@@ -23,9 +23,6 @@ class ResGroups(models.Model):
     all_users_count = fields.Integer('# Users', help='Number of users having this group (implicitly or explicitly)',
         compute='_compute_all_users_count', compute_sudo=True)
 
-    model_access = fields.One2many('ir.model.access', 'group_id', string='Access Controls', copy=True)
-    rule_groups = fields.Many2many('ir.rule', 'rule_group_rel',
-        'group_id', 'rule_group_id', string='Rules', domain="[('global', '=', False)]")
     access_ids = fields.One2many('ir.access', 'group_id', string="Access Rules", copy=True)
     menu_access = fields.Many2many('ir.ui.menu', 'ir_ui_menu_group_rel', 'gid', 'menu_id', string='Access Menu')
     view_access = fields.Many2many('ir.ui.view', 'ir_ui_view_group_rel', 'group_id', 'view_id', string='Views')
@@ -229,14 +226,14 @@ class ResGroups(models.Model):
         # field 'share' depends on method has_group()
         # DLE P139
         if any(self._ids):
-            self.env['ir.model.access'].call_cache_clearing_methods()
+            self.env['ir.access']._clear_caches()
 
         res = super().write(vals)
 
         # invalidate caches after the write (if not su) because we check access
         # when writing
         if any(self._ids) and not self.env.su:
-            self.env['ir.model.access'].call_cache_clearing_methods()
+            self.env['ir.access']._clear_caches()
         return res
 
     def _ensure_xml_id(self):

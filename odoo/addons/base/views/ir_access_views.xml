@@ -117,6 +117,4 @@
         <field name="search_view_id" ref="ir_access_search_view"/>
     </record>
 
-    <menuitem id="menu_ir_access" parent="base.menu_security" action="ir_access_action"/>
-
 </odoo>
