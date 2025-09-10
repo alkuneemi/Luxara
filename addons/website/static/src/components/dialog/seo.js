@@ -958,7 +958,7 @@ export class OptimizeSEODialog extends Component {
             // from the iframe DOM.
             await this.waitForIframe();
             const {
-                metadata: { mainObject, seoObject, path },
+                metadata: { mainObject, seoObject, path, langName },
             } = this.website.currentWebsite;
             this.object = seoObject || mainObject;
             this.data = await rpc("/website/get_seo_data", {
@@ -966,6 +966,9 @@ export class OptimizeSEODialog extends Component {
                 res_model: this.object.model,
             });
 
+            if (this.data.multi_lang) {
+                this.title += ` — ${langName || this.data.lang.name}`;
+            }
             this.canEditSeo = this.data.can_edit_seo;
             this.canEditDescription = this.canEditSeo && "website_meta_description" in this.data;
             this.canEditTitle = this.canEditSeo && "website_meta_title" in this.data;
@@ -988,7 +991,12 @@ export class OptimizeSEODialog extends Component {
                 this.seoNameDefault = this.data.seo_name_default;
             }
 
-            seoContext.description = this.getMeta({ name: "description" });
+            const storedDescription = this.canEditDescription
+                ? this.data.website_meta_description
+                : "";
+            const isDefaultLang = this.data.lang?.code === this.data.default_lang_code;
+            seoContext.description =
+                storedDescription || (isDefaultLang ? this.getMeta({ name: "description" }) : "");
             this.previewDescription = _t(
                 "Your page description should be between 50 and 160 characters long."
             );
@@ -1007,7 +1015,14 @@ export class OptimizeSEODialog extends Component {
             this.hasSocialDefaultImage = this.data.has_social_default_image;
 
             this.canEditKeywords = "website_meta_keywords" in this.data;
-            seoContext.keywords = this.getMeta({ name: "keywords" });
+            if (this.canEditKeywords) {
+                seoContext.keywords = this.data.website_meta_keywords
+                    .split(",")
+                    .map((el) => el.trim())
+                    .filter(Boolean);
+            } else {
+                seoContext.keywords = [];
+            }
         });
     }
 
