@@ -8,6 +8,8 @@ import typing
 from collections import defaultdict
 from random import randint
 from zoneinfo import ZoneInfo
+from stdnum.util import clean
+from stdnum import get_cc_module
 
 from werkzeug import urls
 
@@ -1227,6 +1229,50 @@ class ResPartner(models.Model):
     @api.model
     def _get_res_city_by_name(self, name, country_id):
         pass
+
+    @api.model
+    def _split_vat(self, vat, country_code=None):
+        """
+        Return Country Code and VAT number without country prefix.
+
+        This method is a generic utility that:
+        - Accepts a VAT number as input
+        - Optionally accepts a country code
+        - Uses stdnum when possible for normalization
+        - Falls back to simple prefix stripping
+
+        :param vat: VAT number (string)
+        :param country_code: ISO country code (string, optional)
+        :return: VAT without country prefix (string) and Country Code (String)
+        """
+        country_code = (country_code or '').upper()
+
+        if self._is_vat_void(vat):
+            return country_code, ''
+
+        # Some countries (e.g., 'SM') are not fully supported by stdnum VAT modules
+        # or may raise errors during normalization. For these countries, we skip
+        # the `compact` method and fall back to simple prefix stripping instead.
+        excluded_country_codes = ['SM']
+
+        # Try stdnum normalization
+        if country_code and country_code not in excluded_country_codes:
+            try:
+                return country_code, get_cc_module(country_code, 'vat').compact(vat)
+            except Exception:  # noqa: BLE001
+                pass
+
+        # Normalize VAT (this replaces .replace logic everywhere)
+        vat = clean(vat, ' .-').upper()
+
+        # Fallback: strip prefix
+        if country_code and vat.startswith(country_code):
+            return country_code, vat[len(country_code):].strip()
+
+        if not country_code and vat[:2].isalpha():
+            return vat[:2], vat[2:]
+
+        return '', vat
 
 
 class ResPartnerIndustry(models.Model):
