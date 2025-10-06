@@ -49,12 +49,17 @@
     </template>
     <template id="s_dynamic_snippet" name="Dynamic Snippet">
         <t t-call="website.s_dynamic_snippet_template"
-            snippet_name.f="s_dynamic_snippet"/>
+            snippet_name.f="s_dynamic_snippet" s_dynamic_snippet_vcss.f="001" vcss.f="001"/>
     </template>
 
 <asset id="website.s_dynamic_snippet_000_scss" name="Dynamic snippet 000 SCSS">
     <bundle>web.assets_frontend</bundle>
     <path>website/static/src/snippets/s_dynamic_snippet/000.scss</path>
+</asset>
+
+<asset id="website.s_dynamic_snippet_001_scss" name="Dynamic snippet 001 SCSS">
+    <bundle>web.assets_frontend</bundle>
+    <path>website/static/src/snippets/s_dynamic_snippet/001.scss</path>
 </asset>
 
 <asset id="website.s_dynamic_snippet_000_xml" name="Dynamic snippet 000 XML">
