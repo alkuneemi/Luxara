@@ -12,11 +12,25 @@
     </BuilderRow>
 </t>
 
+<t t-name="website.VideoTranslationOption">
+    <BuilderRow label.translate="Video">
+        <BuilderButton
+            action="'translateMediaSrc'"
+            actionParam="'videos'"
+            label.translate="Replace"
+            type="'success'"
+            preview="false"/>
+    </BuilderRow>
+</t>
+
 <t t-inherit="website.TranslationBuilderOptions" t-inherit-mode="extension">
     <xpath expr="//t[@id='translation_options']" position="before">
         <img_translation_option
             template="website.ImgTranslationOption"
             selector="img.o_savable_attribute"/>
+        <video_translation_option
+            template="website.VideoTranslationOption"
+            selector=".media_iframe_video.o_savable_attribute"/>
     </xpath>
 </t>
 

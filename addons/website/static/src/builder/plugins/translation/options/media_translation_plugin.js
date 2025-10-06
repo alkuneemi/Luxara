@@ -103,6 +103,7 @@ export class TranslateMediaSrcAction extends BuilderAction {
     setup() {
         this.savingMap = {
             images: this.saveImage.bind(this),
+            videos: this.saveVideo.bind(this),
         };
     }
 
@@ -177,5 +178,16 @@ export class TranslateMediaSrcAction extends BuilderAction {
                 "srcset"
             );
         }
+    }
+
+    saveVideo(editingElement, newVideoEl) {
+        const originalSrc =
+            this.dependencies.translation.getTranslationInfo(editingElement)["data-oe-expression"]
+                .translation;
+        const newSrc = newVideoEl.querySelector("iframe").getAttribute("src");
+        editingElement.setAttribute("data-oe-expression", newSrc);
+        editingElement.querySelector("iframe").setAttribute("src", newSrc);
+
+        this.handleTranslationMapHistory(editingElement, newSrc, originalSrc, "data-oe-expression");
     }
 }

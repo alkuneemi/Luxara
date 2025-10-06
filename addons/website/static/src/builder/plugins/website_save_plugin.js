@@ -9,6 +9,7 @@ import { registry } from "@web/core/registry";
 
 const ATTRS_TO_TRANSLATE = {
     img: ["src", "srcset"],
+    ".media_iframe_video": ["data-oe-expression"],
 };
 
 export class WebsiteSavePlugin extends Plugin {
