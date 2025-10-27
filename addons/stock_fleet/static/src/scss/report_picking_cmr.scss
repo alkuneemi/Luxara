@@ -1,0 +1,307 @@
+.o_report_cmr {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    td, th {
+        border: 1px solid #000;
+        padding: 3px 5px;
+        vertical-align: top;
+    }
+
+    .cmr-label {
+        display: block;
+        font-size: 7.5pt;
+        margin-bottom: 2px;
+    }
+
+    .cmr-translated {
+        font-size: 6.5pt;
+        color: #3d3d3d;
+    }
+
+    .cmr-value {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 7pt;
+        margin: 1px 0;
+    }
+
+    .cmr-field-label {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 6.5pt;
+        color: #444;
+    }
+    
+    .cmr-field-label-spacer {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 6.5pt;
+        visibility: hidden;
+    }
+
+    .cmr-sublabel {
+        display: block;
+        font-size: 7pt;
+        color: #444;
+    }
+
+    .cmr-text-right {
+        text-align: right;
+    }
+
+    .cmr-dotted {
+        padding: 0 4em;
+    }
+
+    // Header line: copy designation + reference
+    .cmr-header-line {
+        border: none;
+        margin-bottom: 0.3em;
+        td {
+            border: none;
+            padding: 2px 5px;
+            font-size: 8pt;
+            font-weight: normal;
+        }
+        .cmr-col-half { width: 50%; }
+    }
+
+    // Top section: 2 columns, 4 rows
+    .cmr-top {
+        .cmr-col-left { width: 50%; }
+        .cmr-col-right { width: 50%; }
+
+        .cmr-row-1 td { height: 5.5em; }
+        .cmr-row-2 td { height: 5.5em; }
+        .cmr-row-3 td { height: 5.5em; }
+        .cmr-row-4 td { height: 5.5em; }
+
+        .cmr-stacked-cell {
+            padding: 0;
+            > table {
+                border: none;
+            }
+            td {
+                height: 2.75em;
+                border: none;
+            }
+            tr:first-child td {
+                border-bottom: 1px solid #000;
+            }
+        }
+
+        .cmr-intl-box {
+            text-align: center;
+            vertical-align: top;
+            padding: 0.5em;
+        }
+
+        .cmr-intl-title {
+            display: block;
+            font-size: 12pt;
+            font-weight: normal;
+        }
+
+        .cmr-intl-subtitle {
+            display: block;
+            font-size: 8pt;
+            font-weight: normal;
+        }
+
+        .cmr-intl-text {
+            display: block;
+            font-size: 7pt;
+            text-align: center;
+        }
+    }
+
+    // Goods table: boxes 6-12
+    .cmr-goods {
+        border-top: none;
+
+        thead tr th {
+            border-top: none;
+        }
+
+        th {
+            font-size: 6.5pt;
+            font-weight: normal;
+            text-align: center;
+            vertical-align: top;
+            padding: 1px 1px;
+            line-height: 1.1;
+        }
+        td {
+            height: 1.5em;
+        }
+
+        .cmr-goods-body {
+            td {
+                height: auto;
+                border: 0.5px solid #ccc;
+                font-size: 6.5pt;
+                padding: 1px 2px;
+            }
+            tr td:first-child {
+                border-left: 1px solid #000;
+            }
+            tr td:last-child {
+                border-right: 1px solid #000;
+            }
+            tr:last-child td {
+                border-bottom: 1px solid #000;
+            }
+        }
+
+        .cmr-goods-totals {
+            td {
+                height: auto;
+                font-size: 6.5pt;
+                font-weight: normal;
+                text-align: left;
+                padding: 2px 2px;
+                line-height: 2;
+                border-top: none;
+            }
+        }
+
+        .cmr-col-marks { width: 14%; }
+        .cmr-col-packages { width: 10%; }
+        .cmr-col-packing { width: 12%; }
+        .cmr-col-nature { width: 28%; }
+        .cmr-col-statno { width: 10%; }
+        .cmr-col-weight { width: 13%; }
+        .cmr-col-volume { width: 13%; }
+    }
+
+    // Boxes 13/14/21 (left) + boxes 19/20/15 (right)
+    .cmr-goods-footer {
+        border-top: none;
+        > tbody > tr > td {
+            border-top: none;
+        }
+        .cmr-col-left { width: 50%; }
+        .cmr-col-right { width: 50%; }
+
+        .cmr-left-stack, .cmr-right-stack {
+            padding: 0;
+            height: auto;
+            > table {
+                border: none;
+            }
+        }
+
+        .cmr-left-stack {
+            td {
+                border: none;
+                border-bottom: 1px solid #000;
+            }
+            tr:last-child td {
+                border-bottom: none;
+            }
+            .cmr-box-13 {
+                height: 5.5em;
+            }
+            .cmr-box-14 {
+                height: 5.5em;
+            }
+            .cmr-box-21 {
+                height: auto;
+            }
+        }
+
+        .cmr-checkbox {
+            display: inline-block;
+            font-size: 7pt;
+            margin-right: 1.5em;
+        }
+
+        .cmr-checkbox-icon {
+            font-size: 14pt;
+            vertical-align: middle;
+        }
+
+        .cmr-right-stack {
+            .cmr-box-19 {
+                height: 3em;
+                border: none;
+                border-bottom: 1px solid #000;
+            }
+        }
+
+        .cmr-charges-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            td, th {
+                border: 1px solid #000;
+                border-left: none;
+                border-right: none;
+                font-size: 7.5pt;
+                height: auto;
+                padding: 1px 3px;
+            }
+            th {
+                font-weight: normal;
+                border-top: none;
+                border-bottom: 1px solid #000;
+                padding: 5px 3px;
+            }
+            thead tr th:not(:first-child) {
+                border-left: 1px solid #000;
+            }
+            tbody tr td:not(:first-child) {
+                border-left: 1px solid #000;
+            }
+            tfoot td {
+                border-top: 1px solid #000;
+                border-bottom: none;
+            }
+            .cmr-col-charge-label { width: 40%; }
+            .cmr-col-sender { width: 30%; }
+            .cmr-col-consignee { width: 30%; }
+        }
+    }
+
+    // Signatures section: boxes 22-24
+    .cmr-signatures {
+        border-top: none;
+        .cmr-col-sig { width: 33.33%; }
+        > tbody > tr > td {
+            border-top: none;
+        }
+
+        td {
+            height: 10em;
+        }
+
+        .cmr-box-23 {
+            padding: 3px 0 0 0;
+            .cmr-label {
+                padding: 0 5px;
+            }
+        }
+
+        .cmr-licence-table {
+            margin-top: 1em;
+            border: none;
+            td {
+                border-top: 1px solid #000;
+                border-bottom: 1px solid #000;
+                border-left: none;
+                border-right: none;
+                font-size: 7pt;
+                text-align: left;
+                height: auto;
+                padding: 1.5px 1px 8px;
+            }
+            tr td:first-child {
+                border-right: 1px solid #000;
+            }
+        }
+    }
+}
