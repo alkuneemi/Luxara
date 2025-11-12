@@ -6,6 +6,7 @@ from . import (
     delivery_zip_prefix,
     ir_http,
     ir_module_module,
+    payment_method,
     payment_provider,
     payment_transaction,
     product_category,

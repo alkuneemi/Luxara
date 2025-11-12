@@ -2,6 +2,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Domain
 
 
 class SaleOrder(models.Model):
@@ -21,6 +22,13 @@ class SaleOrder(models.Model):
     )
     shipping_weight = fields.Float(compute="_compute_shipping_weight", store=True, readonly=False)
 
+    pending_delivery_transaction_ids = fields.Many2many(
+        comodel_name="payment.transaction",
+        compute="_compute_pending_delivery_transaction_ids",
+        compute_sudo=True,
+    )
+    amount_on_delivery = fields.Monetary(compute="_compute_amount_on_delivery", compute_sudo=True)
+
     @api.depends("order_line")
     def _compute_is_service_products(self):
         for so in self:
@@ -38,6 +46,22 @@ class SaleOrder(models.Model):
     def _compute_delivery_state(self):
         for order in self:
             order.delivery_set = any(line.is_delivery for line in order.order_line)
+
+    @api.depends("transaction_ids")
+    def _compute_pending_delivery_transaction_ids(self):
+        pms_at_delivery = self.env["payment.method"]._get_payment_method_at_delivery_codes()
+        domain = Domain([
+            ("payment_method_id.code", "in", pms_at_delivery),
+            ("state", "=", "pending"),
+        ])
+
+        for order in self:
+            order.pending_delivery_transaction_ids = order.transaction_ids.filtered_domain(domain)
+
+    @api.depends("pending_delivery_transaction_ids")
+    def _compute_amount_on_delivery(self):
+        for order in self:
+            order.amount_on_delivery = order.pending_delivery_transaction_ids._get_last().amount
 
     @api.onchange("order_line", "partner_id", "partner_shipping_id")
     def onchange_order_line(self):
@@ -110,6 +134,42 @@ class SaleOrder(models.Model):
                 "default_order_id": self.id,
                 "default_carrier_id": carrier.id,
                 "default_total_weight": self._get_estimated_weight(),
+            },
+        }
+
+    def action_confirm_payment_on_delivery(self, message=None):
+        """Mark the last pending delivery transaction as done and trigger post-processing so payment
+        records are created immediately. Other pending transactions are canceled.
+
+        :param str message: Optionally, a message to be posted on related records of the last
+            transaction.
+        :raises UserError: If no pending delivery transaction is found.
+        :return: An action dict to display a notification of confirmation.
+        :rtype: dict
+        """
+        if not self.pending_delivery_transaction_ids:
+            raise UserError(self.env._("No pending transaction found."))
+
+        last_tx = self.pending_delivery_transaction_ids._get_last()
+        last_tx._set_done()
+        if other_txs := self.pending_delivery_transaction_ids - last_tx:
+            other_txs._set_canceled(
+                state_message=self.env._(
+                    "Canceled in favor of transaction %s", last_tx.display_name
+                )
+            )
+
+        self.pending_delivery_transaction_ids._post_process()
+        if message:
+            last_tx._log_message_on_linked_documents(message)
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "type": "success",
+                "message": self.env._("The payment was collected successfully!"),
+                "next": {"type": "ir.actions.client", "tag": "soft_reload"},
             },
         }
 
