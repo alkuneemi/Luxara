@@ -29,16 +29,16 @@ const suggestionServicePatch = {
     /**
      * @override
      */
-    isSuggestionValid(partner, thread) {
+    isPartnerSuggestionValid(partner, { thread, composerType }) {
         if (thread?.channel && partner.eq(this.store.odoobot)) {
             return true;
         }
-        return super.isSuggestionValid(...arguments);
+        return super.isPartnerSuggestionValid(partner, { thread, composerType });
     },
     /**
      * @override
      */
-    getPartnerSuggestions(thread) {
+    getPartnerSuggestions({ thread, composerType }) {
         const isNonPublicChannel =
             thread &&
             (thread.channel?.channel_type === "group" ||
@@ -65,13 +65,13 @@ const suggestionServicePatch = {
             }
             return Array.from(partnersById.values());
         } else {
-            return super.getPartnerSuggestions(...arguments);
+            return super.getPartnerSuggestions({ thread, composerType });
         }
     },
     /**
      * @override
      */
-    searchSuggestions({ delimiter, term }, { thread } = {}) {
+    searchSuggestions({ delimiter, term }, { thread, composerType } = {}) {
         if (delimiter === "/") {
             return this.searchChannelCommand(cleanTerm(term), thread.channel);
         }

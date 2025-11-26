@@ -192,7 +192,17 @@ export function addLink(node, transformChildren) {
     return getOuterHtml(node);
 }
 
-function generateMentionElement({ className, id, model, text }) {
+function generateMentionElement({ className, id, model, text }, { readonly } = {}) {
+    if (readonly) {
+        const span = document.createElement("span");
+        setAttributes(span, {
+            "data-oe-id": id,
+            "data-oe-model": model,
+            contenteditable: "false",
+        });
+        span.textContent = text;
+        return span;
+    }
     const link = document.createElement("a");
     setAttributes(link, {
         href: router.stateToUrl({ model: model, resId: id }),
@@ -208,15 +218,21 @@ function generateMentionElement({ className, id, model, text }) {
 
 /**
  * @param {import("models").ResPartner} partner
- * @param {import("models").Thread} thread
+ * @param {Object} [params]
+ * @param {import("models").Thread} [params.thread]
+ * @param {boolean} [params.readonly=false] If true, returns a non-clickable mention (<span>)
+ *   instead of a link (<a>). Used for log notes where external partners should not be clickable.
  */
-export function generatePartnerMentionElement(partner, thread) {
-    return generateMentionElement({
-        className: "o_mail_redirect",
-        id: partner.id,
-        model: "res.partner",
-        text: `@${thread?.getPersonaName(partner) ?? partner.name}`,
-    });
+export function generatePartnerMentionElement(partner, { thread, readonly } = {}) {
+    return generateMentionElement(
+        {
+            className: "o_mail_redirect",
+            id: partner.id,
+            model: "res.partner",
+            text: `@${thread?.getPersonaName(partner) ?? partner.name}`,
+        },
+        { readonly }
+    );
 }
 
 /** @param {import("models").ResRole} role */
@@ -271,7 +287,7 @@ function generateMentionsLinks(
         const placeholder = `@-mention-partner-${partner.id}`;
         const text = `@${thread?.getPersonaName(partner) ?? partner.name}`;
         mentions.push({
-            link: generatePartnerMentionElement(partner, thread),
+            link: generatePartnerMentionElement(partner, { thread }),
             placeholder,
         });
         body = htmlReplace(body, text, placeholder);
