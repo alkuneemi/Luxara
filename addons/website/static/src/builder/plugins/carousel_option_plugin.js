@@ -5,6 +5,8 @@ import { CarouselItemHeaderMiddleButtons } from "./carousel_item_header_buttons"
 import { renderToElement } from "@web/core/utils/render";
 import { BuilderAction } from "@html_builder/core/builder_action";
 import { selectElements } from "@html_editor/utils/dom_traversal";
+import { patch } from "@web/core/utils/patch";
+import { SetContainerWidthAction } from "./content_width_option_plugin";
 
 /**
  * @typedef { Object } CarouselOptionShared
@@ -470,5 +472,20 @@ export class SetCarouselDurationAction extends BuilderAction {
         return duration;
     }
 }
+
+patch(SetContainerWidthAction.prototype, {
+    apply({ editingElement }) {
+        super.apply(...arguments);
+        if (!editingElement.closest(".s_quotes_carousel")) {
+            return;
+        }
+        const carouselEl = editingElement.querySelector(".carousel");
+        if (carouselEl) {
+            // Ensure carousel recomputes its min-height on content-width
+            // option change
+            carouselEl.dispatchEvent(new CustomEvent("content_changed"));
+        }
+    },
+});
 
 registry.category("website-plugins").add(CarouselOptionPlugin.id, CarouselOptionPlugin);
