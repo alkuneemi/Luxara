@@ -68,6 +68,7 @@ class StockLandedCost(models.Model):
     vendor_bill_id = fields.Many2one(
         'account.move', 'Vendor Bill', copy=False, domain=[('move_type', '=', 'in_invoice')], index='btree_not_null')
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id')
+    allowed_product_ids = fields.Many2many('product.product', compute='_compute_allowed_product_ids')
 
     @api.depends('cost_lines.price_unit')
     def _compute_total_amount(self):
@@ -78,6 +79,11 @@ class StockLandedCost(models.Model):
     def _compute_pickings_count(self):
         for cost in self:
             cost.pickings_count = len(cost.picking_ids)
+
+    @api.depends('picking_ids')
+    def _compute_allowed_product_ids(self):
+        for cost in self:
+            cost.allowed_product_ids = cost._get_targeted_move_ids().product_id
 
     @api.onchange('target_model')
     def _onchange_target_model(self):
@@ -178,12 +184,10 @@ class StockLandedCost(models.Model):
             }
             lines.append(vals)
 
-        if not lines:
-            target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
-            raise UserError(_("You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.", target_model_descriptions[self.target_model]))
         return lines
 
     def compute_landed_cost(self):
+        self._check_valid_target_products()
         AdjustementLines = self.env['stock.valuation.adjustment.lines']
         AdjustementLines.search([('cost_id', 'in', self.ids)]).unlink()
 
@@ -191,27 +195,19 @@ class StockLandedCost(models.Model):
         for cost in self.filtered(lambda cost: cost._get_targeted_move_ids()):
             cost = cost.with_company(cost.company_id)
             rounding = cost.currency_id.rounding
-            total_qty = 0.0
-            total_cost = 0.0
-            total_weight = 0.0
-            total_volume = 0.0
-            total_line = 0.0
             all_val_line_values = cost.get_valuation_lines()
-            for val_line_values in all_val_line_values:
-                for cost_line in cost.cost_lines:
-                    val_line_values.update({'cost_id': cost.id, 'cost_line_id': cost_line.id})
-                    self.env['stock.valuation.adjustment.lines'].create(val_line_values)
-                total_qty += val_line_values.get('quantity', 0.0)
-                total_weight += val_line_values.get('weight', 0.0)
-                total_volume += val_line_values.get('volume', 0.0)
-
-                former_cost = val_line_values.get('former_cost', 0.0)
-                # round this because former_cost on the valuation lines is also rounded
-                total_cost += cost.currency_id.round(former_cost)
-
-                total_line += 1
-
             for line in cost.cost_lines:
+                total_qty = total_cost = total_weight = total_volume = total_line = 0.0
+                for val_line_values in all_val_line_values:
+                    if not line.target_product_ids or val_line_values.get('product_id') in line.target_product_ids.ids:
+                        val_line_values.update({'cost_id': cost.id, 'cost_line_id': line.id})
+                        self.env['stock.valuation.adjustment.lines'].create(val_line_values)
+                        total_qty += val_line_values.get('quantity', 0.0)
+                        total_weight += val_line_values.get('weight', 0.0)
+                        total_volume += val_line_values.get('volume', 0.0)
+                        total_cost += cost.currency_id.round(val_line_values.get('former_cost', 0.0))
+                        total_line += 1
+
                 value_split = 0.0
                 for valuation in cost.valuation_adjustment_lines:
                     value = 0.0
@@ -274,6 +270,34 @@ class StockLandedCost(models.Model):
                 target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
                 raise UserError(_('Please define %s on which those additional costs should apply.', target_model_descriptions[cost.target_model]))
 
+    def _check_valid_target_products(self):
+        """Ensure that landed costs can be distributed on the targeted products.
+        Raise a UserError if all targeted products of the selected transfer(s) or
+        explicitly selected products on landed cost line(s) don't use FIFO or average costing method.
+        """
+        for cost in self:
+            if not any(p.cost_method in ('fifo', 'average') for p in cost.allowed_product_ids):
+                target_model_descriptions = dict(self._fields['target_model']._description_selection(self.env))
+                raise UserError(self.env._(
+                    "You cannot apply landed costs on the chosen %s(s). Landed costs can only be applied for products with FIFO or average costing method.",
+                    target_model_descriptions[cost.target_model],
+                ))
+
+            invalid_lines_descriptions = []
+            for line in cost.cost_lines.filtered('target_product_ids'):
+                products = line.target_product_ids
+                if not any(p.cost_method in ('fifo', 'average') for p in products):
+                    invalid_lines_descriptions.append(self.env._(
+                        "- %(line)s: %(products)s", line=line.product_id.display_name,
+                        products=", ".join(products.mapped('display_name'))),
+                    )
+            if invalid_lines_descriptions:
+                raise UserError(self.env._(
+                    "Please select valid products(with FIFO or average costing method) in the following landed cost lines."
+                    " The selected products cannot be used for landed cost calculations:\n%(lines)s",
+                    lines="\n".join(invalid_lines_descriptions),
+                ))
+
     def _check_sum(self):
         """ Check if each cost line its valuation lines sum to the correct amount
         and if the overall total amount is correct also """
@@ -312,6 +336,7 @@ class StockLandedCostLines(models.Model):
              "By Volume: Cost will be divided depending on its volume.")
     account_id = fields.Many2one('account.account', 'Account')
     currency_id = fields.Many2one('res.currency', related='cost_id.currency_id')
+    target_product_ids = fields.Many2many('product.product', string="Apply On", compute='_compute_target_product_ids', readonly=False, store=True)
 
     @api.onchange('product_id')
     def onchange_product_id(self):
@@ -320,6 +345,14 @@ class StockLandedCostLines(models.Model):
         self.price_unit = self.product_id.standard_price or 0.0
         accounts_data = self.product_id.product_tmpl_id.get_product_accounts()
         self.account_id = accounts_data['expense']
+
+    @api.depends('product_id', 'cost_id.allowed_product_ids')
+    def _compute_target_product_ids(self):
+        for line in self:
+            line.target_product_ids = (
+                line.target_product_ids.filtered(lambda product: product in line.cost_id.allowed_product_ids)
+                | line.cost_id.allowed_product_ids._origin & line.product_id.target_product_ids
+            )
 
 
 class StockValuationAdjustmentLines(models.Model):
