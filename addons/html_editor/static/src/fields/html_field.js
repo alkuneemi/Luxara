@@ -15,7 +15,7 @@ import {
 } from "@html_editor/others/embedded_components/embedding_sets";
 import { normalizeHTML } from "@html_editor/utils/html";
 import { Wysiwyg } from "@html_editor/wysiwyg";
-import { Component, markup, status } from "@odoo/owl";
+import { Component, markup, onWillUnmount, onWillUpdateProps, status } from "@odoo/owl";
 import { localization } from "@web/core/l10n/localization";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
@@ -85,6 +85,7 @@ export class HtmlField extends Component {
         );
         this.busService = this.env.services.bus_service;
         this.ormService = useService("orm");
+        this.pendingAttachmentIds = [];
 
         this.isDirty = false;
         this.lastChangeId = 0;
@@ -94,6 +95,12 @@ export class HtmlField extends Component {
             containsComplexHTML: computeContainsComplexHTML(
                 this.props.record.data[this.props.name]
             ),
+        });
+
+        onWillUpdateProps((nextProps) => {
+            if (this.props.record.resId !== nextProps.record.resId) {
+                this.pendingAttachmentIds = [];
+            }
         });
 
         useRecordObserver((record) => {
@@ -118,6 +125,20 @@ export class HtmlField extends Component {
             // update Dynamic Placeholder reference model
             if (this.editor && this.editor.isReady) {
                 this.editor.trigger("on_model_changed_handlers", value);
+            }
+        });
+        onWillUnmount(() => {
+            // Remove pending attachments on Discard record.
+            if (this.props.record.isNew && this.editor.shared.media) {
+                const pendingIds = this.editor.shared.media.extractUnmappedAttachmentsIds(
+                    this.editor.editable
+                );
+                this.pendingAttachmentIds.push(...pendingIds);
+                if (this.pendingAttachmentIds.length) {
+                    this.env.model.orm.unlink("ir.attachment", [
+                        ...new Set(this.pendingAttachmentIds),
+                    ]);
+                }
             }
         });
     }
@@ -163,6 +184,11 @@ export class HtmlField extends Component {
 
     async updateValue(value, { changeId } = { changeId: this.lastChangeId }) {
         this.lastValue = normalizeHTML(value, this.clearElementToCompare.bind(this));
+        if (this.pendingAttachmentIds.length) {
+            this.props.record.context["pending_attachment_ids"] = this.pendingAttachmentIds;
+        } else {
+            delete this.props.record.context["pending_attachment_ids"];
+        }
         await this.props.record.update({ [this.props.name]: value }).then(
             () => {
                 if (this.lastChangeId === changeId) {
@@ -209,6 +235,11 @@ export class HtmlField extends Component {
             }
             const changeId = this.lastChangeId;
             const el = await this.getEditorContent();
+            if (this.props.record.isNew && this.editor.shared.media) {
+                this.pendingAttachmentIds.push(
+                    ...this.editor.shared.media.extractUnmappedAttachmentsIds(this.editor.editable)
+                );
+            }
             const content = el.innerHTML;
             this.clearElementToCompare(el);
             const comparisonValue = el.innerHTML;
