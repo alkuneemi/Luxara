@@ -6,7 +6,7 @@ import { ProductsDesignPanel } from "./products_design_panel";
 
 export class ProductsDesignPanelPlugin extends Plugin {
     static id = "productsDesignPanel";
-    static dependencies = ["builderActions", "builderComponents"];
+    static dependencies = ["builderActions", "builderComponents", "domReferenceMap"];
     static shared = ["registerPanel", "unregisterPanel"];
 
     resources = {
@@ -17,7 +17,7 @@ export class ProductsDesignPanelPlugin extends Plugin {
         builder_components: {
             ProductsDesignPanel,
         },
-        on_new_records_handled_handlers: this.handleMutations.bind(this),
+        on_pending_mutations_staged_handlers: this.handleMutations.bind(this),
         on_ready_to_save_document_handlers: this.onSave.bind(this),
         product_design_list_to_save: {
             selector: "#o_wsale_products_grid",
@@ -54,20 +54,14 @@ export class ProductsDesignPanelPlugin extends Plugin {
 
     /**
      * Handles the flag of the closest product savable element
-     * @param {Object} records - The observed mutations
-     * @param {String} currentOperation - The name of the current operation
+     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} records - The observed mutations
      */
-    handleMutations(records, currentOperation) {
-        if (currentOperation === "undo" || currentOperation === "redo") {
-            // Do nothing as `o_dirty_product_design_list` has already been handled by the history
-            // plugin.
-            return;
-        }
+    handleMutations(records) {
         for (const record of records) {
-            if (record.attributeName === "contenteditable") {
+            if (record.type === "attributes" && record.attributeName === "contenteditable") {
                 continue;
             }
-            let targetEl = record.target;
+            let targetEl = this.dependencies.domReferenceMap.getNodeById(record.nodeId);
             if (!targetEl.isConnected) {
                 continue;
             }

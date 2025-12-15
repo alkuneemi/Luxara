@@ -44,7 +44,7 @@ import { FormController } from "@web/views/form/form_controller";
 import { Counter, EmbeddedWrapperMixin } from "./_helpers/embedded_component";
 import { moveSelectionOutsideEditor, setSelection } from "./_helpers/selection";
 import {
-    ensureDistinctHistoryStep,
+    ensureDistinctHistoryCommit,
     insertText,
     pasteHtml,
     pasteOdooEditorHtml,
@@ -851,7 +851,7 @@ test("undo after discard html field changes in form", async () => {
     await click(".odoo-editor-editable");
     setSelectionInHtmlField();
     await insertText(htmlEditor, "tes");
-    await ensureDistinctHistoryStep();
+    await ensureDistinctHistoryCommit();
     await insertText(htmlEditor, "t");
     await animationFrame();
     expect(".odoo-editor-editable p").toHaveText("testfirst");
@@ -946,10 +946,10 @@ test("Embed video by pasting video URL", async () => {
 
     // Press Enter to select first option in the powerbox ("Embed Youtube Video").
     await press("Enter");
-    // Insertion triggers selectionchange & addStep creates selection
-    // placeholder.fixSelectionInsideEditableRoot moves selection into it,
-    // trigger another selectionchange that removes selection placeholder.
-    // So we must wait for the o-we-hint.
+    // Insertion triggers `selectionchange` and `commit` creates a selection
+    // placeholder. `fixSelectionInsideEditableRoot` moves the selection into it
+    // and triggers another `selectionchange` that removes the selection
+    // placeholder. So we must wait for the `.o-we-hint`.
     await waitFor(".o-we-hint");
     await animationFrame();
     const videoIframe = queryOne("div[data-embedded='video']");
@@ -1057,11 +1057,11 @@ test("isDirty should not be reset to false if onChange fired between getEditorCo
     expect(`.o_form_button_save`).not.toBeVisible();
     const p = htmlField.editor.editable.querySelector("p");
     p.append(htmlField.editor.document.createTextNode("Second"));
-    htmlField.editor.shared.history.addStep();
+    htmlField.editor.shared.history.commit();
     await clickSave();
     await firstStep;
     p.append(htmlField.editor.document.createTextNode("Third"));
-    htmlField.editor.shared.history.addStep();
+    htmlField.editor.shared.history.commit();
     resolveSecond();
     await thirdStep;
     await animationFrame();
@@ -1699,9 +1699,9 @@ test("edit and enable/disable codeview with editor toolbar", async () => {
 
     setSelectionInHtmlField();
     await insertText(htmlEditor, "Hello");
-    await ensureDistinctHistoryStep();
+    await ensureDistinctHistoryCommit();
     await insertText(htmlEditor, " ");
-    await ensureDistinctHistoryStep();
+    await ensureDistinctHistoryCommit();
     expect("[name='txt'] .odoo-editor-editable").toHaveInnerHTML("<p>Hello first </p>");
 
     // Switch to code view
@@ -1738,8 +1738,8 @@ test("edit and save a html field in collaborative should keep the same wysiwyg",
         expect(normalizeHTML(txt, stripHistoryIds)).toBe("<p>Hello first</p>");
         expect.step("web_save");
         args[1].txt = txt.replace(
-            /\sdata-last-history-steps="[^"]*?"/,
-            ' data-last-history-steps="12345"'
+            /\sdata-last-history-commits="[^"]*?"/,
+            ' data-last-history-commits="12345"'
         );
     });
     onRpc("/html_editor/get_ice_servers", () => []);
@@ -2448,7 +2448,7 @@ describe("save image", () => {
         sendBeaconDef = new Deferred();
         setSelectionInHtmlField(".test_target");
         await insertText(htmlEditor, "a");
-        htmlEditor.shared.history.addStep();
+        htmlEditor.shared.history.commit();
         await formController.beforeUnload();
         await sendBeaconDef;
 
@@ -2457,7 +2457,7 @@ describe("save image", () => {
         const imageContainerElement = parseHTML(htmlEditor.document, imageContainerHTML).firstChild;
         const paragraph = htmlEditor.editable.querySelector(".test_target");
         htmlEditor.editable.replaceChild(imageContainerElement, paragraph);
-        htmlEditor.shared.history.addStep();
+        htmlEditor.shared.history.commit();
 
         // Simulate an urgent save before the end of the RPC roundtrip for the
         // image.

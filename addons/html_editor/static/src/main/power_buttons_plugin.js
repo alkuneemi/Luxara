@@ -62,7 +62,6 @@ export class PowerButtonsPlugin extends Plugin {
         "localOverlay",
         "powerbox",
         "userCommand",
-        "history",
     ];
     /** @type {import("plugins").EditorResources} */
     resources = {

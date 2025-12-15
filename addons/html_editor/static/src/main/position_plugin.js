@@ -12,12 +12,11 @@ import { couldBeScrollableX, couldBeScrollableY } from "@web/core/utils/scrollin
  */
 export class PositionPlugin extends Plugin {
     static id = "position";
+    static dependencies = ["domObserver"];
     /** @type {import("plugins").EditorResources} */
     resources = {
-        // todo: it is strange that the position plugin is aware of on_external_history_step_added_handlers and on_history_reset_from_steps_handlers.
-        on_external_history_step_added_handlers: this.layoutGeometryChange.bind(this),
-        on_history_reset_from_steps_handlers: this.layoutGeometryChange.bind(this),
-        on_step_added_handlers: this.layoutGeometryChange.bind(this),
+        on_history_rebased_handlers: this.layoutGeometryChange.bind(this),
+        on_committed_to_history_handlers: this.layoutGeometryChange.bind(this),
         on_will_filter_mutation_record_handlers:
             this.handlePotentialLayoutGeometryChange.bind(this),
     };
@@ -49,15 +48,23 @@ export class PositionPlugin extends Plugin {
         }
     }
 
-    handlePotentialLayoutGeometryChange(records) {
-        for (const record of records) {
-            if (
-                record.type === "classList" ||
-                (record.type === "attributes" && record.attributeName === "style")
-            ) {
-                this.debouncedLayoutGeometryChange();
-                return;
-            }
+    /**
+     * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation[]} mutations
+     */
+    handlePotentialLayoutGeometryChange(mutations) {
+        const hasClassChange = (mutation) => {
+            const { addedClasses, removedClasses } =
+                this.dependencies.domObserver.getClassChanges(mutation);
+            return !!new Set([...addedClasses, ...removedClasses]).size;
+        };
+        if (
+            mutations.find((mutation) => {
+                const attribute = mutation.type === "attributes" && mutation.attributeName;
+                return attribute === "style" || (attribute === "class" && hasClassChange(mutation));
+            })
+        ) {
+            this.debouncedLayoutGeometryChange();
+            return;
         }
     }
     destroy() {

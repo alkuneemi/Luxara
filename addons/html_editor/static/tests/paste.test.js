@@ -3537,10 +3537,10 @@ describe("images", () => {
             );
         });
 
-        test("should not revert a history step when pasting an image URL as a link (1)", async () => {
+        test("should not revert a history commit when pasting an image URL as a link (1)", async () => {
             const { el, editor } = await setupEditor("<p>[]</p>");
 
-            // paste text to have a history step recorded
+            // paste text to have a history commit recorded
             pasteText(editor, "*should not disappear*");
             pasteText(editor, imgUrl);
             await animationFrame();
@@ -3606,10 +3606,10 @@ describe("images", () => {
             );
         });
 
-        test("should not revert a history step when pasting an image URL as a link (2)", async () => {
+        test("should not revert a history commit when pasting an image URL as a link (2)", async () => {
             const { el, editor } = await setupEditor("<p>[]</p>");
 
-            // paste text (to have a history step recorded)
+            // paste text (to have a history commit recorded)
             pasteText(editor, "abxxxcd");
             // select xxx in "<p>ab[xxx]cd</p>""
             const p = editor.editable.querySelector("p");
@@ -3732,10 +3732,10 @@ describe("youtube video", () => {
             expect(cleanLinkArtifacts(getContent(el))).toBe(`<p><a href="${url}">${url}</a>[]</p>`);
         });
 
-        test("should not revert a history step when pasting a youtube URL as a link (1)", async () => {
+        test("should not revert a history commit when pasting a youtube URL as a link (1)", async () => {
             const url = "https://youtu.be/dQw4w9WgXcQ";
             const { el, editor } = await setupEditor("<p>[]</p>", { config });
-            // paste text to have a history step recorded
+            // paste text to have a history commit recorded
             pasteText(editor, "*should not disappear*");
             pasteText(editor, url);
             await animationFrame();
@@ -3821,9 +3821,9 @@ describe("youtube video", () => {
             );
         });
 
-        test("should not revert a history step when pasting a youtube URL as a link (2)", async () => {
+        test("should not revert a history commit when pasting a youtube URL as a link (2)", async () => {
             const { el, editor } = await setupEditor("<p>[]</p>", { config });
-            // paste text (to have a history step recorded)
+            // paste text (to have a history commit recorded)
             pasteText(editor, "abxxxcd");
             // select xxx in "<p>ab[xxx]cd</p>"
             const p = editor.editable.querySelector("p");

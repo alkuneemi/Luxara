@@ -8,12 +8,15 @@ import { withSequence } from "@html_editor/utils/resource";
 
 export class FieldChangeReplicationPlugin extends Plugin {
     static id = "fieldChangeReplication";
-    static dependencies = ["dom"];
+    static dependencies = ["dom", "domReferenceMap"];
 
     /** @type {import("plugins").BuilderResources} */
     resources = {
-        on_new_records_handled_handlers: this.handleMutations.bind(this),
-        normalize_processors: withSequence(9000, this.normalizeProcessor.bind(this)),
+        on_pending_mutations_staged_handlers: this.handleMutations.bind(this),
+        on_pending_mutations_normalized_handlers: withSequence(
+            9000,
+            this.onNormalizedPendingMutations.bind(this)
+        ),
     };
 
     setup() {
@@ -21,13 +24,16 @@ export class FieldChangeReplicationPlugin extends Plugin {
     }
 
     /**
-     * @param { import("@html_editor/core/history_plugin").HistoryMutationRecord[] } records
+     * @param { import("@html_editor/core/dom_observer_plugin").SerializedMutation[] } records
      */
     handleMutations(records) {
         records
             .filter((r) => !(r.type === "attributes" && r.attributeName.startsWith("data-oe-t")))
             .map((r) =>
-                closestElement(r.target, "[data-oe-model], [data-oe-translation-source-sha]")
+                closestElement(
+                    this.dependencies.domReferenceMap.getNodeById(r.nodeId),
+                    "[data-oe-model], [data-oe-translation-source-sha]"
+                )
             )
             .filter(Boolean)
             // Do not forward "unstyled" copies to other nodes.
@@ -35,16 +41,9 @@ export class FieldChangeReplicationPlugin extends Plugin {
             .forEach((fieldEl) => this.fieldsToReplicate.add(fieldEl));
     }
 
-    /**
-     * @param { Node } commonAncestor
-     * @param { "original"|"undo"|"redo"|"restore" } stepState
-     */
-    normalizeProcessor(commonAncestor, stepState) {
+    onNormalizedPendingMutations() {
         const fields = this.fieldsToReplicate;
         this.fieldsToReplicate = new Set();
-        if (stepState !== "original") {
-            return;
-        }
         const touchedEls = new Set();
         for (const sourceEl of fields) {
             const same = (attribute, quote = '"') =>

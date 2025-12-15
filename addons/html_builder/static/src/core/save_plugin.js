@@ -31,11 +31,11 @@ import { _t } from "@web/core/l10n/translation";
 export class SavePlugin extends Plugin {
     static id = "savePlugin";
     static shared = ["save", "ignoreDirty", "groupElements"];
-    static dependencies = ["history"];
+    static dependencies = ["history", "domReferenceMap"];
 
     /** @type {import("plugins").BuilderResources} */
     resources = {
-        on_new_records_handled_handlers: this.handleMutations.bind(this),
+        on_pending_mutations_staged_handlers: this.handleMutations.bind(this),
         on_editor_started_handlers: this.startObserving.bind(this),
         // Resource definitions:
         clean_for_save_processors: [
@@ -137,23 +137,21 @@ export class SavePlugin extends Plugin {
     /**
      * Handles the flag of the closest savable element to the mutation as dirty
      *
-     * @param {Object} records - The observed mutations
-     * @param {String} currentOperation - The name of the current operation
+     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} records - The observed mutations
      */
-    handleMutations(records, currentOperation) {
+    handleMutations(records) {
         if (!this.canObserve) {
             return;
         }
-        if (currentOperation === "undo" || currentOperation === "redo") {
-            // Do nothing as `o_dirty` has already been handled by the history
-            // plugin.
-            return;
-        }
         for (const record of records) {
-            if (record.attributeName === "contenteditable") {
+            if (record.type === "attributes" && record.attributeName === "contenteditable") {
                 continue;
             }
-            let targetEl = record.target;
+            let targetId = record.nodeId;
+            if (["add", "remove"].includes(record.type) && record.parentNodeId) {
+                targetId = record.parentNodeId;
+            }
+            let targetEl = this.dependencies.domReferenceMap.getNodeById(targetId);
             if (!targetEl.isConnected) {
                 continue;
             }

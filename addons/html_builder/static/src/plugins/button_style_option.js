@@ -36,7 +36,7 @@ export class ButtonStyleOption extends BaseOptionComponent {
         BuilderNumberInput,
         BorderConfigurator,
     };
-    static dependencies = ["history"];
+    static dependencies = ["domObserver"];
 
     buttonSizesData = BUTTON_SIZES;
     buttonShapesData = BUTTON_SHAPES;
@@ -92,9 +92,7 @@ export class ButtonStyleOption extends BaseOptionComponent {
         for (const [variantName, variantClass] of Object.entries(buttonVariants)) {
             const tempButtonEl = iframeDocument.createElement("a");
             tempButtonEl.className = `btn ${variantClass}`;
-            this.dependencies.history.ignoreDOMMutations(() =>
-                buttonContainerEl.appendChild(tempButtonEl)
-            );
+            this.dependencies.domObserver.ignore(() => buttonContainerEl.appendChild(tempButtonEl));
             const computedStyle = getComputedStyle(tempButtonEl);
             for (const style of previewVariables) {
                 const value = computedStyle.getPropertyValue(style);
@@ -102,7 +100,7 @@ export class ButtonStyleOption extends BaseOptionComponent {
                     styles[variantName] += `${style}: ${value};`;
                 }
             }
-            this.dependencies.history.ignoreDOMMutations(() => tempButtonEl.remove());
+            this.dependencies.domObserver.ignore(() => tempButtonEl.remove());
         }
 
         // The style for btn-custom is always a copy of the current button style.

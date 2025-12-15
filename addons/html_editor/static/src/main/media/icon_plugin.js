@@ -185,7 +185,7 @@ export class IconPlugin extends Plugin {
         if (size !== "1") {
             targetedIcon.classList.add(`fa-${size}x`);
         }
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     toggleSpinIcon() {
@@ -194,7 +194,7 @@ export class IconPlugin extends Plugin {
             return;
         }
         selectedIcon.classList.toggle("fa-spin");
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     hasIconSize(size) {
@@ -234,6 +234,6 @@ export class IconPlugin extends Plugin {
         for (const attribute of icon.attributes) {
             prevIcon.setAttribute(attribute.nodeName, attribute.nodeValue);
         }
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 }

@@ -143,7 +143,7 @@ export class ShortCutPlugin extends Plugin {
 
     replaceSymbol(symbol) {
         this.dependencies.dom.insert(symbol + "\u00A0");
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     onInput(ev) {
