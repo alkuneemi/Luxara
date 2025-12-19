@@ -25,6 +25,7 @@ def get_demo_vendor_bill(user):
         'filename': f'{user.company_id.id}_demo_vendor_bill',
         'enc_key': file_open(DEMO_ENC_KEY, mode='rb').read(),
         'document': file_open(DEMO_BILL_PATH, mode='rb').read(),
+        'document_type': 'Invoice',
     }
 
 
