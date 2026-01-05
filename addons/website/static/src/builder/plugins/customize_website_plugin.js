@@ -34,7 +34,7 @@ import { CompositeAction } from "@html_builder/core/composite_action_plugin";
  */
 
 /**
- * @typedef {((color: string) => void)[]} website_color_updated_handlers
+ * @typedef {((color: string) => Promise<void>)[]} website_color_updated_handlers
  */
 
 export const NO_IMAGE_SELECTION = Symbol.for("NoImageSelection");
@@ -966,7 +966,11 @@ export class CustomizeWebsiteColorAction extends BuilderAction {
             );
         }
         setBuilderCSSVariables(getHtmlStyle(this.document));
-        this.dispatchTo("website_color_updated_handlers", color);
+        await Promise.allSettled(
+            this.getResource("website_color_updated_handlers").map((handler) =>
+                Promise.resolve(handler(color))
+            )
+        );
     }
 }
 

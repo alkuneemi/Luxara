@@ -7,7 +7,7 @@ import { SnippetViewer } from "./snippet_viewer";
 
 /**
  * @typedef {((arg: { iframe: HTMLIFrameElement }) => void)[]} snippet_preview_dialog_stylesheets_handlers
- * @typedef {((arg: { snippetModel: SnippetModel }) => void)[]} on_snippet_addition_dialog_handlers
+ * @typedef {((arg: { snippetModel: SnippetModel }) => Promise<void>)[]} on_snippet_addition_dialog_handlers
  */
 
 export class AddSnippetDialog extends Component {
