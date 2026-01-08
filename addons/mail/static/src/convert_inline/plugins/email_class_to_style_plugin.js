@@ -1,8 +1,9 @@
 import { Plugin } from "../plugin";
 import { withSequence } from "@html_editor/utils/resource";
+import { parseCssText, parseSelector } from "@mail/convert_inline/css_parsers";
+import { splitSelectorList } from "@mail/convert_inline/style_utils";
 import { registry } from "@web/core/registry";
-import { splitSelectorAroundCommasOutsideParentheses } from "../style_utils";
-import { useShorthands } from "./hooks";
+import { useShorthands } from "@mail/convert_inline/plugins/hooks";
 
 // TODO EGGMAIL: review regex, maybe use (future) selector parser instead
 const SELECTORS_IGNORE = /(^\*$|:hover|:before|:after|:active|:link|::|')|@page/;
@@ -64,34 +65,14 @@ export class EmailClassToStylePlugin extends Plugin {
     }
 
     /**
-     * TODO EGGMAIL: incomplete implementation, to rewrite. Don't use regex, but
-     * use the (future) selector parser instead.
-     *
      * Take a selector and return its specificity according to the w3 specification.
      *
-     * @see http://www.w3.org/TR/css3-selectors/#specificity
+     * @see https://www.w3.org/TR/selectors-4/#specificity
      * @param {string} selector
      */
     computeSpecificity(ruleInfo) {
-        let selector = ruleInfo.selector;
-        let a = 0;
-        selector = selector.replace(/#[a-z0-9_-]+/gi, () => {
-            a++;
-            return "";
-        });
-        let b = 0;
-        selector = selector.replace(/(\.[a-z0-9_-]+)|(\[.*?\])/gi, () => {
-            b++;
-            return "";
-        });
-        let c = 0;
-        selector.replace(/(^|\s+|:+)[a-z0-9_-]+/gi, (a) => {
-            if (!a.includes(":not(")) {
-                c++;
-            }
-            return "";
-        });
-        ruleInfo.specificity = [a, b, c];
+        const selectorList = parseSelector(ruleInfo.selector);
+        ruleInfo.specificity = selectorList.specificity;
     }
 
     computeDynamicValues(element, styleInfo) {
@@ -220,7 +201,8 @@ export class EmailClassToStylePlugin extends Plugin {
      */
     normalizeStyle(style) {
         const styleInfo = new StyleInfo();
-        for (const propertyName of style) {
+        const propertyNames = parseCssText(style.cssText).map((property) => property.name);
+        for (const propertyName of propertyNames) {
             const value = style.getPropertyValue(propertyName);
             if (
                 !this.getResource("ignored_style_predicates").some((predicate) =>
@@ -315,9 +297,7 @@ export class EmailClassToStylePlugin extends Plugin {
                 for (const subRule of subRules) {
                     const selectorText = subRule.selectorText || "";
                     // Split selectors, making sure not to split at commas in parentheses.
-                    for (const selector of splitSelectorAroundCommasOutsideParentheses(
-                        selectorText
-                    )) {
+                    for (const selector of splitSelectorList(selectorText)) {
                         if (selector && !SELECTORS_IGNORE.test(selector)) {
                             this.registerCSSRule(selector.trim(), subRule);
                         }
