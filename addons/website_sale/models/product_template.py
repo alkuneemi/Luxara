@@ -12,7 +12,6 @@ from odoo.tools import float_is_zero, is_html_empty
 from odoo.tools.sql import SQL, column_exists, create_column
 from odoo.tools.translate import adapt_translated_field_value, html_translate
 
-from odoo.addons.website.models import ir_http
 from odoo.addons.website.tools import text_from_html
 
 # A delimiter that users aren't likely to search for in product codes.
@@ -1008,7 +1007,7 @@ class ProductTemplate(models.Model):
             product_or_template, quantity, date, currency, pricelist, **kwargs
         )
 
-        if website := ir_http.get_request_website():
+        if website := self.env['website'].get_current_website(fallback=False):
             product_taxes = product_or_template.sudo().taxes_id._filter_taxes_by_company(
                 self.env.company
             )
