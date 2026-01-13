@@ -18,7 +18,8 @@ class IrHttp(models.AbstractModel):
     @api.model
     def get_frontend_session_info(self):
         session_info = super().get_frontend_session_info()
-        session_info.update({"add_to_cart_action": request.website.add_to_cart_action})
+        website = self.env["website"].get_current_website()
+        session_info.update({"add_to_cart_action": website.add_to_cart_action})
         return session_info
 
     @classmethod
@@ -27,6 +28,7 @@ class IrHttp(models.AbstractModel):
 
         # lazy to make sure those are only evaluated when requested
         # All those records are sudoed !
-        request.cart = lazy(request.website._get_and_cache_current_cart)
-        request.fiscal_position = lazy(request.website._get_and_cache_current_fiscal_position)
-        request.pricelist = lazy(request.website._get_and_cache_current_pricelist)
+        website = request.env["website"].get_current_website()
+        request.cart = lazy(website._get_and_cache_current_cart)
+        request.fiscal_position = lazy(website._get_and_cache_current_fiscal_position)
+        request.pricelist = lazy(website._get_and_cache_current_pricelist)

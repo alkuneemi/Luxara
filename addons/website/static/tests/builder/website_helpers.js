@@ -42,7 +42,7 @@ import { BackgroundShapeOptionPlugin } from "@html_builder/plugins/background_op
 class Website extends models.Model {
     _name = "website";
     get_current_website() {
-        return [1];
+        return [1];  // When we try to retrieve the assets, they do not correspond to this website, which may not even exist.
     }
 }
 
@@ -341,7 +341,7 @@ async function openBuilderSidebar(editAssetsLoaded) {
     // The next line allow us to await asynchronous fetches and cache them before it is used
     await Promise.all([
         getWebsiteSnippets(),
-        loadBundle("website.website_builder_assets"),
+        loadBundle("website.website_builder_assets?website_id=1"),  // We use id 1 for get_current_website.
         loadBundle("html_editor.assets_image_cropper"),
     ]);
 
