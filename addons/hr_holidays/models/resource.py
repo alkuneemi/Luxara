@@ -133,6 +133,20 @@ class ResourceCalendarLeaves(models.Model):
         for leave in self:
             leave.company_id = leave.holiday_id.employee_id.company_id or leave.calendar_id.company_id or leave.company_id or self.env.company
 
+    def load_public_holidays(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': self.env._('Load Public Holidays'),
+            'res_model': 'resource.calendar.public.holiday.wizard',
+            'view_mode': 'form',
+            'views': [(self.env.ref('hr_holidays.resource_calendar_public_holiday_wizard_view_form').id, 'form')],
+            'target': 'new',
+            'context': {
+                **self.env.context,
+                'public_holiday_company_ids': self.env.companies.ids,
+            },
+        }
+
 
 class ResourceCalendar(models.Model):
     _inherit = "resource.calendar"

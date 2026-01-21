@@ -179,6 +179,78 @@ class TestGlobalLeaves(TestHrHolidaysCommon):
         })
         self.assertEqual(leave.number_of_days, 2, 'There is a global leave')
 
+    @freeze_time('2026-03-19')
+    def test_load_public_holidays_opens_preview_wizard(self):
+        self.company.country_id = self.env.ref('base.be')
+        self.company.tz = 'Europe/Brussels'
+        self.external_company.country_id = self.env.ref('base.in')
+        self.external_company.tz = 'Asia/Kolkata'
+        companies = self.company + self.external_company
+
+        action = self.env['resource.calendar.leaves'].with_context(
+            allowed_company_ids=companies.ids,
+        ).load_public_holidays()
+
+        self.assertEqual(action['res_model'], 'resource.calendar.public.holiday.wizard')
+        self.assertEqual(action['target'], 'new')
+        self.assertEqual(action['context']['public_holiday_company_ids'], companies.ids)
+
+        wizard = self.env['resource.calendar.public.holiday.wizard'].with_context(action['context']).create({})
+        self.assertEqual(wizard.year, 2026)
+        self.assertTrue(wizard.line_ids.filtered(
+            lambda line: line.company_id == self.company
+            and line.start_date == date(2026, 1, 1)
+            and line.name == "New Year's Day"
+        ))
+        self.assertTrue(wizard.line_ids.filtered(
+            lambda line: line.company_id == self.external_company
+            and line.start_date == date(2026, 1, 26)
+            and line.name == "Republic Day"
+        ))
+        self.assertFalse(self.env['resource.calendar.leaves'].search([
+            ('company_id', 'in', companies.ids),
+            ('resource_id', '=', False),
+            ('date_from', '>=', datetime(2025, 12, 31, 0, 0, 0)),
+            ('date_to', '<=', datetime(2027, 1, 2, 0, 0, 0)),
+        ]))
+
+    def test_public_holiday_wizard_add_creates_records_only_on_confirmation(self):
+        self.company.country_id = self.env.ref('base.be')
+        self.company.tz = 'Europe/Brussels'
+
+        wizard_model = self.env['resource.calendar.public.holiday.wizard'].with_context(
+            allowed_company_ids=self.company.ids,
+            public_holiday_company_ids=self.company.ids,
+            params={'view_type': 'list'},
+        )
+        wizard = wizard_model.create({'year': 2026})
+
+        expected_count = len(wizard.line_ids)
+        self.assertEqual(expected_count, 10)
+        self.assertFalse(self.env['resource.calendar.leaves'].search([
+            ('company_id', '=', self.company.id),
+            ('resource_id', '=', False),
+            ('date_from', '>=', datetime(2025, 12, 31, 0, 0, 0)),
+            ('date_to', '<=', datetime(2027, 1, 2, 0, 0, 0)),
+        ]))
+
+        action = wizard.action_add_public_holidays()
+
+        self.assertEqual(action['type'], 'ir.actions.client')
+        created_leaves = self.env['resource.calendar.leaves'].search([
+            ('company_id', '=', self.company.id),
+            ('resource_id', '=', False),
+            ('date_from', '>=', datetime(2025, 12, 31, 0, 0, 0)),
+            ('date_to', '<=', datetime(2027, 1, 2, 0, 0, 0)),
+        ])
+        self.assertEqual(len(created_leaves), expected_count)
+        self.assertTrue(created_leaves.filtered(lambda leave: leave.name == "New Year's Day"))
+
+        second_wizard = wizard_model.create({'year': 2026})
+
+        self.assertFalse(second_wizard.line_ids)
+        self.assertIn('All public holidays for 2026 are already present', second_wizard.warning_message)
+
     @freeze_time('2024-12-01')
     def test_global_leave_keeps_employee_resource_leave(self):
         """
