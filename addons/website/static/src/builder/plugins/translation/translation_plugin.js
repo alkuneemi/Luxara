@@ -73,6 +73,7 @@ export class TranslationPlugin extends Plugin {
 
     /** @type {import("plugins").WebsiteResources} */
     resources = {
+        force_background_translation_state_selectors: ["a[role]", "a.nav-link"],
         clean_for_save_processors: this.cleanForSave.bind(this),
         dirty_els_providers: this.getDirtyTranslations.bind(this),
         after_setup_editor_overrides: () => {

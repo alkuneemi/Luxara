@@ -13,31 +13,22 @@ export class TranslateTableOfContentOptionPlugin extends Plugin {
 
     normalize(root) {
         applyFunDependOnSelectorAndExclude(this.updateTableOfContentNavbar.bind(this), root, {
-            selector: ".s_table_of_content_main",
+            selector: ".s_table_of_content_main :is(h1, h2, h3, h4, h5, h6)",
         });
     }
 
-    updateTableOfContentNavbar(tableOfContentMain) {
-        const tableOfContent = tableOfContentMain.closest(".s_table_of_content");
-        const tableOfContentNavbar = tableOfContent.querySelector(".s_table_of_content_navbar");
-        const currentNavbarItems = [...tableOfContentNavbar.children].map((el) => el.firstChild);
-
-        const targetedElements = "h1, h2";
-        const currentHeadingItems = [
-            ...tableOfContentMain.querySelectorAll(targetedElements),
-        ].filter((el) => !el.closest(".o_snippet_desktop_invisible"));
-
-        currentNavbarItems.map((el, i) => {
-            const newText = currentHeadingItems[i]?.textContent || "";
-            if (el.textContent !== newText) {
-                el.textContent = newText;
+    updateTableOfContentNavbar(headingEl) {
+        const linkEl = this.document.querySelector(
+            `.s_table_of_content_navbar a[href="#${headingEl.id}"]`
+        );
+        const newText = headingEl.textContent;
+        if (linkEl.textContent !== newText) {
+            linkEl.textContent = newText;
+            const tranlationSpanOfLinkEl = linkEl.closest("[data-oe-translation-state]");
+            if (tranlationSpanOfLinkEl) {
+                tranlationSpanOfLinkEl.classList.add("o_dirty");
             }
-
-            const newHref = `#${currentHeadingItems[i]?.id}`;
-            if (newHref && el.parentElement.getAttribute("href") !== newHref) {
-                el.parentElement.setAttribute("href", newHref);
-            }
-        });
+        }
     }
 }
 
