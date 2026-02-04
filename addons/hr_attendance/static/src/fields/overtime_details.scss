@@ -1,0 +1,22 @@
+.popover.overtime-popover {
+    min-width: 520px;
+    max-width: 720px;
+    padding: 0 !important;
+    .popover-header {
+        padding: 10px 14px;
+    }
+    .popover-body {
+        padding: 0;
+        max-height: 60vh;
+        overflow-y: auto;
+
+        table tbody td {
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+        table.o_readonly {
+            opacity: 0.75;
+            pointer-events: none;
+        }
+    }
+}

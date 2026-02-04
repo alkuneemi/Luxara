@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="hr_attendance.OvertimeDetails">
+        <div class="o_field_tags d-inline-flex flex-wrap"
+             t-ref="overtimeDetails">
+
+            <div class="d-inline-flex text-info"
+                 tabindex="0"
+                 t-on-click="_onOpenPopover">
+
+                <t t-out="formatDurationOvertime()"/>
+
+            </div>
+        </div>
+    </t>
+
+    <t t-name="hr_attendance.OvertimeDetailsPopover">
+        <div class="overtime-popover popover">
+            <!-- Header -->
+            <div class="popover-header">
+                <div class="d-flex align-items-center">
+                    <div class="h5 mt-1 me-auto">
+                        Overtime Details
+                    </div>
+                    <button class="btn btn-sm btn-ghost-secondary"
+                            t-on-click="onClose"
+                            title="Close">
+                        <span class="fa fa-close"/>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="popover-body overflow-auto">
+                <table class="table table-sm table-hover mb-0 table-striped"
+                       t-att-class="{ 'o_readonly': true }">
+                    <thead>
+                        <tr>
+                            <th name="applied_rules">Applied Rules</th>
+                            <th name="overtime_duration">Overtime</th>
+                            <th name="overtime_pay_rate">Overtime Pay Rate</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr t-foreach="props.formattedData"
+                            t-as="line"
+                            t-key="line.id">
+
+                            <Record t-props="props.recordProps(line)"
+                                    t-slot-scope="data">
+                                <td>
+                                    <t t-foreach="line.rule_ids"
+                                       t-as="rule"
+                                       t-key="rule.id">
+                                        <BadgeTag text="rule.display_name"/>
+                                    </t>
+                                </td>
+                                <td>
+                                    <Field name="'manual_duration'"
+                                           record="data.record"
+                                           readonly="true"/>
+                                </td>
+                                <td class="text-center">
+                                    <Field name="'amount_rate'"
+                                           record="data.record"
+                                           readonly="true"/>
+                                </td>
+
+                            </Record>
+
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </t>
+</templates>
