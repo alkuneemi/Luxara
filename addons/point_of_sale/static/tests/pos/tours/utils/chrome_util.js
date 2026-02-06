@@ -237,11 +237,11 @@ export function presetTimingSlotHourExists(hour) {
 export function selectSlotDays(d) {
     return [
         {
-            trigger: `.modal .d-flex.w-100.flex-wrap.gap-2.mt-2 button:nth-of-type(${d})`,
+            trigger: `.modal .d-flex.w-100.flex-wrap.gap-2 button:nth-of-type(${d})`,
             run: "click",
         },
         {
-            trigger: `.modal .d-flex.w-100.flex-wrap.gap-2.mt-2 button:nth-of-type(${d}).btn-primary`,
+            trigger: `.modal .d-flex.w-100.flex-wrap.gap-2 button:nth-of-type(${d}).btn-primary`,
         },
     ];
 }
@@ -323,21 +323,21 @@ export function CustomerDisplayHasThisDeviceButton() {
     return {
         isActive: ["desktop"],
         content: "Check that the customer display popup has a 'This device' button",
-        trigger: ".o_dialog .modal-body .container .btn-primary:contains('This device')",
+        trigger: ".o_dialog .modal-footer .btn-primary:contains('This device')",
     };
 }
 export function CustomerDisplayHasQRButton() {
     return {
         isActive: ["desktop"],
         content: "Check that the customer display popup has a 'Display QR' button",
-        trigger: ".o_dialog .modal-body .container .btn-secondary:contains('Display QR')",
+        trigger: ".o_dialog .modal-footer .btn-secondary:contains('Display QR')",
     };
 }
 export function ClickCustomerDisplayThisDeviceButton() {
     return {
         isActive: ["desktop"],
         content: "Check that the customer display popup has a 'This device' button",
-        trigger: ".btn-primary:contains('This device')",
+        trigger: ".o_dialog .modal-footer .btn-primary:contains('This device')",
         run: "click",
     };
 }
@@ -345,7 +345,7 @@ export function ClickCustomerDisplayQRButton() {
     return {
         isActive: ["desktop"],
         content: "Check that the customer display popup has a 'Display QR' button",
-        trigger: ".btn-secondary:contains('Display QR')",
+        trigger: ".o_dialog .modal-footer .btn-secondary:contains('Display QR')",
         run: "click",
     };
 }
@@ -353,7 +353,7 @@ export function CustomerDisplayQRIsDisplayed() {
     return {
         isActive: ["desktop"],
         content: "Check that the QR code is displayed on screen",
-        trigger: ".o-overlay-item .modal .modal-body img.square",
+        trigger: ".o-overlay-item .modal .modal-body img#CustomerDisplayqrCode",
     };
 }
 export function freezeDateTime(millis) {

@@ -24,7 +24,11 @@ export class ConfirmationDialog extends Component {
             },
             optional: true,
         },
-        size: { type: String, optional: true },
+        size: {
+            type: String,
+            optional: true,
+            validate: (s) => ["sm", "md", "lg", "xl", "fs", "fullscreen"].includes(s),
+        },
         body: { type: String, optional: true },
         confirm: { type: Function, optional: true },
         confirmLabel: { type: String, optional: true },

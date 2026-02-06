@@ -12,6 +12,7 @@ export class SelectionPopup extends Component {
         getPayload: Function,
         close: Function,
         size: { type: String, optional: true },
+        bodyClass: { type: String, optional: true },
     };
     static defaultProps = {
         title: _t("Select"),

@@ -4,7 +4,7 @@
         <Dialog size="'xl'" title="this.pos.getOrder().preset_id.name">
             <div>
                 <t t-set="preset" t-value="this.pos.getOrder().preset_id"/>
-                <div class="d-flex w-100 flex-wrap gap-2 mt-2">
+                <div class="d-flex w-100 flex-wrap gap-2">
                     <button class="btn flex-grow-1 p-3"
                         t-foreach="Object.keys(preset.availabilities)" t-as="sqlDate" t-key="sqlDate"
                         t-attf-class="{{ this.state.selectedDate === sqlDate ? 'btn-primary' : 'btn-secondary' }}"
