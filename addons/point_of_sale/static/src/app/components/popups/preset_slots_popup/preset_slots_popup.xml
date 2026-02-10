@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="point_of_sale.PresetSlotsPopup">
-        <Dialog size="'xl'" title="this.pos.getOrder().preset_id.name">
+        <Dialog size="'xl'" title="this.pos.getOrder().preset_id.name" backdrop="true">
             <div>
                 <t t-set="preset" t-value="this.pos.getOrder().preset_id"/>
                 <div class="d-flex w-100 flex-wrap gap-2">

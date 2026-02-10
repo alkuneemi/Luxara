@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="point_of_sale.CashMovePopup">
-        <Dialog header="false" bodyClass="'pb-0'">
+        <Dialog header="false" bodyClass="'pb-0'" backdrop="true">
             <div class="input-amount d-flex mb-3 gap-2">
                 <div class="input-group" t-att-class="{ 'w-50' : this.ui.isSmall }">
                     <button t-on-click="() => this.onClickButton('in')" t-attf-class="input-type btn lh-lg #{this.ui.isSmall ? 'btn-md' : 'btn-lg'} #{this.state.type === 'in' ? 'highlight btn-success' : 'btn-secondary' }">

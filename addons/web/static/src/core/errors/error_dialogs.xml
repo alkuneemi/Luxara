@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <t t-name="web.WarningDialog">
-        <Dialog title="this.title" size="'sm'" contentClass="'o_error_dialog'">
+        <Dialog title="this.title" size="'sm'" contentClass="'o_error_dialog'" backdrop="this.props.backdrop">
             <div role="alert">
                 <p t-out="this.message" class="text-prewrap mb-0"/>
             </div>

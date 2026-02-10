@@ -43,7 +43,7 @@ class QrDialog extends Component {
     static props = ["close", "qrData", "parentClose"];
     static components = { Dialog };
     static template = xml`
-        <Dialog header="false" size="'sm'" bodyClass="'d-flex justify-content-center'" contentClass="'pt-4 pb-3'">
+        <Dialog header="false" size="'sm'" bodyClass="'d-flex justify-content-center'" contentClass="'pt-4 pb-3'" backdrop="true">
             <img id="CustomerDisplayqrCode" t-att-src="this.props.qrData" alt="Customer QR Code" class="img-fluid w-50"/>
             <t t-set-slot="footer">
                 <button class="btn btn-secondary mx-auto" t-on-click="this.close">Discard</button>

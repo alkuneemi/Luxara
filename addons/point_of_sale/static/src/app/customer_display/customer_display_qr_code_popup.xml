@@ -3,7 +3,7 @@
 
     <t t-name="point_of_sale.QrCodeCustomerDisplay">
         <t t-if="this.ui.isSmall">
-            <Dialog title.translate="Scan QR" size="'sm'" bodyClass="'d-flex justify-content-center'">
+            <Dialog title.translate="Scan QR" size="'sm'" bodyClass="'d-flex justify-content-center'" backdrop="true">
                 <img id="CustomerDisplayqrCode" t-att-src="this.getQrCode()" alt="Customer QR Code"
                         class="img-fluid mb-3 w-50"/>
                 <t t-set-slot="footer">
@@ -14,7 +14,7 @@
             </Dialog>
         </t>
         <t t-else="">
-            <Dialog title.translate="Open Customer Display" size="'md'">
+            <Dialog title.translate="Open Customer Display" size="'md'" backdrop="true">
                 <p class="popup-text mt-n3">You can either use it on this device or scan the QR code to display it on another device</p>
                  <t t-set-slot="footer">
                     <button t-on-click="this.openOnThisDevice" class="btn btn-primary">

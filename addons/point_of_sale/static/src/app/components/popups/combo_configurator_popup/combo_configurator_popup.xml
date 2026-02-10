@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="point_of_sale.ComboConfiguratorPopup">
-        <Dialog t-if="this.hasMultipleChoices()" title="this.title" contentClass="'combo-configurator-popup'" bodyClass="'bg-secondary'">
+        <Dialog t-if="this.hasMultipleChoices()" title="this.title" contentClass="'combo-configurator-popup'" bodyClass="'bg-secondary'" backdrop="true">
             <div t-foreach="this.props.productTemplate.combo_ids" t-as="combo" t-key="combo.id" t-att-class="'d-flex flex-column my-3' + (combo_index > 0 ? ' mt-4' : '')">
                 <div class="d-flex align-items-center mb-3">
                     <h3 class="mb-0" t-out="combo.name"></h3>

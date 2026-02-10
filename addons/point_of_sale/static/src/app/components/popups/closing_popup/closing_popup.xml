@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="point_of_sale.ClosePosPopup">
-        <Dialog contentClass="'close-pos-popup'" bodyClass="'pt-2 pb-1'">
+        <Dialog contentClass="'close-pos-popup'" bodyClass="'pt-2 pb-1'" backdrop="true">
             <t t-set-slot="header">
                 <div class="d-flex flex-grow-1 justify-content-between mb-2">
                     <h4 class="align-middle my-1 fs-2">Closing Register</h4>

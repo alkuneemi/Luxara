@@ -2,7 +2,7 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="point_of_sale.TextInputPopup">
-        <Dialog size="this.props.size" title="this.props.title" bodyClass="'py-0'">
+        <Dialog size="this.props.size" title="this.props.title" bodyClass="'py-0'" backdrop="true">
             <t t-foreach="this.props.buttons" t-as="button" t-key="button_index" id="buttons">
                 <button t-on-click="() => this.buttonClick(button)"
                     type="button"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="point_of_sale.NumberPopup">
-        <Dialog title="this.props.title" contentClass="'pos-number-popup'" bodyClass="'d-flex flex-column justify-content-center py-0'" size="'sm'">
+        <Dialog title="this.props.title" contentClass="'pos-number-popup'" bodyClass="'d-flex flex-column justify-content-center py-0'" size="'sm'" backdrop="true">
             <div t-if="this.props.subtitle" class="subtitle p-1 mx-auto" t-out="this.props.subtitle"/>
             <div class="input-symbol mb-3">
                 <div class="popup-input value active form-control form-control-lg text-center position-relative">

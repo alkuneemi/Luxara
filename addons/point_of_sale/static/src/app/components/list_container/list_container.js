@@ -13,7 +13,7 @@ class ListContainerDialog extends Component {
         close: Function,
     };
     static template = xml`
-        <Dialog title="this.title" footer="false">
+        <Dialog title="this.title" footer="false" backdrop="true">
             <div class="list-container-items d-flex p-2 flex-wrap" style="gap: 0.5rem;">
                 <t t-foreach="this.props.items" t-as="item" t-key="item_index">
                     <t t-slot="default" item="item" />

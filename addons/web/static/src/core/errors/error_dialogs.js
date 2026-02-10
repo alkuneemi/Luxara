@@ -158,6 +158,7 @@ export class WarningDialog extends Component {
     static props = {
         ...standardErrorDialogProps,
         title: { type: String, optional: true },
+        backdrop: { type: Boolean, optional: true },
     };
 
     setup() {

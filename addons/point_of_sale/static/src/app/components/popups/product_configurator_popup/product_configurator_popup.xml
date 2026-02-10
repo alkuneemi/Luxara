@@ -194,7 +194,7 @@
     </t>
 
     <t t-name="point_of_sale.ProductConfiguratorPopup">
-        <Dialog title="this.title" bodyClass="'bg-secondary'">
+        <Dialog title="this.title" bodyClass="'bg-secondary'" backdrop="true">
             <ProductInfoBanner t-if="this.showInfoBanner" productTemplate="this.props.productTemplate" product="this.product" />
             <div t-custom-ref="input-area">
                 <div t-if="this.isArchivedCombination()" class="alert alert-warning mt-3">

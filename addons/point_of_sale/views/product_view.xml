@@ -205,7 +205,7 @@
         <field name="res_model">product.template</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="context" eval="{'default_available_in_pos': True, 'create_variant_never': 'no_variant', 'dialog_size': 'medium', 'can_be_sold': True, 'default_is_storable': True}"/>
+        <field name="context" eval="{'default_available_in_pos': True, 'create_variant_never': 'no_variant', 'dialog_size': 'medium', 'can_be_sold': True, 'default_is_storable': True, 'dialog_backdrop': True}"/>
         <field name="view_id" ref="point_of_sale.product_template_view_form_normalized_pos"/>
     </record>
     <record id="product_template_action_edit_pos" model="ir.actions.act_window">
@@ -213,7 +213,7 @@
         <field name="res_model">product.template</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="context" eval="{'dialog_size': 'medium'}"/>
+        <field name="context" eval="{'dialog_size': 'medium', 'dialog_backdrop': True}"/>
         <field name="view_id" ref="point_of_sale.product_template_view_form_normalized_pos"/>
     </record>
 </odoo>

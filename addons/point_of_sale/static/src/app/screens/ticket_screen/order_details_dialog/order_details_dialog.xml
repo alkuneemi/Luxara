@@ -1,6 +1,6 @@
 <templates id="template" xml:space="preserve">
     <t t-name="point_of_sale.OrderDetailsDialog">
-        <Dialog size="'md'" title="this.title">
+        <Dialog size="'md'" title="this.title" backdrop="true">
             <t t-set="order" t-value="props.order"/>
             <div class="d-flex flex-column gap-3 rounded-2">
                 <div class="card border bg-secondary-subtle rounded-2 pb-2">

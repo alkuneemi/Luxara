@@ -613,6 +613,7 @@ export class PosStore extends WithLazyGetterTrap {
                         order.pos_reference,
                         this.env.utils.formatCurrency(order.priceIncl)
                     ),
+                backdrop: true,
             });
         }
         return true;
