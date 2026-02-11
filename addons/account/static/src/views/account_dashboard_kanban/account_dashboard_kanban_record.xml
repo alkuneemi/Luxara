@@ -11,11 +11,11 @@
             <AccountFileUploader t-if="this.allowDrop" record="this.props.record">
                 <t t-set-slot="default">
                     <UploadDropZone t-props="this.dropzoneProps"/>
-                    <t t-call="{{ this.templates[this.constructor.KANBAN_CARD_ATTRIBUTE] }}"
+                    <t t-call="{{ this.templates[this.constructor.CARD_ATTRIBUTE] }}"
                         t-call-context="this.renderingContext"/>
                 </t>
             </AccountFileUploader>
-            <t t-else="" t-call="{{ this.templates[this.constructor.KANBAN_CARD_ATTRIBUTE] }}"
+            <t t-else="" t-call="{{ this.templates[this.constructor.CARD_ATTRIBUTE] }}"
                 t-call-context="this.renderingContext"/>
             <t t-call="{{ this.constructor.menuTemplate }}"/>
         </article>

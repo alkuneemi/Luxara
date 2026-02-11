@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="web.KanbanCoverImageDialog">
+    <t t-name="web.CardCoverImageDialog">
         <Dialog title.translate="Set a Cover Image" size="'md'">
-            <div t-if="this.attachments.length" class="o_kanban_cover_container grid gap-3 gap-lg-2">
+            <div t-if="this.attachments.length" class="o_card_cover_container grid gap-3 gap-lg-2">
                 <t t-foreach="this.attachments" t-as="attachment" t-key="attachment.id">
-                    <div class="o_kanban_cover_image position-relative overflow-hidden g-col-6 g-col-md-4 g-col-lg-3 border bg-white w-auto cursor-pointer rounded ratio ratio-1x1"
+                    <div class="o_card_cover_image position-relative overflow-hidden g-col-6 g-col-md-4 g-col-lg-3 border bg-white w-auto cursor-pointer rounded ratio ratio-1x1"
                          t-att-class="{
                             'o_selected border-2': this.state.selectedAttachmentId === attachment.id
                          }"

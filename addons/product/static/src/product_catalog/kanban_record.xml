@@ -10,7 +10,7 @@
             t-custom-ref="root"
         >
             <div class="d-flex flex-column h-100">
-                <t t-call="{{ this.templates[this.constructor.KANBAN_CARD_ATTRIBUTE] }}"
+                <t t-call="{{ this.templates[this.constructor.CARD_ATTRIBUTE] }}"
                    t-call-context="this.renderingContext"/>
                 <t t-component="this.orderLineComponent" productId="this.props.record.resId" t-props="this.productCatalogData"/>
             </div>

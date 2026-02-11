@@ -2,8 +2,8 @@ import { useLayoutEffect, useRef } from "@web/owl2/utils";
 import { Component } from "@odoo/owl";
 import { useDropdownCloser } from "@web/core/dropdown/dropdown_hooks";
 
-export class KanbanDropdownMenuWrapper extends Component {
-    static template = "web.KanbanDropdownMenuWrapper";
+export class CardDropdownMenuWrapper extends Component {
+    static template = "web.CardDropdownMenuWrapper";
     static props = {
         slots: Object,
     };

@@ -39,11 +39,10 @@
                             </t>
                             <t t-foreach="group.list.records" t-as="record" t-key="record.id">
                                 <KanbanRecord
-                                    archInfo="this.props.archInfo"
+                                    archInfo="this.props.archInfo.cardArchInfo"
                                     Compiler="this.props.Compiler"
                                     canResequence="!isGroupProcessing and !this.isProcessing(record.id) and this.canResequenceRecords"
                                     forceGlobalClick="this.props.forceGlobalClick"
-                                    group="group"
                                     groupByField="this.props.list.groupByField"
                                     getSelection.bind="this.getSelection"
                                     toggleSelection.bind="this.toggleSelection"
@@ -71,7 +70,7 @@
                 </t>
                 <t t-else="">
                     <KanbanRecord
-                        archInfo="this.props.archInfo"
+                        archInfo="this.props.archInfo.cardArchInfo"
                         Compiler="this.props.Compiler"
                         canResequence="!this.isProcessing(groupOrRecord.record.id) and this.canResequenceRecords"
                         forceGlobalClick="this.props.forceGlobalClick"
