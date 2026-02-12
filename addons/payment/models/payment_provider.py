@@ -19,7 +19,7 @@ _logger = get_payment_logger(__name__, sensitive_keys=SENSITIVE_KEYS)
 class PaymentProvider(models.Model):
     _name = "payment.provider"
     _description = "Payment Provider"
-    _order = "module_state, state desc, sequence, name"
+    _order = "module_state, state desc,  is_published desc, sequence, name"
     _check_company_auto = True
     _check_company_domain = models.check_company_domain_parent_of
 
@@ -40,7 +40,7 @@ class PaymentProvider(models.Model):
         string="State",
         help="In test mode, a fake payment is processed through a test payment interface.\n"
         "This mode is advised when setting up the provider.",
-        selection=[("disabled", "Disabled"), ("enabled", "Enabled"), ("test", "Test Mode")],
+        selection=[("disabled", "Disabled"), ("enabled", "Enabled"), ("test", "Test")],
         default="disabled",
         required=True,
         copy=False,
@@ -63,7 +63,9 @@ class PaymentProvider(models.Model):
         help="The main currency of the company, used to display monetary fields.",
     )
     payment_method_ids = fields.Many2many(
-        string="Supported Payment Methods", comodel_name="payment.method"
+        string="Supported Payment Methods",
+        comodel_name="payment.method",
+        context={'active_test': False},
     )
     allow_tokenization = fields.Boolean(
         string="Allow Saving Payment Methods",
@@ -203,6 +205,22 @@ class PaymentProvider(models.Model):
         compute="_compute_feature_support_fields",
     )
 
+    # Form view fields
+    payment_transaction_ids = fields.One2many(
+        string="Payment Transactions",
+        comodel_name='payment.transaction',
+        inverse_name='provider_id',
+    )
+    transaction_count = fields.Integer(compute='_compute_transaction_count')
+    txs_amount = fields.Monetary(
+        compute='_compute_transaction_amount', currency_field='main_currency_id'
+    )
+
+    payment_token_ids = fields.One2many(
+        string='Payment Tokens', comodel_name='payment.token', inverse_name='provider_id'
+    )
+    token_count = fields.Integer(compute='_compute_token_count')
+
     # Kanban view fields
     image_128 = fields.Image(string="Image", max_width=128, max_height=128)
     color = fields.Integer(
@@ -234,6 +252,26 @@ class PaymentProvider(models.Model):
                 provider.available_currency_ids = supported_currencies
             else:
                 provider.available_currency_ids = None
+
+    @api.depends('payment_transaction_ids')
+    def _compute_transaction_count(self):
+        for provider in self:
+            provider.transaction_count = (
+                provider.env['payment.transaction'].search_count([
+                    ('provider_id', '=', provider.id)
+                ])
+                or 0
+            )
+
+    @api.depends('payment_transaction_ids')
+    def _compute_transaction_amount(self):
+        # take currency into account
+        domain = [('provider_id', '=', self.id), ('state', '=', 'done')]
+        self.txs_amount = sum(self.env['payment.transaction'].search(domain).mapped('amount'))
+
+    @api.depends('payment_token_ids')
+    def _compute_token_count(self):
+        self.token_count = len(self.payment_transaction_ids)
 
     def _get_supported_currencies(self):
         """Return the supported currencies for the payment provider.
@@ -566,6 +604,30 @@ class PaymentProvider(models.Model):
         if self.state == "disabled" and not self.is_published:
             raise UserError(_("You cannot publish a disabled provider."))
         self.is_published = not self.is_published
+
+    def action_view_payment_transactions(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Payment Transactions"),
+            'res_model': 'payment.transaction',
+            'view_mode': 'list,kanban,form',
+            'domain': [
+                ('id', 'in', self.with_context(active_test=False).payment_transaction_ids.ids)
+            ],
+            'context': {'active_test': False, 'create': False},
+        }
+
+    def action_view_payment_tokens(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Payment Tokens"),
+            'res_model': 'payment.token',
+            'view_mode': 'list,kanban,form',
+            'domain': [('id', 'in', self.with_context(active_test=False).payment_token_ids.ids)],
+            'context': {'active_test': False, 'create': False},
+        }
 
     def action_view_payment_methods(self):
         self.ensure_one()

@@ -44,10 +44,12 @@
                         name="razorpay_key_id"
                         string="Key Id"
                         invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
+                        readonly="razorpay_account_id"
                     />
                     <field
                         name="razorpay_key_secret"
                         string="Key Secret"
+                        readonly="razorpay_account_id"
                         password="True"
                         invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
                     />

@@ -38,6 +38,8 @@
         "web.assets_backend": [
             "payment/static/src/scss/payment_provider.scss",
             "payment/static/src/js/payment_wizard_copy_clipboard_field.js",
+            "payment/static/src/components/**/*",
+            "payment/static/src/views/**/*",
         ],
         "web.assets_unit_tests_setup": [
             "payment/static/src/interactions/payment_button.js",

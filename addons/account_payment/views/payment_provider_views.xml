@@ -17,7 +17,7 @@
                     required="state != 'disabled' and code not in ['none', 'custom']"/>
                 <field name="support_refund" groups="base.group_no_one"/>
             </group>
-            <field name="available_country_ids" position="after">
+            <field name="minimum_amount" position="before">
                 <field
                     name="available_pricelist_ids"
                     widget="many2many_tags"
@@ -25,6 +25,18 @@
                     options="{'no_create': True}"
                 />
             </field>
+        </field>
+    </record>
+
+    <record id="payment_provider_list" model="ir.ui.view">
+        <field name="name">payment.provider.list.account</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_list"/>
+        <field name="arch" type="xml">
+            <list position="inside">
+                <field name="available_pricelist_ids" widget="many2many_tags" optional="hide"/>
+                <field name="journal_id" optional="hide"/>
+            </list>
         </field>
     </record>
 

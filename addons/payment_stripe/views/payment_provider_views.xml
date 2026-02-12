@@ -6,18 +6,21 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <group name="provider_credentials" position="before">
-                <div
-                     name="stripe_onboarding_group"
-                     invisible="context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key or stripe_publishable_key)">
-                    <button string="Connect Stripe"
+            <sheet position="before">
+                <header invisible="context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key or stripe_publishable_key)">
+                    <div
+                     name="stripe_onboarding_group">
+                        <button
+                            string="Connect"
                             type="object"
                             name="action_start_onboarding"
                             class="btn-primary"
                             colspan="2"
-                            invisible="state == 'enabled'"/>
-                </div>
-            </group>
+                            invisible="state == 'enabled'"
+                        />
+                    </div>
+                </header>
+            </sheet>
             <group name="provider_credentials" position="inside">
                 <group invisible="code != 'stripe'" name="stripe_credentials">
                     <field name="stripe_publishable_key" required="code == 'stripe' and state != 'disabled'"/>
