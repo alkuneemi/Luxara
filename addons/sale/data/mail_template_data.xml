@@ -415,8 +415,20 @@
         <t t-else="">
             has been confirmed.
             <t t-if="object.currency_id.compare_amounts(object.amount_paid, object.amount_total) &lt; 0">
+                <!-- For Pay on Delivery, if the latest transaction is not pending, no additional payment is expected. -->
+                <t
+                    t-if="
+                        hasattr(transaction_sudo, '_filtered_paid_on_delivery')
+                        and transaction_sudo._filtered_paid_on_delivery()
+                    "
+                    t-set="remaining_balance"
+                    t-value="0.0"
+
+                />
+                <t t-else="" t-set="remaining_balance" t-value="object.amount_total - object.amount_paid"/>
+
                 <br/>
-                <span style="font-weight:bold;" t-out="format_amount(object.amount_total - object.amount_paid, object.currency_id) or ''">$ 10.00</span>
+                <span style="font-weight:bold;" t-out="format_amount(remaining_balance, object.currency_id) or ''">$ 10.00</span>
                 remains to be paid.
             </t>
         </t>

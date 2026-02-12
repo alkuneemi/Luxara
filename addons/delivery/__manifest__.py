@@ -28,6 +28,7 @@ The system is able to add and compute the shipping line.
         "views/sale_order_views.xml",
         "wizard/res_config_settings_views.xml",
         "wizard/choose_delivery_carrier_views.xml",
+        "wizard/pay_on_delivery_views.xml",
     ],
     "demo": ["data/delivery_demo.xml"],
     "assets": {"web.assets_frontend": ["delivery/static/src/**/*"]},

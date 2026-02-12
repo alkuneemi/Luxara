@@ -66,6 +66,13 @@ class SaleOrder(models.Model):
             'domain': [('id', 'in', linked_orders.ids)],
         }
 
+    @api.depends('order_line.pos_order_line_ids')
+    def _compute_amount_paid(self):
+        super()._compute_amount_paid()
+        for sale_order in self:
+            pos_orders = sale_order.order_line.pos_order_line_ids.order_id
+            sale_order.amount_paid += sum(pos_orders.mapped('amount_paid'))
+
     @api.depends('transaction_ids.state', 'transaction_ids.amount', 'order_line', 'amount_total', 'order_line.invoice_lines.parent_state', 'order_line.invoice_lines.price_total', 'order_line.pos_order_line_ids')
     def _compute_amount_unpaid(self):
         for sale_order in self:
