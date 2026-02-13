@@ -353,18 +353,48 @@ class Users(models.Model):
                 elif record in allowed_records:
                     activities_by_model_name[model_name] += activities
         model_ids = [self.env["ir.model"]._get_id(name) for name in activities_by_model_name]
+
+        def _get_studio_app_icon(Model):
+            default = {
+                "icon": "/web/static/img/default_icon_app.png",
+                "is_custom_image": True,
+            }
+            action_ids = self.env["ir.actions.act_window"]._search([("res_model", "=", Model._name)])
+            if not action_ids:
+                return default
+            menu = self.env["ir.ui.menu"].search([("action", "in", [f"ir.actions.act_window,{aid}" for aid in action_ids])], limit=1)
+            if not menu:
+                return default
+            root = self.env["ir.ui.menu"].browse(int(menu.parent_path.split('/')[0])) if menu.parent_path else menu
+            if root.web_icon_data:
+                return {
+                    "icon": f"/web/image/ir.ui.menu/{root.id}/web_icon_data",
+                    "is_custom_image": True,
+                }
+            if root.web_icon:
+                icon_class, color, bg = root.web_icon.split(",")
+                return {
+                    "icon": {"class": icon_class, "color": color, "bg": bg},
+                    "is_custom_image": False,
+                }
+            return default
+
         user_activities = {}
         for model_name, activities in activities_by_model_name.items():
             Model = self.env[model_name]
             module = Model._original_module
             icon = module and modules.module.get_module_icon(module)
             model = self.env["ir.model"]._get(model_name).with_prefetch(model_ids)
+            is_custom_model = Model._custom
+            icon_data = is_custom_model and _get_studio_app_icon(Model)
             user_activities[model_name] = {
                 "id": model.id,
                 "name": model.name,
                 "model": model_name,
                 "type": "activity",
-                "icon": icon,
+                "is_custom_model": is_custom_model,
+                "icon": icon_data["icon"] if is_custom_model else icon,
+                "is_custom_image": icon_data["is_custom_image"] if is_custom_model else True,
                 "total_count": 0,
                 "today_count": 0,
                 "overdue_count": 0,
