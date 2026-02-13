@@ -232,16 +232,24 @@ class PurchaseOrderLine(models.Model):
         move_dests = self.move_dest_ids or self.move_ids.move_dest_ids
         move_dests = move_dests.filtered(lambda m: m.state != 'cancel' and not m._is_purchase_return())
 
+        qty_to_push = self.product_qty - qty
+        move_dests_initial_demand = self._get_move_dests_initial_demand(move_dests)
         if not move_dests:
             qty_to_attach = 0
-            qty_to_push = self.product_qty - qty
         else:
-            move_dests_initial_demand = self._get_move_dests_initial_demand(move_dests)
             qty_to_attach = move_dests_initial_demand - qty
-            qty_to_push = self.product_qty - move_dests_initial_demand
 
+<<<<<<< 5802c934d3edded72fb2f96c1829bb868fd50e42
         if float_compare(qty_to_attach, 0.0, precision_rounding=self.product_uom_id.rounding) > 0:
             product_uom_qty, product_uom = self.product_uom_id._adjust_uom_quantities(qty_to_attach, self.product_id.uom_id)
+||||||| d73e5662a0af7c549008661f743ba5d51f765339
+        if float_compare(qty_to_attach, 0.0, precision_rounding=self.product_uom.rounding) > 0:
+            product_uom_qty, product_uom = self.product_uom._adjust_uom_quantities(qty_to_attach, self.product_id.uom_id)
+=======
+        if float_compare(qty_to_attach, 0.0, precision_rounding=self.product_uom.rounding) > 0:
+            qty_to_push = self.product_qty - move_dests_initial_demand
+            product_uom_qty, product_uom = self.product_uom._adjust_uom_quantities(qty_to_attach, self.product_id.uom_id)
+>>>>>>> 16eef4c006cff20438649355d3fce317c2d3624a
             res.append(self._prepare_stock_move_vals(picking, price_unit, product_uom_qty, product_uom))
         if not float_is_zero(qty_to_push, precision_rounding=self.product_uom_id.rounding):
             product_uom_qty, product_uom = self.product_uom_id._adjust_uom_quantities(qty_to_push, self.product_id.uom_id)
