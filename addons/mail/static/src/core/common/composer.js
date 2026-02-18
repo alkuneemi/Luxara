@@ -490,6 +490,15 @@ export class Composer extends Component {
         );
     }
 
+    async unlinkAttachment(attachment) {
+        if (this.message && attachment.in(this.message.attachment_ids)) {
+            this.props.composer.savedAttachmentsToRemove.add(attachment);
+            this.props.composer.attachments.delete(attachment);
+            return;
+        }
+        await this.attachmentUploader.unlink(attachment);
+    }
+
     get hasSuggestions() {
         return Boolean(this.suggestion?.state.items);
     }
@@ -768,10 +777,14 @@ export class Composer extends Component {
 
     get canProcessMessage() {
         return (
-            !isHtmlEmpty(this.props.composer.composerHtml) ||
-            this.props.composer.attachments.length > 0 ||
-            (this.message && this.message.attachment_ids.length > 0)
+            !isHtmlEmpty(this.props.composer.composerHtml) || this.props.composer.attachments.length > 0
         );
+    }
+
+    async removeEditedMessageAttachments() {
+        for (const attachment of this.props.composer.savedAttachmentsToRemove) {
+            await attachment.remove();
+        }
     }
 
     async sendMessage() {
@@ -882,14 +895,18 @@ export class Composer extends Component {
 
     async editMessage() {
         const composer = toRaw(this.props.composer);
+        const unsavedAttachments = this.props.composer.attachments.filter(
+            (attachment) => !attachment.message || attachment.message.notEq(this.message)
+        );
         if (!this.askDeleteFromEdit) {
-            await this.processMessage(async (value) =>
-                composer.message.edit(value, composer.attachments, {
+            await this.processMessage(async (value) => {
+                await this.removeEditedMessageAttachments();
+                await composer.message.edit(value, unsavedAttachments, {
                     mentionedChannels: composer.mentionedChannels,
                     mentionedPartners: composer.mentionedPartners,
                     mentionedRoles: composer.mentionedRoles,
-                })
-            );
+                });
+            });
         } else {
             composer.message.showDeleteConfirm(this);
         }
@@ -898,7 +915,7 @@ export class Composer extends Component {
 
     get askDeleteFromEdit() {
         const composer = toRaw(this.props.composer);
-        return !composer.composerText && composer.message.attachment_ids.length === 0;
+        return !composer.composerText && composer.attachments.length === 0;
     }
 
     onClickInsertCannedResponse(ev) {
