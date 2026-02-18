@@ -41,6 +41,9 @@ html:has(.o_layout) {
             border: none;
             .o_layout {
                 overflow: visible;
+                * {
+                    box-sizing: border-box !important;
+                }
             }
         }
         .o_mass_mailing_value {
@@ -49,7 +52,10 @@ html:has(.o_layout) {
         .o_mass_mailing_value ~ .o_loading_screen {
             display: none !important;
         }
+        font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
         overflow-wrap: break-word;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .editor_enable .o_mail_wrapper_td.oe_empty:empty {

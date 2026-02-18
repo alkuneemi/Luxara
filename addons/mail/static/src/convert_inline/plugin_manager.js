@@ -72,6 +72,7 @@ export class PluginManager {
             trigger: this.trigger.bind(this),
             triggerAsync: this.triggerAsync.bind(this),
             delegateTo: this.delegateTo.bind(this),
+            processRules: this.processRules.bind(this),
             processThrough: this.processThrough.bind(this),
             checkPredicates: this.checkPredicates.bind(this),
         };
@@ -102,6 +103,7 @@ export class PluginManager {
             this.pluginsMap.set(P.id, P);
             const plugin = new P(this.getPluginContext(P.dependencies));
             plugin[this.pluginPropertyName] = this;
+            plugin.assignShared();
             this.plugins.push(plugin);
             const exports = {};
             for (const h of P.shared) {
@@ -244,6 +246,17 @@ export class PluginManager {
      */
     delegateTo(resourceId, ...args) {
         return this.getResource(resourceId).some((fn) => fn(...args));
+    }
+
+    /**
+     * Special case of processThrough for Rules, assign the pluginId as
+     * the origin of every created Rule, for easier debugging
+     */
+    processRules(resourceId, rules) {
+        this.getResource(resourceId).forEach(([processor, pluginId]) => {
+            processor(rules.forPlugin(pluginId));
+        });
+        return rules;
     }
 
     /**

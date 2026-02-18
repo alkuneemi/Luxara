@@ -120,13 +120,6 @@
 
             ('include', 'mass_mailing.assets_mail_themes'),
             'mass_mailing/static/src/iframe_assets/**/*',
-
-            # TODO EGGMAIL: extract what is needed here from the bundle, but remove
-            # this bundle inclusion as it should only concern the sent email,
-            # not its appearance in the browser (except if this is a way to
-            # copy microsoft-specific style rules inline, to check if this does
-            # not cause some style parser to crash and interrupt reading).
-            ('include', 'mass_mailing.assets_email_html_conversion'),
         ],
         'mass_mailing.assets_email_html_conversion': [
             # style sheet added in _prepare_mail_values in the

@@ -1,30 +1,18 @@
 import { Plugin } from "../plugin";
-import { childNodes } from "@html_editor/utils/dom_traversal";
 import { registry } from "@web/core/registry";
-import { uuid } from "@web/core/utils/strings";
-
-/**
- * @typedef { Object } NodeInfo
- * @property { Node } referenceNode node from this.config.reference
- * @property { Comment } vNode comment node to represent the referenceNode in
- *           another NodeInfo fragment (used to reference childNode position for
- *           the final rendering)
- * @property { DocumentFragment } fragment fragment containing the final
- *           representation of the reference node, and other vNode
- *
- * TODO EGGMAIL better documentation for:
- * renderNode: clone of a vNode during one rendering phase (temporary, disposable)
- * renderFragment: clone of a fragment during one rendering phase (temporary, disposable)
- * templateNode: clone of a referenceNode in its nodeInfo.fragment
- *   (permanent but it may be replaced by something else in the fragment)
- */
+import { NodeInfo } from "./vdom_models";
 
 export class VDomPlugin extends Plugin {
-    static id = "vDomPlugin";
-    static shared = ["getNodeInfo", "renderEmailHtml"];
+    static id = "vDom";
+    static shared = [
+        "createReferenceTreeWalker",
+        "createTemplateNode",
+        "getNodeInfo",
+        "processChildNodes",
+        "renderEmailHtml",
+    ];
     resources = {
-        render_email_html_handlers: this.renderEmailHtml.bind(this),
-        template_node_created_handlers: this.emptyDesignElementFragment.bind(this),
+        on_render_email_template_handlers: this.renderEmailHtml.bind(this),
     };
 
     setup() {
@@ -33,37 +21,53 @@ export class VDomPlugin extends Plugin {
         this.renderIdToInfo = new Map();
     }
 
+    processChildNodes(node, callback = () => {}) {
+        const nodes = [];
+        let child = node.firstChild;
+        while (child) {
+            const currentChild = child;
+            child = child.nextSibling;
+            if (![Node.ELEMENT_NODE, Node.TEXT_NODE].includes(currentChild.nodeType)) {
+                continue;
+            }
+            if (callback(currentChild) !== false) {
+                nodes.push(currentChild);
+            }
+        }
+        return nodes;
+    }
+
     lazyNodeInfoProxyHandler(referenceNode) {
         return {
-            set: () => false,
-            deleteProperty: () => false,
             get: (target, key, receiver) => {
                 if (key === "fragment" && !target.fragment) {
-                    target.fragment = this.config.referenceDocument.createDocumentFragment();
-                    const templateNode =
-                        referenceNode === this.config.reference
-                            ? this.config.referenceDocument.createDocumentFragment()
-                            : referenceNode.cloneNode();
-                    const childNodeList = childNodes(referenceNode);
-                    for (const child of childNodeList) {
-                        const nodeInfo = this.getNodeInfo(child);
-                        templateNode.appendChild(nodeInfo.vNode);
-                    }
                     // Ensure that during the final rendering, if no plugin
                     // ever modified the fragment associated with a reference
                     // node, it contains its clone and references to its
                     // childNodes.
+                    target.fragment = this.config.referenceDocument.createDocumentFragment();
+                    const templateNode = this.createTemplateNode(target);
+                    const childNodeList = this.processChildNodes(referenceNode);
+                    for (const child of childNodeList) {
+                        const nodeInfo = this.getNodeInfo(child);
+                        if (!nodeInfo.vNode.parentNode && !nodeInfo.isDiscarded) {
+                            templateNode.appendChild(nodeInfo.vNode);
+                        }
+                    }
                     target.fragment.appendChild(templateNode);
-                    // Allow other plugins to process the template node
-                    // (e.g. add inline style)
-                    this.trigger("template_node_created_handlers", {
-                        nodeInfo: receiver,
-                        templateNode,
-                    });
                 }
                 return Reflect.get(target, key, receiver);
             },
         };
+    }
+
+    createTemplateNode(nodeInfo) {
+        const { referenceNode } = nodeInfo;
+        const templateNode =
+            referenceNode === this.config.reference
+                ? this.config.referenceDocument.createDocumentFragment()
+                : referenceNode.cloneNode();
+        return this.processThrough("template_node_processors", templateNode, nodeInfo);
     }
 
     /**
@@ -74,17 +78,15 @@ export class VDomPlugin extends Plugin {
      */
     getNodeInfo(node) {
         let nodeInfo;
-        if (this.config.reference.contains(node)) {
+        if (this.config.referenceDocument.contains(node)) {
             nodeInfo = this.referenceToInfo.get(node);
             if (!nodeInfo) {
                 const vNode = this.config.referenceDocument.createComment("");
                 nodeInfo = new Proxy(
-                    {
-                        renderId: uuid(),
+                    new NodeInfo({
                         referenceNode: node,
                         vNode,
-                        fragment: undefined,
-                    },
+                    }),
                     this.lazyNodeInfoProxyHandler(node)
                 );
                 this.vNodeToInfo.set(vNode, nodeInfo);
@@ -113,8 +115,11 @@ export class VDomPlugin extends Plugin {
         const { withRenderId } = options;
         const fragment = nodeInfo.fragment;
         const renderFragment = fragment.cloneNode(true);
-        const vWalker = fragment.ownerDocument.createTreeWalker(fragment, NodeFilter.SHOW_COMMENT);
-        const renderWalker = renderFragment.ownerDocument.createTreeWalker(
+        const vWalker = this.config.referenceDocument.createTreeWalker(
+            fragment,
+            NodeFilter.SHOW_COMMENT
+        );
+        const renderWalker = this.config.referenceDocument.createTreeWalker(
             renderFragment,
             NodeFilter.SHOW_COMMENT
         );
@@ -131,6 +136,14 @@ export class VDomPlugin extends Plugin {
         return renderFragment;
     }
 
+    createReferenceTreeWalker(filter = () => NodeFilter.FILTER_ACCEPT) {
+        return this.config.referenceDocument.createTreeWalker(
+            this.config.reference,
+            NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+            filter
+        );
+    }
+
     renderReferenceFragment(nodeInfo, options = {}) {
         const renderNode = this.vNodeToRenderNode.get(nodeInfo.vNode);
         if (!renderNode) {
@@ -138,17 +151,33 @@ export class VDomPlugin extends Plugin {
             // has no position in the current rendering.
             return;
         }
+        if (nodeInfo.isDiscarded) {
+            renderNode.remove();
+            return;
+        }
         const renderFragment = this.cloneReferenceFragment(nodeInfo, options);
         renderNode.replaceWith(renderFragment);
-        for (const descendant of childNodes(nodeInfo.referenceNode)) {
-            // TODO EGGMAIL: rendering is currently based on `referenceNode`
-            // it should be changed to use the "pattern model" -> create a
-            // tree of "patterns" and render their fragments
+        for (const descendant of this.processChildNodes(nodeInfo.referenceNode)) {
             const descendantInfo = this.getNodeInfo(descendant);
             this.renderReferenceFragment(descendantInfo, options);
         }
     }
 
+    ensureTemplateContent(template) {
+        if (!template.content.firstChild) {
+            const paragraph = this.config.referenceDocument.createElement("P");
+            const br = this.config.referenceDocument.createElement("BR");
+            paragraph.append(br);
+            template.content.appendChild(paragraph);
+        }
+    }
+
+    /**
+     * // TODO EGGMAIL: docstring
+     * @param {*} template
+     * @param {*} [options]
+     * @param {*} [options.withRenderId]
+     */
     renderEmailHtml(template, options = {}) {
         // TODO EGGMAIL: give the `reference` as an argument, to be able to
         // start from any point in the rendering tree (render partial tree).
@@ -161,21 +190,8 @@ export class VDomPlugin extends Plugin {
         template.content.appendChild(renderNode);
         this.renderReferenceFragment(referenceInfo, options);
         this.vNodeToRenderNode = undefined;
-    }
-
-    /**
-     The `<style id="design-element">` should not be sent by email, as all
-     relevant style is inlined, and the variables it contains are not used
-     in the final rendering. Its fragment is therefore emptied.
-     */
-    emptyDesignElementFragment({ nodeInfo, templateNode }) {
-        if (
-            templateNode.nodeType === Node.ELEMENT_NODE &&
-            templateNode.matches("#design-element")
-        ) {
-            nodeInfo.fragment.replaceChildren();
-        }
+        this.ensureTemplateContent(template);
     }
 }
 
-registry.category("mail-html-conversion-plugins").add(VDomPlugin.id, VDomPlugin);
+registry.category("mail-html-conversion-core-plugins").add(VDomPlugin.id, VDomPlugin);

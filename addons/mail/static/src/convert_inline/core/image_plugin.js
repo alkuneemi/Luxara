@@ -2,23 +2,13 @@ import { registry } from "@web/core/registry";
 import { Plugin } from "../plugin";
 import { getImageSrc } from "@html_editor/utils/image";
 import { loadImage } from "@html_editor/utils/image_processing";
-import { useShorthands } from "@mail/convert_inline/plugins/hooks";
 
-export class EmailImagePlugin extends Plugin {
+export class ImagePlugin extends Plugin {
     static id = "image";
-    static dependencies = ["computeStyle"];
+    static dependencies = ["measurementSnapshot"];
     resources = {
-        load_reference_content_handlers: () => this.loadImages(this.config.reference),
+        on_load_reference_content_handlers: () => this.loadImages(this.config.reference),
     };
-
-    setup() {
-        useShorthands(this, "computeStyle", [
-            "getComputedStyle",
-            "getHeight",
-            "getStylePropertyValue",
-            "getWidth",
-        ]);
-    }
 
     /**
      * Return promises for every image to control when they have their final
@@ -31,7 +21,7 @@ export class EmailImagePlugin extends Plugin {
         for (const img of root.querySelectorAll("img")) {
             const src = getImageSrc(img);
             if (src) {
-                promises.push(loadImage(src));
+                promises.push(loadImage(src, img));
             }
         }
         return Promise.allSettled(promises);
@@ -44,4 +34,4 @@ export class EmailImagePlugin extends Plugin {
     // TODO EGGMAIL: fontToImg
 }
 
-registry.category("mail-html-conversion-plugins").add(EmailImagePlugin.id, EmailImagePlugin);
+registry.category("mail-html-conversion-core-plugins").add(ImagePlugin.id, ImagePlugin);

@@ -51,11 +51,13 @@ export class MassMailingHtmlField extends HtmlField {
         });
         super.setup();
         this.converter = useEmailHtmlConverter({
-            // TODO EGGMAIL: evaluate email_html_conversion bundle after refactoring
-            bundles: [
-                "mass_mailing.assets_iframe_style",
-                "mass_mailing.assets_email_html_conversion",
+            Plugins: [
+                ...registry.category("mail-html-conversion-core-plugins").getAll(),
+                ...registry.category("mail-html-conversion-main-plugins").getAll(),
+                ...registry.category("mass-mailing-html-conversion-plugins").getAll(),
             ],
+            bundles: ["mass_mailing.assets_iframe_style"],
+            services: this.env.services,
         });
         this.themeService = useService("mass_mailing.themes");
         this.ui = useService("ui");
@@ -399,7 +401,7 @@ export class MassMailingHtmlField extends HtmlField {
      * @override
      */
     savePendingImages(content) {
-        return this.editor.shared["mail.ImageFormatPlugin"].sanitizeImages(content);
+        return this.editor.shared["imageEmailFormat"].sanitizeImages(content);
     }
 
     /**
@@ -455,9 +457,7 @@ export class MassMailingHtmlField extends HtmlField {
         const valueFragment = parseHTML(document, value);
         let inlineValue;
         try {
-            inlineValue = await this.converter.convertToEmailHtml(valueFragment, {
-                preProcessCallbacks: [this.preprocessFilterDomains.bind(this)],
-            });
+            inlineValue = await this.converter.convertToEmailHtml(valueFragment);
         } catch (error) {
             if (status(this) !== "destroyed") {
                 throw error;
@@ -478,11 +478,10 @@ export class MassMailingHtmlField extends HtmlField {
         );
         record.model.bus.trigger("FIELD_IS_DIRTY", this.isDirty);
     }
+
     /**
-     * Processes the data-filter-domain to be converted to a t-if that will be interpreted on send
-     * by QWeb.
-     * TODO EGGMAIL: move in a convert_inline plugin when they are implemented.
-     * @param {HTMLElement} htmlEl
+     * TODO EGGMAIL: remove in dev branch
+     * @deprecated
      */
     preprocessFilterDomains(htmlEl) {
         htmlEl.querySelectorAll("[data-filter-domain]").forEach((el) => {

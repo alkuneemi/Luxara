@@ -1,6 +1,10 @@
 /**
- * Selector level 4 parser for the purposes of specificity computation.
+ * CSS parsers:
+ * @see parseSelector selector level 4 parser for the purpose of specificity
+ *      computation and selector parts analysis
  * @see https://www.w3.org/TR/selectors-4/
+ * @see parseCssText cssText parser for the purpose of listing defined
+ *      properties in a CSSStyleRule from a CSSStyleSheet
  */
 
 const R_CHAR = /[\w-]/;
@@ -13,8 +17,9 @@ const COMPUTED_PSEUDO_CLASSES = COMPUTED_ADD_PSEUDO_CLASSES.union(COMPUTED_REPLA
 const ZEROED_PSEUDO_CLASSES = new Set(["where"]);
 const LEGACY_PSEUDO_ELEMENTS = new Set(["before", "after", "first-line", "first-letter"]);
 
-const selectorListCache = new Map();
-const selectorSpecificityCache = new Map();
+const selectorListCache = new Map(); // selector string to selectorList instance
+const selectorSpecificityCache = new Map(); // selector string to specificity
+const propertyListCache = new Map(); // cssText string to propertyList instance
 
 /**
  * @abstract
@@ -27,18 +32,53 @@ class Selector extends Array {
         return computeSpecificity(this.selector);
     }
     toString() {
-        return this.join("");
+        if (!this._selector) {
+            this._selector = this.join("");
+        }
+        return this._selector;
     }
 }
 
 class SelectorList extends Selector {
+    get simpleSelectorList() {
+        if (!this._simpleSelectorList) {
+            this._simpleSelectorList = [];
+            for (const complexSelector of this) {
+                this._simpleSelectorList.push(...complexSelector.simpleSelectorList);
+            }
+        }
+        return this._simpleSelectorList;
+    }
     toString() {
-        return this.join(",");
+        if (!this._selector) {
+            this._selector = this.join(",");
+        }
+        return this._selector;
     }
 }
 
-class ComplexSelector extends Selector {}
-class CompoundSelector extends Selector {}
+class ComplexSelector extends Selector {
+    get simpleSelectorList() {
+        if (!this._simpleSelectorList) {
+            this._simpleSelectorList = [];
+            for (const compoundSelector of this.filter((s) => s instanceof CompoundSelector)) {
+                this._simpleSelectorList.push(...compoundSelector.simpleSelectorList);
+            }
+        }
+        return this._simpleSelectorList;
+    }
+}
+class CompoundSelector extends Selector {
+    get simpleSelectorList() {
+        if (!this._simpleSelectorList) {
+            this._simpleSelectorList = [];
+            for (const simpleSelector of this) {
+                this._simpleSelectorList.push(simpleSelector, ...simpleSelector.simpleSelectorList);
+            }
+        }
+        return this._simpleSelectorList;
+    }
+}
 
 class Combinator {
     constructor({ combinator } = {}) {
@@ -63,6 +103,7 @@ class SimpleSelector {
         this.argument = argument;
         this._argumentPrefix = undefined;
         this._argumentSelector = undefined;
+        this._selector = undefined;
         this._specificity = specificity;
     }
     get selector() {
@@ -94,6 +135,12 @@ class SimpleSelector {
     get argumentSelector() {
         return this.argumentTokens.selector;
     }
+    get simpleSelectorList() {
+        if (!this._simpleSelectorList) {
+            this._simpleSelectorList = parseSelector(this.argumentSelector).simpleSelectorList;
+        }
+        return this._simpleSelectorList;
+    }
     set specificity(value) {
         this._specificity = value;
     }
@@ -119,20 +166,23 @@ class SimpleSelector {
         return [...(specificity || [0, 0, 0])];
     }
     toString() {
-        return `${this.prefix}${this.content}${this.argument ? `(${this.argument})` : ""}${
-            this.suffix
-        }`;
+        if (!this._selector) {
+            this._selector = `${this.prefix}${this.content}${
+                this.argument ? `(${this.argument})` : ""
+            }${this.suffix}`;
+        }
+        return this._selector;
     }
 }
 
 /**
  * @see https://www.w3.org/TR/selectors-4/#specificity
  *
- * @param {string} selector
+ * @param {string|undefined} selector
  * @returns {Array<number>} [A, B, C]
  */
 function computeSpecificity(selector) {
-    selector = selector.trim();
+    selector = selector?.trim();
     if (selectorSpecificityCache.has(selector)) {
         return selectorSpecificityCache.get(selector);
     }
@@ -158,7 +208,7 @@ function computeSpecificity(selector) {
         }
         return 0;
     });
-    selectorSpecificityCache.set(selector, specificities.at(-1));
+    selectorSpecificityCache.set(selector, specificities.at(-1) ?? [0, 0, 0]);
     return selectorSpecificityCache.get(selector);
 }
 
@@ -250,7 +300,7 @@ function parseNthChildArgument(argument) {
 }
 
 /**
- * Parses a given selector string into a @see SelectorList .
+ * Parses a given WELL FORMED selector string into a @see SelectorList .
  *
  * - returns an Array of @see ComplexSelector objects (implicit `,` separation)
  * - a ComplexSelector is composed of one or more @see CompoundSelector objects
@@ -259,12 +309,16 @@ function parseNthChildArgument(argument) {
  *   which are weighted according to the specificity algorithm.
  * @see https://www.w3.org/TR/selectors-4/
  *
- * @param {string} selector
+ * @param {string|undefined} selector
  * @returns {SelectorList}
  */
 export function parseSelector(selector) {
-    selector = selector.trim();
+    selector = selector?.trim();
     if (selectorListCache.has(selector)) {
+        return selectorListCache.get(selector);
+    }
+    if (!selector) {
+        selectorListCache.set(selector, new SelectorList());
         return selectorListCache.get(selector);
     }
 
@@ -504,6 +558,8 @@ class PropertyList extends Array {
 }
 
 /**
+ * Parses a given WELL FORMED cssText string into a @see PropertyList .
+ *
  * cssText style property parser, to list propertyNames used in a
  * CSSStyleSheet -> CSSStyleRule -> CSSStyleProperties.
  * This is required because looping over rule.style gives browser standardized
@@ -515,11 +571,18 @@ class PropertyList extends Array {
  * longhand property will return an empty string, which results in a loss of
  * information.
  *
- * @param {string} cssText
+ * @param {string|undefined} cssText
  * @returns {PropertyList}
  */
 export function parseCssText(cssText) {
-    cssText = cssText.trim();
+    cssText = cssText?.trim();
+    if (propertyListCache.has(cssText)) {
+        return propertyListCache.get(cssText);
+    }
+    if (!cssText) {
+        propertyListCache.set(cssText, new PropertyList());
+        return propertyListCache.get(cssText);
+    }
 
     const firstProperty = new Property();
     const propertyList = new PropertyList(firstProperty);
@@ -605,5 +668,28 @@ export function parseCssText(cssText) {
         }
     }
     closeProperty();
+
+    propertyListCache.set(cssText, propertyList);
     return propertyList;
+}
+
+/**
+ * TODO EGGMAIL: evaluate if full parser is needed.
+ * For now: only handle simple css values like 100%, 75px
+ *
+ * @param {string} cssValue
+ * @returns {Object} description { string, unit, number }
+ */
+export function parseCssValue(cssValue) {
+    const match = /^(-?\d*\.?\d+)([a-z%]*)$/i.exec(cssValue.trim());
+    const result = {
+        string: cssValue,
+    };
+    if (match) {
+        Object.assign(result, {
+            number: parseFloat(match[1]),
+            unit: match[2] || null,
+        });
+    }
+    return result;
 }

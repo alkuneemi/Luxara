@@ -1,13 +1,12 @@
-import {
-    EMAIL_MOBILE_DIMENSIONS,
-    EMAIL_DESKTOP_DIMENSIONS,
-    useEmailHtmlConverter,
-} from "@mail/convert_inline/hooks";
-import { loadIframe, loadIframeBundles } from "@mail/convert_inline/iframe_utils";
+import { DIMENSIONS, useEmailHtmlConverter } from "@mail/convert_inline/hooks";
+import { loadIframe } from "@mail/convert_inline/iframe_utils";
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { isBrowserSafari } from "@web/core/browser/feature_detection";
 import { Dialog } from "@web/core/dialog/dialog";
-import { renderToFragment } from "@web/core/utils/render";
+import { registry } from "@web/core/registry";
+import { renderToElement, renderToFragment } from "@web/core/utils/render";
+
+const { DESKTOP, MOBILE } = DIMENSIONS;
 
 export class DebugConvertInlineDialog extends Component {
     static template = "test_convert_inline.DebugConvertInlineDialog";
@@ -23,14 +22,18 @@ export class DebugConvertInlineDialog extends Component {
         this.outputIframeRef = useRef("outputIframe");
         this.state = useState({
             isMobile: false,
-            height: EMAIL_DESKTOP_DIMENSIONS.height,
-            width: EMAIL_DESKTOP_DIMENSIONS.width,
+            height: DESKTOP.height,
+            width: DESKTOP.width,
+            displayWidth: DESKTOP.width,
         });
         const { updateLayoutDimensions, convertToEmailHtml } = useEmailHtmlConverter({
-            bundles: [
-                "mass_mailing.assets_iframe_style",
-                "mass_mailing.assets_email_html_conversion",
+            Plugins: [
+                ...registry.category("mail-html-conversion-core-plugins").getAll(),
+                ...registry.category("mail-html-conversion-main-plugins").getAll(),
+                ...registry.category("mass-mailing-html-conversion-plugins").getAll(),
             ],
+            bundles: ["mass_mailing.assets_iframe_style"],
+            services: this.env.services,
             targetRef: useRef("referenceIframe"),
             isVisible: true,
         });
@@ -39,7 +42,6 @@ export class DebugConvertInlineDialog extends Component {
         onMounted(() => {
             const iframe = this.outputIframeRef.el;
             const promises = [
-                loadIframeBundles(iframe, ["mass_mailing.assets_email_html_conversion"]),
                 loadIframe(iframe, () => {
                     iframe.contentDocument.head.append(
                         renderToFragment("mail.EmailHtmlConverterHead")
@@ -47,22 +49,42 @@ export class DebugConvertInlineDialog extends Component {
                 }),
             ];
             Promise.all(promises).then(async () => {
-                iframe.contentDocument.body.innerHTML = await convertToEmailHtml(
-                    this.props.fragment
-                );
+                const referenceElement = renderToElement("mail.EmailHtmlConverterReference");
+                referenceElement.innerHTML = await convertToEmailHtml(this.props.fragment);
+                iframe.contentDocument.body.append(referenceElement);
             });
         });
+    }
+
+    get stepRange() {
+        return 5;
+    }
+
+    get minRange() {
+        return MOBILE.width;
+    }
+
+    get maxRange() {
+        return DESKTOP.width;
     }
 
     isBrowserSafari() {
         return isBrowserSafari();
     }
 
+    onRangeChange(ev) {
+        this.state.width = ev.target.value;
+        this.updateConverterLayoutDimensions(this.state);
+    }
+
+    onRangeInput(ev) {
+        this.state.displayWidth = ev.target.value;
+    }
+
     updateLayoutDimensions(isMobile = false) {
-        Object.assign(this.state, isMobile ? EMAIL_MOBILE_DIMENSIONS : EMAIL_DESKTOP_DIMENSIONS);
-        this.updateConverterLayoutDimensions(
-            isMobile ? EMAIL_MOBILE_DIMENSIONS : EMAIL_DESKTOP_DIMENSIONS
-        );
+        Object.assign(this.state, isMobile ? MOBILE : DESKTOP);
+        this.updateConverterLayoutDimensions(isMobile ? MOBILE : DESKTOP);
+        this.state.displayWidth = this.state.width;
         this.state.isMobile = isMobile;
     }
 }

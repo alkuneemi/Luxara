@@ -1,4 +1,8 @@
-import { parseSelector } from "@mail/convert_inline/css_parsers";
+export const BACKGROUND_VARIANTS = ["color", "image", "repeat", "size"];
+export const CONTOUR_VARIANTS = ["width", "style", "color"];
+export const DIRECTION_VARIANTS = ["top", "right", "bottom", "left"];
+export const FONT_VARIANTS = ["family", "size", "style", "weight"];
+export const DOM_RECT_PROPERTIES = ["x", "y", "width", "height", "top", "right", "bottom", "left"];
 
 /**
  * @param {string} propertyName shorthand property e.g. "border"
@@ -22,17 +26,4 @@ export function generateLonghands(propertyName, suffixArrays = []) {
         );
     }
     return result;
-}
-
-export function splitSelectorList(selector) {
-    try {
-        if (selector.indexOf(",") === -1) {
-            return [selector].filter(Boolean);
-        }
-        return parseSelector(selector)
-            .map((complexSelector) => complexSelector.selector)
-            .filter(Boolean);
-    } catch {
-        return [];
-    }
 }

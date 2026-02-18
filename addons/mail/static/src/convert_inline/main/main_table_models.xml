@@ -1,0 +1,14 @@
+<templates>
+    <t t-name="mail.MainTable">
+        <table t-att="model.renderAttributes()">
+            <tbody t-att="model.renderAttributes('tbody')">
+                <tr t-att="model.renderAttributes('tr')">
+                    <td t-att="model.renderAttributes('td')">
+                        <t t-call="{{nodePositionManager.template}}"
+                            t-call-context="nodePositionManager.renderContext(model.childNodes)"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+</templates>

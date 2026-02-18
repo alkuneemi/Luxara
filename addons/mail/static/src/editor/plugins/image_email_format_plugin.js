@@ -10,8 +10,8 @@ import { registry } from "@web/core/registry";
 const EMAIL_RESTRICTED_IMAGE_MIMETYPES = ["image/svg+xml", "image/webp"];
 const EMAIL_RESTRICTED_IMAGE_MIMETYPES_SET = new Set(EMAIL_RESTRICTED_IMAGE_MIMETYPES);
 
-export class ImageFormatPlugin extends Plugin {
-    static id = "mail.ImageFormatPlugin";
+export class ImageEmailFormatPlugin extends Plugin {
+    static id = "imageEmailFormat";
     static dependencies = ["imagePostProcess", "imageSave"];
     static shared = ["sanitizeImages"];
     static defaultConfig = {
@@ -35,21 +35,21 @@ export class ImageFormatPlugin extends Plugin {
      */
     async sanitizeImages(editable = this.editable) {
         const promises = [];
-        promises.push(...this.forEachSvg((svg) => this.sanitizeSvg(svg, editable)));
-        promises.push(...this.forEachImg((img) => this.sanitizeImage(img, editable)));
-        promises.push(...this.forEachBackgroundImg((el) => this.sanitizeImage(el, editable)));
+        promises.push(...this.forEachSvg((svg) => this.sanitizeSvg(svg), editable));
+        promises.push(...this.forEachImg((img) => this.sanitizeImage(img), editable));
+        promises.push(...this.forEachBackgroundImg((el) => this.sanitizeImage(el), editable));
         // TODO EGGMAIL: handle promise failures, should we accept them and ignore and continue?
         await Promise.allSettled(promises);
-        const oldSrcToNewSrcMap = await this.dependencies.imageSave.savePendingImages();
+        const oldSrcToNewSrcMap = await this.dependencies.imageSave.savePendingImages(editable);
         // Register images in a cache, to avoid handling unchanged src.
         this.forEachImg((img) => {
             const src = getImageSrc(img);
             this.imgNodes.set(img, src);
-        });
+        }, editable);
         this.forEachBackgroundImg((el) => {
             const src = getImageSrc(el);
             this.bgImgNodes.set(el, src);
-        });
+        }, editable);
         return oldSrcToNewSrcMap;
     }
 
@@ -202,7 +202,9 @@ export class ImageFormatPlugin extends Plugin {
     forEachBackgroundImg(callback, editable) {
         const promises = [];
         for (const el of editable.querySelectorAll(`[style*="background-image"]`)) {
-            const { url } = backgroundImageCssToParts(el.style.getProperty("background-image"));
+            const { url } = backgroundImageCssToParts(
+                el.style.getPropertyValue("background-image")
+            );
             if (this.bgImgNodes.has(el) && this.bgImgNodes.get(el) === url) {
                 continue;
             }
@@ -217,4 +219,4 @@ export class ImageFormatPlugin extends Plugin {
     }
 }
 
-registry.category("mail-core-plugins").add(ImageFormatPlugin.id, ImageFormatPlugin);
+registry.category("mail-core-plugins").add(ImageEmailFormatPlugin.id, ImageEmailFormatPlugin);
