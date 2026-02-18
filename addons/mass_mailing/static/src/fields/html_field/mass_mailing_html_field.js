@@ -51,7 +51,11 @@ export class MassMailingHtmlField extends HtmlField {
         });
         super.setup();
         this.converter = useEmailHtmlConverter({
-            bundles: ["mass_mailing.assets_iframe_style"],
+            // TODO EGGMAIL: evaluate email_html_conversion bundle after refactoring
+            bundles: [
+                "mass_mailing.assets_iframe_style",
+                "mass_mailing.assets_email_html_conversion",
+            ],
         });
         this.themeService = useService("mass_mailing.themes");
         this.ui = useService("ui");
@@ -235,7 +239,7 @@ export class MassMailingHtmlField extends HtmlField {
         } else if (this.withBuilder) {
             return this.getBuilderConfig();
         } else {
-            return this.getSimpleEditorConfig();
+            return this.getBasicEditorConfig();
         }
     }
 
@@ -265,7 +269,7 @@ export class MassMailingHtmlField extends HtmlField {
         };
     }
 
-    getSimpleEditorConfig() {
+    getBasicEditorConfig() {
         const config = super.getConfig();
         const codeViewCommand = [config.resources?.user_commands]
             .filter(Boolean)
@@ -280,6 +284,7 @@ export class MassMailingHtmlField extends HtmlField {
             Plugins: [
                 ...MAIN_EDITOR_PLUGINS,
                 ...DYNAMIC_PLACEHOLDER_PLUGINS,
+                ...registry.category("mail-core-plugins").getAll(),
                 ...registry.category("mass_mailing-basic-editor-plugins").getAll(),
                 PowerButtonsPlugin,
             ].filter((P) => !["banner", "prompt"].includes(P.id)),
@@ -298,7 +303,7 @@ export class MassMailingHtmlField extends HtmlField {
                     }
                     // The inlineField can not be updated to its final value at
                     // this point since the editor is needed to process the
-                    // theme template. (i.e. applying the default style).
+                    // theme template (i.e. to insert the Design Tab style).
                     // It will be updated onEditorReady since it has become empty.
                     return record
                         .update({

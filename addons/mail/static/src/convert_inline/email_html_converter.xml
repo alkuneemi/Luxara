@@ -3,11 +3,13 @@
         <iframe t-att-sandbox="isBrowserSafari() ? 'allow-same-origin allow-scripts' : 'allow-same-origin'"
             aria-hidden="true"
             t-attf-style="
-                visibility: hidden !important;
-                pointer-events: none !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: -9999px !important;
+                {{ isVisible ? `` : 
+                    `visibility: hidden !important;
+                    pointer-events: none !important;
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: -9999px !important;`
+                }}
             "/>
     </t>
     <t t-name="mail.EmailHtmlConverterReference">

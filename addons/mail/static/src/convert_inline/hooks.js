@@ -1,7 +1,8 @@
 import { onMounted, onWillDestroy, onWillUnmount, status, useComponent } from "@odoo/owl";
 import { isBrowserSafari } from "@web/core/browser/feature_detection";
+import { registry } from "@web/core/registry";
 import { renderToElement, renderToFragment } from "@web/core/utils/render";
-import { getCSSRules, toInline } from "@mail/views/web/fields/html_mail_field/convert_inline";
+import { EmailHtmlConverter } from "@mail/convert_inline/email_html_converter";
 import { loadIframeBundles, loadIframe } from "@mail/convert_inline/iframe_utils";
 import { useService } from "@web/core/utils/hooks";
 
@@ -19,13 +20,14 @@ export const EMAIL_MOBILE_DIMENSIONS = {
  * @param {Array<string>} [options.bundles] bundles to load for the conversion
  * @returns {Object}
  */
-export function useEmailHtmlConverter({ bundles = [] }) {
-    let reference, referenceDocument; // Element and Document in which the conversion takes place.
+export function useEmailHtmlConverter({ Plugins, bundles, isVisible }) {
+    let converter, reference, referenceDocument; // Element and Document in which the conversion takes place.
     let currentConfig = {};
     const cmp = useComponent();
     const convertInlineIframeService = useService("convert_inline_iframe");
     const referenceIframe = renderToElement("mail.EmailHtmlConverterReferenceIframe", {
         isBrowserSafari,
+        isVisible,
     });
     const setupIframe = async () => {
         await convertInlineIframeService.readyPromise;
@@ -61,16 +63,24 @@ export function useEmailHtmlConverter({ bundles = [] }) {
         referenceIframe.style.setProperty("max-width", `${width}px`, "important");
         referenceIframe.style.setProperty("min-width", `${width}px`, "important");
         referenceIframe.style.setProperty("min-height", `${height}px`, "important");
+        if (converter) {
+            converter.onLayoutDimensionsUpdate({ width, height });
+        }
     };
     const cleanupEmailHtmlConversion = () => {
         if (reference?.isConnected) {
             reference.remove();
             reference = undefined;
         }
+        if (converter) {
+            converter.destroy();
+            converter = undefined;
+        }
     };
     const prepareEmailHtmlConversion = async (fragment) => {
         await iframeLoaded;
         cleanupEmailHtmlConversion();
+        converter = new EmailHtmlConverter(undefined, cmp.env.services);
         reference = renderToElement("mail.EmailHtmlConverterReference");
         reference.append(fragment);
         referenceDocument.body.append(reference);
@@ -80,22 +90,23 @@ export function useEmailHtmlConverter({ bundles = [] }) {
             currentConfig = newConfig;
         }
         return {
+            Plugins: Plugins ?? registry.category("mail-html-conversion-plugins").getAll(),
             ...currentConfig,
             reference,
             referenceDocument,
+            updateLayoutDimensions,
         };
     };
     const convertToEmailHtml = async (fragment, config) => {
         await prepareEmailHtmlConversion(fragment);
-        updateLayoutDimensions();
-        config = getCurrentConfig(config);
-        for (const cb of config.preProcessCallbacks ?? []) {
-            cb(config.reference);
+        const htmlConverted = converter.convertToEmailHtml(getCurrentConfig(config));
+        if (!isVisible) {
+            return htmlConverted.then((emailHtml) => {
+                cleanupEmailHtmlConversion();
+                return emailHtml;
+            });
         }
-        const cssRules = getCSSRules(config.referenceDocument);
-        await toInline(config.reference, cssRules);
-        cleanupEmailHtmlConversion();
-        return config.reference.innerHTML;
+        return htmlConverted;
     };
 
     let isReady = false;
