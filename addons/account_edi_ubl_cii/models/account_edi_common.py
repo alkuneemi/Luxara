@@ -1,4 +1,5 @@
 from markupsafe import Markup
+from functools import wraps
 
 from odoo import _, api, models
 from odoo.addons.base.models.res_bank import sanitize_account_number
@@ -150,6 +151,122 @@ SUPPORTED_FILE_TYPES = {
 }
 
 
+# -------------------------------------------------------------------------
+# UBL/PINT LAYER SYSTEM DECORATORS
+# -------------------------------------------------------------------------
+
+
+def dispatch_by_document(func):
+    """
+    Decorator for the "base" methods of the UBL/PINT layer system.
+
+    A base method (e.g. `_ubl_add_notes_nodes`) implements the default behavior
+    shared across all document types. Subclasses can provide document-specific
+    overrides by defining methods named `{base_method}__{suffix}` and decorating
+    them with `@documents(...)` listing the document types they apply to.
+
+    At call time, this decorator inspects `vals['_document_type']` (set via
+    `_define_document_type`) and walks up the MRO of the current model's
+    `python_class`. For each class, it looks for a sibling method whose
+    `_root_method_name` matches the decorated function's name and whose
+    `_document_types` includes the current document type. The first matching
+    override found (most-derived first) is invoked instead of the base method;
+    if none is found, the base method runs as usual.
+
+    A small per-`vals` history prevents the same root method from being
+    dispatched twice on the same model, so a `super()` call inside an override
+    correctly resolves to the next class up in the chain rather than looping
+    back to the same override.
+
+    Methods that are not decorated with `@dispatch_by_document` will not
+    consider any `@documents(...)` overrides.
+    """
+    def is_in_history(vals, model_name, method_name):
+        document_type_data = vals['_document_type']
+        history_models, history_method_name = document_type_data.get('history', ([], None))
+        return (
+            model_name in history_models
+            and method_name == history_method_name
+        )
+
+    def update_history(vals, model, method_name):
+        document_type_data = vals['_document_type']
+        history_models, history_method_name = document_type_data.get('history', (None, None))
+        if history_method_name != method_name:
+            history_models, history_method_name = document_type_data['history'] = ([], method_name)
+        history_models.append(model._name)
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        vals = next((arg for arg in args if isinstance(arg, dict) and '_document_type' in arg), {})
+        if document_type_data := vals.get('_document_type'):
+            document_type = document_type_data['name']
+            root_method_name = func.__name__
+
+            current_model = document_type_data['model']
+            while current_model._name != 'account.edi.common':
+                python_class = current_model.python_class
+                for method_name in dir(python_class):
+                    if not method_name.startswith(root_method_name):
+                        continue
+
+                    if is_in_history(vals, current_model._name, root_method_name):
+                        break
+
+                    method = getattr(current_model.__class__, method_name, None)
+                    if (
+                        method
+                        and callable(method)
+                        and document_type in getattr(method, '_document_types', ())
+                        and getattr(method, '_root_method_name', None) == root_method_name
+                    ):
+                        update_history(vals, current_model, root_method_name)
+                        return method(current_model, *args, **kwargs)
+
+                current_model = current_model.env[current_model._BaseModel__base_classes[1]._name]
+
+        return func(self, *args, **kwargs)
+    return wrapper
+
+
+def documents(*document_types: str):
+    """
+    Decorator marking a method as a document-specific override of a base method
+    handled by `@dispatch_by_document`.
+
+    The method name must follow the format `{base_method}__{suffix}`, where
+    `{base_method}` matches the name of a base method decorated with
+    `@dispatch_by_document`. The suffix is free-form and only used to keep
+    method names unique; it does not need to match a document type.
+
+    `document_types` is the list of document type names (as set in
+    `vals['_document_type']['name']`, e.g. `'invoice'`, `'credit_note'`,
+    `'self_invoice'`, `'self_credit_note'`) for which this override should be
+    invoked instead of the base method. Multiple types can be listed when the
+    same override applies to several documents.
+
+    Example:
+
+        @documents('invoice', 'credit_note')
+        def _ubl_add_notes_nodes__base(self, vals):
+            ...
+
+    overrides `_ubl_add_notes_nodes` when `vals['_document_type']['name']` is
+    either `'invoice'` or `'credit_note'`. The override is responsible for
+    calling the base implementation (typically via `super()` or by invoking
+    the base method directly) when the default behavior is still wanted.
+    """
+    def decorator(func):
+        func._document_types = document_types
+        func._root_method_name = func.__name__.split('__')[0]
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 class FloatFmt(float):
     """ A float with a given precision.
     The precision is used when formatting the float.
@@ -193,9 +310,19 @@ class AccountEdiCommon(models.AbstractModel):
     _name = "account.edi.common"
     _description = "Common functions for EDI documents: generate the data, the constraints, etc"
 
+    @property
+    def python_class(self):
+        return AccountEdiCommon
+
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
+
+    def _define_document_type(self, vals, document_type):
+        vals['_document_type'] = {
+            'name': document_type,
+            'model': self,
+        }
 
     def module_installed(self, module_name):
         return self.env['ir.module.module']._get(module_name).state == 'installed'
