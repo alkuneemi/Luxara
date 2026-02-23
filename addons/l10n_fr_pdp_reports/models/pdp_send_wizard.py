@@ -2,11 +2,11 @@ from odoo import fields, models, _
 
 
 class PdpSendWizard(models.TransientModel):
-    _name = 'l10n.fr.pdp.send.wizard'
+    _name = 'l10n.fr.pdp.reports.send.wizard'
     _description = 'Send PDP Flow Wizard'
 
     flow_id = fields.Many2one(
-        comodel_name='l10n.fr.pdp.flow',
+        comodel_name='l10n.fr.pdp.reports.flow',
         required=True,
         ondelete='cascade',
         default=lambda self: self.env.context.get('default_flow_id'),

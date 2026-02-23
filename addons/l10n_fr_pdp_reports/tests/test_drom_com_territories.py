@@ -314,17 +314,6 @@ class TestDromComTerritories(TransactionCase):
     # Test Helper Functions
     # -------------------------------------------------------------------------
 
-    def test_is_b2b_transaction(self):
-        """Test B2B detection based on VAT presence."""
-        # B2B - has VAT
-        self.assertTrue(drom_com_territories.is_b2b_transaction('FR12345678901'))
-        self.assertTrue(drom_com_territories.is_b2b_transaction('DE123456789'))
-
-        # B2C - no VAT
-        self.assertFalse(drom_com_territories.is_b2b_transaction(None))
-        self.assertFalse(drom_com_territories.is_b2b_transaction(''))
-        self.assertFalse(drom_com_territories.is_b2b_transaction('/'))
-
     def test_get_drom_com_info(self):
         """Test comprehensive territory information retrieval."""
         info = drom_com_territories.get_drom_com_info()

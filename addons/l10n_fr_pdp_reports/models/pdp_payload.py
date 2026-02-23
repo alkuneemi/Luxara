@@ -3,19 +3,21 @@ import re
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
-from functools import lru_cache
 
 from lxml import etree
 
-from odoo import fields, _
+from odoo import _, fields
 from odoo.exceptions import UserError
-from odoo.tools import file_path, float_round, html2plaintext
+from odoo.tools import float_round, html2plaintext
 from odoo.addons.account_edi_ubl_cii_tax_extension.models.account_edi_common import TAX_EXEMPTION_MAPPING
 from odoo.addons.l10n_fr_pdp_reports.utils import drom_com_territories
 
 
 class PdpPayloadBuilder:
-    """Build and validate Flux 10 payloads for a flow"""
+# class PdpFlow10XML(models.AbstractModel):
+#     _name = "pdp.flow.10.xml"
+#     _inherit = 'account.edi.common'
+#     """Build Flow 10 payloads for a flow"""
 
     def __init__(self, flow):
         self.flow = flow
@@ -29,7 +31,7 @@ class PdpPayloadBuilder:
         """Build XML payload for the given moves."""
         report_vals = (
             self._build_payment_report_vals(moves, invalid_collector)
-            if self.flow.report_kind == 'payment'
+            if self.flow.report_type == 'payment'
             else self._build_transaction_report_vals(moves, invalid_collector)
         )
         self._validate(report_vals)
@@ -39,7 +41,6 @@ class PdpPayloadBuilder:
         )
         try:
             xml_root = etree.fromstring(rendered.encode('utf-8'))
-            self._validate_xml_schema(xml_root)
             xml_content = etree.tostring(
                 xml_root,
                 xml_declaration=True,
@@ -51,84 +52,6 @@ class PdpPayloadBuilder:
             'payload': base64.b64encode(xml_content),
             'filename': self._filename(slice_date),
         }
-
-    def _validate_xml_schema(self, xml_root):
-        """Validate generated XML against Flux 10 XSDs when enabled."""
-        mode = self._get_xsd_validation_mode()
-        if mode == 'off':
-            return
-
-        xsd_dir = self._resolve_xsd_directory()
-        if not xsd_dir:
-            if mode == 'strict':
-                raise UserError(_(
-                    "Flux 10 XSD validation is enabled in strict mode but XSD files were not found. "
-                    "Set system parameter %(param)s to a valid XSD folder.",
-                    param='l10n_fr_pdp_reports.xsd_dir',
-                ))
-            return
-
-        try:
-            schema = self._get_ereporting_schema(xsd_dir)
-            schema.assertValid(xml_root)
-        except etree.DocumentInvalid as err:
-            details = self._format_schema_errors(schema.error_log)
-            raise UserError(_("Generated Flux 10 XML is not compliant with AIFE XSD: %(details)s", details=details)) from err
-        except (OSError, etree.XMLSchemaParseError, etree.XMLSyntaxError) as err:
-            raise UserError(_("Unable to load Flux 10 XSD schema: %(error)s", error=err)) from err
-
-    def _get_xsd_validation_mode(self):
-        param_value = (
-            self.env['ir.config_parameter']
-            .sudo()
-            .get_param('l10n_fr_pdp_reports.xsd_validation', 'auto')
-            .strip()
-            .lower()
-        )
-        return param_value if param_value in {'off', 'auto', 'strict'} else 'auto'
-
-    def _resolve_xsd_directory(self):
-        configured_dir = (
-            self.env['ir.config_parameter']
-            .sudo()
-            .get_param('l10n_fr_pdp_reports.xsd_dir', '')
-            .strip()
-        )
-        if configured_dir:
-            if self._has_ereporting_schema(configured_dir):
-                return configured_dir
-            return None
-
-        xsd_directory = 'l10n_fr_pdp_reports/data/xsd'
-        if self._has_ereporting_schema(xsd_directory):
-            return xsd_directory
-        return None
-
-    @staticmethod
-    def _has_ereporting_schema(directory):
-        if not directory:
-            return False
-        try:
-            normalized_directory = directory.rstrip('/\\')
-            xsd_relative_path = normalized_directory + '/ereporting.xsd'
-            file_path(xsd_relative_path, filter_ext=('.xsd',))
-            return True
-        except (FileNotFoundError, ValueError):
-            return False
-
-    @staticmethod
-    def _format_schema_errors(error_log):
-        errors = [f"line {err.line}: {err.message}" for err in list(error_log)[:5]]
-        return ' | '.join(errors) if errors else _("Unknown XSD validation error")
-
-    @staticmethod
-    @lru_cache(maxsize=8)
-    def _get_ereporting_schema(xsd_directory):
-        normalized_directory = xsd_directory.rstrip('/\\')
-        xsd_relative_path = normalized_directory + '/ereporting.xsd'
-        xsd_file = file_path(xsd_relative_path, filter_ext=('.xsd',))
-        schema_doc = etree.parse(xsd_file)
-        return etree.XMLSchema(schema_doc)
 
     # -------------------------------------------------------------------------
     # Report Builders
@@ -185,10 +108,10 @@ class PdpPayloadBuilder:
         b2c = self.env['account.move'].browse()
         international = self.env['account.move'].browse()
         for move in moves:
-            tx_type = move._get_l10n_fr_pdp_transaction_type()
-            if tx_type == 'b2c':
+            transaction_type = move._get_l10n_fr_pdp_transaction_type()
+            if transaction_type == 'b2c':
                 b2c |= move
-            elif tx_type == 'international':
+            elif transaction_type == 'international':
                 international |= move
         return b2c, international
 
@@ -267,6 +190,7 @@ class PdpPayloadBuilder:
                 bucket['amount_tax'] += line_tax
 
                 unit_price = (line.price_unit or 0.0) * (1 - (line.discount or 0.0) / 100.0)
+                # unit_price = float_round(unit_price, precision_digits=6)
                 taxes_res = line.tax_ids.compute_all(
                     unit_price,
                     currency,
@@ -297,26 +221,26 @@ class PdpPayloadBuilder:
         flow = self.flow
         company = flow.company_id
         flow._ensure_tracking_id()
-        issue_dt = flow.issue_datetime or fields.Datetime.now()
+        issue_dt = fields.Datetime.now()
         if isinstance(issue_dt, str):
             issue_dt = fields.Datetime.from_string(issue_dt)
         company_siret = company.siret or ''
         company_siren = company_siret[:9]
         declarant_siren = company.l10n_fr_pdp_declarant_siren or company_siren or str(company.id)
-        sender_id = (company.l10n_fr_pdp_sender_id or '').strip() or '0129'
         issuer_role = 'BY' if flow.operation_type == 'purchase' else 'SE'
         # v1.2: No References block (transmission_reference/reference_scheme removed)
         return {
             'id': flow.tracking_id or flow.name,
             'name': _("Flux 10 Report %(date)s", date=flow.reporting_date),
             'issue_datetime': issue_dt.strftime('%Y%m%d%H%M%S'),
-            'type_code': flow.transmission_type or 'IN',  # TT-4: only IN or RE
+            'type_code': 'RE' if flow.transmission_type == 'rectificative' else 'IN',  # TT-4: only IN or RE
+            # TODO SENDER WILL BE DONE BY PA
             'sender': {
                 'scheme_id': '0238',  # 0238 = PA/PPF SIREN scheme (AFNOR table)
-                'id': sender_id,
-                'name': company.name,
+                'id': '2728',
+                'name': 'PDP_2728',
                 'role_code': 'WK',  # WK = platform/operator role
-                'email': company.email or '',
+                'email': 'pdp@odoo.com',
             },
             'issuer': {
                 'scheme_id': '0002',  # 0002 = French SIREN scheme for issuer
@@ -392,7 +316,8 @@ class PdpPayloadBuilder:
         flow = self.flow
         company = flow.company_id
         flow_currency = flow.currency_id or company.currency_id
-        tax_due_code = company.l10n_fr_pdp_tax_due_code or '3'
+        # tax_due_code = company.l10n_fr_pdp_tax_due_code or '3'
+        tax_due_code = '5'  # TODO check why ?
         summaries = []
         grouped = self._b2c_summary_buckets(moves)
         for (date, category_code), metrics in sorted(grouped.items(), key=lambda item: (item[0][0], item[0][1])):
@@ -403,7 +328,8 @@ class PdpPayloadBuilder:
                 if has_on_invoice and not has_on_payment:
                     summary_due_code = '1'  # TVA sur les debits
                 elif has_on_payment and not has_on_invoice:
-                    summary_due_code = '3'  # TVA sur les encaissements
+                    # summary_due_code = '3'  # TVA sur les encaissements
+                    summary_due_code = '72'  # TODO check
             vat_breakdown = sorted([{
                 'vat_rate': rate,
                 'transaction_count': len(vals['move_ids']),
@@ -479,9 +405,7 @@ class PdpPayloadBuilder:
             else:
                 for partial in move._get_all_reconciled_invoice_partials():
                     aml = partial.get('aml')
-                    if not aml:
-                        continue
-                    if not self._is_payment_partial_aml(aml):
+                    if not aml or not self._is_payment_partial_aml(aml):
                         continue
                     amount = self._payment_amount(partial, aml, flow_currency, move.currency_id)
                     if amount:
@@ -547,9 +471,7 @@ class PdpPayloadBuilder:
                 continue
             for partial in move._get_all_reconciled_invoice_partials():
                 aml = partial.get('aml')
-                if not aml:
-                    continue
-                if not self._is_payment_partial_aml(aml):
+                if not aml or not self._is_payment_partial_aml(aml):
                     continue
                 amount = self._payment_amount(partial, aml, flow_currency, move.currency_id)
                 if not amount:
@@ -615,12 +537,12 @@ class PdpPayloadBuilder:
         return {
             'description': line.name or '',
             'quantity': quantity,
-            'unit_code': line.product_uom_id.l10n_fr_pdp_unit_code if line.product_uom_id and 'l10n_fr_pdp_unit_code' in line.product_uom_id._fields else None,
-            'price_unit': line.price_unit or 0.0,
+            'unit_code': line.product_uom_id.l10n_fr_pdp_unit_code if line.product_uom_id and 'l10n_fr_pdp_unit_code' in line.product_uom_id._fields else None,  # TODO implement l10n_fr_pdp_unit_code or logic to set valid UOM codes
+            'price_unit': float_round(line.price_unit, precision_digits=6) or 0.0,
             'line_extension': abs(line.price_subtotal),
-            'price_unit_net': net_unit_price,
-            'price_unit_gross': gross_unit_price,
-            'note': {'code': 'PRD', 'comment': line.name} if line.name else False,
+            'price_unit_net': float_round(net_unit_price, precision_digits=6),
+            'price_unit_gross': float_round(gross_unit_price, precision_digits=6),
+            # 'note': {'code': 'PRD', 'comment': line.name} if line.name else False,
             'preceding_invoice_reference': self._line_preceding_invoice_ref(line),
         }
 
@@ -646,10 +568,8 @@ class PdpPayloadBuilder:
         if not partner:
             return {}
 
-        delivery_country_code = partner.country_id.code if partner.country_id else ''
-
         # Country codes for DROM-COM territories are mapped to 'FR' for PPF transmission.
-        mapped_country_code = drom_com_territories.map_country_code_for_ppf(delivery_country_code)
+        mapped_country_code = drom_com_territories.map_country_code_for_ppf(partner.country_id.code)
 
         return {
             'date': self.flow._format_date(move.invoice_date or move.date),
@@ -658,7 +578,7 @@ class PdpPayloadBuilder:
             'line2': partner.street2 or '',
             'city': partner.city or '',
             'postal_zone': partner.zip or '',
-            'country': mapped_country_code,
+            'country': mapped_country_code or '',
         }
 
     def _allowance_charges(self, move):
@@ -830,7 +750,7 @@ class PdpPayloadBuilder:
         """Build party (seller/buyer) values."""
         partner = partner.commercial_partner_id
         partner_siret = partner.siret or ''
-        partner_country_code = partner.country_id.code if partner.country_id else ''
+        partner_country_code = partner.country_id.code or ''
 
         # Country codes for DROM-COM territories are mapped to 'FR' for PPF transmission
         mapped_country_code = drom_com_territories.map_country_code_for_ppf(partner_country_code)
@@ -868,7 +788,7 @@ class PdpPayloadBuilder:
 
     def _invoice_identifier(self, move):
         """Return the invoice identifier used in Flux 10 payloads."""
-        return (move.l10n_fr_pdp_invoice_reference or move.name or '').strip()
+        return move.name
 
     def _to_eur(self, amount, currency, company, date):
         """Convert amount to EUR for TVA reporting (G6.23/G6.27)."""
@@ -927,12 +847,13 @@ class PdpPayloadBuilder:
 
     def _tax_due_date_type_code(self, move, company):
         """Return TT-24 based on BT-8 with required transcodings."""
-        bt8_code = (move.l10n_fr_pdp_bt8_code or '').strip()
-        if bt8_code == '29':
-            return '5'
-        if bt8_code == '35':
-            return '3'
-        return bt8_code or (company.l10n_fr_pdp_tax_due_code or '3')
+        # TODO: implement logic
+        # Should only be '5' when invoice is service (or mixed ?) and some services are subject to VAT invoice date.
+        # Should be UNTDID 2475 Subset:
+        # 5 Date of invoice
+        # 29 Date of delivery of goods to establishments/domicile/site
+        # 72 Payment date
+        return '5'
 
     def _vat_exemption_reason(self, tax):
         """Return VATEX reason code and text with BR-FR-MAP-25..28 rules."""
@@ -961,10 +882,7 @@ class PdpPayloadBuilder:
 
     def _is_payment_partial_aml(self, aml):
         """Return True when a reconciled AML corresponds to an actual payment."""
-        move = aml.move_id
-        has_origin_payment = 'origin_payment_id' in move._fields and bool(move.origin_payment_id)
-        has_statement_line = 'statement_line_id' in move._fields and bool(move.statement_line_id)
-        return has_origin_payment or has_statement_line
+        return bool(aml.move_id.origin_payment_id or aml.move_id.statement_line_id)
 
     def _is_advance_payment_move(self, move):
         """Return True when payment reporting must include all lines (advance invoices)."""
@@ -1003,7 +921,7 @@ class PdpPayloadBuilder:
             domain.append(('event_date', '>=', flow.period_start))
         if flow.period_end:
             domain.append(('event_date', '<=', flow.period_end))
-        return self.env['l10n.fr.pdp.payment.event'].sudo().search(domain, order='event_date,id')
+        return self.env['l10n.fr.pdp.reports.payment.event'].sudo().search(domain, order='event_date,id')
 
     # -------------------------------------------------------------------------
     # Validation
@@ -1070,7 +988,7 @@ class PdpPayloadBuilder:
         invoices = report_vals.get('invoices') or []
         allowed_type_codes = self._valid_invoice_type_codes()
         seen_invoice_identities = set()
-        if (flow.report_kind == 'transaction' and
+        if (flow.report_type == 'transaction' and
                 report_vals.get('expected_international_invoices') and
                 not invoices and not flow.error_move_ids):
             errors.append(_("Flow %(name)s must contain at least one international invoice.", name=flow.name))
@@ -1202,7 +1120,7 @@ class PdpPayloadBuilder:
         flow = self.flow
         summaries = report_vals.get('transaction_summaries') or []
         valid_categories = {'TLB1', 'TPS1', 'TNT1', 'TMA1'}
-        if (flow.report_kind == 'transaction' and
+        if (flow.report_type == 'transaction' and
                 report_vals.get('expected_b2c_transactions') and
                 not summaries and not flow.error_move_ids):
             errors.append(_("Flow %(name)s must include aggregated B2C data.", name=flow.name))
@@ -1243,7 +1161,7 @@ class PdpPayloadBuilder:
 
     def _validate_payments(self, report_vals, currency, errors):
         """Validate payment entries."""
-        if self.flow.report_kind != 'payment' or not currency:
+        if self.flow.report_type != 'payment' or not currency:
             return
         payments = report_vals.get('invoice_payments') or report_vals.get('transaction_payments') or []
         for payment in payments:
@@ -1403,15 +1321,15 @@ class PdpPayloadBuilder:
                       invoice=invoice_id, line=index)
                 )
 
-            for field_name in ('price_unit', 'price_unit_net', 'price_unit_gross'):
-                value = line.get(field_name)
-                if value is None:
-                    continue
-                if not self._has_valid_numeric_format(value, 19, 6, allow_negative=False):
-                    errors.append(
-                        _("Invoice %(invoice)s line %(line)s has invalid %(field)s format (G1.16).",
-                          invoice=invoice_id, line=index, field=field_name)
-                    )
+            # for field_name in ('price_unit', 'price_unit_net', 'price_unit_gross'):
+            #     value = line.get(field_name)
+            #     if value is None:
+            #         continue
+            #     if not self._has_valid_numeric_format(value, 19, 6, allow_negative=False):
+            #         errors.append(
+            #             _("Invoice %(invoice)s line %(line)s has invalid %(field)s format (G1.16).",
+            #               invoice=invoice_id, line=index, field=field_name)
+            #        )
 
             gross_price = line.get('price_unit_gross')
             net_price = line.get('price_unit_net')

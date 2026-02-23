@@ -1,4 +1,4 @@
-from odoo import fields, models, _
+from odoo import _, fields, models
 from odoo.tools.misc import format_date
 
 
@@ -13,75 +13,61 @@ class AccountJournal(models.Model):
             lambda j: (
                 j.type == 'sale'
                 and j.company_id.country_code == 'FR'
-                and j.company_id.l10n_fr_pdp_enabled
+                and j.company_id.l10n_fr_pdp_send_to_ppf
             ),
         )
         if not pdp_enabled_journals:
             return dashboard_data
 
-        Flow = self.env['l10n.fr.pdp.flow']
-        Move = self.env['account.move']
-        today = fields.Date.context_today(self)
-
-        # Group journals by company to avoid duplicate queries
-        journals_by_company = {}
-        for journal in pdp_enabled_journals:
-            company_id = journal.company_id.id
-            if company_id not in journals_by_company:
-                journals_by_company[company_id] = []
-            journals_by_company[company_id].append(journal)
+        def _get_due(company, report_type):
+            flow = self.env['l10n.fr.pdp.reports.flow'].search(
+                [
+                    ('company_id', '=', company.id),
+                    ('report_type', '=', report_type),
+                    ('state', 'in', ('pending', 'building', 'ready', 'error')),
+                    ('next_deadline_end', '!=', False),
+                ],
+                limit=1,
+                order='next_deadline_end asc',
+            )
+            if not flow:
+                return False, False, False
+            due = flow.next_deadline_end
+            has_errors = flow.state == 'error' or bool(flow.error_move_ids)
+            return due, format_date(self.env, due), has_errors
 
         # Compute PDP data per company
-        for company_id, journals in journals_by_company.items():
+        for company, journals in pdp_enabled_journals.grouped('company_id').items():
 
-            # ---------- Next due dates ----------
-            def _get_due(report_kind):
-                flow = Flow.search(
-                    [
-                        ('company_id', '=', company_id),
-                        ('report_kind', '=', report_kind),
-                        ('state', 'in', ('pending', 'building', 'ready', 'error')),
-                        ('next_deadline_end', '!=', False),
-                    ],
-                    limit=1,
-                    order='next_deadline_end asc',
-                )
-                if not flow:
-                    return None, None, False
-                due = flow.next_deadline_end
-                has_errors = flow.state == 'error' or bool(flow.error_move_ids)
-                return due, format_date(self.env, due), has_errors
+            # Next due dates
+            transaction_due_raw, transaction_due_str, transaction_has_errors = _get_due(company, 'transaction')
+            payment_due_raw, payment_due_str, payment_has_errors = _get_due(company, 'payment')
 
-            tx_due_raw, tx_due_str, tx_has_errors = _get_due('transaction')
-            pay_due_raw, pay_due_str, pay_has_errors = _get_due('payment')
-
-            # ---------- Errors ----------
-            error_domain = [
-                ('company_id', '=', company_id),
+            # Errors
+            error_count = self.env['account.move'].search_count([
+                ('company_id', '=', company.id),
                 ('l10n_fr_pdp_status', '=', 'error'),
-            ]
-            error_count = Move.search_count(error_domain)
+            ])
 
-            has_warning = bool(error_count)
-            has_danger = False
             if error_count:
-                deadlines = [d for d in (tx_due_raw, pay_due_raw) if d]
-                if deadlines:
-                    min_deadline = min(deadlines)
-                    if (min_deadline - today).days <= 3:
-                        has_danger = True
+                has_warning = True
+                deadlines = [d for d in (transaction_due_raw, payment_due_raw) if d]
+                has_danger = deadlines and (min(deadlines) - fields.Date.context_today(self)).days <= 3
+            else:
+                has_warning = False
+                has_danger = False
 
             # Apply data to all journals in this company
             for journal in journals:
                 data = dashboard_data[journal.id]
 
-                # Mark EREP journal specifically
+                # EREP (e-reporting) journal has more data
                 if journal.code == 'EREP':
                     data['pdp_is_ereporting_journal'] = True
-                    data['pdp_tx_due'] = tx_due_str or False
-                    data['pdp_pay_due'] = pay_due_str or False
-                    data['pdp_tx_has_errors'] = tx_has_errors
-                    data['pdp_pay_has_errors'] = pay_has_errors
+                    data['pdp_transaction_due'] = transaction_due_str
+                    data['pdp_payment_due'] = payment_due_str
+                    data['pdp_transaction_has_errors'] = transaction_has_errors
+                    data['pdp_payment_has_errors'] = payment_has_errors
 
                 # Add error info to ALL sale journals
                 data['pdp_error_count'] = error_count
@@ -90,20 +76,13 @@ class AccountJournal(models.Model):
 
         return dashboard_data
 
-    def _action_open_next_flow(self, report_kind):
-        """Open the next flow with upcoming due date for given report kind.
-
-        Args:
-            report_kind: 'transaction' or 'payment'
-
-        Returns:
-            dict: Action to open flow form, or False if no flow found
-        """
+    def _action_open_next_flow(self, report_type):
+        """Open the next flow with upcoming due date for given report kind."""
         self.ensure_one()
-        flow = self.env['l10n.fr.pdp.flow'].search(
+        flow = self.env['l10n.fr.pdp.reports.flow'].search(
             [
                 ('company_id', '=', self.company_id.id),
-                ('report_kind', '=', report_kind),
+                ('report_type', '=', report_type),
                 ('state', 'in', ('pending', 'building', 'ready', 'error')),
                 ('next_deadline_end', '!=', False),
             ],
@@ -111,13 +90,7 @@ class AccountJournal(models.Model):
             order='next_deadline_end asc',
         )
         if flow:
-            return {
-                'type': 'ir.actions.act_window',
-                'res_model': 'l10n.fr.pdp.flow',
-                'res_id': flow.id,
-                'view_mode': 'form',
-                'target': 'current',
-            }
+            return flow._get_records_action()
         return False
 
     def action_open_next_transaction_flow(self):
@@ -131,15 +104,12 @@ class AccountJournal(models.Model):
     def action_open_pdp_error_moves(self):
         """Open in-scope accounting documents currently in PDP error for this company."""
         self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _("E-Reporting Error Documents"),
-            'res_model': 'account.move',
-            'view_mode': 'list,form',
-            'domain': [
+        return self._get_records_action(
+            name=_("E-Reporting Error Documents"),
+            domain=[
                 ('company_id', '=', self.company_id.id),
                 ('l10n_fr_pdp_status', '=', 'error'),
             ],
-            'context': {'search_default_group_by_move_type': 1},
-            'target': 'current',
-        }
+            context={'search_default_group_by_move_type': 1},
+            res_model='account.move',
+        )
