@@ -33,9 +33,9 @@ function getDefaultGallery(bsRide = false, bsInterval = 0, showPopup = false) {
                                 <span class="visually-hidden">Previous</span>
                             </button>
                             <div class="carousel-indicators">
-                                <button type="button" data-bs-target="#slideshow_sample" data-bs-slide-to="0" style="background-image: url(/web/image/website.library_image_08)" class="active" aria-label="Carousel indicator"/>
-                                <button type="button" style="background-image: url(/web/image/website.library_image_03)" data-bs-target="#slideshow_sample" data-bs-slide-to="1" aria-label="Carousel indicator"/>
-                                <button type="button" style="background-image: url(/web/image/website.library_image_02)" data-bs-target="#slideshow_sample" data-bs-slide-to="2" aria-label="Carousel indicator"/>
+                                <button type="button" data-bs-target="#slideshow_sample" data-bs-slide-to="0" style="background-image: url(/web/image/website.library_image_08)" class="active" aria-label="Slide 1 of 3"/>
+                                <button type="button" style="background-image: url(/web/image/website.library_image_03)" data-bs-target="#slideshow_sample" data-bs-slide-to="1" aria-label="Slide 2 of 3"/>
+                                <button type="button" style="background-image: url(/web/image/website.library_image_02)" data-bs-target="#slideshow_sample" data-bs-slide-to="2" aria-label="Slide 3 of 3"/>
                             </div>
                             <button class="carousel-control-next o_not_editable" contenteditable="false" data-bs-target="#slideshow_sample" data-bs-slide="next" aria-label="Next" title="Next">
                                 <span class="carousel-control-next-icon" aria-hidden="true"/>
@@ -72,12 +72,12 @@ const defaultLightbox = `
                     <span class="visually-hidden">Previous</span>
                 </button>
                 <div class="carousel-indicators s_image_gallery_indicators_bars">
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="0" class="active" style="background-image: url(/web/image/website.library_image_03)"></button>
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="1" style="background-image: url(/web/image/website.library_image_10)"></button>
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="2" style="background-image: url(/web/image/website.library_image_13)"></button>
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="3" style="background-image: url(/web/image/website.library_image_05)"></button>
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="4" style="background-image: url(/web/image/website.library_image_14)"></button>
-                    <button type="button" aria-label="Carousel indicator" data-bs-target="#slideshow_3" data-bs-slide-to="5" style="background-image: url(/web/image/website.library_image_16)"></button>
+                    <button type="button" aria-label="Slide 1 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="0" class="active" style="background-image: url(/web/image/website.library_image_03)"></button>
+                    <button type="button" aria-label="Slide 2 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="1" style="background-image: url(/web/image/website.library_image_10)"></button>
+                    <button type="button" aria-label="Slide 3 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="2" style="background-image: url(/web/image/website.library_image_13)"></button>
+                    <button type="button" aria-label="Slide 4 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="3" style="background-image: url(/web/image/website.library_image_05)"></button>
+                    <button type="button" aria-label="Slide 5 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="4" style="background-image: url(/web/image/website.library_image_14)"></button>
+                    <button type="button" aria-label="Slide 6 of 6" data-bs-target="#slideshow_3" data-bs-slide-to="5" style="background-image: url(/web/image/website.library_image_16)"></button>
                 </div>
                 <button class="carousel-control-next o_we_no_overlay o_not_editable" contenteditable="false" data-bs-slide="next" aria-label="Next" title="Next" data-bs-target="#slideshow_3">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
