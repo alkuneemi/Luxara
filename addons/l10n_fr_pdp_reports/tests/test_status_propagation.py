@@ -74,7 +74,7 @@ class TestPdpStatusPropagation(PdpTestCommon):
         self.assertTrue(flow.send_datetime)
         self.assertTrue(flow.last_send_datetime)
         transport_attachments = self.env['ir.attachment'].search([
-            ('res_model', '=', 'l10n.fr.pdp.flow'),
+            ('res_model', '=', 'l10n.fr.pdp.reports.flow'),
             ('res_id', '=', flow.id),
             ('mimetype', '=', 'application/json'),
             ('name', 'like', '%_transport_response.json'),
@@ -195,7 +195,7 @@ class TestPdpStatusPropagation(PdpTestCommon):
             def __init__(self):
                 self.calls = []
 
-            def _l10n_fr_pdp_call_proxy(self, endpoint, params=None):
+            def _call_pdp_proxy(self, endpoint, params=None):
                 self.calls.append((endpoint, params or {}))
                 if endpoint == '/api/pdp/1/get_all_documents':
                     return {
@@ -212,7 +212,7 @@ class TestPdpStatusPropagation(PdpTestCommon):
 
         dummy_proxy = DummyProxy()
         with patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_flow.PdpFlow._get_pdp_proxy_user', return_value=dummy_proxy):
-            self.env['l10n.fr.pdp.flow']._cron_sync_transport_statuses()
+            self.env['l10n.fr.pdp.reports.flow']._cron_sync_transport_statuses()
 
         flow.invalidate_recordset(['state', 'transport_status', 'acknowledgement_status'])
         self.assertEqual(flow.state, 'completed')
@@ -235,7 +235,7 @@ class TestPdpStatusPropagation(PdpTestCommon):
             def __init__(self):
                 self.calls = []
 
-            def _l10n_fr_pdp_call_proxy(self, endpoint, params=None):
+            def _call_pdp_proxy(self, endpoint, params=None):
                 self.calls.append((endpoint, params or {}))
                 if endpoint == '/api/pdp/1/get_all_documents':
                     return {
@@ -253,7 +253,7 @@ class TestPdpStatusPropagation(PdpTestCommon):
 
         dummy_proxy = DummyProxy()
         with patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_flow.PdpFlow._get_pdp_proxy_user', return_value=dummy_proxy):
-            self.env['l10n.fr.pdp.flow']._cron_sync_transport_statuses()
+            self.env['l10n.fr.pdp.reports.flow']._cron_sync_transport_statuses()
 
         flow.invalidate_recordset(['state', 'transport_status', 'transport_message', 'acknowledgement_status'])
         self.assertEqual(flow.state, 'error')
@@ -289,10 +289,10 @@ class TestPdpStatusPropagation(PdpTestCommon):
         self._create_invoice(partner=self.partner_international, sent=True)
         flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
         self.assertIn(flow.state, {'pending', 'ready'})
-        self.assertTrue(flow.has_payload)
+        self.assertTrue(flow.payload_id)
 
         self.partner_international.with_context(no_vat_validation=True).write({'vat': 'BE000'})
-        flow.invalidate_recordset(['state', 'has_payload', 'revision'])
+        flow.invalidate_recordset(['state', 'payload_id', 'revision'])
         self.assertEqual(flow.state, 'pending', 'Flow should be reset to pending after partner change')
         self.assertFalse(flow.payload, 'Flow payload field should be cleared when marked outdated')
 

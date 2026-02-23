@@ -17,7 +17,7 @@ class TestPdpFlowsBasic(PdpTestCommon):
         """No transaction/payment source move in period -> no flow generated."""
         flows = self._run_aggregation()
         self.assertFalse(flows, 'No flow should be generated when there is no activity in the period')
-        stored_flows = self.env['l10n.fr.pdp.flow'].search([('company_id', '=', self.company.id)])
+        stored_flows = self.env['l10n.fr.pdp.reports.flow'].search([('company_id', '=', self.company.id)])
         self.assertFalse(stored_flows, 'Database should not contain PDP flows when there is no activity')
 
     def test_single_invoice_ready_flow(self):
@@ -28,7 +28,7 @@ class TestPdpFlowsBasic(PdpTestCommon):
         self.assertGreaterEqual(len(flow), 1, 'Expected at least one transaction flow')
         flow = flow[:1]
         self.assertEqual(flow.state, 'ready', 'Flow should be ready after payload build')
-        self.assertEqual(flow.transmission_type, 'IN', 'First flow must be IN')
+        self.assertEqual(flow.transmission_type, 'initial', 'First flow must be IN')
         self.assertTrue(flow.payload, 'Payload must be generated')
 
     def test_invoice_not_sent_flags_error_status(self):
@@ -45,9 +45,9 @@ class TestPdpFlowsBasic(PdpTestCommon):
         self._create_invoice(date_val=day1, sent=True)
         self._create_invoice(date_val=day2, sent=True)
         flows = self._run_aggregation()
-        tx_flows = flows.filtered(lambda f: f.report_kind == 'transaction')
-        self.assertTrue(tx_flows, 'Transaction flow should exist')
-        for flow in tx_flows:
+        transaction_flows = flows.filtered(lambda f: f.report_kind == 'transaction')
+        self.assertTrue(transaction_flows, 'Transaction flow should exist')
+        for flow in transaction_flows:
             dates = {m.invoice_date or m.date for m in flow.move_ids}
             builder = PdpPayloadBuilder(flow)
             report_vals = builder._build_transaction_report_vals(flow.move_ids)
@@ -90,7 +90,7 @@ class TestPdpFlowsBasic(PdpTestCommon):
 
         attachment_model = self.env['ir.attachment']
         domain = [
-            ('res_model', '=', 'l10n.fr.pdp.flow'),
+            ('res_model', '=', 'l10n.fr.pdp.reports.flow'),
             ('res_id', '=', flow.id),
             ('mimetype', '=', 'application/xml'),
             ('res_field', '=', False),
@@ -116,7 +116,7 @@ class TestPdpFlowsBasic(PdpTestCommon):
 
     def test_tracking_identifier_is_unique_per_company(self):
         """Two flows with identical attributes must not share the same TT-1 identifier."""
-        flow_model = self.env['l10n.fr.pdp.flow']
+        flow_model = self.env['l10n.fr.pdp.reports.flow']
         common_vals = {
             'company_id': self.company.id,
             'reporting_date': self.TEST_INVOICE_DATE,
@@ -125,7 +125,7 @@ class TestPdpFlowsBasic(PdpTestCommon):
             'report_kind': 'transaction',
             'operation_type': 'sale',
             'transaction_type': 'b2c',
-            'transmission_type': 'IN',
+            'transmission_type': 'initial',
         }
         flow_a = flow_model.create(common_vals)
         flow_b = flow_model.create(common_vals)
@@ -161,16 +161,16 @@ class TestPdpFlowsBasic(PdpTestCommon):
         receipt.is_move_sent = True
 
         flows = self._run_aggregation()
-        tx_flow = flows.filtered(lambda f: f.report_kind == 'transaction' and receipt in f.move_ids)[:1]
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment' and receipt in f.move_ids)[:1]
+        transaction_flow = flows.filtered(lambda f: f.report_kind == 'transaction' and receipt in f.move_ids)[:1]
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment' and receipt in f.move_ids)[:1]
 
-        self.assertTrue(tx_flow, 'Service receipt should be reported in transaction flow (10.3).')
-        self.assertTrue(pay_flow, 'Service receipt should be reported in payment flow (10.4).')
+        self.assertTrue(transaction_flow, 'Service receipt should be reported in transaction flow (10.3).')
+        self.assertTrue(payment_flow, 'Service receipt should be reported in payment flow (10.4).')
 
-        tx_xml = etree.fromstring(b64decode(tx_flow.payload))
-        tx_summary = tx_xml.find(".//TransactionsReport/Transactions[CategoryCode='TPS1']")
-        self.assertIsNotNone(tx_summary, '10.3 should contain a TPS1 summary for service receipt.')
+        transaction_xml = etree.fromstring(b64decode(transaction_flow.payload))
+        transaction_summary = transaction_xml.find(".//TransactionsReport/Transactions[CategoryCode='TPS1']")
+        self.assertIsNotNone(transaction_summary, '10.3 should contain a TPS1 summary for service receipt.')
 
-        pay_xml = etree.fromstring(b64decode(pay_flow.payload))
-        pay_subtotals = pay_xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
-        self.assertTrue(pay_subtotals, '10.4 should contain payment subtotals for service receipt.')
+        payment_xml = etree.fromstring(b64decode(payment_flow.payload))
+        payment_subtotals = payment_xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
+        self.assertTrue(payment_subtotals, '10.4 should contain payment subtotals for service receipt.')

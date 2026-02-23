@@ -2,7 +2,7 @@ from odoo import fields, models
 
 
 class PdpPaymentEvent(models.Model):
-    _name = 'l10n.fr.pdp.payment.event'
+    _name = 'l10n.fr.pdp.reports.payment.event'
     _description = 'PDP Payment Event'
     _order = 'event_date asc, id asc'
 
@@ -35,14 +35,12 @@ class PdpPaymentEvent(models.Model):
         index=True,
     )
     reported_flow_id = fields.Many2one(
-        comodel_name='l10n.fr.pdp.flow',
+        comodel_name='l10n.fr.pdp.reports.flow',
         ondelete='set null',
     )
 
-    _sql_constraints = [
-        (
-            'l10n_fr_pdp_payment_event_partial_move_uniq',
-            'unique(source_partial_id, move_id)',
-            'A payment event for this partial reconciliation and invoice already exists.',
-        ),
-    ]
+    _sql_constraints = [(
+        'l10n_fr_pdp_reports_payment_event_partial_move_uniq',
+        'unique(source_partial_id, move_id)',
+        'A payment event for this partial reconciliation and invoice already exists.',
+    )]

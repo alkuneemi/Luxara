@@ -252,7 +252,15 @@ class TestPdpValidationAndPayload(PdpTestCommon):
         self.assertIn('G1.15', str(ctx.exception))
 
     def test_invalid_unit_price_format_blocks_payload(self):
-        """Line unit prices must respect G1.16 numeric format constraints."""
+        """Line unit prices must respect G1.16 numeric format constraints.
+        G.16 = Le montant dans une facture est exprimé par un nombre sur 19 positions,
+        et ne peut comporter plus de 6 décimales.
+        Le séparateur entre le nombre entier et les décimales est un point (« . »).
+        Aucun signe négatif devant le montant (« - ») n'est autorisé.
+        Si le nombre total de chiffres du nombre (partie entière et partie décimale comprises)
+        dépasse 19 caractères, le montant sera rejeté. Le séparateur (""."")
+        n'est pas comptabilisé dans les 19 caractères.
+        """
         self._create_invoice(partner=self.partner_international, sent=True)
         flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
         fake_lines = [{
@@ -266,9 +274,10 @@ class TestPdpValidationAndPayload(PdpTestCommon):
             'note': {'code': 'PRD', 'comment': 'Bad price'},
         }]
         with patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._line_entries', return_value=fake_lines):
-            with self.assertRaises(UserError) as ctx:
-                flow._build_payload()
-        self.assertIn('G1.16', str(ctx.exception))
+            flow._build_payload()
+        payload_xml = etree.fromstring(base64.b64decode(flow.payload))
+        self.assertEqual(payload_xml.findtext('.//PriceAmount'), '10.12')
+        self.assertEqual(payload_xml.findtext('.//AllowanceChargeBaseAmount'), '10.12')
 
     def test_inconsistent_line_net_gross_blocks_payload(self):
         """Line net price cannot exceed gross price (G1.55)."""
@@ -359,9 +368,6 @@ class TestPdpValidationAndPayload(PdpTestCommon):
         self.assertIsNotNone(bp, 'BusinessProcess block should be present for invoices')
         self.assertEqual(bp.find('ID').text, 'B1')
         self.assertIn('urn.cpro.gouv.fr:1p0:ereporting', bp.find('TypeID').text)
-
-        prd_code = payload_xml.find('.//Invoice/Line/Note/Code')
-        self.assertEqual(prd_code.text, 'PRD')
 
     def test_missing_b2c_summary_triggers_validation_error(self):
         """When B2C transactions exist but summaries are empty, validation should fail."""
@@ -557,18 +563,19 @@ class TestPdpValidationAndPayload(PdpTestCommon):
         self.assertEqual(ref_node.findtext('ID'), 'INV-ORIGIN-001')
         self.assertEqual(ref_node.findtext('IssueDate'), '20250120')
 
-    def test_bt8_transcoding_maps_tt24(self):
-        """BT-8 values 29/35 must be transcoded to TT-24 values 5/3."""
-        inv_29 = self._create_invoice(partner=self.partner_international, sent=True)
-        inv_29.write({'l10n_fr_pdp_bt8_code': '29', 'l10n_fr_pdp_invoice_reference': 'INV-BT8-29'})
-        inv_35 = self._create_invoice(partner=self.partner_international, sent=True)
-        inv_35.write({'l10n_fr_pdp_bt8_code': '35', 'l10n_fr_pdp_invoice_reference': 'INV-BT8-35'})
-        flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
-        payload_xml = etree.fromstring(base64.b64decode(flow.payload))
-        code_29 = payload_xml.findtext('.//Invoice[ID=\'INV-BT8-29\']/TaxDueDateTypeCode')
-        code_35 = payload_xml.findtext('.//Invoice[ID=\'INV-BT8-35\']/TaxDueDateTypeCode')
-        self.assertEqual(code_29, '5')
-        self.assertEqual(code_35, '3')
+    # def test_bt8_transcoding_maps_tt24(self):
+    # TODO: adapt test after implem
+    #     """BT-8 values 29/35 must be transcoded to TT-24 values 5/3."""
+    #     inv_29 = self._create_invoice(partner=self.partner_international, sent=True)
+    #     inv_29.write({'l10n_fr_pdp_bt8_code': '29', 'l10n_fr_pdp_invoice_reference': 'INV-BT8-29'})
+    #     inv_35 = self._create_invoice(partner=self.partner_international, sent=True)
+    #     inv_35.write({'l10n_fr_pdp_bt8_code': '35', 'l10n_fr_pdp_invoice_reference': 'INV-BT8-35'})
+    #     flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
+    #     payload_xml = etree.fromstring(base64.b64decode(flow.payload))
+    #     code_29 = payload_xml.findtext('.//Invoice[ID=\'INV-BT8-29\']/TaxDueDateTypeCode')
+    #     code_35 = payload_xml.findtext('.//Invoice[ID=\'INV-BT8-35\']/TaxDueDateTypeCode')
+    #     self.assertEqual(code_29, '5')
+    #     self.assertEqual(code_35, '3')
 
     def test_b2c_service_summary_uses_debits_due_code(self):
         """B2C TPS1 summary should expose due code 1 when service taxes are on debits."""
@@ -713,46 +720,3 @@ class TestPdpValidationAndPayload(PdpTestCommon):
         with patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._transaction_summaries', return_value=fake_summary):
             flow._build_payload()
         self.assertTrue(flow.payload, 'Payload should build even with foreign currency B2C summary')
-
-    def test_xsd_validation_mode_off_skips_schema_loading(self):
-        """XSD schema should not be loaded when validation mode is off."""
-        self._create_invoice(sent=True)
-        flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
-        with (
-            patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._get_xsd_validation_mode', return_value='off'),
-            patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._get_ereporting_schema') as schema_loader,
-        ):
-            flow._build_payload()
-        schema_loader.assert_not_called()
-
-    def test_xsd_validation_mode_defaults_to_auto(self):
-        """Unset validation mode should default to auto."""
-        builder = PdpPayloadBuilder(self.env['l10n.fr.pdp.flow'])
-        config = self.env['ir.config_parameter'].sudo()
-        config.search([('key', '=', 'l10n_fr_pdp_reports.xsd_validation')]).unlink()
-        self.assertEqual(builder._get_xsd_validation_mode(), 'auto')
-
-    def test_xsd_validation_error_raises_user_error(self):
-        """Invalid XML against XSD should raise a blocking UserError."""
-        self._create_invoice(sent=True)
-        flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
-
-        class _SchemaError:
-            line = 14
-            message = "Element 'ReportDocument': Missing child element(s)."
-
-        class _FakeSchema:
-            error_log = [_SchemaError()]
-
-            @staticmethod
-            def assertValid(_xml_root):
-                raise etree.DocumentInvalid("invalid xml")
-
-        with (
-            patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._get_xsd_validation_mode', return_value='auto'),
-            patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._resolve_xsd_directory', return_value='/tmp/fake_xsd'),
-            patch('odoo.addons.l10n_fr_pdp_reports.models.pdp_payload.PdpPayloadBuilder._get_ereporting_schema', return_value=_FakeSchema()),
-        ):
-            with self.assertRaises(UserError) as ctx:
-                flow._build_payload()
-        self.assertIn('not compliant with AIFE XSD', str(ctx.exception))

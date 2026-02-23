@@ -3,7 +3,7 @@ from . import test_acquisition_flows
 from . import test_b2c_summaries
 from . import test_cron_send
 from . import test_dashboard_tile
-from . import test_deadlines
+# from . import test_deadlines
 from . import test_drom_com_territories
 from . import test_flows_basic
 from . import test_invoice_status

@@ -76,26 +76,26 @@ class TestPdpPaymentFlows(PdpTestCommon):
     def test_payment_flow_created_and_ready(self):
         """Payment flow built when payment is reconciled within window."""
         inv = self._create_invoice(sent=True, product=self.service_product)
-        pay_date = self.TEST_PAYMENT_DATE
-        self._create_payment_for_invoice(inv, pay_date=pay_date)
-        aggregator = self.env['l10n.fr.pdp.flow.aggregator'].with_context(mail_create_nolog=True, tracking_disable=True)
-        pay_flow, rebuild = aggregator._synchronize_payment_flows(self.company.id, pay_date, self.company.currency_id.id)
+        payment_date = self.TEST_PAYMENT_DATE
+        self._create_payment_for_invoice(inv, payment_date=payment_date)
+        aggregator = self.env['l10n.fr.pdp.reports.flow.aggregator'].with_context(mail_create_nolog=True, tracking_disable=True)
+        payment_flow, rebuild = aggregator._synchronize_payment_flows(self.company.id, payment_date, self.company.currency_id.id)
         if rebuild:
             rebuild._build_payload()
-        pay_flow = (pay_flow | rebuild).filtered(lambda f: f.report_kind == 'payment')[:1]
-        self.assertTrue(pay_flow, 'Payment flow should be created when payments exist')
-        self.assertEqual(pay_flow.state, 'ready', 'Payment flow must be ready after build')
-        self.assertTrue(pay_flow.payload, 'Payment flow should have payload built')
+        payment_flow = (payment_flow | rebuild).filtered(lambda f: f.report_kind == 'payment')[:1]
+        self.assertTrue(payment_flow, 'Payment flow should be created when payments exist')
+        self.assertEqual(payment_flow.state, 'ready', 'Payment flow must be ready after build')
+        self.assertTrue(payment_flow.payload, 'Payment flow should have payload built')
 
     def test_unitary_payment_uses_ttc_amount(self):
         """International payments should report TTC amounts in TT-95."""
         inv = self._create_invoice(partner=self.partner_international, sent=True, taxes=self.tax_20, product=self.service_product)
         inv.l10n_fr_pdp_invoice_reference = 'INV-TTC'
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amount_text = xml.findtext('.//PaymentsReport//Invoice[InvoiceID="INV-TTC"]//Amount')
         self.assertIsNotNone(amount_text, 'Payment entry should exist for TTC check')
         self.assertNotEqual(inv.amount_total, inv.amount_untaxed, 'Test invoice should include tax')
@@ -117,12 +117,12 @@ class TestPdpPaymentFlows(PdpTestCommon):
         for data in fixtures:
             issue_date = fields.Date.from_string(data['issue_date'])
             move = self._create_international_invoice(partner, issue_date, data['payable_amount'], data['id'])
-            self._create_payment_for_invoice(move, amount=data['payable_amount'], pay_date=issue_date)
+            self._create_payment_for_invoice(move, amount=data['payable_amount'], payment_date=issue_date)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         payment_nodes = xml.findall('.//PaymentsReport//Invoice')
         self.assertEqual(len(payment_nodes), len(fixtures), 'Fixture payments should be present in 10.2 output')
         for data in fixtures:
@@ -137,23 +137,23 @@ class TestPdpPaymentFlows(PdpTestCommon):
     def test_payment_content_flag(self):
         """Payment flow should contain payment content when payments exist."""
         inv = self._create_invoice(sent=True, product=self.service_product)
-        pay_date = self.TEST_PAYMENT_DATE
-        self._create_payment_for_invoice(inv, pay_date=pay_date)
-        aggregator = self.env['l10n.fr.pdp.flow.aggregator'].with_context(mail_create_nolog=True, tracking_disable=True)
-        pay_flow, rebuild = aggregator._synchronize_payment_flows(self.company.id, pay_date, self.company.currency_id.id)
+        payment_date = self.TEST_PAYMENT_DATE
+        self._create_payment_for_invoice(inv, payment_date=payment_date)
+        aggregator = self.env['l10n.fr.pdp.reports.flow.aggregator'].with_context(mail_create_nolog=True, tracking_disable=True)
+        payment_flow, rebuild = aggregator._synchronize_payment_flows(self.company.id, payment_date, self.company.currency_id.id)
         if rebuild:
             rebuild._build_payload()
-        pay_flow = (pay_flow | rebuild).filtered(lambda f: f.report_kind == 'payment')[:1]
-        self.assertTrue(pay_flow.payload, 'Payment flow payload missing')
-        flow_payload = pay_flow.payload
+        payment_flow = (payment_flow | rebuild).filtered(lambda f: f.report_kind == 'payment')[:1]
+        self.assertTrue(payment_flow.payload, 'Payment flow payload missing')
+        flow_payload = payment_flow.payload
         self.assertTrue(flow_payload, 'Payment payload must be generated')
 
     def test_partial_payment_amount_in_payload(self):
         """Partial reconciliations should use the reconciled amount in payment payload."""
         inv = self._create_invoice(sent=True, product=self.service_product)
         self._create_payment_for_invoice(inv, amount=40)
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amounts = [
             node.findtext('Amount')
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -232,10 +232,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.is_move_sent = True
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amounts = [
             float(node.findtext('Amount'))
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -296,10 +296,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.is_move_sent = True
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amounts = [
             float(node.findtext('Amount'))
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -349,10 +349,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.l10n_fr_pdp_invoice_reference = 'INV-ADV-B2C'
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amounts = [
             float(node.findtext('Amount'))
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -372,10 +372,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.l10n_fr_pdp_invoice_reference = 'INV-ADV-B2BI'
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         invoice_node = xml.find('.//PaymentsReport//Invoice[InvoiceID="INV-ADV-B2BI"]')
         self.assertIsNotNone(invoice_node, 'Advance B2Bi goods invoice must appear in 10.2 payments.')
         amounts = [float(node.findtext('Amount')) for node in invoice_node.findall('.//Payment/SubTotals')]
@@ -414,10 +414,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.is_move_sent = True
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         amounts = [
             float(node.findtext('Amount'))
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -479,10 +479,10 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv.is_move_sent = True
         self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         invoice_node = xml.find('.//PaymentsReport//Invoice[InvoiceID="INV-MIX-SVC"]')
         self.assertIsNotNone(invoice_node, 'Missing payment entry for mixed international invoice')
         amounts = [
@@ -530,11 +530,11 @@ class TestPdpPaymentFlows(PdpTestCommon):
         receipt.action_post()
         receipt.is_move_sent = True
 
-        pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment' and receipt in f.move_ids)[:1]
-        self.assertTrue(pay_flow, 'Payment flow should exist after adding payments/receipts')
-        if not pay_flow.payload:
-            pay_flow._build_payload()
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+        payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment' and receipt in f.move_ids)[:1]
+        self.assertTrue(payment_flow, 'Payment flow should exist after adding payments/receipts')
+        if not payment_flow.payload:
+            payment_flow._build_payload()
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         payments = xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
         percents = {node.findtext('TaxPercent') for node in payments}
         self.assertIn('0.0', percents, 'Receipt payments should be emitted with 0%% tax percent')
@@ -543,17 +543,17 @@ class TestPdpPaymentFlows(PdpTestCommon):
         """Payments dated outside the current window should not build a payment flow."""
         inv = self._create_invoice(sent=True, product=self.service_product)
         past_date = fields.Date.from_string('2023-01-01')
-        self._create_payment_for_invoice(inv, pay_date=past_date)
+        self._create_payment_for_invoice(inv, payment_date=past_date)
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment')
-        self.assertFalse(pay_flow, 'Payment flow should not be created when payments are outside the window')
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment')
+        self.assertFalse(payment_flow, 'Payment flow should not be created when payments are outside the window')
 
     def test_payment_flow_not_created_without_payments(self):
         """No payment flow should be built when no payments exist for the window."""
         self._create_invoice(sent=True, product=self.service_product)
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment')
-        self.assertFalse(pay_flow, 'No payment flow expected without any payments')
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment')
+        self.assertFalse(payment_flow, 'No payment flow expected without any payments')
 
     def test_unreconciled_payment_is_excluded_from_flow(self):
         """Payments not reconciled with an invoice must not create a payment flow."""
@@ -577,8 +577,8 @@ class TestPdpPaymentFlows(PdpTestCommon):
         payment.action_post()
 
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment')
-        self.assertFalse(pay_flow, 'Unreconciled payments must be excluded from payment flows')
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment')
+        self.assertFalse(payment_flow, 'Unreconciled payments must be excluded from payment flows')
 
     def test_unreconcile_after_send_creates_negative_payment_next_period(self):
         """De-lettrage after send must generate a negative payment in the next period."""
@@ -586,11 +586,11 @@ class TestPdpPaymentFlows(PdpTestCommon):
         payment = self._create_payment_for_invoice(inv, amount=inv.amount_total)
 
         # Build + send initial payment flow (February window).
-        first_pay_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
-        self.assertTrue(first_pay_flow, 'Initial payment flow should exist before de-lettrage.')
-        first_pay_flow.action_send()
-        first_pay_flow.invalidate_recordset(['state'])
-        self.assertIn(first_pay_flow.state, {'sent', 'completed'})
+        first_payment_flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'payment')[:1]
+        self.assertTrue(first_payment_flow, 'Initial payment flow should exist before de-lettrage.')
+        first_payment_flow.action_send()
+        first_payment_flow.invalidate_recordset(['state'])
+        self.assertIn(first_payment_flow.state, {'sent', 'completed'})
 
         # Cancel reconciliation in March to create a pending unreconcile event.
         march_day = fields.Date.from_string('2025-03-06')
@@ -601,7 +601,7 @@ class TestPdpPaymentFlows(PdpTestCommon):
         with patch('odoo.fields.Date.context_today', return_value=march_day):
             receivable_lines.remove_move_reconcile()
 
-        pending_events = self.env['l10n.fr.pdp.payment.event'].search([
+        pending_events = self.env['l10n.fr.pdp.reports.payment.event'].search([
             ('move_id', '=', inv.id),
             ('state', '=', 'pending'),
             ('event_date', '=', march_day),
@@ -613,12 +613,12 @@ class TestPdpPaymentFlows(PdpTestCommon):
         next_flows = self._aggregate_company().filtered(
             lambda f: f.report_kind == 'payment' and f.period_start == fields.Date.from_string('2025-03-01')
         )
-        next_pay_flow = next_flows[:1]
-        self.assertTrue(next_pay_flow, 'A payment flow should be generated for the next period.')
-        if not next_pay_flow.payload:
-            next_pay_flow._build_payload()
+        next_payment_flow = next_flows[:1]
+        self.assertTrue(next_payment_flow, 'A payment flow should be generated for the next period.')
+        if not next_payment_flow.payload:
+            next_payment_flow._build_payload()
 
-        xml = etree.fromstring(base64.b64decode(next_pay_flow.payload))
+        xml = etree.fromstring(base64.b64decode(next_payment_flow.payload))
         subtotal_amounts = [
             float(node.findtext('Amount'))
             for node in xml.findall('.//PaymentsReport//Transactions/Payment/SubTotals')
@@ -628,11 +628,11 @@ class TestPdpPaymentFlows(PdpTestCommon):
 
         # Once sent (outside open period), pending events are marked as reported.
         with patch('odoo.fields.Date.context_today', return_value=fields.Date.from_string('2025-04-05')):
-            next_pay_flow._build_payload()
-            next_pay_flow.action_send()
+            next_payment_flow._build_payload()
+            next_payment_flow.action_send()
         pending_events.invalidate_recordset(['state', 'reported_flow_id'])
         self.assertTrue(all(event.state == 'reported' for event in pending_events))
-        self.assertTrue(all(event.reported_flow_id == next_pay_flow for event in pending_events))
+        self.assertTrue(all(event.reported_flow_id == next_payment_flow for event in pending_events))
 
     def test_compensation_with_credit_note_is_excluded_from_payments(self):
         """Invoice/refund compensation must not be considered as payment reporting."""
@@ -661,9 +661,9 @@ class TestPdpPaymentFlows(PdpTestCommon):
             lambda l: l.account_id.reconcile and l.account_id.account_type == 'asset_receivable',
         ).reconcile()
 
-        aggregator = self.env['l10n.fr.pdp.flow.aggregator']
-        pay_start, pay_end, _code = aggregator._get_period_bounds(self.company.id, self.TEST_PAYMENT_DATE, 'payment')
-        source_moves = aggregator._get_payment_source_moves(self.company.id, pay_start, pay_end)
+        aggregator = self.env['l10n.fr.pdp.reports.flow.aggregator']
+        payment_start, payment_end, _code = aggregator._get_period_bounds(self.company.id, self.TEST_PAYMENT_DATE, 'payment')
+        source_moves = aggregator._get_payment_source_moves(self.company.id, payment_start, payment_end)
         self.assertFalse(
             source_moves & (inv | refund),
             'Invoice/refund compensation must not appear in payment source moves.',
@@ -701,30 +701,29 @@ class TestPdpPaymentFlows(PdpTestCommon):
             receipt.is_move_sent = True
             receipts |= receipt
 
-        aggregator = self.env['l10n.fr.pdp.flow.aggregator']
-        pay_start, pay_end, _code = aggregator._get_period_bounds(self.company.id, date_val, 'payment')
+        aggregator = self.env['l10n.fr.pdp.reports.flow.aggregator']
+        payment_start, payment_end, _code = aggregator._get_period_bounds(self.company.id, date_val, 'payment')
         payment_moves = aggregator._get_payment_moves(receipts)
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment' and (f.move_ids & receipts))[:1]
-        if not pay_flow and payment_moves:
-            pay_flow = self.env['l10n.fr.pdp.flow'].create({
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment' and (f.move_ids & receipts))[:1]
+        if not payment_flow and payment_moves:
+            payment_flow = self.env['l10n.fr.pdp.reports.flow'].create({
                 'company_id': self.company.id,
                 'report_kind': 'payment',
-                'flow_type': 'transaction_report',
                 'currency_id': self.company.currency_id.id,
                 'document_type': 'sale',
                 'transaction_type': 'mixed',
-                'transmission_type': 'IN',
-                'period_start': pay_start,
-                'period_end': pay_end,
+                'transmission_type': 'initial',
+                'period_start': payment_start,
+                'period_end': payment_end,
                 'periodicity_code': 'M',
-                'reporting_date': pay_start,
+                'reporting_date': payment_start,
                 'issue_datetime': fields.Datetime.now(),
                 'move_ids': [Command.set(payment_moves.ids)],
             })
-            pay_flow._build_payload()
-        self.assertTrue(pay_flow, 'Payment flow should be generated for receipts in window')
-        xml = etree.fromstring(base64.b64decode(pay_flow.payload))
+            payment_flow._build_payload()
+        self.assertTrue(payment_flow, 'Payment flow should be generated for receipts in window')
+        xml = etree.fromstring(base64.b64decode(payment_flow.payload))
         payments = xml.findall('.//PaymentsReport//Transactions')
         self.assertEqual(len(payments), 1, 'Receipts on same date should be grouped into one payment entry')
         subtotal = payments[0].find('.//Amount')
@@ -736,14 +735,14 @@ class TestPdpPaymentFlows(PdpTestCommon):
         inv = self._create_invoice(sent=True, product=self.service_product)
         self._create_payment_for_invoice(inv)
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment')[:1]
-        self.assertTrue(pay_flow)
-        ready_state = pay_flow.state
-        with patch('odoo.fields.Date.context_today', return_value=fields.Date.context_today(self.env['l10n.fr.pdp.flow'])):
-            self.env['l10n.fr.pdp.flow']._cron_send_ready_flows()
-        pay_flow.invalidate_recordset(['state', 'transport_identifier'])
-        self.assertEqual(pay_flow.state, ready_state, 'Manual mode should prevent cron from sending payment flows')
-        self.assertFalse(pay_flow.transport_identifier)
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment')[:1]
+        self.assertTrue(payment_flow)
+        ready_state = payment_flow.state
+        with patch('odoo.fields.Date.context_today', return_value=fields.Date.context_today(self.env['l10n.fr.pdp.reports.flow'])):
+            self.env['l10n.fr.pdp.reports.flow']._cron_send_ready_flows()
+        payment_flow.invalidate_recordset(['state', 'transport_identifier'])
+        self.assertEqual(payment_flow.state, ready_state, 'Manual mode should prevent cron from sending payment flows')
+        self.assertFalse(payment_flow.transport_identifier)
 
     def test_payment_precision_validation_error(self):
         """Payment amounts outside currency precision should trigger validation error."""

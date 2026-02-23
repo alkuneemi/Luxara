@@ -18,27 +18,25 @@ class TestPdpRectificativeFlows(PdpTestCommon):
         self._create_invoice(sent=True)
         invoice = self._create_invoice(sent=False)  # Will fail validation
         flows = self._aggregate_company()
-        tx_flow = flows.filtered(lambda f: f.report_kind == 'transaction')[:1]
-        self.assertTrue(tx_flow, 'Initial transaction flow should be created')
+        transaction_flow = flows.filtered(lambda f: f.report_kind == 'transaction')[:1]
+        self.assertTrue(transaction_flow, 'Initial transaction flow should be created')
 
         # Send on deadline (with errors) - should auto-create RE for error invoices
-        tx_flow.with_context(ignore_error_invoices=True).action_send()
+        transaction_flow.with_context(ignore_error_invoices=True).action_send()
 
         # Find the auto-created RE flow
-        re_flow = self.env['l10n.fr.pdp.flow'].search([
+        re_flow = self.env['l10n.fr.pdp.reports.flow'].search([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'transaction'),
-            ('transmission_type', '=', 'RE'),
-            ('is_correction', '=', True),
+            ('transmission_type', '=', 'rectificative'),
         ], order='id desc', limit=1)
 
         self.assertTrue(re_flow, 'RE flow should be auto-created for error invoices')
-        self.assertEqual(re_flow.transmission_type, 'RE', 'TT-4 should be RE')
-        self.assertTrue(re_flow.is_correction, 'Should be marked as correction')
+        self.assertEqual(re_flow.transmission_type, 'rectificative', 'TT-4 should be RE')
         # v1.2: RE is always a full replacement payload (never a delta)
         self.assertEqual(
             re_flow.move_ids.sorted('id'),
-            tx_flow.move_ids.sorted('id'),
+            transaction_flow.move_ids.sorted('id'),
             'RE should contain the full period dataset',
         )
         self.assertIn(invoice, re_flow.error_move_ids, 'RE should keep the invalid set visible for accountants')
@@ -60,16 +58,15 @@ class TestPdpRectificativeFlows(PdpTestCommon):
         flows = self._aggregate_company()
         re_flow = flows.filtered(lambda f: f.report_kind == 'payment' and f.id != first_payment_flow.id)
         if not re_flow:
-            re_flow = self.env['l10n.fr.pdp.flow'].search([
+            re_flow = self.env['l10n.fr.pdp.reports.flow'].search([
                 ('company_id', '=', self.company.id),
                 ('report_kind', '=', 'payment'),
                 ('id', '!=', first_payment_flow.id),
             ], order='id desc', limit=1)
 
         re_flow = re_flow[-1:]
-        self.assertTrue(re_flow, 'RE payment flow should be created for new payments')
-        self.assertEqual(re_flow.transmission_type, 'RE', 'TT-4 should be RE (not MO)')
-        self.assertTrue(re_flow.is_correction, 'Should be marked as correction')
+        self.assertTrue(re_flow, 'rectificative payment flow should be created for new payments')
+        self.assertEqual(re_flow.transmission_type, 'rectificative', 'TT-4 should be rectificative')
 
     def test_rectificative_flow_manual_creation(self):
         """Manual RE flow creation via button (v1.2: no references to previous flows)."""
@@ -83,8 +80,7 @@ class TestPdpRectificativeFlows(PdpTestCommon):
         new_flow = self.env[action['res_model']].browse(action['res_id'])
 
         # v1.2: Only transmission_type matters, no reference fields
-        self.assertEqual(new_flow.transmission_type, 'RE', 'TT-4 should be RE for rectificative')
-        self.assertTrue(new_flow.is_correction, 'Should be marked as correction')
+        self.assertEqual(new_flow.transmission_type, 'rectificative', 'TT-4 should be RE for rectificative')
         self.assertEqual(new_flow.move_ids.sorted('id'), flow.move_ids.sorted('id'), 'Should copy invoices')
         self.assertEqual(new_flow.state, 'pending', 'Should start in pending state')
 
@@ -93,16 +89,16 @@ class TestPdpRectificativeFlows(PdpTestCommon):
         inv = self._create_invoice(sent=True, product=self.service_product)
         self._create_payment_for_invoice(inv)
         flows = self._aggregate_company()
-        pay_flow = flows.filtered(lambda f: f.report_kind == 'payment')[:1]
-        self.assertTrue(pay_flow, 'Payment flow should be present before send')
-        pay_flow.action_send()
+        payment_flow = flows.filtered(lambda f: f.report_kind == 'payment')[:1]
+        self.assertTrue(payment_flow, 'Payment flow should be present before send')
+        payment_flow.action_send()
 
-        count_before = self.env['l10n.fr.pdp.flow'].search_count([
+        count_before = self.env['l10n.fr.pdp.reports.flow'].search_count([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'payment'),
         ])
         self._aggregate_company()
-        count_after = self.env['l10n.fr.pdp.flow'].search_count([
+        count_after = self.env['l10n.fr.pdp.reports.flow'].search_count([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'payment'),
         ])
@@ -118,50 +114,30 @@ class TestPdpRectificativeFlows(PdpTestCommon):
 
         # In v1.2: Even if invoice changes after being sent, no automatic correction flow
         # User must create credit note/rectificative invoice, then manual RE
-        auto_re_flow = self.env['l10n.fr.pdp.flow'].search([
+        auto_re_flow = self.env['l10n.fr.pdp.reports.flow'].search([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'transaction'),
-            ('is_correction', '=', True),
-            ('transmission_type', '=', 'RE'),
+            ('transmission_type', '=', 'rectificative'),
         ], order='id desc', limit=1)
 
         # Should NOT auto-create correction flow (v1.0 behavior removed)
-        self.assertFalse(auto_re_flow, 'v1.2: No auto-correction flows; user creates RE manually')
+        self.assertFalse(auto_re_flow, 'v1.2: No auto-correction flows; user creates rectificative flows manually')
 
     def test_transaction_flow_not_duplicated_for_same_moves(self):
         """No new transaction flow when the sent set is unchanged."""
         self._create_invoice(sent=True)
         flow = self._aggregate_company().filtered(lambda f: f.report_kind == 'transaction')[:1]
         flow.action_send()
-        count_before = self.env['l10n.fr.pdp.flow'].search_count([
+        count_before = self.env['l10n.fr.pdp.reports.flow'].search_count([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'transaction'),
         ])
         self._aggregate_company()
-        count_after = self.env['l10n.fr.pdp.flow'].search_count([
+        count_after = self.env['l10n.fr.pdp.reports.flow'].search_count([
             ('company_id', '=', self.company.id),
             ('report_kind', '=', 'transaction'),
         ])
         self.assertEqual(count_after, count_before, 'Identical transaction set must not spawn a new flow')
-
-    def test_only_in_and_re_transmission_types_allowed(self):
-        """v1.2: Only IN and RE transmission types exist (CO/MO removed)."""
-        self._create_invoice(sent=True)
-        flows = self._aggregate_company()
-
-        # All flows should only have IN or RE
-        for flow in flows:
-            self.assertIn(
-                flow.transmission_type,
-                {'IN', 'RE'},
-                f'Flow {flow.id} has invalid transmission_type: {flow.transmission_type}',
-            )
-
-        # Initial flows should be IN
-        initial_flows = flows.filtered(lambda f: not f.is_correction)
-        for flow in initial_flows:
-            self.assertEqual(flow.transmission_type, 'IN',
-                           f'Initial flow {flow.id} should have transmission_type=\'IN\'')
 
     def test_re_flow_no_reference_fields(self):
         """v1.2: RE flows don't use transmission_reference or reference_scheme."""
@@ -175,5 +151,4 @@ class TestPdpRectificativeFlows(PdpTestCommon):
 
         # v1.2: These fields should not be used (will be removed from model)
         # Just verify RE type is correct
-        self.assertEqual(re_flow.transmission_type, 'RE', 'Should be RE transmission type')
-        self.assertTrue(re_flow.is_correction, 'Should be marked as correction flow')
+        self.assertEqual(re_flow.transmission_type, 'rectificative', 'Should be rectificative transmission type')

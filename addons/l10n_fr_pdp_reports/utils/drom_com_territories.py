@@ -55,17 +55,17 @@ ALL_FRANCE_TERRITORIES = FRANCE_METRO | ALL_DROM_COM
 
 # According to technical specifications, these ISO country codes must be
 # mapped to 'FR' in XML flows (Flux 1 & Flux 10) transmitted to the PPF
-COUNTRY_CODE_TO_FR_MAPPING = {
-    'GP': 'FR',  # Guadeloupe
-    'MQ': 'FR',  # Martinique
-    'GF': 'FR',  # Guyane
-    'RE': 'FR',  # La Réunion
-    'YT': 'FR',  # Mayotte
-    'BL': 'FR',  # Saint-Barthélemy
-    'MF': 'FR',  # Saint-Martin
-    'PM': 'FR',  # Saint-Pierre-et-Miquelon
-    'WF': 'FR',  # Wallis-et-Futuna
-    'TF': 'FR',  # Terres australes françaises
+COUNTRY_CODE_MAPPEDN_TO_FR = {
+    'GP',  # Guadeloupe
+    'MQ',  # Martinique
+    'GF',  # Guyane
+    'RE',  # La Réunion
+    'YT',  # Mayotte
+    'BL',  # Saint-Barthélemy
+    'MF',  # Saint-Martin
+    'PM',  # Saint-Pierre-et-Miquelon
+    'WF',  # Wallis-et-Futuna
+    'TF',  # Terres australes françaises
     # Note: NC and PF may retain specific processing for identifiers
 }
 
@@ -92,6 +92,8 @@ SPECIFIC_IDENTIFIER_SCHEMES = {
         'description': 'Wallis & Futuna business identifier',
     },
 }
+
+E_INVOICING_ZONES = {'metro', 'drom_einvoicing'}
 
 # -------------------------------------------------------------------------
 # Helper Functions
@@ -133,29 +135,18 @@ def get_territory_type(country_code):
 
 def should_use_einvoicing(company_country, partner_country):
     """Determine if e-invoicing (Flux 1) should be used for a transaction."""
-    if not company_country or not partner_country:
-        return False
-
     comp_type = get_territory_type(company_country)
     part_type = get_territory_type(partner_country)
-
-    # Both must be French territories
-    if not comp_type or not part_type:
-        return False
-
-    # E-invoicing zones: Metro + DROM e-invoicing group
-    einvoicing_zones = {'metro', 'drom_einvoicing'}
-
     # Both in e-invoicing zone
-    return comp_type in einvoicing_zones and part_type in einvoicing_zones
+    return {comp_type, part_type}.issubset(E_INVOICING_ZONES)
 
 
 def map_country_code_for_ppf(country_code):
     """Map a country code to the value that should be used in PPF XML flows."""
-    if not country_code:
-        return country_code
+    if (country_code or '').upper() in COUNTRY_CODE_MAPPEDN_TO_FR:
+        return 'FR'
 
-    return COUNTRY_CODE_TO_FR_MAPPING.get(country_code.upper(), country_code)
+    return country_code
 
 
 def get_specific_identifier_scheme(country_code):
@@ -174,26 +165,18 @@ def get_transaction_flow_type(company_country, partner_country, partner_vat):
 
     # If no country info, cannot determine
     if not company_country or not partner_country:
-        return False
-
-    comp_type = get_territory_type(company_country)
-    part_type = get_territory_type(partner_country)
+        return None
 
     # One party outside French territories = International
-    if not comp_type or not part_type:
+    if not get_territory_type(company_country) or not get_territory_type(partner_country):
         return 'international'
 
     # Both parties in e-invoicing zones = Domestic B2B (excluded from Flux 10)
     if should_use_einvoicing(company_country, partner_country):
-        return False
+        return None
 
     # All other cases: International
     return 'international'
-
-
-def is_b2b_transaction(partner_vat):
-    """Check if a transaction is B2B based on partner VAT."""
-    return bool(partner_vat and partner_vat != '/')
 
 
 def get_drom_com_info():

@@ -6,15 +6,14 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import Command, api, fields, models, _
 
+from odoo.addons.l10n_fr_pdp_reports.models.pdp_flow import FLOW_OPEN_STATES, FLOW_SENT_STATES
+
 _logger = logging.getLogger(__name__)
 
 
 class PdpFlowAggregator(models.AbstractModel):
-    _name = 'l10n.fr.pdp.flow.aggregator'
+    _name = 'l10n.fr.pdp.reports.flow.aggregator'
     _description = 'PDP Flow Aggregator'
-
-    _OPEN_STATES = {'pending', 'building', 'ready', 'error'}
-    _SENT_STATES = {'sent', 'completed'}
 
     # -------------------------------------------------------------------------
     # Public API
@@ -23,7 +22,7 @@ class PdpFlowAggregator(models.AbstractModel):
     @api.model
     def _cron_generate_daily_flows(self):
         """Cron job to generate PDP flows for all enabled companies."""
-        companies = self.env['res.company'].search([('l10n_fr_pdp_enabled', '=', True)])
+        companies = self.env['res.company'].search([('l10n_fr_pdp_send_to_ppf', '=', True)])
         for company in companies:
             _logger.info('Running PDP flow aggregation cron for company %s', company.id)
             try:
@@ -35,7 +34,7 @@ class PdpFlowAggregator(models.AbstractModel):
         """Process unprocessed moves for a single company."""
         today = fields.Date.context_today(self)
         moves = self._get_unprocessed_moves(company)
-        flows = self.env['l10n.fr.pdp.flow'].browse()
+        flows = self.env['l10n.fr.pdp.reports.flow'].browse()
         if moves:
             _logger.info('Processing %s unreported invoices for company %s', len(moves), company.id)
             flows |= self._aggregate_moves(moves)
@@ -49,7 +48,7 @@ class PdpFlowAggregator(models.AbstractModel):
             payment_rebuild._log_cron_event(_("Payment flow payload rebuilt automatically by the PDP cron."))
         flows |= payment_flows | payment_rebuild
         # Build any flows needing a (re)build.
-        pending_flows = self.env['l10n.fr.pdp.flow'].search([
+        pending_flows = self.env['l10n.fr.pdp.reports.flow'].search([
             ('company_id', '=', company.id),
             ('state', 'in', ('pending', 'building', 'error')),
         ]) - flows
@@ -106,7 +105,7 @@ class PdpFlowAggregator(models.AbstractModel):
             _logger.info('Skipping %s invoices outside PDP scope for company %s: %s', len(skipped), company.id, preview)
 
         def _is_reported(move):
-            sent_flows = move.l10n_fr_pdp_flow_ids.filtered(lambda f: f.state in self._SENT_STATES)
+            sent_flows = move.l10n_fr_pdp_flow_ids.filtered(lambda f: f.state in FLOW_SENT_STATES)
             return bool(sent_flows) and any(move not in f.error_move_ids for f in sent_flows)
 
         return eligible.filtered(lambda m: not _is_reported(m))
@@ -118,10 +117,10 @@ class PdpFlowAggregator(models.AbstractModel):
     def _aggregate_moves(self, moves):
         """Aggregate moves into PDP flows by period, currency, and transaction type."""
         if not moves:
-            return self.env['l10n.fr.pdp.flow'].browse()
+            return self.env['l10n.fr.pdp.reports.flow'].browse()
         grouped = self._group_moves(moves)
-        flow_model = self.env['l10n.fr.pdp.flow']
-        aggregated_flows = flow_model.browse()
+        Flow = self.env['l10n.fr.pdp.reports.flow']
+        aggregated_flows = Flow.browse()
         payment_source_cache = {}
         for key, group_moves in grouped.items():
             company_id, period_start, period_end, periodicity_code, currency_id, operation_type = key
@@ -146,8 +145,8 @@ class PdpFlowAggregator(models.AbstractModel):
             )
 
             # Create/update the payment flow for the same period anchor (sales only).
-            payment_flow = flow_model.browse()
-            payment_rebuild = flow_model.browse()
+            payment_flow = Flow.browse()
+            payment_rebuild = Flow.browse()
             if operation_type == 'sale':
                 payment_period_start, payment_period_end, _payment_periodicity_code = self._get_period_bounds(
                     company_id, period_start, 'payment',
@@ -214,10 +213,10 @@ class PdpFlowAggregator(models.AbstractModel):
         has_b2c = False
         has_international = False
         for move in moves:
-            tx_type = move._get_l10n_fr_pdp_transaction_type()
-            if tx_type == 'b2c':
+            transaction_type = move._get_l10n_fr_pdp_transaction_type()
+            if transaction_type == 'b2c':
                 has_b2c = True
-            elif tx_type == 'international':
+            elif transaction_type == 'international':
                 has_international = True
         if has_b2c and has_international:
             return 'mixed'
@@ -231,14 +230,14 @@ class PdpFlowAggregator(models.AbstractModel):
     # Period Calculation
     # -------------------------------------------------------------------------
 
-    def _get_period_bounds(self, company_id, reporting_date, report_kind):
+    def _get_period_bounds(self, company_id, reporting_date, report_type):
         """Calculate period start/end based on company periodicity settings."""
         company = self.env['res.company'].browse(company_id)
         base_date = fields.Date.to_date(reporting_date)
         periodicity = (
-            company.l10n_fr_pdp_payment_periodicity if report_kind == 'payment'
+            company.l10n_fr_pdp_payment_periodicity if report_type == 'payment'
             else company.l10n_fr_pdp_periodicity
-        ) or ('monthly' if report_kind == 'payment' else 'decade')
+        ) or ('monthly' if report_type == 'payment' else 'decade')
 
         if periodicity == 'monthly':
             period_start = base_date.replace(day=1)
@@ -292,24 +291,28 @@ class PdpFlowAggregator(models.AbstractModel):
 
         Args:
             domain: Domain identifying a unique flow scope (period/currency/kind).
-            create_values: Base values for creating a flow (without transmission/is_correction/move_ids).
+            create_values: Base values for creating a flow (without transmission/move_ids).
             moves: Moves to include in the flow.
             transaction_type: Computed scope for the flow (b2c/international/mixed).
             period_end: Period end used to decide when to rebuild pending flows.
             unlink_if_empty: If True, remove any open flow when no moves are found.
-            skip_if_last_sent_same_moves: If True, avoid creating a new RE flow when the last sent one matches.
+            skip_if_last_sent_same_moves: If True, avoid creating a new rectificative flow when the last sent one matches.
         """
-        flow_model = self.env['l10n.fr.pdp.flow']
-        existing_flows = flow_model.search(domain, order='create_date desc')
-        sent_flows = existing_flows.filtered(lambda f: f.state in self._SENT_STATES)
-        open_flows = existing_flows.filtered(lambda f: f.state in self._OPEN_STATES)
+        Flow = self.env['l10n.fr.pdp.reports.flow']
+        existing_flows = Flow.search(domain, order='create_date desc')
+        sent_flows = Flow.browse()
+        open_flows = Flow.browse()
+        target_open_flows = Flow.browse()
+        for flow in existing_flows:
+            if flow.state in FLOW_SENT_STATES:
+                sent_flows |= flow
+            if flow.state in FLOW_OPEN_STATES:
+                open_flows |= flow
 
         want_correction = bool(sent_flows)
-        target_transmission = 'RE' if want_correction else 'IN'
+        target_transmission = 'rectificative' if want_correction else 'initial'
 
-        target_open_flows = open_flows.filtered(
-            lambda f: f.transmission_type == target_transmission and bool(f.is_correction) == want_correction,
-        )
+        target_open_flows = open_flows.filtered(lambda f: f.transmission_type == target_transmission)
         obsolete_open_flows = open_flows - target_open_flows
         if obsolete_open_flows:
             obsolete_open_flows.unlink()
@@ -322,22 +325,21 @@ class PdpFlowAggregator(models.AbstractModel):
         if unlink_if_empty and not moves:
             if flow:
                 flow.unlink()
-            return flow_model.browse(), flow_model.browse()
+            return Flow.browse(), Flow.browse()
 
         if skip_if_last_sent_same_moves and want_correction and not flow and moves:
             last_sent = sent_flows.sorted('create_date')[-1:]
             if last_sent and moves.sorted('id') == last_sent.move_ids.sorted('id'):
-                return last_sent, flow_model.browse()
+                return last_sent, Flow.browse()
 
         changed = False
         if flow:
             changed = flow._synchronize_moves(moves)
         else:
-            flow = flow_model.create({
+            flow = Flow.create({
                 **create_values,
                 'transaction_type': transaction_type,
                 'transmission_type': target_transmission,
-                'is_correction': want_correction,
                 'move_ids': [Command.set(moves.ids)],
             })
             flow._update_reference_name()
@@ -347,9 +349,9 @@ class PdpFlowAggregator(models.AbstractModel):
         if flow.transaction_type != transaction_type:
             flow.transaction_type = transaction_type
 
-        rebuild_flows = flow_model.browse()
+        rebuild_flows = Flow.browse()
         today = fields.Date.context_today(self)
-        if changed or not flow.has_payload or (flow.state == 'pending' and today > period_end):
+        if changed or not flow.payload_id or (flow.state == 'pending' and today > period_end):
             rebuild_flows |= flow
         return flow, rebuild_flows
 
@@ -368,11 +370,10 @@ class PdpFlowAggregator(models.AbstractModel):
         base_domain = [
             ('company_id', '=', company_id),
             ('currency_id', '=', currency_id),
-            ('flow_type', '=', 'transaction_report'),
         ]
 
         domain = base_domain + [
-            ('report_kind', '=', 'transaction'),
+            ('report_type', '=', 'transaction'),
             ('operation_type', '=', operation_type),
             ('period_start', '=', period_start),
             ('period_end', '=', period_end),
@@ -385,13 +386,11 @@ class PdpFlowAggregator(models.AbstractModel):
                 'reporting_date': period_start,
                 'currency_id': currency_id,
                 'document_type': 'mixed',
-                'flow_type': 'transaction_report',
-                'report_kind': 'transaction',
+                'report_type': 'transaction',
                 'operation_type': operation_type,
                 'period_start': period_start,
                 'period_end': period_end,
                 'periodicity_code': periodicity_code,
-                'issue_datetime': fields.Datetime.now(),
             },
             moves=period_moves,
             transaction_type=transaction_type,
@@ -416,10 +415,9 @@ class PdpFlowAggregator(models.AbstractModel):
         base_domain = [
             ('company_id', '=', company_id),
             ('currency_id', '=', currency_id),
-            ('flow_type', '=', 'transaction_report'),
         ]
         payment_domain = base_domain + [
-            ('report_kind', '=', 'payment'),
+            ('report_type', '=', 'payment'),
             ('period_start', '=', payment_period_start),
             ('period_end', '=', payment_period_end),
             ('periodicity_code', '=', payment_periodicity_code),
@@ -431,12 +429,10 @@ class PdpFlowAggregator(models.AbstractModel):
                 'reporting_date': payment_period_start,
                 'currency_id': currency_id,
                 'document_type': 'sale',
-                'flow_type': 'transaction_report',
-                'report_kind': 'payment',
+                'report_type': 'payment',
                 'period_start': payment_period_start,
                 'period_end': payment_period_end,
                 'periodicity_code': payment_periodicity_code,
-                'issue_datetime': fields.Datetime.now(),
             },
             moves=payment_moves,
             transaction_type=payment_transaction_type,
@@ -473,8 +469,8 @@ class PdpFlowAggregator(models.AbstractModel):
                 # Exception: advance invoices (BT-3 386/500) are always reported.
                 if not has_reportable_lines:
                     continue
-                if move.amount_tax <= 0:
-                    continue
+                # if move.amount_tax <= 0:  # TODO check
+                #     continue
 
             result |= move
         return result
@@ -491,7 +487,7 @@ class PdpFlowAggregator(models.AbstractModel):
         """Return True when a line should be considered in payment reporting.
 
         Services with option débits (tax_exigibility='on_invoice') are excluded
-        because TVA is already due at invoicing — no payment reporting needed.
+        because VAT is already due at invoicing — no payment reporting needed.
         """
         taxes = line.tax_ids
         if line.product_id:
@@ -503,15 +499,12 @@ class PdpFlowAggregator(models.AbstractModel):
             )
         if not is_service:
             return False
-        # Only report payments for services with TVA à l'encaissement (on_payment)
+        # Only report payments for services with "TVA à l'encaissement" (on_payment)
         return any(t.tax_exigibility == 'on_payment' for t in taxes) if taxes else True
 
     def _is_payment_partial_aml(self, aml):
         """Return True when a reconciled AML corresponds to an actual payment."""
-        move = aml.move_id
-        has_origin_payment = 'origin_payment_id' in move._fields and bool(move.origin_payment_id)
-        has_statement_line = 'statement_line_id' in move._fields and bool(move.statement_line_id)
-        return has_origin_payment or has_statement_line
+        return bool(aml.move_id.origin_payment_id or aml.move_id.statement_line_id)
 
     def _get_payment_source_moves(self, company_id, period_start, period_end):
         """Sale docs with payments dated in the payment window."""
@@ -524,20 +517,22 @@ class PdpFlowAggregator(models.AbstractModel):
         result = self.env['account.move'].browse()
         for move in candidates:
             # Cash receipt acts as its own payment.
-            pay_date = move.invoice_date or move.date
-            if move.move_type == 'out_receipt' and period_start <= pay_date <= period_end:
+            payment_date = move.invoice_date or move.date
+            if move.move_type == 'out_receipt' and period_start <= payment_date <= period_end:
                 result |= move
                 continue
             # Find reconciled payment lines dated in the window.
             for partial in move._get_all_reconciled_invoice_partials():
-                if aml := partial.get('aml'):
-                    if not self._is_payment_partial_aml(aml):
-                        continue
-                    if period_start <= aml.date <= period_end:
-                        result |= move
-                        break
+                aml = partial.get('aml')
+                if (
+                    aml
+                    and (aml.move_id.origin_payment_id or aml.move_id.statement_line_id)
+                    and period_start <= aml.date <= period_end
+                ):
+                    result |= move
+                    break
         # Include invoices that have pending unreconcile events in the period.
-        event_moves = self.env['l10n.fr.pdp.payment.event'].sudo().search([
+        event_moves = self.env['l10n.fr.pdp.reports.payment.event'].sudo().search([
             ('company_id', '=', company_id),
             ('state', '=', 'pending'),
             ('event_date', '>=', period_start),
