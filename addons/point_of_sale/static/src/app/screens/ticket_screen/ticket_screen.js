@@ -735,8 +735,11 @@ export class TicketScreen extends Component {
             .map((info) => info[0]);
 
         if (idsNotInCacheOrOutdated.length > 0) {
-            await this.pos.data.read("pos.order", Array.from(new Set(idsNotInCacheOrOutdated)));
+            await this._fetchNotInCachedOrOutdatedOrders(idsNotInCacheOrOutdated);
         }
+    }
+    async _fetchNotInCachedOrOutdatedOrders(idsNotInCacheOrOutdated) {
+        return await this.pos.data.read("pos.order", Array.from(new Set(idsNotInCacheOrOutdated)));
     }
 }
 

@@ -199,6 +199,22 @@ class PosOrder(models.Model):
             'coupon_report': coupon_per_report,
         }
 
+    def get_next_order_coupon_data(self):
+        result = defaultdict(list)
+        histories = self.env['loyalty.history'].search([
+            ('order_model', '=', 'pos.order'),
+            ('card_id.source_pos_order_id', 'in', self.ids),
+            ('card_id.program_id.program_type', '=', 'next_order_coupons'),
+        ])
+        for history in histories:
+            result[history.card_id.source_pos_order_id.id].append({
+                'program_name': history.card_id.program_id.name,
+                'expiration_date': history.card_id.expiration_date,
+                'code': history.card_id.code,
+            })
+
+        return result
+
     def _check_existing_loyalty_cards(self, coupon_data):
         coupon_key_to_modify = []
         for coupon_id, coupon_vals in coupon_data.items():

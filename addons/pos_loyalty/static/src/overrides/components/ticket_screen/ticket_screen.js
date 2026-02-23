@@ -57,4 +57,14 @@ patch(TicketScreen.prototype, {
             this.pos.updateRewards();
         }
     },
+    async _fetchNotInCachedOrOutdatedOrders(idsNotInCacheOrOutdated) {
+        const orders = await super._fetchNotInCachedOrOutdatedOrders(...arguments);
+        const couponData = await this.pos.data.call("pos.order", "get_next_order_coupon_data", [
+            orders.map(({ id }) => id),
+        ]);
+        for (const order of orders) {
+            order.new_coupon_info = couponData[order.id] ?? [];
+        }
+        return orders;
+    },
 });
