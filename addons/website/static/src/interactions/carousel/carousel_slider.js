@@ -20,6 +20,7 @@ export class CarouselSlider extends Interaction {
             "t-att-style": () => ({
                 "min-height": this.maxHeight ? `${this.maxHeight}px` : "",
             }),
+            "t-att-role": () => (this.areIndicatorsVisible ? "tabpanel" : "group"),
         },
         ".slide-link": { "t-att-class": () => ({ "d-none": !this.showClickableSlideLinks }) },
         ".carousel-indicators button, .carousel-indicators li": {
@@ -45,6 +46,10 @@ export class CarouselSlider extends Interaction {
         if (this.carouselInnerEl) {
             this.carouselItemEls = [...this.carouselInnerEl.querySelectorAll(".carousel-item")];
         }
+        const carouselIndicatorsEl = this.el.querySelector(".carousel-indicators");
+        this.areIndicatorsVisible =
+            carouselIndicatorsEl &&
+            getComputedStyle(this.el.querySelector(".carousel-indicators")).display !== "none";
 
         this.hasInterval = ![undefined, "false", "0"].includes(this.el.dataset.bsInterval);
         if (!["true", "carousel", "false"].includes(this.el.dataset.bsRide)) {
@@ -134,6 +139,18 @@ export class CarouselSlider extends Interaction {
      * @param {Event} ev The Bootstrap Carousel slid event.
      */
     onSlidCarousel(ev) {
+        if (this.el.querySelector(".carousel-indicators button")) {
+            // For indicators, aria-selected with role=tab is a better default
+            // than Bootstrap's aria-current.
+            this.el
+                .querySelector(".carousel-indicators button[aria-selected='true']")
+                .setAttribute("aria-selected", "false");
+            const activeIndicatorEl = this.el.querySelector(".carousel-indicators button.active");
+            // Somehow `activeIndicatorEl` is sometimes null in edit mode.
+            activeIndicatorEl?.setAttribute("aria-selected", "true");
+            activeIndicatorEl?.removeAttribute("aria-current");
+        }
+
         if (this.options.scrollMode === "single") {
             this.onSlidSingleScroll(ev);
         }

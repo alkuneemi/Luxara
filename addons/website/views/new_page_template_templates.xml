@@ -996,12 +996,14 @@ overridden by modules), because:
     <xpath expr="(//img)[3]" position="replace">
         <img alt="" src="/web/image/website.s_company_team_image_3" class="img img-fluid d-block h-100" data-name="Image" data-index="2"/>
     </xpath>
-    <xpath expr="//div[hasclass('carousel-indicators')]" position="replace">
-        <div class="carousel-indicators">
-            <button data-bs-target="#slideshow_sample" data-bs-slide-to="0" style="background-image: url(/web/image/website.s_company_team_image_1)" class="active" aria-label="Carousel indicator"/>
-            <button data-bs-target="#slideshow_sample" data-bs-slide-to="1" style="background-image: url(/web/image/website.s_company_team_image_2)" aria-label="Carousel indicator"/>
-            <button data-bs-target="#slideshow_sample" data-bs-slide-to="2" style="background-image: url(/web/image/website.s_company_team_image_3)" aria-label="Carousel indicator"/>
-        </div>
+    <xpath expr="(//div[hasclass('carousel-indicators')]//button)[1]" position="attributes">
+        <attribute name="style">background-image: url(/web/image/website.s_company_team_image_1)</attribute>
+    </xpath>
+    <xpath expr="(//div[hasclass('carousel-indicators')]//button)[2]" position="attributes">
+        <attribute name="style">background-image: url(/web/image/website.s_company_team_image_2)</attribute>
+    </xpath>
+    <xpath expr="(//div[hasclass('carousel-indicators')]//button)[3]" position="attributes">
+        <attribute name="style">background-image: url(/web/image/website.s_company_team_image_3)</attribute>
     </xpath>
 </template>
 
