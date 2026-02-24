@@ -8,6 +8,8 @@ export class CarouselSlider extends Interaction {
         _root: {
             "t-on-slide.bs.carousel": this.onSlideCarousel,
             "t-on-slid.bs.carousel": this.onSlidCarousel,
+            "t-on-focusin": () => window.Carousel.getInstance(this.el)?.pause(),
+            "t-on-focusout": this.resumeCarouselCycling,
         },
         "img": {
             "t-on-load": this.computeMaxHeight,
@@ -113,6 +115,15 @@ export class CarouselSlider extends Interaction {
         this.loadItemsToAppear(); // Preload future items after a slide
     }
 
+    /**
+     * If the carousel should auto-slide and it has been paused, resume it.
+     */
+    resumeCarouselCycling() {
+        const carouselBS = window.Carousel.getInstance(this.el);
+        if ([true, "carousel"].includes(carouselBS?._config.ride)) {
+            carouselBS.cycle();
+        }
+    }
     /**
      * Loads images of the carousel-item necessary for both 'prev' and 'next'
      * animations. Loads images for items that are about to become visible.
