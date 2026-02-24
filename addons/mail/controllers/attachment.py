@@ -5,13 +5,15 @@ import io
 import logging
 import zipfile
 
-from werkzeug.exceptions import NotFound, UnsupportedMediaType
+from werkzeug.exceptions import BadRequest, NotFound, UnsupportedMediaType
 
 from odoo import _, http
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, MissingError, UserError
 from odoo.http import request
-from odoo.http.stream import content_disposition
+from odoo.http.stream import content_disposition, STATIC_CACHE_LONG
 from odoo.tools import BinaryBytes, file_open
+from odoo.tools.mail import html_sanitize
+from odoo.tools.misc import replace_exceptions
 from odoo.tools.pdf import DependencyError, PdfReadError, extract_page
 
 from odoo.addons.mail.controllers.thread import ThreadController
@@ -19,8 +21,20 @@ from odoo.addons.mail.tools.discuss import Store, add_guest_to_context, mail_rou
 
 logger = logging.getLogger(__name__)
 
+try:
+    from markdown2 import markdown
+except ImportError:
+    markdown = None
+    logger.warning("markdown2 is not installed, markdown won't be rendered")
+
 
 class AttachmentController(ThreadController):
+    TEXTUAL_THUMBNAIL_SIZE = 4096
+    SUPPORTED_TEXT_MIMETYPES = (
+        'application/javascript', 'application/json', 'application/xml',
+        'text/css', 'text/csv', 'text/html', 'text/markdown', 'text/plain', 'text/xml',
+    )
+
     def _make_zip(self, name, attachments):
         streams = (request.env['ir.binary']._get_stream_from(record, 'raw') for record in attachments)
         # TODO: zip on-the-fly while streaming instead of loading the
@@ -169,3 +183,68 @@ class AttachmentController(ThreadController):
         if attachment.name:
             headers.append(("Content-Disposition", content_disposition(attachment.name)))
         return request.make_response(content, headers)
+
+    @http.route(
+        "/mail/attachment/render_textual/<int:attachment_id>",
+        type="http",
+        auth="public",
+        readonly=True,
+    )
+    def mail_attachment_render_textual(self, attachment_id, access_token=None, head=False, unique=False, **kwargs):
+        """Render the textual content for preview and thumbnail.
+
+        Render the document content / preview for:
+        - Simple text
+        - HTML
+        - XML
+        - JSON
+        - Markdown
+
+        :param int attachment_id: ID of the attachment
+        :param str access_token: The access token to the record
+        :param bool head: Show only the thumbnail (first 4kiB) of text-like documents
+        :param str unique: Indicates if the response can be cached
+        """
+        with replace_exceptions(AccessError, MissingError, by=request.not_found()):
+            attachment = request.env['ir.binary']._find_record(
+                res_model='ir.attachment',
+                res_id=int(attachment_id),
+                access_token=access_token,
+                field='raw',
+            )
+        return self._render_textual_attachment(attachment.sudo(), head, unique)
+
+    def _render_textual_attachment(self, attachment, head=False, unique=False):
+        """Shared rendering engine for textual attachments."""
+        mimetype = attachment.mimetype
+        if mimetype not in self.SUPPORTED_TEXT_MIMETYPES:
+            raise BadRequest(f"bad document mimetype: expect a recognized textual type, got {mimetype}")
+        send_file_kwargs = {'as_attachment': False}
+        if unique:
+            send_file_kwargs.update({'immutable': True, 'max_age': STATIC_CACHE_LONG})
+        if (mimetype == 'application/json' and not head) or mimetype == 'text/html':
+            with replace_exceptions(ValueError, MissingError, by=request.not_found()):
+                stream = request.env['ir.binary']._get_stream_from(attachment)
+            return stream.get_response(**send_file_kwargs)
+        with attachment.raw.open() as f:
+            content = f.read(self.TEXTUAL_THUMBNAIL_SIZE) if head else f.read()
+        if not content:
+            with replace_exceptions(ValueError, MissingError, by=request.not_found()):
+                stream = request.env['ir.binary']._get_stream_from(attachment)
+            return stream.get_response(**send_file_kwargs)
+        text_content = content.decode('utf-8', errors='replace')
+        if mimetype == 'text/markdown' and markdown:
+            response = request.render("mail.content_markdown", {
+                'content': html_sanitize(markdown(
+                    text_content,
+                    safe_mode='escape',
+                    extras=['strike', 'fenced-code-blocks', 'tables', 'footnotes'],
+                )),
+            })
+        else:
+            response = request.render("mail.content_textual", {
+                'content': text_content,
+            })
+        if unique:
+            response.headers['Cache-Control'] = f'public, max-age={STATIC_CACHE_LONG}, immutable'
+        return response
