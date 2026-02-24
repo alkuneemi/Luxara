@@ -2877,6 +2877,7 @@ export class PosStore extends WithLazyGetterTrap {
         this.setOrder(this.getEmptyOrder());
         this.mobile_pane = "right";
     }
+<<<<<<< 1f410efb465e3f82dc3282c95977136209fcce96
 
     get showSaveOrderButton() {
         return this.config.raw.trusted_config_ids.length > 0;
@@ -2897,6 +2898,18 @@ export class PosStore extends WithLazyGetterTrap {
                 destPrep[destKey] = { ...srcPrep[srcKey], uuid: destLine.uuid, quantity: qty };
             }
         }
+||||||| f942e64a6923cebb3c22795b6f110ee22f099095
+
+    get showSaveOrderButton() {
+        return this.config.raw.trusted_config_ids.length > 0;
+    }
+
+    canEditPayment(order) {
+        return order.nb_print === 0;
+=======
+    canEditPayment(order) {
+        return order.nb_print === 0;
+>>>>>>> 1b5af06e39448f3c2eb536c7ab0da1412df43412
     }
 
     get isSelectedLineCombo() {
