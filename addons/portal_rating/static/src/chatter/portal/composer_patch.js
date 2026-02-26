@@ -15,14 +15,6 @@ patch(Composer.prototype, {
         this.portalState = useState({
             hoveredRatingValue: undefined,
             ratingValue: DEFAULT_STAR_RATING,
-            /** @deprecated: use 'hoveredRatingValue' instead */
-            get starValue() {
-                return this.hoveredRatingValue;
-            },
-            /** @deprecated: use 'hoveredRatingValue' instead */
-            set starValue(val) {
-                this.hoveredRatingValue = val;
-            },
         });
     },
 
@@ -97,7 +89,6 @@ patch(Composer.prototype, {
         if (this.env.displayRating && !this.message) {
             postData.rating_value = this.portalState.ratingValue;
         }
-        this.portalState.ratingValue = DEFAULT_STAR_RATING;
         return postData;
     },
 });

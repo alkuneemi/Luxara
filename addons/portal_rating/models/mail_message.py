@@ -42,6 +42,10 @@ class MailMessage(models.Model):
 
         for message, values in zip(self, vals_list):
             values["rating_id"] = message_to_rating.get(message.id, {})
+            if values.get("author_id"):
+                values["author_id"]["pseudonymize_name"] = self._pseudonymize_name(
+                    values["author_id"]["name"]
+                )
 
             record = self.env[message.model].browse(message.res_id)
             if hasattr(record, 'rating_get_stats'):
@@ -64,5 +68,14 @@ class MailMessage(models.Model):
         rating_values['publisher_comment'] = rating_values['publisher_comment'] or ''
         rating_values['publisher_datetime'] = format_datetime(self.env, rating_values['publisher_datetime'])
         rating_values['publisher_id'] = publisher_id
-        rating_values['publisher_name'] = publisher_name
+        rating_values['publisher_name'] = self._pseudonymize_name(publisher_name)
         return rating_values
+
+    @staticmethod
+    def _pseudonymize_name(name):
+        if not name:
+            return name
+        parts = name.split()
+        if len(parts) == 1:
+            return name
+        return f"{' '.join(parts[:-1])} {parts[-1][0]}."
