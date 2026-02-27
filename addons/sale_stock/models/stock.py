@@ -163,6 +163,25 @@ class StockMove(models.Model):
             if ids_to_reset:
                 self.env['stock.move'].browse(ids_to_reset).sale_line_id = False
 
+    def _process_negative_moves(self, neg_moves):
+        res = super()._process_negative_moves(neg_moves)
+
+        neg_moves_ids = set(neg_moves.ids)
+        origin_moves_by_key = defaultdict(lambda: self.env['stock.move'])
+
+        for move in neg_moves.reference_ids.picking_ids.move_ids.filtered(
+            lambda move: move.state == 'done' and move.id not in neg_moves_ids
+        ):
+            origin_moves_by_key[move.picking_type_id.id, move.sale_line_id.id] |= move
+
+        # Link each reverse move to the original move from which it originated, similar to return moves.
+        for move in neg_moves.filtered('sale_line_id'):
+            origin_moves = origin_moves_by_key[move.picking_type_id.id, move.sale_line_id.id]
+            move_orig_to_link = origin_moves and origin_moves.filtered(lambda m: m.state != 'cancel') - neg_moves
+            if move_orig_to_link:
+                move.write({'move_orig_ids': [Command.link(m.id) for m in move_orig_to_link]})
+        return res
+
 
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
