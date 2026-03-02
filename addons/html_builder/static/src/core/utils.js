@@ -502,8 +502,11 @@ function usePrepareAction(getAllActions) {
         onReady = new Promise((r) => {
             resolve = r;
         });
+        const editingElement = env.getEditingElement();
         onWillStart(async function () {
-            await Promise.all(asyncActions.map((obj) => obj.action.prepare(obj.descr)));
+            await Promise.all(
+                asyncActions.map((obj) => obj.action.prepare({ ...obj.descr, editingElement }))
+            );
             resolve();
         });
         onWillUpdateProps(async ({ actionParam, actionValue }) => {
@@ -516,6 +519,7 @@ function usePrepareAction(getAllActions) {
                     obj.action.prepare({
                         ...obj.descr,
                         actionParam: convertParamToObject(actionParam),
+                        editingElement,
                         actionValue,
                     })
                 )
@@ -952,7 +956,8 @@ export function useInputBuilderComponent({
 
     const applyOperation = comp.env.editor.shared.history.makePreviewableAsyncOperation(callApply);
     const operationWithReload = useOperationWithReload(callApply, reload);
-    function getState(editingElement) {
+    async function getState(editingElement) {
+        await onReady;
         if (!isConnectedElement(editingElement)) {
             // TODO try to remove it. We need to move hook in BuilderComponent
             return {};
