@@ -89,6 +89,24 @@ export class AttendeeCalendarModel extends CalendarModel {
     }
 
     /**
+     * Make sure that events filters also include the partner_id (organizer) field instead of just attendees
+     * @override
+     */
+    computeFiltersDomain(data) {
+        const domain = super.computeFiltersDomain(data);
+        const partnerIndex = domain.findIndex((d) => d[0] === "partner_ids" && d[1] === "in");
+        if (partnerIndex !== -1) {
+            const partnerValues = domain[partnerIndex][2];
+            domain.splice(partnerIndex, 1, "|",
+                ["partner_ids", "in", partnerValues],
+                ["partner_id", "in", partnerValues]
+            );
+        }
+
+        return domain;
+    }
+
+    /**
      * @override
      */
     async updateData(data) {
@@ -130,9 +148,10 @@ export class AttendeeCalendarModel extends CalendarModel {
             for (const event of Object.values(data.records)) {
                 const eventData = event.rawRecord;
                 const attendees =
-                    eventData.partner_ids && eventData.partner_ids.length
+                    eventData.partner_ids && eventData.partner_ids.some((id) => activeAttendeeIds.has(id))
                         ? eventData.partner_ids
                         : [eventData.partner_id[0]];
+
                 let duplicatedRecords = 0;
                 for (const attendee of attendees) {
                     if (!activeAttendeeIds.has(attendee)) {
