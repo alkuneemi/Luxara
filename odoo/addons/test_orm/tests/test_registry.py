@@ -35,6 +35,7 @@ class TestRegistry(TransactionCase):
             registry.field_setup_dependents.clear()  # filled during incremental setup
 
         registry.clear_all_caches()  # stuff may remain in the cache
+        self.env.transaction.clear()  # remove recent environments
 
         # Now collect objects
         # This test may fail if your debugger stores references to previous fields.
