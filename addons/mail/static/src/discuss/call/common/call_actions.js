@@ -90,7 +90,7 @@ export const cameraOnAction = {
         store.rtc?.isRemote
             ? _t("Camera is unavailable outside the call tab.")
             : store.rtc.selfSession.is_camera_on
-            ? _t("Stop camera")
+            ? _t("Turn camera off")
             : _t("Turn camera on"),
     isActive: ({ store }) => store.rtc.selfSession?.is_camera_on,
     icon: "fa fa-video-camera",
@@ -145,7 +145,10 @@ registerCallAction("raise-hand", {
     onSelected: ({ store }) => store.rtc.raiseHand(!store.rtc.selfSession.raisingHand),
     sequence: 50,
     sequenceGroup: 200,
-    tags: ACTION_TAGS.CALL_ACTION_TRACKED,
+    tags: ({ action }) => [
+        ACTION_TAGS.CALL_ACTION_TRACKED,
+        action.isActive ? ACTION_TAGS.SUCCESS : undefined,
+    ],
 });
 registerCallAction("share-screen", {
     condition: ({ channel }) => channel?.isSelfInCall && !isMobileOS(),
