@@ -177,6 +177,10 @@ class ResUsers(models.Model):
     def check_synchronization_status(self):
         return {}
 
+    def get_calendar_email(self):
+        """Meant to be overridden by a specific calendar provider"""
+        return False
+
     def _has_any_active_synchronization(self):
         """
         Overridable method for checking if user has any synchronization active in inherited modules.

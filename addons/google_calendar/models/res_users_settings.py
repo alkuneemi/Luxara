@@ -25,6 +25,7 @@ class ResUsersSettings(models.Model):
     def _get_fields_blacklist(self):
         """ Get list of google fields that won't be formatted in session_info. """
         google_fields_blacklist = [
+            'google_account_email',
             'google_calendar_rtoken',
             'google_calendar_token',
             'google_calendar_token_validity',

@@ -22,6 +22,7 @@ class ResUsers(models.Model):
     google_calendar_sync_token = fields.Char(related='res_users_settings_id.google_calendar_sync_token', groups="base.group_system")
     google_calendar_cal_id = fields.Char(related='res_users_settings_id.google_calendar_cal_id', groups="base.group_system")
     google_synchronization_stopped = fields.Boolean(related='res_users_settings_id.google_synchronization_stopped', readonly=False, groups="base.group_system")
+    google_synchronization_needs_reset = fields.Boolean(related='res_users_settings_id.google_synchronization_needs_reset', readonly=False)
 
     def _get_google_calendar_token(self):
         self.ensure_one()
@@ -164,6 +165,7 @@ class ResUsers(models.Model):
     def stop_google_synchronization(self):
         self.ensure_one()
         self.sudo().google_synchronization_stopped = True
+        self.sudo().google_account_email = False
 
     def restart_google_synchronization(self):
         self.ensure_one()
@@ -190,6 +192,12 @@ class ResUsers(models.Model):
         res = super().check_calendar_credentials()
         res['google_calendar'] = self._has_setup_credentials()
         return res
+
+    def get_calendar_email(self):
+        if self.sudo().google_account_email:
+            return self.sudo().google_account_email
+        else:
+            return super().get_calendar_email()
 
     def check_synchronization_status(self):
         res = super().check_synchronization_status()
