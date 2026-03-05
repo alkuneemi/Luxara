@@ -83,7 +83,6 @@ class PurchaseEdiXmlUbl_Bis3(models.AbstractModel):
             'company_currency_id': purchase_order.company_id.currency_id,
 
             'use_company_currency': False,  # If true, use the company currency for the amounts instead of the order currency
-            'fixed_taxes_as_allowance_charges': True,  # If true, include fixed taxes as AllowanceCharges on lines instead of as taxes
         })
 
     def _add_purchase_order_base_lines_vals(self, vals):
@@ -262,16 +261,10 @@ class PurchaseEdiXmlUbl_Bis3(models.AbstractModel):
                 'base_line': vals['base_line'],
             },
         }
+        # Allowance/Charge from taxes with type 'allowance_charge' (includes recycling contribution taxes, excises).
         self._ubl_add_line_allowance_charge_nodes(sub_vals)
-
-        # Discount.
+        # Allowance/Charge for line discount
         self._ubl_add_line_allowance_charge_nodes_for_discount(sub_vals)
-
-        # Recycling contribution taxes.
-        self._ubl_add_line_allowance_charge_nodes_for_recycling_contribution_taxes(sub_vals)
-
-        # Excise taxes.
-        self._ubl_add_line_allowance_charge_nodes_for_excise_taxes(sub_vals)
 
     def _ubl_add_line_item_name_description_nodes(self, vals):
         # EXTENDS account.edi.xml.ubl_bis3
@@ -382,6 +375,6 @@ class PurchaseEdiXmlUbl_Bis3(models.AbstractModel):
     def _retrieve_line_vals(self, record, tree, document_type=False, qty_factor=1):
         """Override of `account.edi.common` to adapt dictionary keys from the base method to be
         compatible with the `purchase.order.line` model."""
-        line_vals = super()._retrieve_line_vals(record, tree, document_type, qty_factor)
+        line_vals, line_logs = super()._retrieve_line_vals(record, tree, document_type, qty_factor)
         line_vals['product_qty'] = line_vals.pop('quantity')
-        return line_vals
+        return line_vals, line_logs
