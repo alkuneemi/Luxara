@@ -48,6 +48,8 @@ patch(AttendeeCalendarController.prototype, {
             "unpause_microsoft_synchronization",
             [[user.userId]],
         );
+        this.model._loaded = false;
+        await this.model.load();
         render(this, true);
     }
 });

@@ -41,11 +41,16 @@ class GoogleAuth(http.Controller):
             if email:
                 request.env.user.sudo().google_account_email = email
 
+            self._on_google_auth_success()
             return request.redirect(url_return)
         elif kw.get('error'):
             return request.redirect("%s%s%s" % (url_return, "?error=", kw['error']))
         else:
             return request.redirect("%s%s" % (url_return, "?error=Unknown_error"))
+
+    def _on_google_auth_success(self):
+        """ Hook for submodules to execute logic after successful Google authentication. """
+        pass
 
     def _get_email_from_google(self, token=None, timeout=TIMEOUT):
         headers = {'Content-type': 'application/json'}

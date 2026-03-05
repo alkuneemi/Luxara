@@ -32,15 +32,21 @@ class MicrosoftAuth(http.Controller):
                 redirect_uri=f'{base_url}/microsoft_account/authentication'
             )
             request.env.user._set_microsoft_auth_tokens(access_token, refresh_token, ttl)
+
             email = self._get_email_from_outlook(token=access_token)
             if email:
                 request.env.user.sudo().microsoft_account_email = email
 
+            self._on_microsoft_auth_success()
             return request.redirect(url_return)
         elif kw.get('error'):
             return request.redirect("%s%s%s" % (url_return, "?error=", kw['error']))
         else:
             return request.redirect("%s%s" % (url_return, "?error=Unknown_error"))
+
+    def _on_microsoft_auth_success(self):
+        """ Hook for submodules to execute logic after successful Microsoft authentication. """
+        pass
 
     def _get_email_from_outlook(self, token=None, timeout=TIMEOUT):
         url = '/v1.0/me'

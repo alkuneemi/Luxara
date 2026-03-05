@@ -20,6 +20,7 @@ class ResUsers(models.Model):
     microsoft_calendar_sync_token = fields.Char(related='res_users_settings_id.microsoft_calendar_sync_token', groups='base.group_system')
     microsoft_synchronization_stopped = fields.Boolean(related='res_users_settings_id.microsoft_synchronization_stopped', readonly=False, groups='base.group_system')
     microsoft_last_sync_date = fields.Datetime(related='res_users_settings_id.microsoft_last_sync_date', readonly=False, groups='base.group_system')
+    microsoft_synchronization_needs_reset = fields.Boolean(related='res_users_settings_id.microsoft_synchronization_needs_reset', readonly=False)
 
     def _microsoft_calendar_authenticated(self):
         return bool(self.sudo().microsoft_calendar_rtoken)
@@ -133,6 +134,7 @@ class ResUsers(models.Model):
         self.ensure_one()
         self.sudo().microsoft_last_sync_date = datetime.now()
         self.sudo().microsoft_synchronization_stopped = False
+        self.sudo().microsoft_synchronization_needs_reset = False
         self.env['calendar.recurrence']._restart_microsoft_sync()
         self.env['calendar.event']._restart_microsoft_sync()
 

@@ -49,6 +49,8 @@ patch(AttendeeCalendarController.prototype, {
             "unpause_google_synchronization",
             [[user.userId]],
         );
+        this.model._loaded = false;
+        await this.model.load();
         render(this, true);
     }
 });
