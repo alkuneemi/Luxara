@@ -154,7 +154,7 @@
                                         class="o_wsale_product_details_content_section o_wsale_product_details_content_section_accordion mb-4"
                                         t-if="is_view_active('website_sale.accordion_specs_item') or is_view_active('website_sale.accordion_more_information')"
                                     >
-                                        <t t-call="website_sale.product_accordion"/>
+                                        <t t-call="website_sale.product_accordion" combination="combination_info['combination']"/>
                                     </div>
                                     <t t-set="product_documents" t-value="product.sudo().product_document_ids.filtered(lambda doc: doc.shown_on_product_page)"/>
                                     <div
@@ -627,7 +627,7 @@
                 <span name="o_wsale_cta_wrapper_boxed_price_label" class="text-muted">Price</span>
                 <div>
                     <t t-call="website_sale.product_price"/>
-                    <small
+                    <small 
                         t-if="combination_info.get('base_unit_price')"
                         class="ms-1 text-muted o_base_unit_price_wrapper d-none"
                     >
@@ -702,18 +702,29 @@
     </template>
 
     <template id="website_sale.product_accordion" name="Accordion On Product Page">
-        <div
-            t-if="is_view_active('website_sale.accordion_specs_item')
-                  or is_view_active('website_sale.accordion_more_information')"
-            id="product_accordion"
-            class="o_accordion_not_initialized accordion accordion-flush my-4"
-        >
+        <t t-set="attrib_categories" t-value="product.valid_product_template_attribute_line_ids._prepare_categories_for_display()"/>
+        <t t-set="extra_fields_by_category" t-value="website.get_extra_spec_fields_by_category()"/>
+        <t t-set="has_extra_fields" t-value="any(
+            (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+            for fields in extra_fields_by_category.values()
+            for ef in fields
+        )"/>
+        <t t-set="has_content" t-value="bool(attrib_categories or has_extra_fields)"/>
+        <t t-if="has_content or editable">
             <div
-                t-if="is_view_active('website_sale.accordion_more_information')"
-                id="more_information_accordion_item"
-                class="accordion-item"
-            />
-        </div>
+                t-if="is_view_active('website_sale.accordion_specs_item')
+                    or is_view_active('website_sale.accordion_more_information')"
+                id="product_accordion"
+                t-attf-class="o_wsale_specss #{has_content and 'o_accordion_not_initialized' or ''} accordion accordion-flush my-4"
+                t-attf-style="#{not has_content and editable and 'min-height: 50px;' or ''}"
+            >
+                <div
+                    t-if="is_view_active('website_sale.accordion_more_information')"
+                    id="more_information_accordion_item"
+                    class="accordion-item"
+                />
+            </div>
+        </t>
     </template>
 
     <template
@@ -1249,33 +1260,6 @@
     </template>
 
     <template
-        id="website_sale.ecom_show_extra_fields"
-        inherit_id="website_sale.product"
-        name="Show Extra Fields"
-        active="True"
-    >
-        <xpath expr="//div[@id='product_details']" position="inside">
-            <t t-if="any([product.sudo()[field.name] for field in website.shop_extra_field_ids])">
-                <hr/>
-                <p class="text-muted">
-                    <t t-foreach="website.shop_extra_field_ids" t-as="field" t-if="product.sudo()[field.name]">
-                        <b><t t-out="field.label"/>: </b>
-                        <t t-if="field.field_id.ttype != 'binary'">
-                            <span t-out="product.sudo()[field.name]" t-options="{'widget': field.field_id.ttype}"/>
-                        </t>
-                        <t t-else=''>
-                            <a target='_blank' t-attf-href='/web/content/product.template/#{product.id}/#{field.name}?download=1'>
-                                <i class='fa fa-file'></i>
-                            </a>
-                        </t>
-                        <br/>
-                    </t>
-                </p>
-            </t>
-        </xpath>
-    </template>
-
-    <template
         id="product_add_to_compare"
         name="Add to comparison in product page"
         inherit_id="website_sale.cta_wrapper"
@@ -1363,27 +1347,72 @@
         </xpath>
     </template>
 
-    <template id="product_attributes_body" inherit_id="website_sale.product" name="Product attributes table">
-        <xpath expr="//div[@id='product_full_description']" position="after">
-            <t t-set="attrib_categories" t-value="product.valid_product_template_attribute_line_ids._prepare_categories_for_display()"/>
-            <t t-if="attrib_categories">
-                <section class="pt32 pb32" id="product_full_spec">
-                    <div class="container">
+    <template id="website_sale.product_spec_section" name="Product Spec Section">
+        <t t-set="attrib_categories" t-value="product.valid_product_template_attribute_line_ids._prepare_categories_for_display()"/>
+        <t t-set="extra_fields_by_category" t-value="website.get_extra_spec_fields_by_category()"/>
+        <t t-set="has_extra_fields" t-value="any(
+            (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+            for fields in extra_fields_by_category.values()
+            for ef in fields
+        )"/>
+       <t t-if="attrib_categories or has_extra_fields or editable">
+        <section t-attf-class="pt32 pb32 #{spec_extra_class or ''} #{not (attrib_categories or has_extra_fields) and 'css_non_editable_mode_hidden' or ''}"
+                id="product_full_spec">
+            <div class="container o_wsale_specss" t-attf-style="#{editable and 'min-height: 50px;' or ''}">
+                <t t-if="attrib_categories or has_extra_fields">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="m-0 h3">Specifications</h2>
+                        <h2 class="m-0 h3">Specifications</h2>
                         </div>
                         <div id="product_specifications">
                             <div class="row">
-                                <t t-foreach="attrib_categories" t-as="category">
-                                    <div class="col-lg-6">
-                                        <t t-call="website_sale.specifications_table"/>
-                                    </div>
+                                <t t-if="attrib_categories">
+                                    <t t-foreach="attrib_categories" t-as="category">
+                                        <t t-set="category_attrib_lines" t-value="attrib_categories[category]"/>
+                                        <t t-set="category_extra_fields" t-value="extra_fields_by_category.get(category, website.env['website.sale.extra.field'])"/>
+                                        <t t-set="has_visible_extra_fields" t-value="any(
+                                            (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+                                            for ef in category_extra_fields
+                                        )"/>
+                                        <div t-if="category_attrib_lines or has_visible_extra_fields" class="col-lg-6">
+                                            <t t-call="website_sale.specifications_table" combination="combination"/>
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-foreach="extra_fields_by_category" t-as="ef_category">
+                                    <t t-if="not attrib_categories or ef_category not in attrib_categories">
+                                        <t t-set="has_visible_fields" t-value="any(
+                                            (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+                                            for ef in extra_fields_by_category[ef_category]
+                                        )"/>
+                                        <div t-if="has_visible_fields" class="col-lg-6">
+                                            <t t-set="category" t-value="ef_category"/>
+                                            <t t-set="category_attrib_lines" t-value="product.env['product.template.attribute.line']"/>
+                                            <t t-set="category_extra_fields" t-value="extra_fields_by_category[ef_category]"/>
+                                            <t t-call="website_sale.specifications_table" combination="combination"/>
+                                        </div>
+                                    </t>
                                 </t>
                             </div>
                         </div>
-                    </div>
-                </section>
-            </t>
+                    </t>
+                </div>
+            </section>
+        </t>
+    </template>
+
+    <template id="product_attributes_body" inherit_id="website_sale.product" name="Product attributes table">
+        <xpath expr="//div[@id='product_full_description']" position="after">
+            <t t-call="website_sale.product_spec_section" combination="combination_info['combination']"/>
+        </xpath>
+    </template>
+
+    <template id="website_sale.product_attributes_top" inherit_id="website_sale.product" active="False" name="Product Specifications Top">
+        <xpath expr="//div[@id='product_detail_main']" position="after">
+            <t
+                t-call="website_sale.product_spec_section"
+                spec_extra_class="'o_wsale_spec_top'"
+                combination="combination_info['combination']"
+            />
         </xpath>
     </template>
 
@@ -1394,12 +1423,16 @@
         active="False"
     >
         <xpath expr="//div[@id='more_information_accordion_item']" position="before">
-            <t
-                t-set="attrib_categories"
-                t-value="product.valid_product_template_attribute_line_ids._prepare_categories_for_display()"
-            />
-            <t t-if="attrib_categories">
-                <t t-foreach="attrib_categories" t-as="category">
+            <t t-set="attrib_categories" t-value="product.valid_product_template_attribute_line_ids._prepare_categories_for_display()"/>
+            <t t-set="extra_fields_by_category" t-value="website.get_extra_spec_fields_by_category()"/>
+            <t t-foreach="attrib_categories" t-as="category">
+                <t t-set="category_attrib_lines" t-value="attrib_categories[category]"/>
+                <t t-set="category_extra_fields" t-value="extra_fields_by_category.get(category, website.env['website.sale.extra.field'])"/>
+                <t t-set="has_visible_extra_fields" t-value="any(
+                    (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+                    for ef in category_extra_fields
+                )"/>
+                <t t-if="category_attrib_lines or has_visible_extra_fields">
                     <div class="accordion-item">
                         <div class="accordion-header my-0 h6">
                             <button
@@ -1412,7 +1445,7 @@
                                 aria-controls="specifications"
                             >
                                 <t t-if="category_size == 1">Specifications</t>
-                                <t t-else="">Others</t>
+                                <t t-else=""><t t-out="category.name or 'Others'"/></t>
                             </button>
                         </div>
                         <div
@@ -1421,52 +1454,96 @@
                             data-bs-parent="#product_accordion"
                         >
                             <div class="accordion-body pt-0">
-                                <t t-call="website_sale.specifications_table" is_accordion="True"/>
+                                <t t-call="website_sale.specifications_table" is_accordion="True" combination="combination"/>
                             </div>
                         </div>
                     </div>
                 </t>
             </t>
+            <t t-foreach="extra_fields_by_category" t-as="ef_category">
+                <t t-if="ef_category not in attrib_categories">
+                    <t t-set="has_visible_fields" t-value="any(
+                        (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+                        for ef in extra_fields_by_category[ef_category]
+                    )"/>
+                    <t t-if="has_visible_fields">
+                        <t t-set="category" t-value="ef_category"/>
+                        <t t-set="category_attrib_lines" t-value="product.env['product.template.attribute.line']"/>
+                        <t t-set="category_extra_fields" t-value="extra_fields_by_category[ef_category]"/>
+                        <div class="accordion-item">
+                            <div class="accordion-header my-0 h6">
+                                <button
+                                    class="accordion-button collapsed fw-medium"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    t-attf-data-bs-target="#category_accordion_ef_{{ef_category_index}}"
+                                    aria-expanded="false"
+                                    aria-controls="specifications"
+                                >
+                                    <t t-out="ef_category and ef_category.name or 'Others'"/>
+                                </button>
+                            </div>
+                            <div
+                                t-attf-id="category_accordion_ef_{{ef_category_index}}"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#product_accordion"
+                            >
+                                <div class="accordion-body pt-0">
+                                    <t t-call="website_sale.specifications_table" is_accordion="True" combination="combination"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t>
+            <t t-set="has_any_spec_content" t-value="attrib_categories or any(
+                (product_variant.sudo()[ef.name] if product_variant else product.sudo()[ef.name])
+                for fields in extra_fields_by_category.values()
+                for ef in fields
+            )"/>
         </xpath>
     </template>
 
     <template id="specifications_table" name="Specifications Table">
         <table t-attf-class="table {{is_accordion and 'table-sm mb-0'}}">
-            <t t-if="len(attrib_categories) > 1 and not is_accordion">
+
+            <t t-if="not is_accordion">
                 <tr>
-                    <th class="text-start" colspan="2">
+                    <th class="ps-0" colspan="2">
                         <span t-if="category" t-field="category.name"/>
                         <span t-else="">Others</span>
                     </th>
                 </tr>
             </t>
+
             <tr
-                t-foreach="attrib_categories[category].filtered(lambda l: len(l.value_ids) > 1)"
+                t-foreach="category_attrib_lines.filtered(lambda l: len(l.value_ids) &gt; 1)"
                 t-as="ptal"
+                t-att-data-ptal-id="ptal.id"
             >
-                <t
-                    t-set="hide_border_bottom_classes"
-                    t-value="'border-bottom-0' if ptal_last and is_accordion else ''"
-                />
+                <t t-set="hide_border_bottom_classes" t-value="'border-bottom-0' if ptal_last and is_accordion else ''"/>
                 <td t-attf-class="w-25 {{hide_border_bottom_classes}} ps-0">
                     <span t-field="ptal.attribute_id.name"/>
                 </td>
                 <td t-attf-class="w-75 {{hide_border_bottom_classes}} pe-0 text-muted text-end">
-                    <t t-foreach="ptal.value_ids" t-as="pav">
-                        <span t-field="pav.name"/><t t-if="not pav_last">, </t>
+                    <t t-if="combination">
+                        <t t-foreach="ptal.product_template_value_ids._only_active().filtered(lambda ptav: ptav in combination)" t-as="ptav">
+                            <span t-field="ptav.name"/><t t-if="not ptav_last">, </t>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="ptal.value_ids" t-as="pav">
+                            <span t-field="pav.name"/><t t-if="not pav_last">, </t>
+                        </t>
                     </t>
                 </td>
             </tr>
-            <t
-                t-set="single_value_attributes"
-                t-value="attrib_categories[category]._prepare_single_value_for_display()"
-            />
-            <tr t-foreach="single_value_attributes" t-as="attribute">
-                <t
-                    t-set="hide_border_bottom_classes"
-                    t-value="'border-bottom-0' if attribute_last and is_accordion else ''"
-                />
-                <td t-attf-class="w-25 {{hide_border_bottom_classes}} ps-0 ">
+
+            <!-- Attribute lines: single-value -->
+            <t t-set="single_value_attributes" t-value="category_attrib_lines._prepare_single_value_for_display()"/>
+            <tr t-foreach="single_value_attributes" t-as="attribute" t-att-data-attribute-id="attribute.id">
+                <t t-set="hide_border_bottom_classes" t-value="'border-bottom-0' if attribute_last and is_accordion else ''"/>
+                <td t-attf-class="w-25 {{hide_border_bottom_classes}} ps-0">
                     <span t-field="attribute.name"/>
                 </td>
                 <td t-attf-class="w-75 {{hide_border_bottom_classes}} pe-0 text-muted text-end">
@@ -1475,6 +1552,48 @@
                     </t>
                 </td>
             </tr>
+
+            <!-- Extra fields -->
+            <t t-if="category_extra_fields">
+                <t t-foreach="category_extra_fields" t-as="extra_field">
+                    <!-- Always read from variant first (handles proxy fields like weight/volume
+                         correctly for multi-variant products); fall back to template when no
+                         variant is resolved yet. -->
+                    <t t-set="field_value" t-value="
+                        product_variant.sudo()[extra_field.name]
+                        if product_variant
+                        else product.sudo()[extra_field.name]
+                    "/>
+                    <tr t-if="field_value" t-att-data-extra-field-id="extra_field.id">
+                        <td t-attf-class="w-50 ps-0 pe-3 {{extra_field_last and is_accordion and 'border-bottom-0' or ''}}">
+                            <span t-out="extra_field.label"/>
+                        </td>
+                        <td t-attf-class="w-50 pe-0 text-muted text-end text-break {{extra_field_last and is_accordion and 'border-bottom-0' or ''}}">
+                            <t t-if="extra_field.field_id.ttype == 'binary'">
+                                <!-- Use variant record for binary when a variant is available,
+                                     otherwise fall back to the template record. -->
+                                <t t-if="product_variant">
+                                    <a target="_blank" t-attf-href="/web/content/product.product/#{product_variant.id}/#{extra_field.name}?download=1">
+                                        <i class="fa fa-file"/>
+                                    </a>
+                                </t>
+                                <t t-else="">
+                                    <a target="_blank" t-attf-href="/web/content/product.template/#{product.id}/#{extra_field.name}?download=1">
+                                        <i class="fa fa-file"/>
+                                    </a>
+                                </t>
+                            </t>
+                            <t t-elif="extra_field.field_id.ttype == 'float'">
+                                <span t-out="'%.2f' % field_value"/>
+                            </t>
+                            <t t-else="">
+                                <span t-out="field_value.name if extra_field.field_id.ttype == 'many2one' else field_value"/>
+                            </t>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+
         </table>
     </template>
 

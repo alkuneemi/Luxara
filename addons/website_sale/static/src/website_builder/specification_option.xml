@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="website_sale.SpecificationsOption">
+
+    <t t-set="availableFields" t-value="state.fields.filter(f => !extraFields.some(ef => ef.field_id[0] === f.id))"/>
+    <t t-set="noFields" t-value="availableFields.length === 0"/>
+
+    <BuilderRow label.translate="Field" disabled="noFields">
+        <BuilderSelect dataAttributeAction="'pendingFieldId'" preview="false" disabled="noFields">
+            <t t-if="noFields">
+                <BuilderSelectItem dataAttributeActionValue="''">— All fields added —</BuilderSelectItem>
+            </t>
+            <t t-foreach="availableFields" t-as="field" t-key="field.id">
+                <BuilderSelectItem dataAttributeActionValue="`${field.id}`">
+                    <t t-out="field.field_description"/>
+                </BuilderSelectItem>
+            </t>
+        </BuilderSelect>
+    </BuilderRow>
+
+    <BuilderRow label.translate="Category">
+        <BuilderSelect dataAttributeAction="'pendingCategoryId'" preview="false">
+            <BuilderSelectItem dataAttributeActionValue="''">Others</BuilderSelectItem>
+            <t t-foreach="categories" t-as="category" t-key="category.id">
+                <BuilderSelectItem dataAttributeActionValue="`${category.id}`">
+                    <t t-out="category.name"/>
+                </BuilderSelectItem>
+            </t>
+        </BuilderSelect>
+        <BuilderButton
+            t-if="!categoryCreateMode.value"
+            title.translate="Create new category"
+            className="'fa fa-plus text-success border-0'"
+            style="'background-color: transparent !important;'"
+            preview="false"
+            t-on-click="() => this.openCategoryCreate()"
+        />
+        <BuilderButton
+            t-if="categoryCreateMode.value"
+            title.translate="Cancel"
+            className="'fa fa-times text-danger border-0'"
+            style="'background-color: transparent !important;'"
+            preview="false"
+            t-on-click="() => this.cancelCategoryCreate()"
+        />
+    </BuilderRow>
+
+    <t t-if="categoryCreateMode.value">
+        <BuilderRow label.translate="Name" level="1">
+            <BuilderTextInput
+                dataAttributeAction="'pendingNewCategoryName'"
+                placeholder.translate="Category name..."
+            />
+        </BuilderRow>
+        <BuilderRow label.translate=" ">
+            <BuilderButton action="'createCategory'" preview="false" type="'success'" className="'w-auto'">
+                Create Category
+            </BuilderButton>
+        </BuilderRow>
+    </t>
+
+    <t t-if="!categoryCreateMode.value">
+        <BuilderRow label.translate=" " disabled="noFields">
+            <BuilderButton
+                action="'addSpecField'"
+                preview="false"
+                type="'success'"
+                className="noFields ? 'disabled pe-none' : ''"
+            >
+                + Add Field
+            </BuilderButton>
+        </BuilderRow>
+        <BuilderRow t-if="noFields" label.translate=" ">
+            <small class="text-muted fst-italic">No more fields available to add.</small>
+        </BuilderRow>
+    </t>
+
+</t>
+
+<t t-name="website_sale.SpecFieldRowOption">
+</t>
+
+</templates>

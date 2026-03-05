@@ -22,11 +22,9 @@ class WebsiteSaleVariantController(Controller):
 
         product_template = request.env["product.template"].browse(product_template_id)
 
+        combination_ptavs = request.env["product.template.attribute.value"].browse(combination)
         combination_info = product_template._get_combination_info(
-            combination=request.env["product.template.attribute.value"].browse(combination),
-            product_id=product_id,
-            add_qty=add_qty,
-            uom_id=uom_id,
+            combination=combination_ptavs, product_id=product_id, add_qty=add_qty, uom_id=uom_id
         )
         combination_info["currency_precision"] = combination_info["currency"].decimal_places
 
@@ -76,6 +74,32 @@ class WebsiteSaleVariantController(Controller):
                 "product_variant": product,
                 "combination_info": combination_info,
             },
+        )
+
+        is_accordion = request.website.is_view_active("website_sale.accordion_specs_item")
+
+        template = (
+            "website_sale.product_accordion"
+            if is_accordion
+            else "website_sale.product_spec_section"
+        )
+
+        values = {
+            "product": product_template,
+            "product_variant": product,
+            "website": request.website,
+            "combination": combination_ptavs,
+        }
+
+        if not is_accordion:
+            values["spec_extra_class"] = (
+                "o_wsale_spec_top"
+                if request.website.is_view_active("website_sale.product_attributes_top")
+                else ""
+            )
+
+        combination_info["extra_fields_html"] = request.env["ir.ui.view"]._render_template(
+            template, values
         )
 
         return combination_info
