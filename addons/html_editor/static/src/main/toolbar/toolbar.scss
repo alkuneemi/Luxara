@@ -69,4 +69,11 @@
             background-color: $dropdown-link-hover-bg;
         }
     }
+    
+    &.o_bottom_sheet_body:has(button) {
+        > div {
+            display: flex;
+            justify-content: space-evenly;
+        }
+    }
 }
