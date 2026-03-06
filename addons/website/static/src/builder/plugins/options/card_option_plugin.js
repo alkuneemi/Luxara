@@ -25,6 +25,7 @@ export class CardOptionPlugin extends Plugin {
             websiteBgApplyTo: WEBSITE_BG_APPLY_TO,
             cardParentHandlers: CARD_PARENT_HANDLERS,
         },
+        anchor_allowed_selectors: ".s_card",
     };
 }
 

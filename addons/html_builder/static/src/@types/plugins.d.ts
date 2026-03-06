@@ -1,5 +1,5 @@
 declare module "plugins" {
-    import { AnchorShared } from "@html_builder/core/anchor/anchor_plugin";
+    import { anchor_allowed_selectors, anchor_excluded_selectors, anchor_force_allowed_selectors, AnchorShared } from "@html_builder/core/anchor/anchor_plugin";
     import { builder_components, BuilderComponentShared } from "@html_builder/core/builder_component_plugin";
     import { builder_header_middle_buttons, builder_options_render_context, BuilderOptionsShared, on_current_options_containers_changed_handlers, clone_disabled_reason_providers, container_title, elements_to_options_title_components, options_container_top_buttons_providers, has_overlay_options, should_keep_overlay_options_predicates, no_parent_containers, on_will_restore_containers_handlers, remove_disabled_reason_providers, auto_unfold_container_providers } from "@html_builder/core/builder_options_plugin";
     import { BuilderOverlayShared } from "@html_builder/core/builder_overlay/builder_overlay_plugin";
@@ -156,5 +156,8 @@ declare module "plugins" {
         snippet_preview_dialog_bundles: snippet_preview_dialog_bundles;
         builder_options_render_context: builder_options_render_context;
         uncrossable_element_selector: uncrossable_element_selector;
+        anchor_allowed_selectors: anchor_allowed_selectors;
+        anchor_excluded_selectors: anchor_excluded_selectors;
+        anchor_force_allowed_selectors: anchor_force_allowed_selectors;
     }
 }

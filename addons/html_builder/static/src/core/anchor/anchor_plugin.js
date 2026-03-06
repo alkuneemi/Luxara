@@ -4,12 +4,7 @@ import { browser } from "@web/core/browser/browser";
 import { _t } from "@web/core/l10n/translation";
 import { markup } from "@odoo/owl";
 import { AnchorDialog } from "./anchor_dialog";
-import { getElementsWithOption, getSnippetName } from "@html_builder/utils/utils";
-
-const anchorSelector =
-    ":not(p).oe_structure > *, :not(p)[data-oe-type=html] > *, .row > *, .s_card, .accordion-item";
-const anchorExclude =
-    ".modal *, .oe_structure .oe_structure *, [data-oe-type=html] .oe_structure *, .s_popup, .carousel *, .o_portal_index_card";
+import { getSnippetName } from "@html_builder/utils/utils";
 
 /**
  * Anchor titles are usually taken from headings (h1–h6). Here, styled titles
@@ -20,13 +15,12 @@ const anchorExclude =
 const TITLE_SELECTOR =
     "h1, h2, h3, h4, h5, h6, .h1-fs, .h2-fs, .h3-fs, .h4-fs, .h5-fs, .h6-fs, .display-1-fs, .display-2-fs, .display-3-fs, display-4-fs, .base-fs, .o_small-fs";
 
-export function canHaveAnchor(element) {
-    return element.matches(anchorSelector) && !element.matches(anchorExclude);
-}
-
 /**
  * @typedef { Object } AnchorShared
  * @property { AnchorPlugin['createOrEditAnchorLink'] } createOrEditAnchorLink
+ * @typedef {CSSSelector[]} anchor_allowed_selectors
+ * @typedef {CSSSelector[]} anchor_excluded_selectors
+ * @typedef {CSSSelector[]} anchor_force_allowed_selectors
  */
 export class AnchorPlugin extends Plugin {
     static id = "anchor";
@@ -39,15 +33,59 @@ export class AnchorPlugin extends Plugin {
             0,
             this.getOptionsContainerTopButtons.bind(this)
         ),
+        anchor_allowed_selectors: [
+            ":not(p).oe_structure > *",
+            ":not(p)[data-oe-type=html] > *",
+            ".row > *",
+        ],
+        anchor_excluded_selectors: [
+            ".modal *",
+            ".oe_structure .oe_structure *",
+            "[data-oe-type=html] .oe_structure *",
+        ],
+        // Re-allows elements that would otherwise be excluded. Takes precedence
+        // over `anchor_excluded_selectors`. Useful for opting specific
+        // descendants of a nested `.oe_structure` back in.
+        anchor_force_allowed_selectors: [],
     };
 
+    setup() {
+        this.anchorAllowedSelector = this.getResource("anchor_allowed_selectors").join(", ");
+        this.anchorExcludedSelector = this.getResource("anchor_excluded_selectors").join(", ");
+        this.anchorForceAllowedSelector = this.getResource("anchor_force_allowed_selectors").join(
+            ", "
+        );
+    }
+
+    /**
+     * Determine whether the given element can have an anchor creation option.
+     *
+     * An element is eligible if it matches the allowed selectors and either
+     * matches the force-allowed selectors or does not match the excluded ones.
+     *
+     * @param {Element} element - The DOM element to evaluate.
+     * @returns {boolean} True if the element can have an anchor option, false
+     *                    otherwise.
+     */
+    canHaveAnchor(element) {
+        if (!element.matches(this.anchorAllowedSelector)) {
+            return false;
+        }
+        if (this.anchorForceAllowedSelector && element.matches(this.anchorForceAllowedSelector)) {
+            return true;
+        }
+        return !element.matches(this.anchorExcludedSelector);
+    }
+
     onCloned({ cloneEl }) {
-        const anchorEls = getElementsWithOption(cloneEl, anchorSelector, anchorExclude);
-        anchorEls.forEach((anchorEl) => this.deleteAnchor(anchorEl));
+        const candidateEls = [cloneEl, ...cloneEl.querySelectorAll(this.anchorAllowedSelector)];
+        candidateEls
+            .filter((el) => this.canHaveAnchor(el))
+            .forEach((anchorEl) => this.deleteAnchor(anchorEl));
     }
 
     getOptionsContainerTopButtons(el) {
-        if (!canHaveAnchor(el)) {
+        if (!this.canHaveAnchor(el)) {
             return [];
         }
 
