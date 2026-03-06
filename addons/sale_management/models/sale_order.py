@@ -3,7 +3,8 @@
 from datetime import timedelta
 from itertools import starmap, zip_longest
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import AccessError
 from odoo.tools import is_html_empty
 
 
@@ -151,3 +152,60 @@ class SaleOrder(models.Model):
             if order.sale_order_template_id.mail_template_id:
                 order._send_order_notification_mail(order.sale_order_template_id.mail_template_id)
         return res
+
+    def _prepare_quotation_template_vals(self):
+        """
+        Prepare the dictionary of values to create a new quotation template.
+        Designed to be overridden by other modules to add extra fields.
+        """
+        template_lines = []
+        for line in self.order_line:
+            line_vals = {
+                "sequence": line.sequence,
+                "company_id": line.company_id.id,
+                "product_id": line.product_id.id,
+                "name": line.name,
+                "product_uom_qty": line.product_uom_qty,
+                "display_type": line.display_type,
+                "collapse_composition": line.collapse_composition,
+                "is_optional": line.is_optional,
+                "collapse_prices": line.collapse_prices,
+            }
+            template_lines.append(fields.Command.create(line_vals))
+
+        return {
+            "name": f"Template from {self.name}",
+            "note": self.note,
+            "company_id": self.company_id.id,
+            "journal_id": self.journal_id.id if self.journal_id else False,
+            "require_signature": self.require_signature,
+            "require_payment": self.require_payment,
+            "prepayment_percent": self.prepayment_percent,
+            "sale_order_template_line_ids": template_lines,
+        }
+
+    def action_create_quotation_template(self):
+        self.ensure_one()
+
+        if not self.env.user.has_group("sale_management.group_sale_order_template"):
+            raise AccessError(
+                _(
+                    "You do not have the required permissions to create Quotation "
+                    "  Templates. Please contact your system administrator."
+                )
+            )
+
+        template_vals = self._prepare_quotation_template_vals()
+        new_template = self.env["sale.order.template"].create(template_vals)
+
+        # Assign the newly created template to the current SO
+        self.sale_order_template_id = new_template.id
+
+        return {
+            "name": "Quotation Template",
+            "type": "ir.actions.act_window",
+            "res_model": "sale.order.template",
+            "res_id": new_template.id,
+            "view_mode": "form",
+            "target": "current",
+        }
