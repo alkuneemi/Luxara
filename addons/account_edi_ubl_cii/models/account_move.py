@@ -89,26 +89,27 @@ class AccountMove(models.Model):
                     }]
         return super()._get_invoice_legal_documents(filetype, allow_fallback=allow_fallback)
 
-    def get_extra_print_items(self):
-        print_items = super().get_extra_print_items()
-        posted_moves = self.filtered(lambda move: move.state == 'posted')
-        can_export_xml = any(
-            (
-                move.ubl_cii_xml_id
-                or (
-                    (edi_format := move.commercial_partner_id.with_company(move.company_id)._get_ubl_cii_edi_format())
-                    and move._need_ubl_cii_xml(edi_format)
-                )
+    def _has_zip_export_docs(self):
+        # EXTENDS account
+        self.ensure_one()
+        if super()._has_zip_export_docs():
+            return True
+        return bool(
+            self.ubl_cii_xml_id
+            or (
+                self.partner_id
+                and (edi_format := self.commercial_partner_id.with_company(self.company_id)._get_ubl_cii_edi_format())
+                and self._need_ubl_cii_xml(edi_format)
             )
-            for move in posted_moves.filtered(lambda move: move.ubl_cii_xml_id or move.commercial_partner_id)
         )
-        if can_export_xml:
-            print_items.append({
-                'key': 'download_ubl',
-                'description': _('Export XML'),
-                **posted_moves.action_invoice_download_ubl(),
-            })
-        return print_items
+
+    def _get_invoice_legal_documents_all(self, allow_fallback=False):
+        # EXTENDS account
+        self.ensure_one()
+        docs = super()._get_invoice_legal_documents_all(allow_fallback=allow_fallback)
+        if not self.invoice_pdf_report_id and self.state == 'posted':
+            docs += self._get_invoice_legal_documents('ubl', allow_fallback=allow_fallback)
+        return docs
 
     def action_group_ungroup_lines_by_tax(self):
         """
