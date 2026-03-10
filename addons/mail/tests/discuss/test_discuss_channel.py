@@ -1146,3 +1146,30 @@ class TestChannelInternals(MailCommon, HttpCase):
         actual_member_ids = [m.partner_id.id if m.partner_id else m.guest_id.id for m in channel.channel_member_ids]
         expected_member_ids = [self.partner_employee.id, self.guest.id, self.env.user.partner_id.id]
         self.assertCountEqual(actual_member_ids, expected_member_ids)
+
+    def test_channel_add_members_push_notification(self):
+        invited_user = mail_new_test_user(self.env, login="invitee_push_lang", groups="base.group_user")
+        invited_user.partner_id.lang = False
+        channel = self.env["discuss.channel"].create({"name": "Push Invite", "channel_type": "channel"})
+        push_device = self._setup_push_devices_for_partners(invited_user.partner_id)
+        with self.mock_push_to_end_point():
+            channel.with_user(self.user_employee)._add_members(
+                partners=invited_user.partner_id,
+                post_joined_message=False,
+            )
+        self.assertPushNotification(
+            endpoint=push_device.endpoint,
+            body=self.env._(
+                "%s invited you to join this channel",
+                self.user_employee.partner_id.display_name,
+            ),
+            options={
+                "tag": f"channel_invite_{channel.id}",
+                "icon": f"/web/image/discuss.channel/{channel.id}/avatar_128",
+                "data": {
+                    "action": "mail.action_discuss",
+                    "model": "discuss.channel",
+                    "res_id": channel.id,
+                },
+            },
+        )
