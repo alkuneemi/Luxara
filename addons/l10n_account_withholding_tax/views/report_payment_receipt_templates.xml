@@ -1,5 +1,13 @@
 <odoo>
     <template inherit_id="account.report_payment_receipt_document" id="report_payment_receipt_document">
+        <xpath expr="//div[@t-if='o.amount']" position="before">
+            <div class="col-6" t-if="o.withholding_net_amount">
+                            Paid Amount: <span t-field="o.withholding_net_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}">50 USD</span>
+            </div>
+            <div class="col-6" t-if="o.withholding_total_tax_amount">
+                Tax Amount: <span t-field="o.withholding_total_tax_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}">50 USD</span>
+            </div>
+        </xpath>
         <xpath expr="//table" position="before">
             <t t-if="o.withholding_line_ids">
                 <table id="l10n_account_withholding" class="table table-borderless border-bottom pt-2 mb-5">
