@@ -123,6 +123,47 @@ export class Thread extends Record {
     followersCount;
     loadOlder = false;
     loadNewer = false;
+<<<<<<< 6b510206eab93cf190eb41e23d6b225e5b68d27d
+||||||| db9ffdb1ca0905087bfe8d846f1f22f38bed45d3
+    get importantCounter() {
+        if (this.model === "mail.box") {
+            return this.counter;
+        }
+        return this.message_needaction_counter;
+    }
+    /** ⚠️ {@link AwaitChatHubInit} */
+    isDisplayed = fields.Attr(false, {
+        compute() {
+            return this.computeIsDisplayed();
+        },
+        onUpdate() {
+            this.isDisplayedOnUpdate();
+        },
+    });
+    isDisplayedOnUpdate() {}
+=======
+    get importantCounter() {
+        if (this.model === "mail.box") {
+            return this.counter;
+        }
+        return this.message_needaction_counter;
+    }
+    /** ⚠️ {@link AwaitChatHubInit} */
+    isDisplayed = fields.Attr(false, {
+        compute() {
+            return this.computeIsDisplayed();
+        },
+        onUpdate() {
+            this.isDisplayedOnUpdate();
+        },
+    });
+    isDisplayedOnUpdate() {}
+
+    get composerHidden() {
+        return false;
+    }
+
+>>>>>>> b09eba63af3adbc17ad508d5fc283d423261fcc7
     get isFocused() {
         return this.isFocusedCounter !== 0;
     }
