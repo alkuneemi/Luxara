@@ -1,6 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.fields import Domain
 from odoo.http import request
 from odoo.addons.mail.controllers.thread import ThreadController
 from odoo.addons.mail.controllers.webclient import WebclientController
@@ -32,48 +31,6 @@ class PortalWebClientController(WebclientController):
     @classmethod
     def _process_request_for_all(self, store: Store, name, params):
         super()._process_request_for_all(store, name, params)
-        if name == "/mail/chatter_fetch":
-            # Only search into website_message_ids, so apply the same domain to perform only one search
-            # extract domain from the 'website_message_ids' field
-            fetch_params = params.pop("fetch_params", None)
-            model = request.env[params.pop("thread_model")]
-            thread = ThreadController._get_thread_with_access(
-                model._name,
-                params.pop("thread_id"),
-                token=params.get('token'),
-            )
-            if not thread:
-                return
-            if portal_partner := get_portal_partner(
-                thread,
-                _hash=None,
-                pid=None,
-                token=params.get("token"),
-            ):
-                request.update_context(
-                    portal_data={"portal_partner": portal_partner, "portal_thread": thread},
-                )
-            # Non-employee see only messages with not internal subtype (aka, no internal logs), internal users are
-            # supposed to see the portal as it is for the portal user, so they also have the same restriction.
-            domain = (
-                Domain(self._setup_portal_message_fetch_extra_domain(params))
-                & Domain(model._fields['website_message_ids'].get_comodel_domain(model))
-                & Domain("res_id", "=", thread.id)
-                & Domain("subtype_id", "=", request.env.ref("mail.mt_comment").id)
-                & self._get_non_empty_message_domain()
-                & request.env["mail.message"]._get_search_domain_share()
-            )
-            # sudo: mail.message - thread access is validated above, and domain is massively restricted to share-only messages
-            messages = self._resolve_messages(
-                store,
-                domain=domain,
-                thread=thread,
-                fetch_params=fetch_params,
-                add_to_store=False,
-                sudo=True,
-            )
-            for message_data in messages.portal_message_format(options=params):
-                store.add_model_values("mail.message", message_data)
         if name == "/portal/chatter_init":
             access_params = params.get("access_params", {})
             store.add_global_values(request.env.user.sudo(False)._store_init_global_fields)
@@ -141,16 +98,39 @@ class PortalWebClientController(WebclientController):
         )
 
     @classmethod
-    def _get_non_empty_message_domain(self):
-        return (
-            Domain("body", "!=", False)
-            & Domain(
-                "body",
-                "not =like",
-                '<span class="o-mail-Message-edited" data-o-datetime="%"></span>',
+    def _prepare_fetch_context(self, thread, *, access_params=None, **kwargs):
+        super()._prepare_fetch_context(thread, access_params=access_params, **kwargs)
+        if access_params and (
+            portal_partner := get_portal_partner(
+                thread,
+                _hash=access_params.get("hash"),
+                pid=access_params.get("pid"),
+                token=access_params.get("token"),
             )
-        ) | Domain("attachment_ids", "!=", False)
+        ):
+            request.update_context(
+                portal_data={
+                    "portal_partner": portal_partner,
+                    "portal_thread": thread,
+                }
+            )
 
     @classmethod
-    def _setup_portal_message_fetch_extra_domain(self, data) -> Domain:
-        return Domain.TRUE
+    def _should_apply_share_domain(self, thread, *, only_portal=False, **kwargs):
+        return only_portal or super()._should_apply_share_domain(
+            thread,
+            only_portal=only_portal,
+            **kwargs,
+        )
+
+    @classmethod
+    def _get_fetch_domain(self, thread, **kwargs):
+        """Restricts the fetched messages for portal."""
+        domain = super()._get_fetch_domain(thread, **kwargs)
+        if self._should_apply_share_domain(thread, **kwargs):
+            domain &= (
+                request.env[thread._name]
+                ._fields["website_message_ids"]
+                .get_comodel_domain(request.env[thread._name])
+            )
+        return domain
