@@ -352,6 +352,17 @@ describe("inline code", () => {
             contentAfter: "<p>a`[]f</p>",
         });
     });
+
+    test("should not show placeholder when inline code is available", async () => {
+        await testEditor({
+            contentBefore: '<p><code class="o_inline_code">[] </code></p>',
+            contentBeforeEdit:
+                '<p>\ufeff<code class="o_inline_code">\ufeff[] \ufeff</code>\ufeff</p>',
+            contentAfterEdit:
+                '<p>\ufeff<code class="o_inline_code">\ufeff[] \ufeff</code>\ufeff</p>',
+            contentAfter: '<p><code class="o_inline_code">[]&nbsp;</code></p>',
+        });
+    });
 });
 
 describe("pre", () => {

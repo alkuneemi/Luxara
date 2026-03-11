@@ -143,6 +143,11 @@ describe("visibility", () => {
         await animationFrame();
         expect(".o_we_power_buttons").toBeVisible();
     });
+
+    test("should not show powerButtons when inline code is available", async () => {
+        await setupEditor(`<p><code class="o_inline_code">[] </code></p>`);
+        expect(".o_we_power_buttons").not.toBeVisible();
+    });
 });
 
 describe.tags("desktop");

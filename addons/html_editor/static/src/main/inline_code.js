@@ -55,6 +55,9 @@ export class InlineCodePlugin extends Plugin {
                 return false;
             }
         },
+        should_show_hint_predicates: (node) => !node.querySelector(".o_inline_code"),
+        should_show_power_buttons_predicates: ({ anchorNode }) =>
+            !closestBlock(anchorNode).querySelector(".o_inline_code"),
     };
 
     setup() {
