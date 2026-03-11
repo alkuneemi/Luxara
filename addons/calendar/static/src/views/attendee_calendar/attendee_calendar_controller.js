@@ -91,7 +91,10 @@ export class AttendeeCalendarController extends CalendarController {
             user.partnerId === record.attendeeId &&
             user.partnerId === record.rawRecord.partner_id[0]
         ) {
-            if (!record.rawRecord.recurrency && user.partnerId === record.attendeeId && record.rawRecord.attendees_count == 1) {
+            if (
+                record.rawRecord.is_draft
+                || (!record.rawRecord.recurrency && user.partnerId === record.attendeeId && record.rawRecord.attendees_count == 1)
+            ) {
                 super.deleteRecord(...arguments);
             } else {
                 this.orm.call("calendar.event", "action_unlink", [

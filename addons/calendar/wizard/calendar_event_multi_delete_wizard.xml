@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <form string="Delete Events">
                 <p class="alert alert-warning" role="alert">Are you sure you want to delete those events?</p>
-                Send default cancellation emails to the attendees<span invisible="is_user_admin">for the events you organized</span>?
+                Send default cancellation emails to the attendees for the confirmed events<span invisible="is_user_admin"> you organized</span>?
                 <field name="delete_wizard_ids" invisible="1">
                     <list>
                         <field name="body"/>

@@ -28,7 +28,7 @@ export class CaledarListController extends ListController {
             if (user.isAdmin || user.userId === record.data.user_id.id) {
                 unlinkActionEventIds.push(record.resId);
                 const partnerIds = record.data.partner_ids.resIds;
-                if (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId)) {
+                if (!record.data.is_draft && (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId))) {
                     isUnlinkActionRequired = true;
                 }
             } else {

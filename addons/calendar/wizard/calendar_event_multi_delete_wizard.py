@@ -22,6 +22,7 @@ class CalendarEventMultiDeleteWizard(models.TransientModel):
 
     def action_send_mails_and_delete(self):
         self.env['mail.mail'].sudo().create([
-            wizard._prepare_mail_values() for wizard in self.delete_wizard_ids if wizard.calendar_event_id.partner_ids != self.env.user.partner_id
+            wizard._prepare_mail_values() for wizard in self.delete_wizard_ids
+            if not wizard.calendar_event_id.is_draft and wizard.calendar_event_id.partner_ids != self.env.user.partner_id
         ])
         return self.action_delete()

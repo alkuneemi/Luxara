@@ -5,11 +5,16 @@
         <field name="model">calendar.attendee.invite.wizard</field>
         <field name="arch" type="xml">
             <form string="confirm Event">
-                Send invitations to the new attendees?
+                Send invitations to the <span invisible="is_confirmation_required">new </span>attendees?
                 <field name="calendar_attendee_ids" invisible="1"/>
-                <footer>
+                <footer invisible="is_confirmation_required">
                     <button string="Send" name="action_send" type="object" class="btn-primary"/>
                     <button string="Don't send" class="btn-secondary" special="cancel"/>
+                </footer>
+                <footer invisible="not is_confirmation_required">
+                    <button string="Send and confirm" name="action_send_and_confirm" type="object" class="btn-primary"/>
+                    <button string="Confirm" name="action_confirm" type="object" class="btn-secondary"/>
+                    <button string="Discard" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>

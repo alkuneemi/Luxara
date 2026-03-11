@@ -32,7 +32,7 @@ export class CalendarFormController extends FormController {
         const record = this.model.root;
         if (user.isAdmin || user.userId === record.data.user_id.id) {
             const partnerIds = record.data.partner_ids.resIds
-            if (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId)) {
+            if (!record.data.is_draft && (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId))) {
                 this.orm
                     .call("calendar.event", "action_unlink", [
                         record.resId,
@@ -55,7 +55,7 @@ export class CalendarFormController extends FormController {
     }
 
     shouldAskInvitationsSending(record) {
-        return record.newPartners.length > 0 && record.data.start >= luxon.DateTime.now();
+        return record.newPartners.length > 0 && record.data.start >= luxon.DateTime.now() && !record.data.is_draft;
     }
 
     async onRecordSaved(record, changes) {
