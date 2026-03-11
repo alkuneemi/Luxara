@@ -721,5 +721,4 @@ class CalendarEvent(models.Model):
 
     def _is_microsoft_insertion_blocked(self, sender_user):
         self.ensure_one()
-        has_different_owner = self.user_id and self.user_id != sender_user
-        return has_different_owner
+        return self.is_draft or (self.user_id and self.user_id != sender_user)
