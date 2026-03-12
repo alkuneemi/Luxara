@@ -8,7 +8,7 @@ import sys
 import time
 import threading
 import re
-import tracemalloc
+import psutil
 
 from psycopg2 import OperationalError
 
@@ -19,6 +19,7 @@ from .gc import disabling_gc
 
 
 _logger = logging.getLogger(__name__)
+_process = psutil.Process()
 
 # ensure we have a non patched time for profiling times when using freezegun
 real_datetime_now = datetime.now
@@ -258,43 +259,7 @@ class PeriodicCollector(_BasePeriodicCollector):
             # maybe modify the last entry to add a last seen?
             return
         self.last_frame = frame
-        super().add(entry=entry, frame=frame)
-
-
-_lock = threading.Lock()
-
-
-class MemoryCollector(_BasePeriodicCollector):
-
-    name = 'memory'
-    _store = 'others'
-    _min_interval = 0.01  # minimum interval allowed
-    _default_interval = 1
-
-    def start(self):
-        _lock.acquire()
-        tracemalloc.start()
-        super().start()
-
-    def add(self, entry=None, frame=None):
-        """ Add an entry (dict) to this collector. """
-        self._entries.append({
-            'start': real_time(),
-            'memory': tracemalloc.take_snapshot(),
-        })
-
-    def stop(self):
-        super().stop()
-        _lock.release()
-        tracemalloc.stop()
-
-    def post_process(self):
-        for i, entry in enumerate(self._entries):
-            if entry.get("memory", False):
-                entry_statistics = entry["memory"].statistics('traceback')
-                modified_entry_statistics = [{'traceback': list(statistic.traceback._frames),
-                                            'size': statistic.size} for statistic in entry_statistics]
-                self._entries[i] = {"memory_tracebacks": modified_entry_statistics, "start": entry['start']}
+        super().add(entry={'memory': _process.memory_info().rss, **(entry or {})}, frame=frame)
 
 
 class SyncCollector(Collector):
