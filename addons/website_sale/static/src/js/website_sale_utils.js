@@ -1,64 +1,6 @@
 import { browser } from '@web/core/browser/browser';
 import { _t } from '@web/core/l10n/translation';
-import { createElementWithContent } from '@web/core/utils/html';
-
-/**
- * Updates both navbar cart
- * @param {Object} data
- * @return {void}
- */
-function updateCartNavBar(data) {
-    browser.sessionStorage.setItem('website_sale_cart_quantity', data.cart_quantity);
-    // Mobile and Desktop elements have to be updated.
-    const cartQuantityElements = document.querySelectorAll('.my_cart_quantity');
-    for(const cartQuantityElement of cartQuantityElements) {
-        if (data.cart_quantity === 0) {
-            cartQuantityElement.classList.add('d-none');
-        } else {
-            const cartIconElement = document.querySelector('li.o_wsale_my_cart');
-            cartIconElement.classList.remove('d-none');
-            cartQuantityElement.classList.remove('d-none');
-            cartQuantityElement.classList.add('o_mycart_zoom_animation');
-            setTimeout(() => {
-                cartQuantityElement.textContent = data.cart_quantity;
-                cartQuantityElement.classList.remove('o_mycart_zoom_animation');
-            }, 300);
-        }
-    }
-
-    const cartLines = document.querySelectorAll('.js_cart_lines');
-    cartLines[0]?.insertAdjacentHTML('beforebegin', data['website_sale.cart_lines']);
-    cartLines.forEach(el => el.remove());
-
-    updateCartSummary(data);
-
-    if (data.cart_ready) {
-        document.querySelector("a[name='website_sale_main_button']")?.classList.remove('disabled');
-    } else {
-        document.querySelector("a[name='website_sale_main_button']")?.classList.add('disabled');
-    }
-}
-
-/**
- * Update the cart summary.
- *
- * @param {Object} data
- * @return {void}
- */
-function updateCartSummary(data) {
-    if (data['website_sale.shorter_cart_summary']) {
-        const shorterCartSummaryEl = document.querySelector('.o_wsale_shorter_cart_summary');
-        const newShorterCartSummaryEl = createElementWithContent(
-            'div', data['website_sale.shorter_cart_summary'],
-        );
-        shorterCartSummaryEl.replaceWith(...newShorterCartSummaryEl.childNodes);
-    }
-    if (data['website_sale.total']) {
-        document.querySelectorAll('div.o_cart_total').forEach(
-            div => div.innerHTML = data['website_sale.total']
-        );
-    }
-}
+import { createElementWithContent } from "@web/core/utils/html";
 
 /**
  * Update the quick reorder side panel.
@@ -68,6 +10,9 @@ function updateCartSummary(data) {
  */
 function updateQuickReorderSidebar(data) {
     const quickReorderButton  = document.getElementById('quick_reorder_button');
+    if (!quickReorderButton) {
+        return;
+    }
     document.querySelectorAll('.o_wsale_quick_reorder_line_group').forEach(el => el.remove());
     if (data['website_sale.quick_reorder_history'].trim()) {
         document.querySelector('#quick_reorder_sidebar .offcanvas-body').insertAdjacentHTML(
@@ -118,9 +63,79 @@ function getSelectedAttributeValues(container) {
     )).map(el => parseInt(el.value));
 }
 
+/**
+ * Update the cart summary.
+ *
+ * @param {Object} data
+ * @return {void}
+ */
+function updateCartSummary(data) {
+    if (data["website_sale.shorter_cart_summary"]) {
+        const shorterCartSummaryEl = document.querySelector(".o_wsale_shorter_cart_summary");
+        const newShorterCartSummaryEl = createElementWithContent(
+            "div",
+            data["website_sale.shorter_cart_summary"]
+        );
+        shorterCartSummaryEl.replaceWith(...newShorterCartSummaryEl.childNodes);
+    }
+}
+
+/**
+ * Update the quantity on the cart icon in the navbar.
+ *
+ * @param {Number} cartQuantity - The number of items currently in the cart.
+ *
+ * @returns {void}
+ */
+function updateCartIcon(cartQuantity) {
+    browser.sessionStorage.setItem("website_sale_cart_quantity", cartQuantity);
+    // Mobile and Desktop elements have to be updated.
+    const cartQuantityElements = document.querySelectorAll(".my_cart_quantity");
+    for (const cartQuantityElement of cartQuantityElements) {
+        if (cartQuantity === 0) {
+            cartQuantityElement.classList.add("d-none");
+        } else {
+            const cartIconElement = document.querySelector("li.o_wsale_my_cart");
+            cartIconElement.classList.remove("d-none");
+            cartQuantityElement.classList.remove("d-none");
+            cartQuantityElement.classList.add("o_mycart_zoom_animation");
+            setTimeout(() => {
+                cartQuantityElement.textContent = cartQuantity;
+                cartQuantityElement.classList.remove("o_mycart_zoom_animation");
+            }, 300);
+        }
+    }
+}
+
+/**
+ * Extract text content from edit-mode DOM nodes (mostly labels) to feed OWL cart
+ * components (cart lines & totals).
+ *
+ * Values come from server-rendered edit-mode templates and are passed as props
+ * to preserve partial editability (e.g. customizable labels).
+ *
+ * @param {HTMLElement} root - Parent element containing edit-mode DOM
+ * @param {Object<string, string>} selectors - Mapping of prop keys to CSS selectors
+ * @returns {Object<string, string>} Extracted text values
+ */
+function extractEditModeText(root, selectors) {
+    const data = {};
+
+    for (const key in selectors) {
+        const node = root.querySelector(selectors[key]);
+        if (node) {
+            data[key] = node.textContent;
+        }
+    }
+
+    return data;
+}
+
 export default {
-    updateCartNavBar: updateCartNavBar,
+    extractEditModeText: extractEditModeText,
     showWarning: showWarning,
     getSelectedAttributeValues: getSelectedAttributeValues,
     updateQuickReorderSidebar: updateQuickReorderSidebar,
+    updateCartSummary: updateCartSummary,
+    updateCartIcon: updateCartIcon,
 };
