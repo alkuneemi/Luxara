@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-
     <t t-name="mail.VoiceRecorder">
-        <t t-set="title"><t t-if="!this.state.recording">Voice Message</t><t t-else=""></t></t>
-        <button class="o-mail-VoiceRecorder d-flex align-items-center btn border-0 p-0" t-att-class="{ 'o-recording rounded-start-0 rounded-end user-select-none p-0': this.state.recording, 'rounded-circle': !this.state.recording }" t-att-title="title" t-att-disabled="this.state.isActionPending or this.props.composer.voiceAttachment" t-on-click="this.onClick">
-            <div class="o-mail-VoiceRecorder-elapsed" t-att-class="{
-                'o-active recording ms-2 me-1': this.state.recording,
-                'mw-0': !this.state.recording,
-                'text-danger': this.state.limitWarning,
-            }" style="font-variant-numeric: tabular-nums;"><span class="d-flex text-truncate" t-out="this.state.elapsed"/></div>
-            <span class="rounded-circle" t-att-class="{ 'p-1': this.state.recording }"><i t-att-class="!this.state.recording ? 'fa fa-fw fa-lg fa-microphone' : 'fa fa-fw fa-circle text-danger o-mail-VoiceRecorder-dot'"/></span>
-        </button>
+        <div class="o-mail-VoiceRecorder">
+            <div class="o-mail-VoiceRecorder-elapsed" t-att-class="{ 'text-danger': this.props.state.limitWarning }">
+                <span class="d-flex text-truncate" t-out="this.props.state.elapsed"/>
+            </div>
+            <button class="btn btn-link o-mail-VoiceRecorder-cancel" t-on-click="this.props.state.cancelRecording" t-att-title="this.cancelTitle">
+                <i class="fa fa-times"/>
+            </button>
+            <button class="btn btn-link o-mail-VoiceRecorder-confirm position-relative" t-on-click="this.props.state.onClick" t-att-title="this.title">
+                <div class="o-mail-VoiceRecorder-visualizer">
+                    <t t-foreach="this.props.state.volumes" t-as="vol" t-key="vol_index">
+                        <!-- monitorAudio returns volume ~0.0 to ~1.0, so we boost it for visual impact -->
+                        <div class="o-mail-VoiceRecorder-bar" t-attf-style="transform: scaleY(#{Math.max(0.2, vol * 2.0)});"/>
+                    </t>
+                </div>
+            </button>
+        </div>
     </t>
 
 </templates>
