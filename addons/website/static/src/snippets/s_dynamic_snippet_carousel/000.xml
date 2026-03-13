@@ -2,13 +2,13 @@
 <templates xml:space="preserve">
     <t t-name="website.s_dynamic_snippet.carousel.arrows">
         <div class="o_carousel_arrow_wrap align-items-center pe-none">
-            <a t-attf-href="##{unique_id}" class="carousel-control-prev position-relative pe-auto" data-bs-slide="prev" role="button" t-attf-aria-controls="#{unique_id}_inner" aria-label="Previous" title="Previous">
+            <a t-attf-href="##{this.unique_id}" class="carousel-control-prev position-relative pe-auto" data-bs-slide="prev" role="button" t-attf-aria-controls="#{this.unique_id}_inner" aria-label="Previous" title="Previous">
                 <span class="o_carousel_arrow oi oi-chevron-left p-3"/>
                 <span class="visually-hidden">Previous</span>
             </a>
         </div>
         <div class="o_carousel_arrow_wrap align-items-center justify-content-end pe-none">
-            <a t-attf-href="##{unique_id}" class="carousel-control-next position-relative pe-auto" data-bs-slide="next" role="button" t-attf-aria-controls="#{unique_id}_inner" aria-label="Next" title="Next">
+            <a t-attf-href="##{this.unique_id}" class="carousel-control-next position-relative pe-auto" data-bs-slide="next" role="button" t-attf-aria-controls="#{this.unique_id}_inner" aria-label="Next" title="Next">
                 <span class="o_carousel_arrow oi oi-chevron-right p-3"/>
                 <span class="visually-hidden">Next</span>
             </a>
@@ -17,7 +17,7 @@
     <t t-name="website.s_dynamic_snippet.carousel.base">
         <t t-set="slideSize" t-value="rowSize * this.rowPerSlide" />
         <t t-set="slideIndexGenerator" t-value="Array(Math.ceil(this.data.length/slideSize))"/>
-        <div t-att-id="unique_id" t-attf-class="carousel slide d-flex flex-column-reverse #{extraCarouselClass || ''}"
+        <div t-att-id="this.unique_id" t-attf-class="carousel slide d-flex flex-column-reverse #{extraCarouselClass || ''}"
              t-att-style="extraCarouselStyle"
              t-att-data-bs-interval="slideIndexGenerator.length > minControlValue ? this.interval : 0"
              t-att-data-bs-ride="slideIndexGenerator.length > minControlValue and 'carousel'"
@@ -28,16 +28,14 @@
             <!-- Controls -->
             <t t-if='slideIndexGenerator.length > minControlValue'>
                 <div class="s_dynamic_snippet_arrows d-flex gap-2 w-100 pe-none z-2">
-                    <t t-call="website.s_dynamic_snippet.carousel.arrows">
-                        <t t-set="unique_id" t-value="unique_id" />
-                    </t>
+                    <t t-call="website.s_dynamic_snippet.carousel.arrows"/>
                 </div>
             </t>
             <!-- Content -->
             <t t-set="rowIndexGenerator" t-value="Array(this.rowPerSlide)"/>
             <t t-set="colIndexGenerator" t-value="Array(rowSize)"/>
             <div class="carousel-inner w-100 mx-auto"
-                 t-attf-id="#{unique_id}_inner"
+                 t-attf-id="#{this.unique_id}_inner"
                  aria-label="Carousel"
                  aria-live="off">
                 <t t-foreach="slideIndexGenerator" t-as="slideIndex" t-key="slideIndex_index">
