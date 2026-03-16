@@ -151,6 +151,14 @@ class WebsiteSaleProductConfiguratorController(SaleProductConfiguratorController
             )
             if strikethrough_price:
                 basic_product_information["strikethrough_price"] = strikethrough_price
+            if request.env["res.groups"]._is_feature_enabled("product.group_show_uom_price"):
+                product_uom_price = product_or_template.uom_id._compute_price(
+                    price=basic_product_information["price"], to_unit=product_or_template.uom_id
+                )
+                basic_product_information.update({
+                    "base_unit_name": product_or_template.base_unit_name,
+                    "base_unit_price": product_or_template._get_base_unit_price(product_uom_price),
+                })
         return basic_product_information
 
     def _get_ptav_price_extra(self, ptav, currency, date, product_or_template):
