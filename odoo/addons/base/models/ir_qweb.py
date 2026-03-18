@@ -1365,7 +1365,7 @@ class IrQweb(models.AbstractModel):
             values.setdefault('user_id', self.env.user.with_env(self.env))
             values.setdefault('res_company', self.env.company.sudo())
             values.update(
-                request=request,  # might be unbound if we're not in an httprequest context
+                request=request,  # might be unbound if we're not in an httprequest context, TODO: remove
                 test_mode_enabled=config['test_enable'],
                 json=qwebJSON,
                 quote_plus=werkzeug.urls.url_quote_plus,
