@@ -1989,6 +1989,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         # Restrict options we can write to.
         writable_fields = {
             "shop_page_container",
+            "shop_border_color",
             "shop_ppg",
             "shop_ppr",
             "shop_default_sort",
@@ -2009,6 +2010,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "wishlist_grid_columns",
             "wishlist_mobile_columns",
             "wishlist_gap",
+            "product_page_border_color",
         }
         # Default ppg to 1.
         if "ppg" in options and not options["ppg"]:

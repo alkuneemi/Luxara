@@ -10,6 +10,7 @@ export class ProductsListPageOptionPlugin extends Plugin {
     resources = {
         builder_actions: {
             SetShopContainerAction,
+            SetBorderColor,
             SetPpgAction,
             SetPprAction,
             SetDefaultSortAction,
@@ -68,6 +69,18 @@ export class SetDefaultSortAction extends BuilderAction {
     }
     apply({ value }) {
         return rpc("/shop/config/website", { shop_default_sort: value });
+    }
+}
+
+export class SetBorderColor extends PreviewableWebsiteConfigAction {
+    static id = "setBorderColor";
+
+    async apply({ editingElement: productDetailMainEl, isPreviewing, params, value }) {
+        await super.apply({ editingElement: productDetailMainEl, isPreviewing, params, value });
+
+        if (!isPreviewing) {
+            await rpc("/shop/config/website", { 'shop_border_color': value });
+        }
     }
 }
 

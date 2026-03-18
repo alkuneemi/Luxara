@@ -22,6 +22,12 @@
         </BuilderButtonGroup>
     </BuilderRow>
 
+    <BuilderRow label.translate="Borders">
+        <BuilderButtonGroup action="'setBorderColor'">
+            <BuilderButton actionValue="'default'" actionParam="{ previewClass: 'o_wsale_border_default'}">Default</BuilderButton>
+            <BuilderButton actionValue="'strong'" actionParam="{ previewClass: 'o_wsale_custom_border o_wsale_border_strong'}">Strong</BuilderButton>
+        </BuilderButtonGroup>
+    </BuilderRow>
 
     <BuilderContext applyTo="'#o_wsale_products_grid'">
         <ProductsDesignPanel

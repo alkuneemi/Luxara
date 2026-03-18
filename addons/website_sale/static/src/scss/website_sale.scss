@@ -1,6 +1,22 @@
 // Website Sale
 // =============================================================================
 
+:where(body[class*="o_website_sale_"]) {
+    .o_wsale_border_strong {
+        --o-wsale-border-color: currentColor;
+    }
+
+    .o_wsale_product_border_strong {
+        --o-wsale-product-border-color: currentColor;
+    }
+
+    .o_wsale_custom_border {
+        --o-border-color: var(--o-wsale-product-border-color, var(--o-wsale-border-color));
+        --border-color: var(--o-wsale-product-border-color, var(--o-wsale-border-color));
+        --o-wsale-card-border-color: var(--o-border-color);
+    }
+}
+
 
 // ==== Products list Pages (/shop, /category, /search) ========================
 // =============================================================================
@@ -31,6 +47,7 @@
         }
 
         .o_wsale_products_grid_before_rail{
+            max-height: 100vh;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -249,6 +266,7 @@
         &.o_wsale_filmstrip_grid {
             --o-wsale-filmstrip-wrapper-border-width: #{$border-width} 0 #{$border-width} 0;
             --o-wsale-filmstrip-wrapper-padding-bottom: 0;
+            --o-wsale-filmstrip-wrapper-width: 100%;
 
             --o-wsale-filmstrip-gap: 0;
 
@@ -384,6 +402,7 @@
 
         .o_wsale_filmstrip_wrapper {
             margin-bottom: map-get($spacers, 1);
+            width: var(--o-wsale-filmstrip-wrapper-width, auto);
             border-width: var(--o-wsale-filmstrip-wrapper-border-width, 0);
             border-style: solid;
             border-color: $border-color;
@@ -582,7 +601,7 @@
             }
 
             #o_wsale_products_grid {
-                box-shadow: inset 0 -1px 0 0px var(--border-color);
+                box-shadow: inset 0 -1px 0 0px var(--o-border-color);
             }
         }
 
@@ -602,6 +621,10 @@
                 }
                 @include media-breakpoint-up(lg) {
                     --o-wsale-topbar-border-width: 0 #{$border-width} #{$border-width} #{$border-width};
+                    #category_footer {
+                        border-right: #{$border-width} solid #{$border-color};
+                        border-left: #{$border-width} solid #{$border-color};
+                    }
                 }
             }
 
@@ -618,11 +641,14 @@
                     #o_wsale_pager {
                         border-left: 0;
                     }
+                    #category_footer {
+                        border-right: var(--o-wsale-sidebar-border);
+                    }
                 }
             }
 
             #o_wsale_products_grid {
-                box-shadow: inset -1px -1px 0 0px var(--border-color);
+                box-shadow: inset -1px -1px 0 0px var(--o-border-color);
             }
 
             &:where(:not(.o_wsale_has_sidebar)) #o_wsale_products_grid {
