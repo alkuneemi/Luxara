@@ -68,6 +68,8 @@ class HrEmployee(models.Model):
         index=True,
         bypass_search_access=True,
     )
+    last_fixed_term = fields.Boolean(
+        compute='_compute_last_fixed_term', store=True, groups="hr.group_hr_manager")
     current_date_version = fields.Date(
         string="Current Date Employee Record",
         related="current_version_id.date_version",
@@ -501,6 +503,17 @@ class HrEmployee(models.Model):
         if not self.contract_date_start:
             self.contract_date_end = False
 
+    @api.onchange('contract_date_end')
+    def _onchange_contract_date_end(self):
+        for version in self:
+            if not version.contract_date_end:
+                version.fixed_term = False
+            elif (
+                version._origin.contract_date_start != version.contract_date_start
+                and version._origin.contract_date_end != version.contract_date_end
+            ):
+                version.fixed_term = True
+
     @api.onchange("private_state_id")
     def _onchange_private_state_id(self):
         if self.private_state_id:
@@ -707,6 +720,16 @@ class HrEmployee(models.Model):
             if employee.current_version_id != new_current_version:
                 employee.current_version_id = new_current_version
 
+    @api.depends('version_ids.date_version', 'version_ids.fixed_term', 'version_ids.active', 'active')
+    def _compute_last_fixed_term(self):
+        self.last_fixed_term = False
+        active_versions = self.env['hr.version'].search([
+            ('employee_id', 'in', self.ids), ('active', '=', True)],
+            order='date_version asc',
+        )
+        for version in active_versions:
+            version.employee_id.last_fixed_term = version.fixed_term
+
     def _cron_update_current_version_id(self):
         self.search([])._compute_current_version_id()
 
@@ -776,6 +799,7 @@ class HrEmployee(models.Model):
             'employee_id': employee_id,
             'contract_date_start': contract_date_start,
             'contract_date_end': contract_date_end,
+            'fixed_term': bool(contract_date_end),
         }
         if 'active' in values:
             copy_vals['active'] = values['active']
@@ -788,11 +812,17 @@ class HrEmployee(models.Model):
             if field_name not in copy_vals
         }
         version_fields = self.env['hr.version']._fields
-        copy_vals = {
+        copy_data_vals = {
             k: v
             for k, v in version_to_copy.sudo().copy_data()[0].items()
             if not (k in new_version_vals and version_fields[k].type in ['one2many', 'many2many'])
-        } | copy_vals
+        }
+        if 'contract_template_id' in values:
+            copy_vals['contract_template_id'] = values['contract_template_id']
+            template_whitelist = set(self.env['hr.version']._get_whitelist_fields_from_template())
+            for field in template_whitelist - set(copy_vals):
+                copy_data_vals.pop(field, None)
+        copy_vals = copy_data_vals | copy_vals
         new_version = self.env['hr.version'].sudo().create(copy_vals).sudo(False)
         with self.env.protecting([f for f_name, f in version_fields.items() if f_name not in new_version_vals and f.copy], new_version):
             new_version.write(new_version_vals)

@@ -30,7 +30,14 @@ registry.category("web_tour.tours").add("version_timeline_auto_save_tour", {
             run: "click",
         },
         {
-            trigger: "body:not(:has(.o_datetime_picker))",
+            content: "Close the End of Contract dialog ('Correct terms' button)",
+            trigger: ".modal button.btn-primary",
+            run: "click",
+        },
+        {
+            content: "Wait the form is dirty and click on save button",
+            trigger: "body:has(.o_form_dirty) .o_form_button_save",
+            run: "click",
         },
         {
             content: "Open Create New Version",
@@ -45,11 +52,6 @@ registry.category("web_tour.tours").add("version_timeline_auto_save_tour", {
         {
             content: "Choose date X + 2",
             trigger: ".o_datetime_picker .o_date_item_cell:nth-child(12) > div",
-            run: "click",
-        },
-        {
-            content: "Wait the form is dirty and click on save button",
-            trigger: "body:has(.o_form_dirty) .o_form_button_save",
             run: "click",
         },
         {
