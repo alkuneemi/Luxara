@@ -18,10 +18,6 @@ registry
             ...productConfiguratorTourUtils.saveConfigurator(),
             comboConfiguratorTourUtils.selectComboItem("Product B2"),
             comboConfiguratorTourUtils.assertFooterButtonsEnabled(),
-            {
-                content: "Check that the tax disclaimer gets displayed",
-                trigger: '.js_product small:contains(Taxes calculated at checkout.)',
-            },
             // Assert that the cart's content is correct.
             {
                 content: "Proceed to checkout",

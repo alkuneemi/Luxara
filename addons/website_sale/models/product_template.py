@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from werkzeug import urls
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.fields import Domain
 from odoo.http import request
 from odoo.tools import float_is_zero, is_html_empty
@@ -517,16 +517,6 @@ class ProductTemplate(models.Model):
                 product, combination_info
             )
 
-        if (
-            product_or_template.type == "combo"
-            and website.show_line_subtotals_tax_selection == "tax_included"
-            and not all(
-                tax.price_include
-                for tax in product_or_template.sudo().combo_ids.combo_item_ids.product_id.taxes_id
-            )
-        ):
-            combination_info["tax_disclaimer"] = _("Taxes calculated at checkout.")
-
         return combination_info
 
     def _get_additionnal_combination_info(self, product_or_template, quantity, uom, date, website):
@@ -593,7 +583,7 @@ class ProductTemplate(models.Model):
             self.env.company
         )
         taxes = self.env["account.tax"]
-        if product_taxes:
+        if product_taxes or product_or_template.type == "combo":
             taxes = request.fiscal_position.map_tax(product_taxes)
             # We do not apply taxes on the compare_list_price value because it's meant to be
             # a strict value displayed as is.
@@ -684,16 +674,61 @@ class ProductTemplate(models.Model):
         self, price, currency, product_taxes, taxes, product_or_template, website=None
     ):
         website = website or self.env["website"].get_current_website()
-        price = self.env["product.product"]._get_tax_included_unit_price_from_price(
+        base_price = self.env["product.product"]._get_tax_included_unit_price_from_price(
             price, product_taxes, product_taxes_after_fp=taxes
         )
         show_tax = website.show_line_subtotals_tax_selection
         tax_display = "total_excluded" if show_tax == "tax_excluded" else "total_included"
 
-        # The list_price is always the price of one.
-        return taxes.compute_all(price, currency, 1, product_or_template, self.env.user.partner_id)[
-            tax_display
-        ]
+        if product_or_template.type == "combo" and tax_display == "total_included":
+            combos = product_or_template.sudo().combo_ids
+
+            combo_base_prices = {
+                combo: combo.currency_id._convert(
+                    combo.base_price, currency, self.env.company, fields.Date.context_today(self)
+                )
+                for combo in combos
+            }
+            total_combo_base_price = sum(combo_base_prices.values())
+            combo_prices = {
+                combo: currency.round(base * base_price / (total_combo_base_price or 1))
+                for combo, base in combo_base_prices.items()
+            }
+            combo_price_delta = base_price - sum(combo_prices.values())
+            if combo_price_delta and combos:
+                combo_prices[combos[-1]] += combo_price_delta
+
+            # Heuristic: Pick the cheapest combo item of each choice
+            assumed_combo_items = combos.mapped(
+                lambda c: (
+                    min(
+                        c.combo_item_ids,
+                        key=lambda item: item.product_id.lst_price + item.extra_price,
+                    )
+                    if c.combo_item_ids
+                    else self.env["product.combo.item"]
+                )
+            )
+
+            approx_price = 0.0
+            for item in assumed_combo_items:
+                if not item:
+                    continue
+
+                prorated_base = combo_prices[item.combo_id] + item.extra_price
+
+                item_taxes = item.product_id.taxes_id._filter_taxes_by_company(self.env.company)
+                if item_taxes:
+                    approx_price += item_taxes.compute_all(
+                        prorated_base, currency, 1, item.product_id, self.env.user.partner_id
+                    )[tax_display]
+                else:
+                    approx_price += prorated_base
+            return approx_price
+
+        return taxes.compute_all(
+            base_price, currency, 1, product_or_template, self.env.user.partner_id
+        )[tax_display]
 
     def create_product_variant(self, product_template_attribute_value_ids):
         """Create if necessary and possible and return the id of the product
@@ -922,8 +957,18 @@ class ProductTemplate(models.Model):
             "image_url": {"name": "image_url", "type": "html"},
             "description": {"name": "description_ecommerce", "type": "text", "html": True, "match": True},
             "tags": {"name": "product_tag_ids", "type": "tags", "match": True},
-            "attribute_value_ids": {"name": "attribute_value_ids", "type": "tags", "match": True, "force_show": True},
-            "description_sale": {"name": "description_sale", "type": "text", "html": True, "match": True},
+            "attribute_value_ids": {
+                "name": "attribute_value_ids",
+                "type": "tags",
+                "match": True,
+                "force_show": True,
+            },
+            "description_sale": {
+                "name": "description_sale",
+                "type": "text",
+                "html": True,
+                "match": True,
+            },
         }
         return {
             "model": "product.template",
