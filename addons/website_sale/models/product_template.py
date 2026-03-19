@@ -1414,16 +1414,21 @@ class ProductTemplate(models.Model):
         :returns: the ribbon to display, if there is one.
         :rtype: `product.ribbon` recordset
         """
-        variant = variant or self.product_variant_id
-        ribbon = variant.sudo().variant_ribbon_id or self.sudo().website_ribbon_id
+        ribbon = (variant and variant.sudo().variant_ribbon_id) or self.sudo().website_ribbon_id
         if not ribbon:
             # The None check ensures that we do not recompute the ribbons when no ribbons were
             # previously found.
             if auto_assign_ribbons is None:
                 # On product page, the auto_assign_ribbons are not provided.
-                auto_assign_ribbons = self.env["product.ribbon"].search_fetch([
-                    ("assign", "!=", "manual")
-                ])
+                ribbon_domain = [("assign", "!=", "manual")]
+                if (variant and not variant._is_sold_out()) or (
+                    not variant and not self._is_sold_out()
+                ):
+                    ribbon_domain.append(("assign", "!=", "out_of_stock"))
+                auto_assign_ribbons = self.env["product.ribbon"].search_fetch(ribbon_domain)
+
+            if auto_assign_ribbons:
+                variant = variant or self.product_variant_id
             for rb in auto_assign_ribbons:
                 if rb._is_applicable_for(variant, price_vals):
                     return rb
@@ -1528,7 +1533,9 @@ class ProductTemplate(models.Model):
         """
         if not self.is_storable or self.allow_out_of_stock_order:
             return False
-        return not self.product_variant_id or self.product_variant_id._is_sold_out()
+        return not self.product_variant_ids or all(
+            variant._is_sold_out() for variant in self.product_variant_ids
+        )
 
     @api.model
     def _get_additional_configurator_data(
