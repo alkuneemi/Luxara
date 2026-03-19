@@ -4,12 +4,11 @@ import { Plugin } from "@html_editor/plugin";
 import { searchSupportedParentLinkEl } from "./replace_media_option";
 import { computeMaxDisplayWidth } from "@html_builder/plugins/image/image_format_option";
 import { BuilderAction } from "@html_builder/core/builder_action";
-import { ClassAction } from "@html_builder/core/core_builder_action_plugin";
 import { selectElements } from "@html_editor/utils/dom_traversal";
 import { isCSSColor } from "@web/core/utils/colors";
 import { getCSSVariableValue, getHtmlStyle } from "@html_editor/utils/formatting";
 
-const IMAGE_LINK_ALIGN_CLASSES = ["mx-auto", "ms-auto", "me-auto"];
+export const IMAGE_LINK_ALIGN_CLASSES = ["mx-auto", "ms-auto", "me-auto"];
 
 export class ImageToolOptionPlugin extends Plugin {
     static id = "imageToolOption";
@@ -25,7 +24,6 @@ export class ImageToolOptionPlugin extends Plugin {
     /** @type {import("plugins").BuilderResources} */
     resources = {
         builder_actions: {
-            ImageAlignClassAction,
             CropImageAction,
             ResetCropAction,
             ReplaceMediaAction,
@@ -189,34 +187,6 @@ export class SetLinkAction extends BuilderAction {
     isApplied({ editingElement }) {
         const parentEl = searchSupportedParentLinkEl(editingElement);
         return parentEl.tagName === "A";
-    }
-}
-
-export class ImageAlignClassAction extends ClassAction {
-    static id = "imageAlignClassAction";
-    apply(context) {
-        super.apply(context);
-        this.syncLinkAlignment(context.editingElement);
-    }
-    syncLinkAlignment(editingElement) {
-        const linkEl = editingElement.parentElement;
-        if (
-            !linkEl ||
-            linkEl.tagName !== "A" ||
-            linkEl.firstElementChild !== editingElement ||
-            linkEl.childElementCount !== 1 ||
-            linkEl.textContent.replace(/\u200B/g, "").trim() // ignore ZWSP
-        ) {
-            return;
-        }
-        // Mirror image alignment classes on the wrapping <a> (only when it
-        // wraps just this image) so flex layouts stay consistent.
-        const alignClasses = IMAGE_LINK_ALIGN_CLASSES.filter((cls) =>
-            editingElement.classList.contains(cls)
-        );
-        for (const className of IMAGE_LINK_ALIGN_CLASSES) {
-            linkEl.classList.toggle(className, alignClasses.includes(className));
-        }
     }
 }
 
