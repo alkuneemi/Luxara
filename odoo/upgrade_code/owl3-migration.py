@@ -797,6 +797,7 @@ WEB_WHITELIST = {
     "web.SectionMenu": {'subMenu_index', 'apps'},  # dynamic t-call in t-foreach
     "web.SelectMenu.ChoiceItem": {'choice', 'choice_index'},  # dynamic t-call
     "web.SelectMenu.search": {'inputClass'},  # Var above t-call
+    "web.EmojiPicker.emoji": {'itemIndex'},  # dynamic t-call in t-foreach
     "web.StatusBarField": {'items'},  # dynamic t-call
     "web.TreeEditor.condition:editable": {'node'},  # Nested inherit
     "web.TreeEditor.condition:readonly": {'node'},  # Nested inherit
@@ -827,12 +828,17 @@ WEB_EXT_WHITELIST = {
     "web_studio.property.number": {'attribute'},  # dynamic t-call
     "web_studio.property.string": {'attribute'},  # dynamic t-call
     "web_studio.StudioHomeMenu": {'app_index'},  # xpath on a t-foreach
+    "web_studio.ViewEditorSidebar.ApprovalRule": {'rule'},  # dynamic t-call
+    "web_gantt.ConnectorStrokeHead": {'xmlAttributes'},  # dynamic t-call
 }
 MAIL_WHITELIST = {
     "discuss.GifPicker.gif": {'gif_value'},  # for-each above t-call
-    "mail.ActivityViewCell": {'resId'},  # for each + t-call
-    "mail.Composer.extraActions": {'partitionedActions'},  # Var above t-call
-    "mail.Composer.quickActions": {'partitionedActions'},  # Var above t-call
+    "mail.Action.content": {'inMeetingViewCallButtonsFullscreen'},  # Var above t-call
+    "mail.ActivityViewCell": {'resId', 'type', 'record'},  # for each + t-call
+    "mail.ActivityViewRow": {'resId'},  # for each + t-call
+    "mail.Composer.extraActions": {'partitionedActions', 'actionsContainerClass'},  # Var above t-call
+    "mail.Composer.moreActions": {'actionsContainerClass'},  # Var above t-call
+    "mail.Composer.quickActions": {'partitionedActions', 'actionsContainerClass'},  # Var above t-call
     "mail.Composer.suggestionSpecial": {'option'},  # dynamic t-call
     "mail.Composer.suggestionPartner": {'option'},  # dynamic t-call
     "mail.Composer.suggestionRole": {'option'},  # dynamic t-call
@@ -843,8 +849,11 @@ MAIL_WHITELIST = {
     "mail.MessageSeenIndicatorPopover.card": {'member'},  # for-each above t-call
     "mail.NotificationItem": {'notificationBody'},  # t-slot with name = ... where name is just used for an xpath
     "mail.RottingStatusBarDurationField": {'item'},  # dynamic t-call
+    "mail.SubChannelPreview.message": {'message'},  # dynamic t-call
+    "mail.ThreadIcon.typing": {'attr'},  # dynamic t-call
 }
 MISC_WHITELIST = {
+    "account.MoveStatusBarSecuredField.ItemLabel": {'item'},  # dynamic t-call
     "account_disallowed_expenses.warning_multi_rate": {'warningParams'},  # dynamic t-call
     "account_fiscal_categories_fleet.warning_missing_fiscal_category": {'warningParams'},  # dynamic t-call
     "account_fiscal_categories.warning_multi_rate": {'warningParams'},  # dynamic t-call
@@ -864,17 +873,22 @@ MISC_WHITELIST = {
     "account_reports.journal_balance": {'warningParams'},  # dynamic t-call
     "account_reports.inconsistent_statement_warning": {'warningParams'},  # dynamic t-call
     "account_saft.company_data_warning": {'warningParams'},  # dynamic t-call
+    "appointment.AppointmentTemplateCard": {'templateElemClass'},  # didn't check
     "auth_passkey_portal.rename": {'oldname'},  # t-attf-value
     "crm.ColumnProgress": {'bar'},  # Nested inherit
     "discuss.ChannelInvitation-selectableItem": {"selectablePartner"},  # nested t-call
     "documents.SearchPanel.Category": {'isChildList'},  # dynamic t-call
     "documents.SearchPanel.Category.Small": {'value'},  # Nested t-call/inherit
+    "equity.CapTableCell": {'cell'},  # dynamic t-call
     "event.mailTemplateReferenceField": {'relation'},  # Nested t-inherits
     "helpdesk_timesheet.TimesheetTimerInlineForm": {'data'},  # Nested t-call/inherits
+    "hr.DepartmentChart.Department": {'dept'},  # dynamic t-call
     "html_builder.invisibleSnippetEntry": {'entry', 'toggleElementVisibility'},  # t- call-context
+    "html_builder.ShadowOptionItem": {'onClick'},  # dynamic t-call
     "html_editor.ExternalImage": {'record'},  # nested t-inherit / t-call
     "hr_calendar.CalendarCommonRenderer.buttonWorklocation": {'multiCalendar'},  # Nested t-inherits with a xpath t-call
     "hr_calendar.AttendeeCalendarCommonPopover.body": {'slot'},  # dynamic t-call
+    "hr_payroll.ActionableWarningLine": {'warning'},  # Didn't check
     "hr_skills.SkillsListRenderer.Rows": {'list'},  # dynamic t-call I guess
     "lunch.LunchDashboardOrder": {'currency'},  # Var above t-call
     "l10n_ae_faf.company_data_warning": {'warningParams'},  # dynamic t-call
@@ -895,8 +909,11 @@ MISC_WHITELIST = {
     "l10n_uk_reports_cis.warning_cis_unregistered_partner": {'warningParams'},  # dynamic t-call
     "mrp_workorder.ProductCatalogKanbanRenderer": {'groupOrRecord'},  # Nested t-call or inherit
     "planning.PlanningCalendarCommonPopover.body": {'slot'},  # dynamic t-calls from loops
+    "point_of_sale.ScenarioCard": {'item'},  # dynamic t-call
+    "pos_blackbox_be.CashierClockButtons": {'employee', 'isCachier'},  # dynamic t-call
     "pos_event.QuestionInputs": {'questions', 'stateObject'},  # Var above t-call
-    "pos_restaurant.floor_screen_element": {'element'},  # for each + t-call
+    "pos.floor_screen_shape": {'shape'},  # didn't check
+    "pos_restaurant.floor_screen_element": {'element', 'kanbanMode'},  # for each + t-call
     "pos_restaurant_appointment.PosResAppointmentListRenderer.Rows": {'list'},  # Nested t-inherit
     "product_matrix.matrix": {'format'},  # Var passed via t-set above t-call
     "product_matrix.extra_price": {'format'},  # nested t-call
@@ -907,11 +924,18 @@ MISC_WHITELIST = {
     "sale_management.ListRenderer.RecordRow": {'record'},  # Nested t-inherits
     "composition_button": {'record'},  # Weird case where we use a tname to xpath
     "sale_timesheet_enterprise.TimesheetTimerInlineForm": {'data'},  # Nested t-call or inherit
+    "slide.quiz.answer.line": {'answer'},  # dynamic t-call
+    "social.AccountsStatsValue": {'socialAccount'},  # dynamic t-call
     "social.MentionsTemplate": {'option'},  # Nested t-call or inherit
+    "stock.PickingLockedStatusBarField.ItemLabel": {'item'},  # dynamic t-call
+    "stock_barcode.LineQuantity": {'lowerButtons'},  # dynamic t-call
+    "stock_barcode.LineTitle": {'upperButtons'},  # dynamic t-call
     "views.ViewButtonTooltip": {'debug', 'button', 'model'},  # JSON stringify context
+    "web_map.MapRenderer.PinListContainer": {'rendered'},  # t-set before t-call
     "website.dialog.addFont.singlePreview": {'previewFontName'},  # Nested t-call
-    "website.form_radio": {'record_index'},  # dynamic t-calls from loops
-    "website.form_checkbox": {'record_index'},  # dynamic t-calls from loops
+    "website.form_field": {'fieldTypeClasses', 'form_checkbox'},  # dynamic t-call
+    "website.form_radio": {'record_index', 'record'},  # dynamic t-calls from loops
+    "website.form_checkbox": {'record_index', 'record'},  # dynamic t-calls from loops
     "website_sale.DynamicSnippetProductsOption": {'filteredTemplates', 'isSingleMode'},  # dynamic t-calls from loops
 }
 
