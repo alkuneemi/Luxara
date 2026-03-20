@@ -3028,7 +3028,6 @@ class TestUi(TestPointOfSaleHttpCommon):
             'use_fast_payment': True,
             'fast_payment_method_ids': [(6, 0, self.bank_payment_method.ids)],
             'iface_print_auto': True,
-            'iface_print_skip_screen': True,
             'other_devices': True,
             'receipt_printer_ids': [Command.set(pos_printer.ids)],
         })
@@ -3150,7 +3149,6 @@ class TestUi(TestPointOfSaleHttpCommon):
     def test_automatic_receipt_printing(self):
         self.main_pos_config.write({
             'iface_print_auto': True,
-            'iface_print_skip_screen': True,
             'receipt_printer_ids': [self.printer.id],
         })
 
