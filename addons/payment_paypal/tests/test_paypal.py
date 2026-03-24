@@ -36,7 +36,7 @@ class PaypalTest(PaypalCommon, PaymentHttpCommon):
         """Test the processing of a webhook notification."""
         tx = self._create_transaction("direct")
         normalized_data = PaypalController._normalize_paypal_data(self, self.completed_order)
-        self.env["payment.transaction"]._process("paypal", normalized_data)
+        tx._process(normalized_data)
         self.assertEqual(tx.state, "done")
         self.assertEqual(tx.provider_reference, normalized_data["id"])
 
@@ -47,7 +47,7 @@ class PaypalTest(PaypalCommon, PaymentHttpCommon):
 
         # Confirmed transaction
         tx = self._create_transaction("direct")
-        self.env["payment.transaction"]._process("paypal", normalized_data)
+        tx._process(normalized_data)
         self.assertEqual(tx.state, "done")
         self.assertEqual(tx.provider_reference, normalized_data["id"])
 
@@ -60,7 +60,7 @@ class PaypalTest(PaypalCommon, PaymentHttpCommon):
             "status": "PENDING",
             "pending_reason": "multi_currency",
         }
-        self.env["payment.transaction"]._process("paypal", payload)
+        tx._process(payload)
         self.assertEqual(tx.state, "pending")
         self.assertEqual(tx.state_message, payload["pending_reason"])
 
@@ -86,7 +86,7 @@ class PaypalTest(PaypalCommon, PaymentHttpCommon):
                 "odoo.addons.payment_paypal.controllers.main.PaypalController"
                 "._verify_notification_origin"
             ) as origin_check_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction.record"),
         ):
             self._make_json_request(url, data=self.payment_data)
             self.assertEqual(origin_check_mock.call_count, 1)

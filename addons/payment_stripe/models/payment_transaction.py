@@ -55,7 +55,7 @@ class PaymentTransaction(models.Model):
         # Handle the payment request response
         payment_data = {"reference": self.reference}
         StripeController._include_payment_intent_in_payment_data(payment_intent, payment_data)
-        self._process("stripe", payment_data)
+        self._record(payment_data)
 
     def _stripe_create_intent(self):
         """Create and return a PaymentIntent or a SetupIntent object, depending on the operation.
@@ -240,7 +240,7 @@ class PaymentTransaction(models.Model):
         # Process the refund request response.
         payment_data = {}
         StripeController._include_refund_in_payment_data(data, payment_data)
-        self._process("stripe", payment_data)
+        self._record(payment_data)
 
     def _send_capture_request(self):
         """Override of `payment` to send a capture request to Stripe."""
@@ -255,7 +255,7 @@ class PaymentTransaction(models.Model):
         # Process the capture request response.
         payment_data = {"reference": self.reference}
         StripeController._include_payment_intent_in_payment_data(payment_intent, payment_data)
-        self._process("stripe", payment_data)
+        self._record(payment_data)
 
     def _send_void_request(self):
         """Override of `payment` to send a void request to Stripe."""
@@ -270,7 +270,7 @@ class PaymentTransaction(models.Model):
         # Process the void request response.
         payment_data = {"reference": self.reference}
         StripeController._include_payment_intent_in_payment_data(payment_intent, payment_data)
-        self._process("stripe", payment_data)
+        self._record(payment_data)
 
     @api.model
     def _search_by_reference(self, provider_code, payment_data):

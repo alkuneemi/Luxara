@@ -51,7 +51,7 @@ class TestRefundFlows(AuthorizeCommon):
             patch(
                 "odoo.addons.payment_authorize.models.authorize_request.AuthorizeAPI.void"
             ) as void_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"),
         ):
             source_tx._refund(amount_to_refund=source_tx.amount)
         self.assertEqual(void_mock.call_count, 1)
@@ -70,7 +70,7 @@ class TestRefundFlows(AuthorizeCommon):
             patch(
                 "odoo.addons.payment_authorize.models.authorize_request.AuthorizeAPI.refund"
             ) as refund_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"),
         ):
             source_tx._refund(amount_to_refund=source_tx.amount)
         self.assertEqual(refund_mock.call_count, 1)

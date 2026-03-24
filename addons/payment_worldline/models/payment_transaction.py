@@ -62,7 +62,7 @@ class PaymentTransaction(models.Model):
         ):
             # Tokenized payment failed due to 3-D Secure authentication request.
             # Reset transaction to draft and switch to redirect flow.
-            self.write({"state": "draft", "operation": "online_redirect"})
+            self.write({"state": "draft", "operation": "online_redirect"})  # TODO ANV opt in write
             return {"force_flow": "redirect"}
         return super()._get_specific_processing_values(processing_values)
 
@@ -179,9 +179,9 @@ class PaymentTransaction(models.Model):
                 ),
             )
         except ValidationError as e:
-            self._set_error(str(e))
+            self._set_error(str(e))  # TODO ANV check if should remain/be adapted
         else:
-            self._process("worldline", response_content)
+            self._record(response_content)
 
     @api.model
     def _extract_reference(self, provider_code, payment_data):

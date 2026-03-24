@@ -42,11 +42,11 @@ class TestRefundFlows(StripeCommon, PaymentHttpCommon):
         with (
             patch("odoo.addons.payment_stripe.controllers.main.StripeController._verify_signature"),
             patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
-            ) as process_mock,
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
+            ) as record_mock,
         ):
             self._make_json_request(url, data=self.canceled_refund_payment_data)
-        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(record_mock.call_count, 1)
 
     @mute_logger(
         "odoo.addons.payment_stripe.controllers.main",
@@ -59,7 +59,7 @@ class TestRefundFlows(StripeCommon, PaymentHttpCommon):
         with patch(
             "odoo.addons.payment_stripe.controllers.main.StripeController._verify_signature"
         ), patch(
-            "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
+            "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
         ) as process_mock:
             self._make_json_request(url, data=self.void_payment_data)
         self.assertEqual(process_mock.call_count, 0)

@@ -120,6 +120,10 @@ class PaymentTransaction(models.Model):
         help="Whether the transaction happened in a production environment. False for transactions"
         " created before this tracking was implemented.",
     )
+    payment_data_ids = fields.One2many(
+        string="Pending Updates", comodel_name="payment.data", inverse_name="transaction_id"
+    )
+    payment_data_count = fields.Integer(compute="_compute_payment_data_count")
     source_transaction_id = fields.Many2one(
         string="Source Transaction",
         comodel_name="payment.transaction",
@@ -173,6 +177,16 @@ class PaymentTransaction(models.Model):
     def _compute_primary_payment_method_id(self):
         for pm, txs in self.grouped("payment_method_id").items():
             txs.primary_payment_method_id = pm.primary_payment_method_id or pm
+
+    def _compute_payment_data_count(self):
+        rg_data = self.env["payment.data"]._read_group(
+            domain=[("transaction_id", "in", self.ids)],
+            groupby=["transaction_id"],
+            aggregates=["__count"],
+        )
+        data = {transaction.id: count for transaction, count in rg_data}
+        for record in self:
+            record.payment_data_count = data.get(record.id, 0)
 
     def _compute_refunds_count(self):
         rg_data = self.env["payment.transaction"]._read_group(
@@ -269,6 +283,16 @@ class PaymentTransaction(models.Model):
         """
         return dict()
 
+    def write(self, vals):
+        if not self.env.context.get("payment_trusted_write"):
+            _logger.warning(
+                "Payment transactions should not be updated directly. Either use _record() to queue"
+                " payment data for processing, or pass payment_trusted_write=True to the context"
+                " after ensuring that the update can tolerate conflicts with other requests.",
+                stack_info=True,  # TODO ANV remove
+            )
+        return super().write(vals)
+
     # === ACTION METHODS === #
 
     def action_view_refunds(self):
@@ -296,6 +320,21 @@ class PaymentTransaction(models.Model):
             action["view_mode"] = "list,form"
             action["domain"] = [("source_transaction_id", "=", self.id)]
         return action
+
+    def action_view_payment_data(self):
+        """Return a window action to browse the payment data linked to the transaction.
+
+        :return: A window action to browse the payment data.
+        :rtype: dict
+        """
+        self.ensure_one()
+        return {
+            "name": _("Pending Updates"),
+            "type": "ir.actions.act_window",
+            "domain": [("transaction_id", "=", self.id)],
+            "res_model": "payment.data",
+            "view_mode": "list,form",
+        }
 
     def action_capture(self):
         """Open the partial capture wizard if it is supported by the related providers, otherwise
@@ -397,16 +436,23 @@ class PaymentTransaction(models.Model):
             },
         }
 
+    def action_process(self):
+        """Run the processing of the transactions."""
+        self.env["ir.cron"]._run_payment_processing()
+
     def action_post_process(self):
-        """Trigger the post-processing of the transactions.
+        """Run the post-processing of the transactions.
 
         :return: A client action to soft-reload the view.
         :rtype: dict
         """
-        self._post_process()
+        self.with_context(
+            # Post-processing is idempotent and can be rolled back in case of failure
+            payment_trusted_write=True
+        )._post_process()
         return {"type": "ir.actions.client", "tag": "soft_reload"}
 
-    # === BUSINESS METHODS - PRE-PROCESSING === #
+    # === LIFECYCLE METHODS - CREATION === #
 
     @api.model
     def _compute_reference(self, provider_code, prefix=None, separator="-", **kwargs):  # noqa: ARG002
@@ -507,6 +553,8 @@ class PaymentTransaction(models.Model):
         """
         return ""
 
+    # === LIFECYCLE METHODS - PAYMENT FORM === #
+
     def _get_processing_values(self):
         """Return the values used to process the transaction.
 
@@ -600,6 +648,8 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         return dict()
 
+    # === LIFECYCLE METHODS - OUTBOUND REQUESTS === #
+
     def _charge_with_token(self):
         """Pay the transaction with the given token.
 
@@ -613,7 +663,9 @@ class PaymentTransaction(models.Model):
         try:
             self._send_payment_request()
         except ValidationError as e:
-            self._set_error(str(e))
+            self.with_context(
+                payment_trusted_write=True  # API request failed; no concurrent write is possible
+            )._set_error(str(e))
 
     def _send_payment_request(self):
         """Request the provider handling the transaction to send a token payment request.
@@ -647,7 +699,9 @@ class PaymentTransaction(models.Model):
         try:
             capture_tx._send_capture_request()
         except ValidationError as e:
-            capture_tx._set_error(str(e))
+            capture_tx.with_context(
+                payment_trusted_write=True  # API request failed; no concurrent write is possible
+            )._set_error(str(e))
         return capture_tx
 
     def _send_capture_request(self):
@@ -679,7 +733,9 @@ class PaymentTransaction(models.Model):
         try:
             void_tx._send_void_request()
         except ValidationError as e:
-            void_tx._set_error(str(e))
+            void_tx.with_context(
+                payment_trusted_write=True  # API request failed; no concurrent write is possible
+            )._set_error(str(e))
         return void_tx
 
     def _send_void_request(self):
@@ -711,7 +767,9 @@ class PaymentTransaction(models.Model):
         try:
             refund_tx._send_refund_request()
         except ValidationError as e:
-            refund_tx._set_error(str(e))
+            refund_tx.with_context(
+                payment_trusted_write=True  # API request failed; no concurrent write is possible
+            )._set_error(str(e))
         return refund_tx
 
     def _send_refund_request(self):
@@ -778,27 +836,7 @@ class PaymentTransaction(models.Model):
             **custom_create_values,
         })
 
-    # === BUSINESS METHODS - PROCESSING === #
-
-    def _process(self, provider_code, payment_data):
-        """Process the payment data received from the provider and update the transaction.
-
-        :param str provider_code: The code of the provider handling the transaction.
-        :param dict payment_data: The payment data sent by the provider.
-        :return: The updated transaction.
-        :rtype: payment.transaction
-        """
-        tx = self or self._search_by_reference(provider_code, payment_data)
-        if tx:
-            tx.ensure_one()
-            tx._apply_updates(payment_data)
-            if tx.state in {"authorized", "done"}:
-                tx._validate_amount(payment_data)  # Only validate amount data for successful states
-                if tx.state != "error":  # Amount data validation succeeded.
-                    if tx.tokenize:
-                        tx._tokenize(payment_data)
-            tx._bus_send("payment.notify_transaction_processed", {})
-        return tx
+    # === LIFECYCLE METHODS - PAYLOAD RECEPTION === #
 
     @api.model
     def _search_by_reference(self, provider_code, payment_data):
@@ -835,6 +873,49 @@ class PaymentTransaction(models.Model):
         :rtype: str
         """
         return payment_data.get("reference")
+
+    def _record(self, payment_data):
+        """Record the payment data and schedule the transaction for processing.
+
+        This method serves as the unique entry point for processing payment data and updating the
+        transaction. It should always be called upon receiving payment data from the provider.
+
+        When payment data are received, they are recorded in the database and the transaction is
+        scheduled for processing. The processing is done asynchronously to avoid concurrent updates.
+
+        :param dict payment_data: The payment data received from the provider.
+        :rtype: None
+        """
+        self.ensure_one()
+
+        self.env["payment.data"].create({"transaction_id": self.id, "payload": payment_data})
+        self.env.ref("payment.process_payment_data_cron")._trigger()
+
+    # === LIFECYCLE METHODS - PROCESSING === #
+
+    def _process(self, payment_data):
+        """Process the payment data to update the internal state.
+
+        :param dict payment_data: The payment data to process
+        :rtype: None
+        """
+        self.ensure_one()
+
+        # Update the transaction with the payment data
+        self._apply_updates(payment_data)
+
+        # Notify the client about the updated transaction values
+        self._bus_send("payment.notify_transaction_processed", {})
+
+        if self.state in {"authorized", "done"}:  # The payment was successful
+            # Check that the payment data match the initial payment request
+            self._validate_amount(payment_data)
+            if self.state == "error":
+                return
+
+            # Tokenize the transaction if needed
+            if self.tokenize:
+                self._tokenize(payment_data)
 
     def _apply_updates(self, payment_data):  # noqa: ARG002
         """Update the transaction based on the payment data received from the provider.
@@ -1120,7 +1201,7 @@ class PaymentTransaction(models.Model):
                 child_tx.source_transaction_id._update_state(("authorized",), target_state, "")
                 child_tx.source_transaction_id._log_received_message()
 
-    # === BUSINESS METHODS - POST-PROCESSING === #
+    # === LIFECYCLE METHODS - POST-PROCESSING === #
 
     def _cron_post_process(self):
         """Trigger the post-processing of the transactions that were not handled by the client in
@@ -1140,7 +1221,10 @@ class PaymentTransaction(models.Model):
             ])
         for tx in txs_to_post_process:
             try:
-                tx._post_process()
+                tx.with_context(
+                    # Post-processing is idempotent and can be rolled back in case of failure
+                    payment_trusted_write=True
+                )._post_process()
                 self.env.cr.commit()
             except psycopg2.OperationalError:
                 self.env.cr.rollback()  # Rollback and try later.
@@ -1231,8 +1315,6 @@ class PaymentTransaction(models.Model):
         """
         self.ensure_one()
 
-    # === GETTERS === #
-
     def _get_sent_message(self):
         """Return the message to log to state that the transaction has been created.
 
@@ -1311,6 +1393,8 @@ class PaymentTransaction(models.Model):
             received_message += Markup("<br/>") + self.state_message
 
         return received_message
+
+    # === GETTERS === #
 
     def _get_last(self):
         """Return the last transaction of the recordset.

@@ -143,7 +143,7 @@ class PaymentTransaction(models.Model):
         except ValidationError as error:
             self._set_error(str(error))
         else:
-            self._process("xendit", charge_payment_data)
+            self._record(charge_payment_data)
 
     def _get_rounded_amount(self):
         decimal_places = const.CURRENCY_DECIMALS.get(

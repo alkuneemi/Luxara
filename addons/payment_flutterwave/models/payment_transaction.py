@@ -128,9 +128,9 @@ class PaymentTransaction(models.Model):
         try:
             response_content = self._send_api_request("POST", "tokenized-charges", json=data)
         except ValidationError as error:
-            self._set_error(str(error))
+            self._set_error(str(error))  # TODO ANV should probably be removed and left for _charge_with_token
         else:
-            self._process("flutterwave", response_content)
+            self._record(response_content)
 
     @api.model
     def _extract_reference(self, provider_code, payment_data):

@@ -46,10 +46,10 @@ class BuckarooTest(BuckarooCommon, PaymentHttpCommon):
     def test_feedback_processing(self):
         payment_data = BuckarooController._normalize_data_keys(self.sync_payment_data)
         tx = self._create_transaction(flow="redirect")
-        tx._process("buckaroo", payment_data)
+        tx._process(payment_data)
         self.assertEqual(tx.state, "done")
         self.assertEqual(tx.provider_reference, payment_data.get("brq_transactions"))
-        tx._process("buckaroo", payment_data)
+        tx._process(payment_data)
         self.assertEqual(tx.state, "done", "Buckaroo: validation did not put tx into done state")
         self.assertEqual(tx.provider_reference, payment_data.get("brq_transactions"))
 
@@ -63,7 +63,7 @@ class BuckarooTest(BuckarooCommon, PaymentHttpCommon):
                 brq_signature="b8e54e26b2b5a5e697b8ed5085329ea712fd48b2",
             )
         )
-        self.env["payment.transaction"]._process("buckaroo", payment_data)
+        tx._process(payment_data)
         self.assertEqual(tx.state, "error")
 
     @mute_logger("odoo.addons.payment_buckaroo.controllers.main")

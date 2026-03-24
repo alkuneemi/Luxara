@@ -275,7 +275,7 @@ class TestPaymentTransaction(PaymentCommon):
                 "odoo.addons.payment.models.payment_transaction.PaymentTransaction._apply_updates"
             ) as apply_updates_mock,
         ):
-            tx._process("test", {})
+            tx._process({})
         self.assertEqual(apply_updates_mock.call_count, 1)
 
     def test_processing_sets_authorized_and_done_tx_to_error_on_invalid_amount(self):
@@ -291,7 +291,7 @@ class TestPaymentTransaction(PaymentCommon):
                     return_value={"amount": 10, "currency_code": "USD"},
                 ),
             ):
-                tx._process("test", {})
+                tx._process({})
             self.assertEqual(tx.state, "error")
 
     def test_processing_skips_amount_validation_for_non_authorized_and_done_states(self):
@@ -301,7 +301,7 @@ class TestPaymentTransaction(PaymentCommon):
                 "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
                 "._validate_amount",
             ) as validate_amount_mock:
-                tx._process("test", {})
+                tx._process({})
             self.assertEqual(validate_amount_mock.call_count, 0)
 
     def test_processing_tokenizes_validated_transaction(self):
@@ -324,7 +324,7 @@ class TestPaymentTransaction(PaymentCommon):
                     return_value={"provider_ref": "test"},
                 ),
             ):
-                tx._process("test", {})
+                tx._process({})
             self.assertTrue(tx.token_id)
 
     def test_processing_only_tokenizes_when_requested(self):
@@ -340,7 +340,7 @@ class TestPaymentTransaction(PaymentCommon):
                 "odoo.addons.payment.models.payment_transaction.PaymentTransaction._tokenize"
             ) as tokenize_mock,
         ):
-            tx._process("test", {})
+            tx._process({})
         self.assertEqual(tokenize_mock.call_count, 0)
 
     @mute_logger("odoo.addons.payment.models.payment_transaction")

@@ -37,7 +37,7 @@ class PaymobTest(PaymobCommon, PaymentHttpCommon):
             tx._get_specific_rendering_values(None)  # Set provider reference here
             self.assertEqual(tx.provider_reference, self.redirection_data["id"])
             self.assertEqual(tx.state, "draft")
-            tx._process("paymob", self.redirection_data)
+            tx._process(self.redirection_data)
             self.assertEqual(tx.state, "done")
 
     @mute_logger("odoo.addons.payment_paymob.controllers.main")

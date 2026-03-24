@@ -69,7 +69,7 @@ class PaymentTransaction(models.Model):
                 self.reference,
                 pprint.pformat(res_content),
             )
-        self._process("authorize", {"response": res_content})
+        self._record({"response": res_content})
 
     def _send_refund_request(self):
         """Override of `payment` to send a refund request to Authorize."""
@@ -121,7 +121,7 @@ class PaymentTransaction(models.Model):
                 pprint.pformat(res_content),
             )
             data = {"reference": self.reference, "response": res_content}
-            self._process("authorize", data)
+            self._record(data)
         else:
             err_msg = _(
                 "The transaction is not in a status to be refunded."
@@ -147,7 +147,7 @@ class PaymentTransaction(models.Model):
             self.reference,
             pprint.pformat(res_content),
         )
-        self._process("authorize", {"response": res_content})
+        self._record({"response": res_content})
 
     def _send_void_request(self):
         """Override of `payment` to send a void request to Authorize."""
@@ -161,7 +161,7 @@ class PaymentTransaction(models.Model):
             self.reference,
             pprint.pformat(res_content),
         )
-        self._process("authorize", {"response": res_content})
+        self._record({"response": res_content})
 
     @api.model
     def _extract_reference(self, provider_code, payment_data):

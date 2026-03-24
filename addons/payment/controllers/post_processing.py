@@ -14,13 +14,10 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentPostProcessing(http.Controller):
-    """
-    This controller is responsible for the monitoring and finalization of the post-processing of
-    transactions.
+    """Controller for the payment status page.
 
-    It exposes the route `/payment/status`: All payment flows must go through this route at some
-    point to allow the user checking on the transactions' status, and to trigger the finalization of
-    their post-processing.
+    It keeps track of the transaction being monitored via the user's session and exposes routes to
+    display it and trigger the immediate processing and post-processing of the transaction.
     """
 
     MONITORED_TX_ID_KEY = "__payment_monitored_tx_id__"
@@ -35,6 +32,8 @@ class PaymentPostProcessing(http.Controller):
     )
     def display_status(self, **_kwargs):
         """Fetch the transaction and display it on the payment status page.
+
+        All payment flows that go through the payment form land on this route.
 
         :param dict _kwargs: Optional data. This parameter is not used here
         :return: The rendered status page
@@ -56,9 +55,23 @@ class PaymentPostProcessing(http.Controller):
     def get_payment_status_template_xmlid(self, tx):  # noqa: ARG002
         return "payment.payment_status"
 
+    @http.route("/payment/process", type="jsonrpc", auth="public")
+    def payment_process(self):
+        """Run the processing of the current transaction.
+
+        :rtype: None
+        """
+        monitored_tx_sudo = self._get_monitored_transaction()
+        if not monitored_tx_sudo.payment_data_ids:  # The transaction has already been processed
+            return
+
+        # Run the processing for all transactions. This allows supporting many concurrent processing
+        # requests, delegates the lock acquisition and release to the cron, and reduces overheads.
+        self.env["ir.cron"]._run_payment_processing()
+
     @http.route("/payment/post_process", type="jsonrpc", auth="public")
     def payment_post_process(self, **_kwargs):
-        """Fetch the transaction and trigger its post-processing.
+        """Fetch the transaction and run its post-processing.
 
         :return: The post-processing values of the transaction.
         :rtype: dict

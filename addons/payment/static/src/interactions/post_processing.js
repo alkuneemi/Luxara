@@ -15,14 +15,19 @@ export class PaymentPostProcessing extends Interaction {
         this.busService.subscribe(this.notificationType, this.onProcessingCompleteBind);
 
         // Redirect automatically after 7 seconds to avoid waiting for post-processing forever.
-        this.redirectTimeout = this.waitForTimeout(() => {
-            this.redirectToLandingPage();
-        }, 7000);
+        //this.redirectTimeout = this.waitForTimeout(() => {
+        //    this.redirectToLandingPage();
+        //}, 7000);  // TODO ANV uncomment
     }
 
     async willStart() {
         // Assume we missed a notification from the postprocessing
         await this.onProcessingComplete();
+    }
+
+    start() {
+        // TODO ANV: temp location for this initial processing call
+        rpc("/payment/process");
     }
 
     /**

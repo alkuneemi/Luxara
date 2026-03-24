@@ -246,7 +246,7 @@ class PaymentTransaction(models.Model):
         except ValidationError as e:
             self._set_error(str(e))
         else:
-            self._process("razorpay", recurring_payment_data)
+            self._record(recurring_payment_data)
 
     def _send_refund_request(self):
         """Override of `payment` to send a refund request to Razorpay."""
@@ -267,7 +267,7 @@ class PaymentTransaction(models.Model):
             "POST", f"payments/{self.provider_reference}/refund", json=payload
         )
         response_content.update(entity_type="refund")
-        self._process("razorpay", response_content)
+        self._record(response_content)
 
     def _send_capture_request(self):
         """Override of `payment` to send a capture request to Razorpay."""
@@ -281,7 +281,7 @@ class PaymentTransaction(models.Model):
         )
 
         # Process the capture request response.
-        self._process("razorpay", response_content)
+        self._record(response_content)
 
     def _send_void_request(self):
         """Override of `payment` to explain that it is impossible to void a Razorpay transaction."""

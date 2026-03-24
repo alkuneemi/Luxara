@@ -75,7 +75,7 @@ class PaymentTransaction(models.Model):
         payment_data = self._send_api_request(
             "POST", "/rest/trataPeticionREST", json=self._redsys_prepare_request_payload()
         )
-        self._process("redsys", payment_data)
+        self._record(payment_data)
 
     def _redsys_prepare_request_payload(self):
         """Prepare the Redsys request payload with encoded merchant parameters and signature.

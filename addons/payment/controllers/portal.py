@@ -439,9 +439,9 @@ class PaymentPortal(portal.CustomerPortal):
             access_token = payment_utils.generate_access_token(
                 tx_sudo.partner_id.id, tx_sudo.amount, tx_sudo.currency_id.id
             )
-        tx_sudo.landing_route = (
-            f"{tx_sudo.landing_route}?tx_id={tx_sudo.id}&access_token={access_token}"
-        )
+        tx_sudo.with_context(
+            payment_trusted_write=True  # The transaction has just been created; writes are safe
+        ).landing_route = f"{tx_sudo.landing_route}?tx_id={tx_sudo.id}&access_token={access_token}"
 
     @http.route("/payment/confirmation", type="http", methods=["GET"], auth="public", website=True)
     def payment_confirm(self, tx_id, access_token, **_kwargs):
