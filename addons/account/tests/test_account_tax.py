@@ -526,3 +526,41 @@ class TestAccountTax(AccountTestInvoicingCommon, MailCase):
                     }),
                 ],
             })
+
+    def test_asymmetric_refund_repartition_lines(self):
+        tax_account_1 = self.company_data['default_account_tax_sale'].copy()
+        tax_account_2 = self.company_data['default_account_tax_sale'].copy()
+        tax = self.env['account.tax'].create({
+            'name': 'tax_asymmetric_refund_repartition',
+            'amount': 15.0,
+            'invoice_repartition_line_ids': [
+                Command.create({'repartition_type': 'base'}),
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': tax_account_1.id,
+                }),
+                Command.create({
+                    'factor_percent': -100,
+                    'repartition_type': 'tax',
+                    'account_id': tax_account_2.id,
+                }),
+            ],
+            'refund_repartition_line_ids': [
+                Command.create({'repartition_type': 'base'}),
+            ],
+        })
+
+        refund = self.env['account.move'].create({
+            'move_type': 'out_refund',
+            'invoice_line_ids': [
+                Command.create({
+                    'name': 'refund_line',
+                    'quantity': 1.0,
+                    'price_unit': 100.0,
+                    'tax_ids': [Command.set(tax.ids)],
+                }),
+            ],
+        })
+
+        self.assertFalse(refund.line_ids.filtered('tax_repartition_line_id'))

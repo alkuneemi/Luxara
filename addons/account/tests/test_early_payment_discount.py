@@ -219,6 +219,44 @@ class TestAccountEarlyPaymentDiscount(AccountTestInvoicingCommon):
             {'amount_currency': 57.55},
         ])
 
+    def test_early_payment_discount_with_asymmetric_refund_repartition(self):
+        self.early_pay_10_percents_10_days.early_pay_discount_computation = 'included'
+        tax_account_1 = self.company_data['default_account_tax_sale'].copy()
+        tax_account_2 = self.company_data['default_account_tax_sale'].copy()
+        tax = self.env['account.tax'].create({
+            'name': 'tax_asymmetric_refund_epd',
+            'amount': 15.0,
+            'invoice_repartition_line_ids': [
+                Command.create({'repartition_type': 'base'}),
+                Command.create({
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': tax_account_1.id,
+                }),
+                Command.create({
+                    'factor_percent': -100,
+                    'repartition_type': 'tax',
+                    'account_id': tax_account_2.id,
+                }),
+            ],
+            'refund_repartition_line_ids': [
+                Command.create({'repartition_type': 'base'}),
+            ],
+        })
+
+        invoice = self._create_invoice_one_line(
+            price_unit=1000.0,
+            tax_ids=tax,
+            invoice_payment_term_id=self.early_pay_10_percents_10_days.id,
+            post=True,
+        )
+
+        payment_term_line = invoice.line_ids.filtered(lambda line: line.display_type == 'payment_term')
+        counterpart_lines = invoice._get_invoice_counterpart_amls_for_early_payment_discount_per_payment_term_line()
+
+        self.assertFalse(counterpart_lines['tax_lines'][payment_term_line])
+        self.assertTrue(counterpart_lines['base_lines'][payment_term_line])
+
     @freeze_time('2019-01-01')
     def test_register_discounted_payment_on_single_invoice_with_tax(self):
         self.early_pay_10_percents_10_days.early_pay_discount_computation = 'included'
