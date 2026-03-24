@@ -144,17 +144,25 @@ class TestEventNotifications(CalendarMailCommon):
 
     def test_message_invite(self):
         self.env['ir.config_parameter'].sudo().set_int('mail.mail_force_send_limit', 100)
-        with self.assertSinglePostNotifications([{'partner': self.partner, 'type': 'inbox'}], {
-            'message_type': 'user_notification',
-            'subtype': 'mail.mt_note',
-        }):
-            self.event.partner_ids = self.partner
+        self.event.start = datetime(2022, 1, 1, 1)
+        # Check that invitations are sent for future events.
+        with freeze_time('2021-01-01 01:00+0000'):
+            with self.assertSinglePostNotifications([{'partner': self.partner, 'type': 'inbox'}], {
+                'message_type': 'user_notification',
+                'subtype': 'mail.mt_note',
+            }):
+                self.event.partner_ids = [(6, 0, self.partner.ids)]
 
-        # remove custom threshold, sends immediately instead of queuing
-        email_partner = self.env['res.partner'].create({'name': 'bob invitee', 'email': 'bob.invitee@test.lan'})
-        with self.mock_mail_gateway(mail_unlink_sent=False):
-            self.event.partner_ids += email_partner
-        self.assertMailMail(email_partner, 'sent', author=self.env.ref('base.partner_root'))
+            # Remove custom threshold, sends immediately instead of queuing.
+            email_partner = self.env['res.partner'].create({'name': 'bob invitee', 'email': 'bob.invitee@test.lan'})
+            with self.mock_mail_gateway(mail_unlink_sent=False):
+                self.event.partner_ids += email_partner
+            self.assertMailMail(email_partner, 'sent', author=self.env.ref('base.partner_root'))
+
+        # Check that no invitation is sent for past events.
+        with freeze_time('2023-01-01 01:00+0000'):
+            with self.assertNoNotifications():
+                self.event.partner_ids = [(6, 0, self.partner.ids)]
 
     def test_message_invite_allday(self):
         with self.assertSinglePostNotifications([{'partner': self.partner, 'type': 'inbox'}], {
@@ -176,6 +184,7 @@ class TestEventNotifications(CalendarMailCommon):
             'name': f'test{n}',
             'email': f'test{n}@example.com'} for n in range(101)])
         with self.mock_mail_gateway(mail_unlink_sent=False), self.mock_mail_app():
+            self.event.start = datetime.now() + relativedelta(hours=1)
             self.event.partner_ids = additional_attendees
 
         self.assertNotified(
@@ -266,10 +275,11 @@ class TestEventNotifications(CalendarMailCommon):
             'message_type': 'user_notification',
             'subtype': 'mail.mt_note',
         }):
-            self.event.write({
-                'start': self.event.start - relativedelta(days=1),
-                'partner_ids': [(4, self.partner.id)],
-            })
+            with freeze_time('2010-10-10 10:00+0000'):
+                self.event.write({
+                    'start': self.event.start - relativedelta(days=1),
+                    'partner_ids': [(4, self.partner.id)],
+                })
 
     def test_bus_notif(self):
         alarm = self.env['calendar.alarm'].create({
