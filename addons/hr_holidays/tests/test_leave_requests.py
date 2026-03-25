@@ -1698,3 +1698,22 @@ class TestLeaveRequests(TestHrHolidaysCommon):
         })
 
         self.assertEqual(leave.number_of_hours, 13.0)
+
+    @freeze_time('2026-04-01')
+    def test_timeoff_duration_employee_without_calendar(self):
+        """ Test time off duration for employees without resource_calendar_id. """
+        employee_no_calendar = self.env['hr.employee'].create({
+            'name': 'Employee Without Calendar',
+        })
+        employee_no_calendar.resource_calendar_id = False
+        leave = self.env['hr.leave'].create({
+            'name': 'Time Off Request',
+            'employee_id': employee_no_calendar.id,
+            'holiday_status_id': self.holidays_type_1.id,
+            'request_date_from': date(2026, 4, 6),
+            'request_date_to': date(2026, 4, 10),
+        })
+
+        self.assertEqual(leave.number_of_days, 5)
+        # This field should be False because the calculated days match the requested days
+        self.assertFalse(leave.leave_type_increases_duration)

@@ -377,7 +377,7 @@ class ResourceCalendar(models.Model):
                     days = hours / 24
                     dummy_attendance = self.env['resource.calendar.attendance'].new({
                         'duration_hours': hours,
-                        'duration_days': days,
+                        'duration_days': (end_dt - start_dt).days + 1 if days > 1 else days,
                     })
                     result_per_resource_id[resource.id] = WorkIntervals([(start_datetime, end_datetime, dummy_attendance)])
                 elif self.flexible_hours or (resource and resource_calendars[resource].flexible_hours):

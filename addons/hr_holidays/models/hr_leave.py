@@ -455,7 +455,7 @@ class HolidaysRequest(models.Model):
                         days = 1 if not leave.request_unit_half else 0.5
                     else:
                         days = hours / 24
-                elif leave.leave_type_request_unit == 'day' and check_leave_type:
+                elif leave.leave_type_request_unit == 'day' and check_leave_type and not leave.employee_id.is_fully_flexible:
                     # list of tuples (day, hours)
                     work_time_per_day_list = work_time_per_day_mapped[leave.date_from, leave.date_to, leave.holiday_status_id.include_public_holidays_in_duration, calendar][leave.employee_id.id]
                     days = len(work_time_per_day_list)
