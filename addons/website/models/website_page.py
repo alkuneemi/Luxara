@@ -61,7 +61,7 @@ class WebsitePage(models.Model):
 
     # don't use mixin website_id but use website_id on ir.ui.view instead
     website_id = fields.Many2one(related='view_id.website_id', store=True, readonly=False, ondelete='cascade')
-    arch = fields.Text(related='view_id.arch', readonly=False, depends_context=('website_id',))
+    arch = fields.Text(related='view_id.arch', readonly=False)
 
     @api.depends('view_id.name')
     def _compute_name(self):
