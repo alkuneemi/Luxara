@@ -19,7 +19,8 @@ export class ReplaceMediaOption extends BaseOptionComponent {
             isImageSupportedForStyle(editingElement) &&
             !searchSupportedParentLinkEl(editingElement).matches("a[data-oe-xpath]") &&
             !editingElement.classList.contains("media_iframe_video") &&
-            !editingElement.closest(".s_social_media")
+            !editingElement.closest(".s_social_media") &&
+            !editingElement.closest(".s_card:has(> a.stretched-link)")
         );
     }
     hasHref(editingElement) {
