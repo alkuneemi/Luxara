@@ -15,7 +15,7 @@ from odoo.exceptions import ValidationError
 from odoo.fields import Command, Domain
 from odoo.http import request, route
 from odoo.http.stream import content_disposition
-from odoo.tools import SQL, BinaryBytes, clean_context, float_round, lazy, str2bool
+from odoo.tools import SQL, BinaryBytes, clean_context, float_round, groupby, lazy, str2bool
 from odoo.tools.json import scriptsafe as json_scriptsafe
 from odoo.tools.translate import LazyTranslate, _
 
@@ -83,13 +83,28 @@ class TableCompute:
         return res
 
     def process(self, products, ppg=20, ppr=4):
-        # Compute products positions on the grid
+        items = [
+            {
+                "product": p,
+                "x": p.website_size_x,
+                "y": p.website_size_y,
+                "ribbon": p.sudo().website_ribbon_id,
+            }
+            for p in products
+        ]
+        return self.process_items(items, ppg, ppr)
+
+    def process_items(self, items, ppg=20, ppr=4):
+        """Place item dicts on a grid and return formatted rows.
+
+        Each *item* must contain ``'x'`` and ``'y'`` keys for sizing;
+        every other key is preserved in the output.
+        """
         minpos = 0
         maxy = 0
-        x = 0
-        for index, p in enumerate(products):
-            x = min(max(p.website_size_x, 1), ppr)
-            y = min(max(p.website_size_y, 1), ppr)
+        for index, item in enumerate(items):
+            x = min(max(item["x"], 1), ppr)
+            y = min(max(item["y"], 1), ppr)
             if index >= ppg:
                 x = y = 1
 
@@ -110,21 +125,14 @@ class TableCompute:
             for y2 in range(y):
                 for x2 in range(x):
                     self.table[(pos // ppr) + y2][(pos % ppr) + x2] = False
-            self.table[pos // ppr][pos % ppr] = {
-                "product": p,
-                "x": x,
-                "y": y,
-                "ribbon": p.sudo().website_ribbon_id,
-            }
+            self.table[pos // ppr][pos % ppr] = {**item, "x": x, "y": y}
             if index <= ppg:
                 maxy = max(maxy, y + (pos // ppr))
 
-        # Format table according to HTML needs
         rows = sorted(self.table.items())
         rows = [r[1] for r in rows]
         for col in range(len(rows)):
             cols = sorted(rows[col].items())
-            x += len(cols)
             rows[col] = [r[1] for r in cols if r[1]]
 
         return rows
@@ -151,6 +159,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
         # id is added to be sure that order is a unique sort key
         order = post.get("order") or request.env["website"].get_current_website().shop_default_sort
         return "is_published desc, %s, id desc" % order
+
+    def _get_variant_search_order(self, post):
+        return self._get_search_order(post).replace("list_price", "lst_price")
 
     def _add_search_subdomains_hook(self, _search):
         return []
@@ -182,6 +193,57 @@ class WebsiteSale(payment_portal.PaymentPortal):
             )
 
         return Domain.AND(domains)
+
+    def _get_variant_shop_domain(
+        self,
+        search_product,
+        attribute_value_dict,
+        *,
+        tags=None,
+        min_price=0.0,
+        max_price=0.0,
+        conversion_rate=1.0,
+        search=None,
+        fuzzy_search_term=None,
+        filter_by_tags_enabled=False,
+        filter_by_price_enabled=False,
+    ):
+        """Build the variant-level domain used in split-variants mode."""
+        domain = [("product_tmpl_id", "in", search_product.ids)]
+        if attribute_value_dict:
+            ProductAttribute = request.env["product.attribute"]
+            attribute_create_variant = {
+                attr.id: attr.create_variant
+                for attr in ProductAttribute.browse(list(attribute_value_dict))
+            }
+            for attr_id, av_ids in attribute_value_dict.items():
+                if attribute_create_variant.get(attr_id) == "no_variant":
+                    continue
+                domain.append((
+                    "product_template_attribute_value_ids.product_attribute_value_id",
+                    "in",
+                    list(av_ids),
+                ))
+        if filter_by_tags_enabled and tags:
+            domain.append(("all_product_tag_ids", "in", list(tags)))
+        if filter_by_price_enabled:
+            if min_price:
+                domain.append(("lst_price", ">=", min_price / conversion_rate))
+            if max_price:
+                domain.append(("lst_price", "<=", max_price / conversion_rate))
+        search_term = fuzzy_search_term or search
+        if search_term:
+            for term in search_term.split():
+                domain += [
+                    "|",
+                    "|",
+                    "|",
+                    ("product_tmpl_id.name", "ilike", term),
+                    ("default_code", "ilike", term),
+                    ("product_template_attribute_value_ids.name", "ilike", term),
+                    ("product_tmpl_id.description_sale", "ilike", term),
+                ]
+        return domain
 
     def sitemap_shop(env, _rule, qs):  # noqa: N805
         website = env["website"].get_current_website()
@@ -400,16 +462,26 @@ class WebsiteSale(payment_portal.PaymentPortal):
             Product = request.env["product.template"]
             search_term = fuzzy_search_term if fuzzy_search_term else search
             domain = self._get_shop_domain(search_term, category, attribute_value_dict)
-
-            # This is ~4 times more efficient than a search for the cheapest and most expensive
-            # products
-            query = Product._search(domain)
-            sql = query.select(
-                SQL(
-                    "COALESCE(MIN(list_price), 0) * %(conversion_rate)s, COALESCE(MAX(list_price), 0) * %(conversion_rate)s",  # noqa: E501
-                    conversion_rate=conversion_rate,
+            if website.shop_split_variants:
+                variant_query = request.env["product.product"]._search([
+                    ("product_tmpl_id", "in", Product._search(domain))
+                ])
+                sql = variant_query.select(
+                    SQL(
+                        "COALESCE(MIN(lst_price), 0) * %(conversion_rate)s, COALESCE(MAX(lst_price), 0) * %(conversion_rate)s",  # noqa: E501
+                        conversion_rate=conversion_rate,
+                    )
                 )
-            )
+            else:
+                # This is ~4 times more efficient than a search for the cheapest and most expensive
+                # products
+                query = Product._search(domain)
+                sql = query.select(
+                    SQL(
+                        "COALESCE(MIN(list_price), 0) * %(conversion_rate)s, COALESCE(MAX(list_price), 0) * %(conversion_rate)s",  # noqa: E501
+                        conversion_rate=conversion_rate,
+                    )
+                )
             available_min_price, available_max_price = request.env.execute_query(sql)[0]
 
             if min_price or max_price:
@@ -480,22 +552,63 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         # products for current pager
 
-        pager = website.pager(
-            url=url, total=product_count, page=page, step=ppg, scope=5, url_args=post
-        )
-        offset = pager["offset"]
-        products = search_product[offset : offset + ppg].with_prefetch()
-        products.fetch()
-
-        # map each product to its variant, and prefetch the variants
         Product = request.env["product.product"]
-        product_variant_ids = [product._get_first_possible_variant_id() for product in products]
-        variants = Product.sudo().browse(vid for vid in product_variant_ids if vid)
-        variants.fetch()
-        variant_by_id = {v.id: v for v in variants}
-        product_variants = dict(
-            zip(products, (variant_by_id.get(vid, Product) for vid in product_variant_ids))
-        )
+        shop_split_variants = website.shop_split_variants
+
+        if shop_split_variants:
+            # In split mode, paginate by flat variant sequence.
+            variant_domain = self._get_variant_shop_domain(
+                search_product,
+                attribute_value_dict,
+                tags=tags,
+                min_price=min_price,
+                max_price=max_price,
+                conversion_rate=conversion_rate,
+                search=search,
+                fuzzy_search_term=fuzzy_search_term,
+                filter_by_tags_enabled=filter_by_tags_enabled,
+                filter_by_price_enabled=filter_by_price_enabled,
+            )
+            total_variants = Product.search_count(variant_domain)
+            pager = website.pager(
+                url=url, total=total_variants, page=page, step=ppg, scope=5, url_args=post
+            )
+            page_variants = Product.search_fetch(
+                variant_domain,
+                order=self._get_variant_search_order(post),
+                limit=ppg,
+                offset=pager["offset"],
+            )
+            products = page_variants.product_tmpl_id.with_prefetch()
+            products.fetch()
+        else:
+            pager = website.pager(
+                url=url, total=product_count, page=page, step=ppg, scope=5, url_args=post
+            )
+            offset = pager["offset"]
+            products = search_product[offset : offset + ppg].with_prefetch()
+            products.fetch()
+
+        # map each product to its (representative) variant
+        if shop_split_variants:
+            variants_by_tmpl = dict(groupby(page_variants, key=lambda v: v.product_tmpl_id.id))
+        else:
+            all_variants = Product.search_fetch(
+                [("product_tmpl_id", "in", products.ids)], order="website_sequence asc, id asc"
+            )
+            variants_by_tmpl = dict(groupby(all_variants, key=lambda v: v.product_tmpl_id.id))
+
+        product_variants = {}
+        for product in products:
+            tmpl_variants = variants_by_tmpl.get(product.id, [])
+            if tmpl_variants:
+                product_variants[product] = tmpl_variants[0]
+            else:
+                # Fallback: template with no published variant (e.g. archived single variant).
+                first_variant_id = product._get_first_possible_variant_id()
+                product_variants[product] = (
+                    Product.sudo().browse(first_variant_id) if first_variant_id else Product
+                )
 
         ProductAttribute = request.env["product.attribute"]
         ProductAttributeValue = request.env["product.attribute.value"]
@@ -519,6 +632,16 @@ class WebsiteSale(payment_portal.PaymentPortal):
             attributes = ProductAttribute.union(pavs_per_attribute.keys())
         else:
             attributes = ProductAttribute.browse(attribute_ids).sorted()
+
+        # Variant-level pricing for the cards actually rendered on the page.
+        if shop_split_variants:
+            displayed_variants = page_variants
+        else:
+            displayed_variants = Product.union(*(v for v in product_variants.values() if v))
+        variant_prices = displayed_variants._get_sales_prices(
+            website, request.pricelist.with_context(self.env.context), request.fiscal_position
+        )
+
         products_prices = products._get_sales_prices(website)
         product_query_params = self._get_product_query_params(**post)
 
@@ -529,6 +652,22 @@ class WebsiteSale(payment_portal.PaymentPortal):
             .sorted()
             .grouped("attribute_id")
         )
+
+        if shop_split_variants:
+            split_items = [
+                {
+                    "product": variant.product_tmpl_id,
+                    "variant": variant,
+                    "x": variant.website_size_x or 1,
+                    "y": variant.website_size_y or 1,
+                    "ribbon": variant.sudo().variant_ribbon_id
+                    or variant.product_tmpl_id.sudo().website_ribbon_id,
+                }
+                for variant in page_variants
+            ]
+            bins = TableCompute().process_items(split_items, ppg, ppr)
+        else:
+            bins = TableCompute().process(products, ppg, ppr)
 
         values = {
             "auto_assign_ribbons": self
@@ -545,8 +684,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "products": products,
             "product_variants": product_variants,
             "search_product": search_product,
-            "search_count": product_count,  # common for all searchbox
-            "bins": TableCompute().process(products, ppg, ppr),
+            "search_count": total_variants if shop_split_variants else product_count,
+            "bins": bins,
+            "get_variant_prices": lambda variant: variant_prices.get(variant.id, {}),
             "ppg": ppg,
             "ppr": ppr,
             "gap": gap,
@@ -926,8 +1066,20 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 combination.ids, request.website.id
             )
         else:
-            combination_info = product._get_combination_info()
             attribute_value_images = product._get_dynamic_attribute_images([], request.website.id)
+            # Select the first variant by website_sequence so the
+            # product page matches the ordering visible on /shop.
+            first_variant = request.env["product.product"].search(
+                [("product_tmpl_id", "=", product.id)],
+                order="website_sequence asc, id asc",
+                limit=1,
+            )
+            if first_variant:
+                combination_info = product._get_combination_info(
+                    combination=first_variant.product_template_attribute_value_ids
+                )
+            else:
+                combination_info = product._get_combination_info()
 
         # Needed to trigger the recently viewed product rpc
         view_track = website.viewref("website_sale.product").track
@@ -1952,23 +2104,28 @@ class WebsiteSale(payment_portal.PaymentPortal):
     # ------------------------------------------------------
 
     @route(["/shop/config/product"], type="jsonrpc", auth="user")
-    def change_product_config(self, product_id, **options):
+    def change_product_config(self, product_id=None, variant_id=None, **options):
         if not request.env.user.has_group("website.group_website_restricted_editor"):
             raise NotFound
 
-        product = request.env["product.template"].browse(product_id)
-        if "sequence" in options:
-            sequence = options["sequence"]
-            if sequence == "top":
-                product.set_sequence_top()
-            elif sequence == "bottom":
-                product.set_sequence_bottom()
-            elif sequence == "up":
-                product.set_sequence_up()
-            elif sequence == "down":
-                product.set_sequence_down()
+        if variant_id:
+            record = request.env["product.product"].browse(variant_id)
+        elif product_id:
+            record = request.env["product.template"].browse(product_id)
+        else:
+            raise NotFound
+
+        sequence = options.get("sequence")
+        if sequence == "top":
+            record.set_sequence_top()
+        elif sequence == "bottom":
+            record.set_sequence_bottom()
+        elif sequence == "up":
+            record.set_sequence_up()
+        elif sequence == "down":
+            record.set_sequence_down()
         if {"x", "y"} <= set(options):
-            product.write({"website_size_x": options["x"], "website_size_y": options["y"]})
+            record.write({"website_size_x": options["x"], "website_size_y": options["y"]})
 
     @route(["/shop/config/attribute"], type="jsonrpc", auth="user")
     def change_attribute_config(self, attribute_id, **options):
@@ -1994,6 +2151,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "shop_default_sort",
             "shop_gap",
             "shop_opt_products_design_classes",
+            "shop_split_variants",
             "product_page_container",
             "product_page_image_layout",
             "product_page_image_width",
