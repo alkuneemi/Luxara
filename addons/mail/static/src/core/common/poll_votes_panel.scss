@@ -2,7 +2,17 @@
     --Avatar-size: #{$o-mail-Avatar-size};
 }
 
+.o-mail-PollVotesPanel {
+    .o-mail-Tabs-vertical .o-mail-TabHeader {
+        min-width: map-get($spacers, 5) * 17 / 6;
+    }
+
+    .o-mail-PollVotesPanel-optionHeader {
+        min-height: (map-get($spacers, 4) + map-get($spacers, 5) + map-get($spacers, 2)) / 2;
+    }
+}
+
 .o-mail-PollVotesPanel-emptyEmoji {
-    font-size: 5rem;
+    font-size: map-get($spacers, 5) * 5 / 3;
     filter: grayscale(1);
 }

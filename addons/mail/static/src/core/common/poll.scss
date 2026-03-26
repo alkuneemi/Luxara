@@ -42,8 +42,14 @@ $poll-color-map: (
     .o-mail-PollOption {
         --poll-border-color: rgba(var(--poll-bg-r), var(--poll-bg-g), var(--poll-bg-b), 0.5);
         border: 1px solid var(--poll-border-color);
+        border-radius: $border-radius-lg * 3 / 2;
         background-size: 0%;
         transition: background-size 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+
+        >div,
+        >label {
+            min-height: (map-get($spacers, 3) + map-get($spacers, 4) + map-get($spacers, 5)) / 2;
+        }
 
         .fa-check-circle {
             color: rgb(var(--poll-bg-r), var(--poll-bg-g), var(--poll-bg-b));
@@ -51,6 +57,41 @@ $poll-color-map: (
 
         .form-check-input:focus {
             box-shadow: none;
+        }
+    }
+}
+
+.o-mail-CreatePollDialog .form-control {
+    height: (map-get($spacers, 4) + map-get($spacers, 5)) / 2;
+}
+
+.o-mail-CreatePollOptionDialog {
+    &-emoji {
+        transition: none;
+        width: (map-get($spacers, 4) + map-get($spacers, 5)) / 2;
+
+        >span {
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        &:hover>span {
+            opacity: 0;
+        }
+    }
+
+    &-editEmoji {
+        background-color: var(--bs-secondary-bg);
+        border-radius: inherit;
+        transition: opacity 0.2s ease-in-out;
+
+        .o-mail-CreatePollOptionDialog-emoji:hover & {
+            opacity: 1 !important;
+        }
+
+        i {
+            color: var(--bs-secondary-color);
+            font-size: $font-size-base * .9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
     }
 }

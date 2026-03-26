@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="mail.PollVotesPanel">
-        <Dialog size="'md'" bodyClass="'d-flex flex-column'" header="true" footer="false" contentClass="this.contentClass">
+        <Dialog size="'md'" bodyClass="'o-mail-PollVotesPanel d-flex flex-column'" header="true" footer="false" contentClass="this.contentClass">
             <t t-set-slot="header">
-                <div class="d-flex flex-column fs-4">
-                    <span class="fw-bold" t-out="this.props.poll.poll_question"/>
-                    <span class="text-muted smaller" t-out="this.props.poll.voteCountText(this.props.poll.numberOfVotes)"/>
+                <div class="d-flex align-items-start gap-3 w-100">
+                    <div class="d-flex flex-column fs-4 flex-grow-1 min-w-0">
+                        <span class="fw-bold" t-out="this.props.poll.poll_question"/>
+                        <span class="text-muted smaller" t-out="this.props.poll.voteCountText(this.props.poll.numberOfVotes)"/>
+                    </div>
+                    <button class="btn-close" t-on-click="this.props.close" title="Close" aria-label="Close" tabindex="-1" data-available-offline=""/>
                 </div>
             </t>
             <Tabs initialTabId="this.props.poll.option_ids[0]?.id" direction="this.store.useMobileView ? 'h' : 'v'" ref="this.tabsRef">
                 <t t-set-slot="headers">
                     <TabHeader t-foreach="this.props.poll.option_ids" t-as="option" t-key="option.id" id="option.id">
-                        <div class="p-2 d-flex justify-content-between w-100">
-                            <span class="me-2" t-out="option.option_label"/>
-                            <span t-out="option.number_of_votes"/>
+                        <div class="o-mail-PollVotesPanel-optionHeader d-flex align-items-center gap-1 w-100 min-w-0 px-2 py-1">
+                            <span t-if="option.option_emoji" class="fs-2 lh-1 me-1" t-out="option.option_emoji"/>
+                            <div class="d-flex align-items-center text-truncate min-w-0">
+                                <span class="text-truncate" t-out="option.option_label"/>
+                                <span class="ms-1 flex-shrink-0">(<t t-out="option.number_of_votes"/>)</span>
+                            </div>
                         </div>
                     </TabHeader>
                 </t>
