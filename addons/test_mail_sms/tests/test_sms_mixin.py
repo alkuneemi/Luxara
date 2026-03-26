@@ -78,15 +78,15 @@ class TestSMSNoThread(SMSCommon, TestSMSRecipients):
             with self.mockSMSGateway():
                 composer._action_send_sms()
 
-    def test_composer_comment_res_users(self):
+    def test_composer_comment_res_partner(self):
         for ctx, expected in [
             ({}, {}),
             ({'default_number_field_name': 'mobile'}, {}),
         ]:
             with self.subTest(ctx=ctx):
                 with self.with_user('employee'):
-                    ctx['default_res_id'] = self.user_admin.id
-                    ctx['default_res_model'] = self.user_admin._name
+                    ctx['default_res_id'] = self.user_admin.partner_id.id
+                    ctx['default_res_model'] = self.user_admin.partner_id._name
                     composer_form = Form(self.env['sms.composer'].with_context(**ctx))
                     composer_form.body = self._test_body_sta
                     composer = composer_form.save()
@@ -112,4 +112,4 @@ class TestSMSNoThread(SMSCommon, TestSMSRecipients):
                         composer._action_send_sms()
 
                     # even if the stored number is correct, fall back on the computed number
-                    self.assertSMS(self.env['res.partner'], '+32455135790', 'pending')
+                    self.assertSMS(self.user_admin.partner_id, '+32455135790', 'pending')

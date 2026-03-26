@@ -76,7 +76,28 @@
 
         <template id="mail_tracking_template">
             <t t-foreach="trackingValues" t-as="val">
-                <em t-if="val.get('company_name')" t-out="val['company_name'] + ': '"/><t t-out="val['old_value']" t-if="val['old_value']"/><b t-out="val['new_value']"/><i t-out="val['field_label']"/><br/>
+                <t t-set="field_info" t-value="val.get('field_info', {})"/>
+                <t t-if="field_info.get('added') or field_info.get('removed')">
+                    <t t-if="field_info.get('added')">
+                        <b>Added</b><em t-if="val.get('company_name')" t-out="val['company_name'] + ': '"/><i t-out="val['field_label']"/>
+                        <ul>
+                            <li t-foreach="field_info['added']" t-as="item">
+                                <a href="#" t-att-data-oe-model="item._name" t-att-data-oe-id="item.id" t-out="item.display_name"/>
+                            </li>
+                        </ul>
+                    </t>
+                    <t t-if="field_info.get('removed')">
+                        <b>Removed</b><em t-if="val.get('company_name')" t-out="val['company_name'] + ': '"/><i t-out="val['field_label']"/>
+                        <ul>
+                            <li t-foreach="field_info['removed']" t-as="item">
+                                <a href="#" t-att-data-oe-model="item._name" t-att-data-oe-id="item.id" t-out="item.display_name"/>
+                            </li>
+                        </ul>
+                    </t>
+                </t>
+                <t t-else="">
+                    <em t-if="val.get('company_name')" t-out="val['company_name'] + ': '"/><t t-out="val['old_value']" t-if="val['old_value']"/><b t-out="val['new_value']"/><i t-out="val['field_label']"/><br/>
+                </t>
             </t>
         </template>
     </data>
