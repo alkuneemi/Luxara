@@ -12,15 +12,22 @@ export class PosOrderAccounting extends Base {
         super.setup();
 
         this._prices = {};
-        this.triggerRecomputeAllPrices();
+        this._pricesDirty = true;
     }
 
     triggerRecomputeAllPrices() {
         if (!this._prices) {
             return;
         }
-        this._prices.original = this._constructPriceData();
-        this._prices.unit = this._constructPriceData({ baseLineOpts: { quantity: 1 } });
+        this._pricesDirty = true;
+    }
+
+    _ensurePricesComputed() {
+        if (this._pricesDirty) {
+            this._pricesDirty = false;
+            this._prices.original = this._constructPriceData();
+            this._prices.unit = this._constructPriceData({ baseLineOpts: { quantity: 1 } });
+        }
     }
 
     /**
@@ -129,9 +136,11 @@ export class PosOrderAccounting extends Base {
      * Do not try to make your own price computation outside these getters.
      */
     get prices() {
+        this._ensurePricesComputed();
         return this._prices.original;
     }
     get unitPrices() {
+        this._ensurePricesComputed();
         return this._prices.unit;
     }
     get priceIncl() {

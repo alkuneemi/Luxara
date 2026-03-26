@@ -436,6 +436,7 @@ export class SelfOrder extends Reactive {
             lineToMerge.setQuantity(lineToMerge.qty + newLine.qty);
             newLine.delete();
         }
+        this.currentOrder.updateServiceCharge();
     }
     async confirmationPage(screen_mode, device, access_token) {
         if (!access_token) {
@@ -1058,22 +1059,45 @@ export class SelfOrder extends Reactive {
     }
 
     get orderLineNotSend() {
-        return Object.entries(this.currentOrder.changes).reduce(
+        const result = Object.entries(this.currentOrder.changes).reduce(
             (acc, [key, { qty }]) => {
                 if (qty && qty > 0) {
                     const line = this.models["pos.order.line"].getBy("uuid", key);
+                    if (line.is_service_charge) {
+                        return acc;
+                    }
                     if (!line.combo_parent_id) {
                         acc.count += qty;
                     }
-                    const prices = line.prices;
-                    acc.priceWithTax += prices.total_included;
-                    acc.priceWithoutTax += prices.total_excluded;
-                    acc.tax += prices.taxes_data.reduce((acc, tax) => (acc += tax.tax_amount), 0);
+                    const taxDetails = line.order_id._constructPriceData({
+                        baseLineOpts: { quantity: qty },
+                    }).baseLineByLineUuids[line.uuid].tax_details;
+                    acc.priceWithTax += taxDetails.total_included;
+                    acc.priceWithoutTax += taxDetails.total_excluded;
+                    acc.tax += taxDetails.total_included - taxDetails.total_excluded;
                 }
                 return acc;
             },
             { priceWithTax: 0, priceWithoutTax: 0, count: 0, tax: 0 }
         );
+
+        // Include the service charge delta (not tracked in changes since qty doesn't change)
+        const serviceChargeLines = this.currentOrder.lines.filter((l) => l.is_service_charge);
+        const payAfterEach = this.config.self_ordering_pay_after === "each";
+        if (result.count > 0 && payAfterEach && serviceChargeLines) {
+            for (const serviceChargeLine of serviceChargeLines) {
+                if (serviceChargeLine.qty === 0) {
+                    continue;
+                }
+                const taxDetails = serviceChargeLine.order_id._constructPriceData({
+                    baseLineOpts: { quantity: serviceChargeLine.qty },
+                }).baseLineByLineUuids[serviceChargeLine.uuid].tax_details;
+                result.priceWithTax += taxDetails.total_included;
+                result.priceWithoutTax += taxDetails.total_excluded;
+                result.tax += taxDetails.total_included - taxDetails.total_excluded;
+            }
+        }
+        return result;
     }
 
     get kioskBackgroundImageUrl() {

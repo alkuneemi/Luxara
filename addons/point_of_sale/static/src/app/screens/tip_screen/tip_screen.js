@@ -20,6 +20,10 @@ export class TipScreen extends Component {
         this.dialog = useService("dialog");
         this.state = this.currentOrder.uiState.TipScreen;
         this._totalAmount = this.currentOrder.priceIncl;
+        const serviceChargeLine = this.currentOrder.getServiceChargeLine();
+        this._tipBaseAmount = serviceChargeLine
+            ? this._totalAmount - serviceChargeLine.priceIncl
+            : this._totalAmount;
         useRouterParamsChecker();
 
         this.adjustableTipLine = this.currentOrder.adjustableTipLine;
@@ -49,9 +53,12 @@ export class TipScreen extends Component {
         const config = this.pos.config;
         return [config.tip_percentage_1, config.tip_percentage_2, config.tip_percentage_3];
     }
+    get tipBaseAmount() {
+        return this._tipBaseAmount;
+    }
     get percentageTips() {
         return this.tipPercentages.map((tip) => {
-            const tipAmount = (tip / 100) * this.totalAmount;
+            const tipAmount = (tip / 100) * this.tipBaseAmount;
             return {
                 percentage: `${tip}%`,
                 amount: this.env.utils.formatCurrency(tipAmount),
@@ -83,7 +90,7 @@ export class TipScreen extends Component {
             return;
         }
         const maxTipPercentage = Math.max(...this.tipPercentages);
-        const maxTipAmount = (maxTipPercentage / 100) * this.totalAmount;
+        const maxTipAmount = (maxTipPercentage / 100) * this.tipBaseAmount;
         if (amount > maxTipAmount) {
             const confirmed = await ask(this.dialog, {
                 title: _t("Are you sure?"),

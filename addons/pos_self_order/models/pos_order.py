@@ -125,8 +125,8 @@ class PosOrder(models.Model):
                 'attribute_value_ids': [id for id in line_data.get('attribute_value_ids', []) if isinstance(id, int)],
                 'price_unit': line_data.get('price_unit'),
                 'qty': line_data.get('qty'),
-                'price_subtotal': line_data.get('price_subtotal'),
-                'price_subtotal_incl': line_data.get('price_subtotal_incl'),
+                'price_subtotal': line_data.get('price_subtotal', 0),
+                'price_subtotal_incl': line_data.get('price_subtotal_incl', 0),
                 'price_extra': line_data.get('price_extra'),
                 'price_type': line_data.get('price_type'),
                 'full_product_name': line_data.get('full_product_name'),
@@ -136,6 +136,8 @@ class PosOrder(models.Model):
                 'combo_parent_id': line_data.get('combo_parent_id'),
                 'combo_item_id': line_data.get('combo_item_id'),
                 'combo_line_ids': [id for id in line_data.get('combo_line_ids', []) if isinstance(id, int)],
+                'sequence': line_data.get('sequence', 10),
+                'is_service_charge': line_data.get('is_service_charge', False),
             }]
         return []
 
@@ -264,6 +266,70 @@ class PosOrder(models.Model):
         )
         self.amount_tax = tax_totals['tax_amount_currency']
         self.amount_total = tax_totals['total_amount_currency']
+        self._compute_service_charge()
+
+    def _compute_service_charge(self):
+        self.ensure_one()
+        if self.state in ('paid', 'done', 'cancel'):
+            return
+        if not self.preset_id or not self.preset_id.service_fee or not self.preset_id.service_fee_product_id:
+            self.lines.filtered(lambda l: l.is_service_charge).unlink()
+            return
+
+        service_charge_product = self.preset_id.service_fee_product_id
+        service_charge_lines = self.lines.filtered(lambda l: l.is_service_charge)
+
+        # If no regular lines, remove service charge
+        regular_lines = self.lines.filtered(lambda l: not l.is_service_charge)
+        if not regular_lines:
+            service_charge_lines.unlink()
+            return
+
+        # Remove lines that don't match the current product
+        stale_lines = service_charge_lines.filtered(lambda l: l.product_id != service_charge_product)
+        if stale_lines:
+            stale_lines.unlink()
+            service_charge_lines -= stale_lines
+
+        service_charge_line = service_charge_lines[:1]
+
+        if not service_charge_line:
+            service_charge_line = self.env['pos.order.line'].create({
+                'order_id': self.id,
+                'product_id': service_charge_product.id,
+                'qty': 0,
+                'price_unit': 0,
+                'price_subtotal': 0,
+                'price_subtotal_incl': 0,
+                'price_type': 'manual',
+                'sequence': 10000,
+                'is_service_charge': True,
+            })
+
+        qty = (self.customer_count or 1) if self.preset_id.service_fee_type == 'fixed' else 1
+        if self.preset_id.service_fee_type == 'fixed':
+            price = self.preset_id.service_fee_amount
+        else:
+            if self.preset_id.service_fee_based_on == 'pre_discount':
+                total = sum(l.price_unit * l.qty for l in self.lines if l != service_charge_line)
+            else:
+                total = sum(l.price_subtotal for l in self.lines if l != service_charge_line)
+            price = total * self.preset_id.service_fee_amount
+
+        if service_charge_line.qty != qty or service_charge_line.price_unit != price:
+            tax_ids = service_charge_product.taxes_id._filter_taxes_by_company(self.company_id)
+            tax_ids_after_fp = self.fiscal_position_id.map_tax(tax_ids)
+            taxes = tax_ids_after_fp.compute_all(price, self.currency_id, qty, product=service_charge_product, partner=self.partner_id)
+            service_charge_line.write({
+                'qty': qty,
+                'price_unit': price,
+                'tax_ids': tax_ids_after_fp,
+                'price_subtotal': taxes['total_excluded'],
+                'price_subtotal_incl': taxes['total_included'],
+            })
+            # Re-update totals after service charge change
+            self.amount_total = sum(self.lines.mapped('price_subtotal_incl'))
+            self.amount_tax = sum(l.price_subtotal_incl - l.price_subtotal for l in self.lines)
 
     def _compute_line_price(self, line, price=False):
         pricelist = self.pricelist_id

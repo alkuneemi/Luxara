@@ -190,6 +190,31 @@ export class OrderSummary extends Component {
             }
             return;
         }
+        if (selectedLine && selectedLine === order.getServiceChargeLine()) {
+            const orderLineEditModes = ["quantity", "discount", "price"];
+            if (!orderLineEditModes.includes(this.pos.numpadMode)) {
+                // Not editing the line directly (e.g. setting table/tab number): allow through
+                return;
+            }
+            const preset =
+                typeof order.preset_id === "object"
+                    ? order.preset_id
+                    : this.pos.models["pos.preset"].get(order.preset_id);
+            if (
+                !preset ||
+                preset.service_fee_type !== "fixed" ||
+                this.pos.numpadMode !== "quantity"
+            ) {
+                this.numberBuffer.reset();
+                this.dialog.add(AlertDialog, {
+                    title: _t("Cannot modify Service Charge"),
+                    body: _t(
+                        "The Service Charge line is automatically calculated and cannot be modified."
+                    ),
+                });
+                return;
+            }
+        }
         if (
             selectedLine &&
             this.pos.numpadMode === "quantity" &&

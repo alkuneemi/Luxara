@@ -115,6 +115,28 @@ export class Orderline extends Component {
             productImage: this.props.showImage && imageUrl,
             taxGroup: this.props.showTaxGroup && taxGroup,
             price: this.line.currencyDisplayPrice,
+            serviceChargePct: (() => {
+                if (!line.is_service_charge) {
+                    return false;
+                }
+                const preset = line.order_id?.preset_id;
+                if (preset?.service_fee_type === "percentage" && preset.service_fee_amount) {
+                    return preset.service_fee_amount * 100;
+                }
+                return false;
+            })(),
+            serviceChargeBasedOn: (() => {
+                if (!line.is_service_charge) {
+                    return false;
+                }
+                const preset = line.order_id?.preset_id;
+                if (preset?.service_fee_type === "percentage") {
+                    return preset.service_fee_based_on === "pre_discount"
+                        ? "Before discount"
+                        : "After discount";
+                }
+                return false;
+            })(),
         };
     }
 }

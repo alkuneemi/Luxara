@@ -90,6 +90,14 @@ class PosOrderReceipt(models.AbstractModel):
             product_unit_price = taxes['total_included'] if display_price_incl else taxes['total_excluded']
             data['product_unit_price'] = self._order_receipt_format_currency(product_unit_price)
 
+            # Service charge percentage (only for percentage-type service charge lines)
+            if line.is_service_charge and self.preset_id and self.preset_id.service_fee_type == 'percentage':
+                data['service_fee_pct'] = '%g' % (self.preset_id.service_fee_amount * 100)
+                data['service_fee_based_on'] = self.preset_id.service_fee_based_on
+            else:
+                data['service_fee_pct'] = False
+                data['service_fee_based_on'] = False
+
             lines.append(data)
 
         return lines

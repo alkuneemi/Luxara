@@ -24,6 +24,10 @@ patch(PosOrderline.prototype, {
         );
     },
 
+    get isSpecialLine() {
+        return super.isSpecialLine || this.isDiscountLine;
+    },
+
     get isValidForRefund() {
         return super.isValidForRefund && !this.isDiscountLine;
     },

@@ -1024,3 +1024,34 @@ class TestFrontend(TestFrontendCommon):
     def test_add_new_table_number_with_multi_floor(self):
         self.pos_config.with_user(self.pos_user).open_ui()
         self.start_pos_tour('test_add_new_table_number_with_multi_floor', login="pos_admin")
+
+    def test_service_charge(self):
+        self.preset_fixed_service_charge = self.env['pos.preset'].create({
+            'name': 'Fixed',
+            'service_fee': True,
+            'service_fee_type': 'fixed',
+            'service_fee_amount': 10,
+        })
+        self.preset_percentage_service_charge_before_discount = self.env['pos.preset'].create({
+            'name': 'Percentage before discount',
+            'service_fee': True,
+            'service_fee_type': 'percentage',
+            'service_fee_amount': 0.1,
+            'service_fee_based_on': 'pre_discount',
+        })
+        self.preset_percentage_service_charge_after_discount = self.env['pos.preset'].create({
+            'name': 'Percentage after discount',
+            'service_fee': True,
+            'service_fee_type': 'percentage',
+            'service_fee_amount': 0.1,
+            'service_fee_based_on': 'post_discount',
+        })
+
+        self.main_pos_config.write({
+            'use_presets': True,
+            'default_preset_id': self.preset_fixed_service_charge.id,
+            'available_preset_ids': [(6, 0, [self.preset_percentage_service_charge_before_discount.id, self.preset_percentage_service_charge_after_discount.id])],
+        })
+
+        self.pos_config.with_user(self.pos_user).open_ui()
+        self.start_pos_tour('ServiceChargeTour', login="pos_admin", debug=True)

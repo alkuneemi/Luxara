@@ -19,7 +19,7 @@
                                     <img class="object-fit-cover rounded-4" t-attf-src="/web/image/product.product/{{product.id}}/image_512?unique=#{product.write_date}" loading="lazy"/>
                                 </div>
                                 <div class="w-100" >
-                                    <div class="text-break fs-4 fw-bold "><span t-if="!display_change_quantity" class="fw-normal"><t t-out="line.qty"/>x </span><t t-out="product.name"/></div>
+                                    <div class="text-break fs-4 fw-bold "><span t-if="!display_change_quantity &amp;&amp; !this.isServiceCharge(line)" class="fw-normal"><t t-out="line.qty"/>x </span><t t-out="product.name"/></div>
                                     <t t-set="attribute_ids" t-value="this.getAttributes(line)"/>
                                     <div t-if="attribute_ids.length > 0 || line.combo_line_ids.length > 0" class="border-start mt-2">
                                         <t t-if="attribute_ids.length > 0" >
@@ -44,7 +44,7 @@
                                     </div>
                                     <div class="d-flex w-100 justify-content-between align-items-center mt-3 mt-md-4">
                                         <!-- Quantity -->
-                                        <div t-if="display_change_quantity and !isDeliveryLine(line)" class="btn-group" >
+                                        <div t-if="display_change_quantity and !isDeliveryLine(line) and !this.isServiceCharge(line)" class="btn-group" >
                                             <button
                                                     t-if="this.canDeleteLine(line) &amp;&amp; this.getLineChangeQty(line) > 1"
                                                     type="button"

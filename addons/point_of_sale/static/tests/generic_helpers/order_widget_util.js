@@ -144,3 +144,10 @@ export function hasNoTax() {
         trigger: negate(".tax-info"),
     };
 }
+
+export function hasServiceCharge(amount) {
+    return {
+        content: `order has service charge of '${amount}'`,
+        trigger: `:has(.product-name:contains("Service Charge")):has(.price:contains("${amount}"))`,
+    };
+}

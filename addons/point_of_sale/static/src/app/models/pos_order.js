@@ -64,6 +64,24 @@ export class PosOrder extends PosOrderAccounting {
         }
     }
 
+    triggerRecomputeAllPrices() {
+        super.triggerRecomputeAllPrices();
+    }
+
+    _ensurePricesComputed() {
+        if (this._pricesDirty) {
+            // Only update service charge when the order has been locally modified.
+            // Skipping it for clean (freshly synced) orders prevents re-adding the
+            // service charge line on page refresh before any user interaction.
+            if (this._dirty) {
+                this.updateServiceCharge();
+            }
+            this._pricesDirty = false;
+            this._prices.original = this._constructPriceData();
+            this._prices.unit = this._constructPriceData({ baseLineOpts: { quantity: 1 } });
+        }
+    }
+
     initState() {
         super.initState();
         // !!Keep all uiState in one object!!
@@ -204,6 +222,150 @@ export class PosOrder extends PosOrderAccounting {
         if (preset.is_return) {
             this.lines.forEach((l) => l.setQuantity(-Math.abs(l.getQuantity()), true));
         }
+        this.updateServiceCharge();
+    }
+
+    updateServiceCharge() {
+        if (this._updatingServiceCharge || !this.uiState) {
+            return;
+        }
+        if (this.state === "paid" || this.state === "done" || this.state === "cancel") {
+            return;
+        }
+        const preset =
+            typeof this.preset_id === "object"
+                ? this.preset_id
+                : this.models["pos.preset"].get(this.preset_id);
+
+        const serviceChargeLines = this.lines.filter((l) => l.is_service_charge);
+
+        if (!preset?.service_fee || !preset?.service_fee_product_id) {
+            this._removeServiceChargeLines(serviceChargeLines);
+            return;
+        }
+
+        this._updatingServiceCharge = true;
+        try {
+            const product = preset.service_fee_product_id;
+            const productId = product.id || product;
+
+            // Check if there are any non-service-charge lines with value
+            const regularLines = this.lines.filter((l) => !l.is_service_charge);
+            const hasItems = regularLines.length > 0;
+
+            if (!hasItems) {
+                const toRemove = serviceChargeLines.slice();
+                toRemove.forEach((l) => this.removeOrderline(l));
+                return;
+            }
+
+            // Remove stale service charge lines (those with different products)
+            const toRemove = serviceChargeLines.filter((l) => l.product_id.id !== productId);
+            if (toRemove.length) {
+                toRemove.forEach((l) => this.removeOrderline(l));
+            }
+
+            let line = serviceChargeLines.find((l) => l.product_id.id === productId);
+
+            let isNewFixedLine = false;
+
+            if (!line) {
+                line = this.models["pos.order.line"].create({
+                    order_id: this,
+                    product_id: product,
+                    tax_ids: product.product_tmpl_id.taxes_id.map((tax) => ["link", tax]),
+                    price_type: "original",
+                    course_id: null,
+                    sequence: 10000,
+                    is_service_charge: true,
+                    price_subtotal: 0,
+                    price_subtotal_incl: 0,
+                });
+                this.selectOrderline(this.getLastOrderline());
+                isNewFixedLine = true;
+            }
+
+            const feeAmount = parseFloat(preset.service_fee_amount || 0);
+            let qty = 1;
+            let price = 0;
+
+            if (preset.service_fee_type === "fixed") {
+                price = feeAmount;
+                qty = isNewFixedLine ? 1 : line.getQuantity();
+            } else {
+                // Percentage
+                const total =
+                    preset.service_fee_based_on === "pre_discount"
+                        ? this.getPreDiscountTotal()
+                        : this.getPostDiscountTotal();
+                price = total * feeAmount;
+            }
+
+            if (isNaN(price) || !isFinite(price)) {
+                price = 0;
+            }
+
+            const ProductPrice = this.models["decimal.precision"].find(
+                (dp) => dp.name === "Product Price"
+            );
+            const roundedPrice = ProductPrice.round(price);
+            const roundedQty = isNaN(qty) ? 1 : qty;
+
+            if (
+                line.getQuantity() !== roundedQty ||
+                ProductPrice.round(line.price_unit || 0) !== roundedPrice
+            ) {
+                line.price_unit = roundedPrice;
+                line.qty = roundedQty;
+                // Only mark dirty, avoid full recompute chain since
+                // updateServiceCharge is already called during _ensurePricesComputed.
+                this._pricesDirty = true;
+            }
+        } finally {
+            this._updatingServiceCharge = false;
+        }
+    }
+
+    _removeServiceChargeLines(serviceChargeLines) {
+        if (serviceChargeLines.length) {
+            this._updatingServiceCharge = true;
+            try {
+                serviceChargeLines.forEach((l) => this.removeOrderline(l));
+            } finally {
+                this._updatingServiceCharge = false;
+            }
+        }
+    }
+
+    getServiceChargeLine() {
+        return this.lines.find((l) => l.is_service_charge);
+    }
+
+    getPreDiscountTotal() {
+        const tipProductId = this.config.tip_product_id?.id;
+        const basicOrderLines = this.lines.filter(
+            (l) => !l.isSpecialLine && (!tipProductId || l.product_id.id !== tipProductId)
+        );
+        if (!basicOrderLines.length) {
+            return 0;
+        }
+        const data = this.getPriceWithOptions({
+            lines: basicOrderLines,
+            baseLineOpts: { discount: 0.0 },
+        });
+        return this.currency.round(data.taxDetails.base_amount);
+    }
+
+    getPostDiscountTotal() {
+        const tipProductId = this.config.tip_product_id?.id;
+        const nonServiceChargeLines = this.lines.filter(
+            (l) => !l.is_service_charge && (!tipProductId || l.product_id.id !== tipProductId)
+        );
+        if (!nonServiceChargeLines.length) {
+            return 0;
+        }
+        const data = this.getPriceWithOptions({ lines: nonServiceChargeLines });
+        return this.currency.round(data.taxDetails.base_amount);
     }
 
     getCashierName() {
@@ -434,6 +596,7 @@ export class PosOrder extends PosOrderAccounting {
         if (!this.lines.length) {
             this.general_customer_note = ""; // reset general note on empty order
         }
+        this.triggerRecomputeAllPrices();
         this.selectOrderline(this.getLastOrderline());
         return true;
     }
@@ -690,7 +853,7 @@ export class PosOrder extends PosOrderAccounting {
 
     // NOTE: Overrided in pos_loyalty to put loyalty rewards at this end of array.
     getOrderlines() {
-        return this.lines;
+        return [...this.lines].sort((a, b) => (a.sequence || 10) - (b.sequence || 10));
     }
 
     serializeForORM(opts = {}) {

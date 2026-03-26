@@ -160,6 +160,7 @@ export class PosOrderline extends PosOrderlineAccounting {
 
         const disc = Math.min(Math.max(parsed_discount || 0, 0), 100);
         this.discount = disc;
+        this.order_id?.triggerRecomputeAllPrices?.();
     }
 
     // sets the qty of the product. The qty will be rounded according to the
@@ -215,6 +216,7 @@ export class PosOrderline extends PosOrderlineAccounting {
             // If each combo contains 2 qty of a product, we wanna keep this ratio after setting the new quantity on the parent product.
             comboLine.setQuantity((comboLine.qty / this.uiState.oldQty || 1) * quantity, true);
         }
+        this.order_id?.triggerRecomputeAllPrices?.();
         return true;
     }
 
@@ -290,7 +292,12 @@ export class PosOrderline extends PosOrderlineAccounting {
             : isNaN(parseFloat(price))
             ? 0
             : parseFloat("" + price);
-        this.price_unit = ProductPrice.round(parsed_price || 0);
+        const roundedPrice = ProductPrice.round(parsed_price || 0);
+        if (this.price_unit === roundedPrice) {
+            return;
+        }
+        this.price_unit = roundedPrice;
+        this.order_id?.triggerRecomputeAllPrices?.();
     }
 
     displayDiscountPolicy() {
@@ -357,6 +364,10 @@ export class PosOrderline extends PosOrderlineAccounting {
 
     getDiscount() {
         return this.discount || 0;
+    }
+
+    get isSpecialLine() {
+        return this.is_service_charge;
     }
 
     get isValidForRefund() {
