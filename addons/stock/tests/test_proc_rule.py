@@ -382,8 +382,19 @@ class TestProcRule(TransactionCase):
             ('product_id', '=', self.productA.id),
         ])
         self.assertTrue(rr)
+<<<<<<< fb809564be9ae39f128be50f0b37da4d9d3ca139
 
         orderpoint.replenishment_uom_id = single_unit
+||||||| ec3c45cb25f03c99b686aa39deb26ab9d4e51e2b
+        orderpoint.write({
+            'replenishment_uom_id': self.env['uom.uom'].create({
+                'name': 'Test UoM',
+                'relative_factor': 1,
+            })
+        })
+=======
+        orderpoint.write({'replenishment_uom_id': self.productA.uom_id})
+>>>>>>> 41c46b83e759da91d59ab47ef4b46578da074d53
         self.assertEqual(orderpoint.qty_to_order, 16.0)  # 15.0 < 14.5 + 15 <= 30.0
         self.assertEqual(orderpoint.qty_to_order_to_max, 16.0)
         orderpoint.replenishment_uom_id = False
