@@ -165,7 +165,6 @@ class SaleOrder(models.Model):
             },
         }
 
-    @api.model
     def action_open_pay_on_delivery_form(self):
         if not (orders_to_confirm := self.filtered("amount_on_delivery")):
             return True  # order_ids is required
