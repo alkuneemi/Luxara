@@ -2,7 +2,7 @@ import { DynamicSnippetCarousel } from "@website/snippets/s_dynamic_snippet_caro
 import { registry } from "@web/core/registry";
 
 export class DynamicSnippetProducts extends DynamicSnippetCarousel {
-    static selector = ".s_dynamic_snippet_products";
+    static selector = ".s_dynamic_snippet_products_nope";
 
     /**
      * Gets the category search domain

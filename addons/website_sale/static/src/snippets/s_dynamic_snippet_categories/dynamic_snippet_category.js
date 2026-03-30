@@ -15,7 +15,7 @@ const ALIGNMENT_CLASSES_MAPPING = {
 };
 
 export class DynamicSnippetCategory extends DynamicSnippet {
-    static selector = '.s_dynamic_snippet_category';
+    static selector = '.s_dynamic_snippet_category_nope';
 
     setup(){
         super.setup();
@@ -24,6 +24,7 @@ export class DynamicSnippetCategory extends DynamicSnippet {
         nodeData.button = nodeData.button || _t("Explore Now");
         const colSpanTwo = nodeData.size !== 'small' || parseInt(nodeData.columns) === 5;
         // Pass custom data to the template.
+        // this is extra rpc parameters
         nodeData.customTemplateData = JSON.stringify({
             size: SIZE_CONFIG[nodeData.size]?.span,
             alignmentClass: ALIGNMENT_CLASSES_MAPPING[nodeData.alignment],

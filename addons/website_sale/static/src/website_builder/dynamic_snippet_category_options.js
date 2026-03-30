@@ -12,9 +12,13 @@ export class DynamicSnippetCategoryOption extends DynamicSnippetOption {
         super.setup();
         this.orm = useService('orm');
         this.website = useService('website');
-        this.dynamicOptionParams.domState = useDomState(editingElement => ({
-            parentCategoryId: editingElement.dataset.parentCategoryId,
-        }))
+        this.dynamicOptionParams.domState = useDomState((editingElement) => {
+            const dynamicEl = editingElement.querySelector("[data-oe-dynamic-filter-snippet]");
+            const dynamicParams = JSON.parse(dynamicEl.dataset.oeDynamicFilterSnippet);
+            return {
+                parentCategoryId: dynamicParams.content_extra_data.parent_category_id,
+            };
+        });
         this.categories = [];
 
         onWillStart(async () => {

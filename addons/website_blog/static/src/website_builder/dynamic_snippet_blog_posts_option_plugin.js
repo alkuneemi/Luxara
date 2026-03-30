@@ -14,6 +14,20 @@ export class DynamicSnippetBlogPostsOptionPlugin extends Plugin {
     /** @type {import("plugins").WebsiteResources} */
     resources = {
         on_snippet_dropped_handlers: this.onSnippetDropped.bind(this),
+        dynamic_filter_search_domain_processors: (
+            domain,
+            { blogByIds, blogByTagIds, blogByAuthorIds }
+        ) => {
+            if (blogByIds?.length) {
+                domain.push(["blog_id", "in", blogByIds.map((e) => e.id)]);
+            }
+            if (blogByTagIds?.length) {
+                domain.push(["tag_ids", "in", blogByTagIds.map((e) => e.id)]);
+            }
+            if (blogByAuthorIds?.length) {
+                domain.push(["author_id", "in", blogByAuthorIds.map((e) => e.id)]);
+            }
+        },
     };
     getModelNameFilter() {
         return this.modelNameFilter;

@@ -14,7 +14,9 @@ export class DynamicSnippetBlogPostsOption extends BaseOptionComponent {
         this.modelNameFilter = getModelNameFilter();
         this.dynamicOptionParams = useDynamicSnippetOption(this.modelNameFilter);
         this.templateKeyState = useDomState((el) => ({
-            templateKey: el.dataset.templateKey,
+            templateKey: JSON.parse(
+                el.querySelector("[data-oe-dynamic-filter-snippet]").dataset.oeDynamicFilterSnippet
+            ).content_template_key,
         }));
     }
     showPictureSizeOption() {

@@ -146,7 +146,11 @@ export class SnippetModel extends Reactive {
     load() {
         if (!this.loadProm) {
             this.loadProm = (async () => {
-                const context = { ...this.context, rendering_bundle: true };
+                const context = {
+                    ...this.context,
+                    rendering_bundle: true,
+                    dynamic_filter_snippet_with_sample: true,
+                };
                 if (context.user_lang) {
                     context.lang = this.context.user_lang;
                     context.snippet_lang = this.context.lang;

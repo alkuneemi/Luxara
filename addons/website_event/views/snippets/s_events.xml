@@ -2,13 +2,18 @@
 <odoo>
 <!-- Snippet -->
 <template id="s_events" name="Events">
-    <t t-call="website.s_dynamic_snippet_template"
+    <t t-call="website.s_dynamic_filter_snippet_template"
         snippet_name.f="s_events"
-        snippet_classes="'s_event_upcoming_snippet %s' % snippet_extra_classes"
         main_page_url.f="/event"
-        custom_template_data.f='{"events_event_time_active":true, "events_event_location_active":true}'
+        snippet_classes="'s_event_upcoming_snippet %s' % snippet_extra_classes"
         snippet_title.f="Upcoming Events"
-        snippet_description.f="Explore what’s happening next and join the moments that matter.">
+        snippet_description.f="Explore what’s happening next and join the moments that matter."
+        filter_param="json.dumps(dict(
+            wrapper_template_key='website.s_dynamic_snippet_wrapper_grid',
+            content_extra_data=dict(events_event_time_active=True, events_event_location_active=True),
+            limit=1 if is_single_record else None,
+        ))"
+    >
         <t t-out="0"/>
     </t>
 </template>

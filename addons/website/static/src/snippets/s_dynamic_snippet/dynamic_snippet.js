@@ -9,11 +9,8 @@ import { verifyHttpsUrl } from "@website/utils/misc";
 
 import { markup } from "@odoo/owl";
 
-const DEFAULT_NUMBER_OF_ELEMENTS = 4;
-const DEFAULT_NUMBER_OF_ELEMENTS_SM = 1;
-
 export class DynamicSnippet extends Interaction {
-    static selector = ".s_dynamic_snippet";
+    static selector = ".s_dynamic_snippet_heu_no";
     dynamicContent = {
         "[data-url]": {
             "t-on-click": this.callToAction,
@@ -54,14 +51,14 @@ export class DynamicSnippet extends Interaction {
     }
 
     start() {
-        this.render();
+        // this.render();
     }
 
     destroy() {
         // Clear content.
         const templateAreaEl = this.el.querySelector(".dynamic_snippet_template");
         // Nested interactions are stopped implicitly.
-        templateAreaEl.replaceChildren();
+        // templateAreaEl.replaceChildren();
     }
 
     /**

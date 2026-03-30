@@ -58,21 +58,23 @@ class WebsiteSnippetFilter(models.Model):
                 if not field_name.strip():
                     raise ValidationError(_("Empty field name in “%s”", record.field_names))
 
-    def _render(self, template_key, limit, search_domain=None, with_sample=False, res_model=None, res_id=None, **custom_template_data):
+    def _render(self, template_key, limit, search_domain=None, search_domain_extra=None, with_sample=False, res_model=None, res_id=None, main_object_name=None, main_object_id=None, **custom_template_data):
         """Renders the website dynamic snippet items"""
         self and self.ensure_one()
 
         assert '.dynamic_filter_template_' in template_key, _("You can only use template prefixed by dynamic_filter_template_ ")
         if search_domain is None:
             search_domain = []
+        if search_domain_extra is None:
+            search_domain_extra = dict()
 
         if self.website_id and self.env['website'].get_current_website() != self.website_id:
-            return ''
+            return []
 
         if self.model_name and self.model_name.replace('.', '_') not in template_key:
-            return ''
+            return []
 
-        records = self._prepare_values(limit=limit, search_domain=search_domain, res_model=res_model, res_id=res_id)
+        records = self._prepare_values(limit=limit, search_domain=search_domain, search_domain_extra=search_domain_extra, res_model=res_model, res_id=res_id, main_object_name=main_object_name, main_object_id=main_object_id)
         is_sample = with_sample and not records
         if is_sample:
             records = self._prepare_sample(limit, res_model=res_model)
@@ -83,7 +85,7 @@ class WebsiteSnippetFilter(models.Model):
         ))
         return [etree.tostring(el, encoding='unicode', method='html') for el in html.fromstring('<root>%s</root>' % str(content)).getchildren()]
 
-    def _prepare_values(self, limit=None, search_domain=None, **options):
+    def _prepare_values(self, limit=None, search_domain=None, search_domain_extra=None, main_object_name=None, main_object_id=None, **options):
         """Gets the data and returns it the right format for render."""
         self and self.ensure_one()
 
@@ -135,6 +137,9 @@ class WebsiteSnippetFilter(models.Model):
                     dynamic_filter=self,
                     limit=limit,
                     search_domain=search_domain,
+                    search_domain_extra=search_domain_extra,
+                    main_object_name=main_object_name,
+                    main_object_id=main_object_id,
                 ).sudo().run() or []
             except MissingError:
                 _logger.warning("The provided domain %s in 'ir.actions.server' generated a MissingError in '%s'", search_domain, self._name)

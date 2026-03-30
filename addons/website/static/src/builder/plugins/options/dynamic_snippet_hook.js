@@ -13,19 +13,25 @@ export function useDynamicSnippetOption(modelNameFilter, contextualFilterDomain 
         // one item if it has no layouts for single mode. This can be improved
         // once single templates are added for all dynamic snippet models, and
         // the selection of one record will be enough.
-        domState.isSingleMode = dynamicSnippetUtils.isSingleModeSnippet(domState);
+        domState.isSingleMode = dynamicSnippetUtils.isSingleModeSnippet(domState.dynamicParams);
     });
     const dynamicFilterTemplates = {};
     // Common functions to handle dynamic snippets filters & templates...
     const dynamicSnippetUtils = env.editor.shared.dynamicSnippetOption;
     const dynamicFilters = {};
-    const domState = useDomState((editingElement) => ({
-        filterId: editingElement.dataset.filterId,
-        snippetModel: editingElement.dataset.snippetModel || modelNameFilter,
-        numberOfRecords: parseInt(editingElement.dataset.numberOfRecords),
-        templateKey: editingElement.dataset.templateKey,
-        isSingleMode: dynamicSnippetUtils.isSingleModeSnippet(editingElement.dataset),
-    }));
+    const domState = useDomState((editingElement) => {
+        const dynamicEl = editingElement.querySelector("[data-oe-dynamic-filter-snippet]");
+        /**@type {import("./dynamic_snippet_option_plugin").DynamicFilterSnippetParameters} */
+        const dynamicParams = JSON.parse(dynamicEl.dataset.oeDynamicFilterSnippet);
+        return {
+            dynamicParams,
+            filterId: dynamicParams.filter_id,
+            snippetModel: dynamicParams.res_model || modelNameFilter,
+            limit: dynamicParams.limit,
+            templateKey: dynamicParams.content_template_key,
+            isSingleMode: dynamicSnippetUtils.isSingleModeSnippet(dynamicParams),
+        };
+    });
 
     async function fetchDynamicFiltersAndTemplates() {
         const fetchedDynamicFilters = await dynamicSnippetUtils.fetchDynamicFilters({
@@ -63,7 +69,7 @@ export function useDynamicSnippetOption(modelNameFilter, contextualFilterDomain 
         if (!Object.values(dynamicFilterTemplates).length) {
             return [];
         }
-        const snippetModel = domState.snippetModel || dynamicFilters[domState.filterId].model_name;
+        const snippetModel = domState.snippetModel || dynamicFilters[domState.filterId]?.model_name;
         return Object.values(dynamicFilterTemplates).filter(({ key }) => {
             const isModelTemplate = dynamicSnippetUtils.isModelSnippetTemplate(key, snippetModel);
             const isSingleModeTemplate = dynamicSnippetUtils.isSingleModeSnippetTemplate(key);
