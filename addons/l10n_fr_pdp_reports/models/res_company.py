@@ -4,10 +4,6 @@ from odoo import api, fields, models
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
-    l10n_fr_pdp_declarant_siren = fields.Char(
-        string="PDP Declarant SIREN Override",
-        help="Optional SIREN override used in Flux 10 headers for qualification test datasets.",
-    )
     l10n_fr_pdp_fiscal_representative_vat = fields.Char(
         string="PDP Fiscal Representative VAT",
         help="TT-122 VAT number used when seller VAT is not available on exempt invoices (tax category E).",

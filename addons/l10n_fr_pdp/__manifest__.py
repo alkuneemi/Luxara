@@ -14,7 +14,6 @@
         'security/ir.model.access.csv',
         'views/account_move_views.xml',
         'views/res_config_settings_views.xml',
-        'views/res_partner_views.xml',
         'wizard/pdp_registration_views.xml',
         'wizard/pdp_response_wizard_views.xml',
     ],
