@@ -311,7 +311,7 @@ export class VideoSelector extends Component {
     /**
      * Utility method, called by the MediaDialog component.
      */
-    static createElements(selectedMedia) {
+    static createElements(selectedMedia, { document = window.document } = {}) {
         return selectedMedia.map((video) => {
             const div = document.createElement("div");
             div.dataset.oeExpression = video.src;
