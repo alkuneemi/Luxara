@@ -706,6 +706,7 @@ class Website(models.Model):
             .env["sale.order"]
             .with_user(SUPERUSER_ID)
             .with_company(self.company_id)
+            .with_context(website_sale_is_ecommerce=True)
             .create(so_data)
         )
 

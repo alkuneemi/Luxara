@@ -16,7 +16,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
         values = super()._prepare_home_portal_values(counters)
         partner = request.env.user.partner_id
 
-        SaleOrder = request.env["sale.order"]
+        SaleOrder = request.env["sale.order"].sudo()
         if "quotation_count" in counters:
             values["quotation_count"] = (
                 SaleOrder.search_count(self._prepare_quotations_domain(partner))
@@ -33,16 +33,26 @@ class CustomerPortal(payment_portal.PaymentPortal):
         return values
 
     def _prepare_quotations_domain(self, partner):
+        website = request.website if hasattr(request, "website") else False
+        if website:
+            website_domain = ["|", ("website_id", "=", False), ("website_id", "=", website.id)]
+        else:
+            website_domain = [("website_id", "=", False)]
         return [
             ("partner_id", "child_of", [partner.commercial_partner_id.id]),
             ("state", "=", "sent"),
-        ]
+        ] + website_domain
 
     def _prepare_orders_domain(self, partner):
+        website = request.website if hasattr(request, "website") else False
+        if website:
+            website_domain = ["|", ("website_id", "=", False), ("website_id", "=", website.id)]
+        else:
+            website_domain = [("website_id", "=", False)]
         return [
             ("partner_id", "child_of", [partner.commercial_partner_id.id]),
             ("state", "=", "sale"),
-        ]
+        ] + website_domain
 
     def _get_sale_searchbar_sortings(self):
         return {"date": {"label": _("Order Date"), "order": "date_order desc"}}
@@ -56,7 +66,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
         quotation_page=False,
         **kwargs,  # noqa: ARG002
     ):
-        SaleOrder = request.env["sale.order"]
+        SaleOrder = request.env["sale.order"].sudo()
 
         if not sortby:
             sortby = "date"
