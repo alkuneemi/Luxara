@@ -95,7 +95,7 @@
 </template>
 
 <template id="s_social_media" name="Social Media">
-    <div t-attf-class="s_social_media o_not_editable {{optionalTextPosition or 'text-start'}} {{optionalSnippetClass or ''}}" contenteditable="false" t-att-data-company-id="res_company.id">
+    <div data-name="Social Media" t-attf-class="s_social_media o_not_editable {{optionalTextPosition or 'text-start'}} {{optionalSnippetClass or ''}}" contenteditable="false" t-att-data-company-id="res_company.id">
         <span class="s_social_media_links">
             <t t-call="mass_mailing.social_links"/>
         </span>

@@ -1211,20 +1211,20 @@
         </div>
         <section class="s_text_block o_mail_snippet_general px-3 pt8 pb32" data-vxml="001" data-snippet="s_text_block" data-name="Text">
             <div class="container s_allow_columns">
-                <table class="mx-auto">
-                    <tr style="vertical-align:top">
-                        <td style="text-align: right;" class="p-2">
+                <table class="mx-auto" data-name="Schedule Table">
+                    <tr style="vertical-align:top" data-name="Schedule Item">
+                        <td style="text-align: right;" class="p-2" data-name="Time">
                             <span class="font-weight: bolder">8h:</span>
                         </td>
-                        <td class="p-2">
+                        <td class="p-2" data-name="Activity">
                             <span class="font-weight: bolder">Welcome</span>
                         </td>
                     </tr>
-                    <tr style="vertical-align:top">
-                        <td style="text-align: right;" class="p-2">
+                    <tr style="vertical-align:top" data-name="Schedule Item">
+                        <td style="text-align: right;" class="p-2" data-name="Time">
                             <span class="font-weight: bolder">18h30:</span>
                         </td>
-                        <td class="p-2">
+                        <td class="p-2" data-name="Activity">
                             <span class="font-weight: bolder">[speaker] &amp; [speaker]'s conference</span>
                             <ul>
                                 <li>Interactive Odoo demo</li>
@@ -1232,11 +1232,11 @@
                             </ul>
                         </td>
                     </tr>
-                    <tr style="vertical-align:top">
-                        <td style="text-align: right;" class="p-2">
+                    <tr style="vertical-align:top" data-name="Schedule Item">
+                        <td style="text-align: right;" class="p-2" data-name="Time">
                             <span class="font-weight: bolder">19h00:</span>
                         </td>
-                        <td class="p-2">
+                        <td class="p-2" data-name="Activity">
                             <span class="font-weight: bolder">Table Ronde</span>
                             <ul>
                                 <li>Business Case</li>
@@ -1244,11 +1244,11 @@
                             </ul>
                         </td>
                     </tr>
-                    <tr style="vertical-align:top">
-                        <td style="text-align: right;" class="p-2">
+                    <tr style="vertical-align:top" data-name="Schedule Item">
+                        <td style="text-align: right;" class="p-2" data-name="Time">
                             <span class="font-weight: bolder">19h30: </span>
                         </td>
-                        <td class="p-2">
+                        <td class="p-2" data-name="Activity">
                             <span class="font-weight: bolder">Networking: Walking Dinner &amp; Drinks</span>
                         </td>
                     </tr>
