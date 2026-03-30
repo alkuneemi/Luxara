@@ -11,12 +11,14 @@ export class ProductsListPageOptionPlugin extends Plugin {
         builder_actions: {
             SetShopContainerAction,
             SetBorderColor,
+            ResetShopStrongBorderAction,
             SetPpgAction,
             SetPprAction,
             SetDefaultSortAction,
         },
     };
 }
+
 export class SetShopContainerAction extends PreviewableWebsiteConfigAction {
     static id = "setShopContainer";
 
@@ -80,6 +82,21 @@ export class SetBorderColor extends PreviewableWebsiteConfigAction {
 
         if (!isPreviewing) {
             await rpc("/shop/config/website", { 'shop_border_color': value });
+        }
+    }
+}
+
+// Action to reset the strong border -> default on the #o_wsale_container element
+// when the Border option is not visible.
+export class ResetShopStrongBorderAction extends BuilderAction {
+    static id = "resetShopStrongBorder";
+
+    apply() {
+        const el = this.editable.querySelector("#o_wsale_container");
+        if (el.classList.contains("o_wsale_border_strong")) {
+            el.classList.remove("o_wsale_border_strong", "o_wsale_custom_border");
+            el.classList.add("o_wsale_border_default");
+            return rpc("/shop/config/website", { shop_border_color: "default" });
         }
     }
 }
