@@ -47,10 +47,7 @@ class AccountMove(models.Model):
         string="PDP BT-8 Tax Due Date Type",
         help="Tax due date type code (BT-8) used to map TT-24 in Flux 10.1.",
     )
-    l10n_fr_pdp_contract_reference = fields.Char(
-        string="PDP Contract Reference (BT-12)",
-        help="Contract reference used for TT-30 when BT-3=262.",
-    )
+
     l10n_fr_pdp_billing_period_start = fields.Date(
         string="PDP Billing Period Start (BT-73)",
         help="Billing period start date used for TT-31 when BT-3=262.",
@@ -211,6 +208,9 @@ class AccountMove(models.Model):
 
     def write(self, vals):
         """Reset open PDP flows when tracked fields change."""
+        # TODO: remove this.
+        # If a move is not sent -> no need to generate the flow xml yet
+        # If a move is set, prevent changing anything, allow to cancel it and in this case a rectificative flow must be created.
         not_previously_posted = {move for move in self if move.state != 'posted'}
         tracked_fields = {
             'invoice_date',

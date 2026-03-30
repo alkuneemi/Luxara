@@ -27,7 +27,7 @@ class PdpPayloadBuilder:
     # Public API
     # -------------------------------------------------------------------------
 
-    def build(self, moves, slice_date=None, invalid_collector=None):
+    def build(self, moves, invalid_collector=None):
         """Build XML payload for the given moves."""
         report_vals = (
             self._build_payment_report_vals(moves, invalid_collector)
@@ -50,7 +50,7 @@ class PdpPayloadBuilder:
             raise UserError(_("Failed to render transaction report: %(error)s", error=err))
         return {
             'payload': base64.b64encode(xml_content),
-            'filename': self._filename(slice_date),
+            'filename': self.flow._build_filename(),
         }
 
     # -------------------------------------------------------------------------
@@ -662,14 +662,14 @@ class PdpPayloadBuilder:
     def _preceding_invoice_refs(self, move):
         """Build all document-level TT-30/TT-31 references."""
         refs = []
-        if (move.l10n_fr_pdp_bt3_code or '').strip() == '262':
-            ref_id = (move.l10n_fr_pdp_contract_reference or '').strip()
-            ref_date = move.l10n_fr_pdp_billing_period_start
-            if ref_id and ref_date:
-                refs.append({
-                    'id': ref_id,
-                    'issue_date': self.flow._format_date(ref_date),
-                })
+        # if (move.l10n_fr_pdp_bt3_code or '').strip() == '262':
+        #     ref_id = (move.l10n_fr_pdp_contract_reference or '').strip()
+        #     ref_date = move.l10n_fr_pdp_billing_period_start
+        #     if ref_id and ref_date:
+        #         refs.append({
+        #             'id': ref_id,
+        #             'issue_date': self.flow._format_date(ref_date),
+        #         })
 
         is_refund = move.move_type in ('out_refund', 'in_refund')
         if is_refund:
@@ -1451,10 +1451,3 @@ class PdpPayloadBuilder:
     def _digits(self, value):
         """Extract only digits from value."""
         return ''.join(ch for ch in (value or '') if ch.isdigit())
-
-    def _filename(self, slice_date):
-        """Generate payload filename."""
-        filename = self.flow._build_filename()
-        if slice_date:
-            filename = filename.replace('.xml', f'_{slice_date}.xml')
-        return filename
