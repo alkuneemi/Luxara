@@ -11,7 +11,7 @@
                 </attribute>
             </xpath>
             <xpath expr="//field[@name='quantity']" position="after" >
-                <field name="removal_date"/>
+                <field name="removal_date" column_invisible="context.get('show_lot_removal_date')"/>
             </xpath>
         </field>
     </record>
