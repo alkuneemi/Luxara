@@ -4,5 +4,22 @@
         <xpath expr="//div[hasclass('o-mail-Thread')]" position="before">
             <div t-if="this.showVisitorDisconnected" class="o-livechat-VisitorDisconnected bg-secondary py-1 px-3 fw-bold smaller shadow-sm border border-secondary d-print-none" t-out="this.disconnectedText"/>
         </xpath>
+        <xpath expr="//*[@t-call='mail.Thread.loadingError' and @t-if]" position="attributes">
+            <attribute name="t-if">this.props.thread.hasLoadingFailed or this.props.thread.channel?.chatbotTriggerFailedError</attribute>
+        </xpath>
+        <xpath expr="//*[@t-call='mail.Thread.loadingError' and @t-elif]" position="attributes">
+            <attribute name="t-elif">this.props.thread.hasLoadingFailed or this.props.thread.channel?.chatbotTriggerFailedError</attribute>
+        </xpath>
+    </t>
+
+    <t t-inherit="mail.Thread.loadingError" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o-mail-Thread-error')]" position="replace">
+            <t t-if="this.channel?.chatbotTriggerFailedError">
+                <div class="o-mail-Thread-error">
+                    An error occurred while processing your answer.
+                </div>
+            </t>
+            <t t-else="">$0</t>
+        </xpath>
     </t>
 </templates>

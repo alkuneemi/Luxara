@@ -31,4 +31,11 @@ patch(Thread.prototype, {
         }
         return _t("Visitor is disconnected");
     },
+    onClickRetry() {
+        if (!this.channel?.chatbotTriggerFailedError) {
+            return super.onClickRetry(...arguments);
+        }
+        this.channel.chatbotTriggerFailedError = null;
+        this.channel.chatbot._runUntilUserInputStep();
+    },
 });

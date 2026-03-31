@@ -526,6 +526,10 @@ export class Thread extends Component {
         this.props.thread.fetchMoreMessages({ routeParams: this.messageFetchRouteParams });
     }
 
+    onClickRetry() {
+        this.onClickLoadOlder();
+    }
+
     async onClickPreferences() {
         const actionDescription = await this.orm.call("res.users", "action_get");
         actionDescription.res_id = this.store.self_user?.id;

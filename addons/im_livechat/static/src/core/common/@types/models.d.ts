@@ -8,6 +8,7 @@ declare module "models" {
     import { LivechatChannelMemberHistory as LivechatChannelMemberHistoryClass } from "@im_livechat/core/common/livechat_channel_member_history_model";
     import { LivechatChannelRule as LivechatChannelRuleClass } from "@im_livechat/core/common/livechat_channel_rule_model";
     import { LivechatExpertise as LivechatExpertiseClass } from "@im_livechat/core/common/livechat_expertise_model";
+    import { ConnectionAbortedError, ConnectionLostError, RPCError } from "@web/core/network/rpc";
 
     export interface Chatbot extends ChatbotClass {}
     export interface ChatbotScript extends ChatbotScriptClass {}
@@ -32,6 +33,7 @@ declare module "models" {
     export interface DiscussChannel {
         chatbot: Chatbot;
         chatbot_current_step_id: ChatbotScriptStep;
+        chatbotTriggerFailedError: RPCError|ConnectionLostError|ConnectionAbortedError|undefined;
         country_id: Country;
         livechat_agent_history_ids: LivechatChannelMemberHistory[];
         livechat_bot_history_ids: LivechatChannelMemberHistory[];
