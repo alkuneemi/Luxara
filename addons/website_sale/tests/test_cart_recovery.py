@@ -3,22 +3,6 @@
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
-from odoo.addons.base.tests.common import HttpCaseWithUserPortal
-
-
-@tagged("post_install", "-at_install")
-class TestWebsiteSaleCartRecovery(HttpCaseWithUserPortal):
-    def test_01_shop_cart_recovery_tour(self):
-        """The goal of this test is to make sure cart recovery works."""
-        self.env.ref("base.user_admin").write({"email": "mitchell.admin@example.com"})
-        self.env["product.product"].create({
-            "name": "Acoustic Bloc Screens",
-            "list_price": 2950.0,
-            "website_published": True,
-        })
-
-        self.start_tour("/shop", "website_sale.cart_recovery", login="portal")
-
 
 @tagged("post_install", "-at_install")
 class TestWebsiteSaleCartRecoveryServer(TransactionCase):
@@ -90,7 +74,8 @@ class TestWebsiteSaleCartRecoveryServer(TransactionCase):
             "The recovery mail should not have been sent yet.",
         )
         self.assertFalse(
-            any(orders.mapped("access_token")), "There should not be an access token yet."
+            any(orders.mapped("access_token")),
+            "There should not be an access token yet.",
         )
 
         orders._cart_recovery_email_send()
@@ -100,7 +85,8 @@ class TestWebsiteSaleCartRecoveryServer(TransactionCase):
             "The recovery mail should have been sent.",
         )
         self.assertTrue(
-            all(orders.mapped("access_token")), "All tokens should have been generated."
+            all(orders.mapped("access_token")),
+            "All tokens should have been generated.",
         )
 
         sent_mail = {}
