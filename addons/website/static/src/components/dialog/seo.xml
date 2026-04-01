@@ -79,11 +79,11 @@
         <h4 class="border-bottom pb-2">
             Images Optimization
         </h4>
-        <t t-if="!this.state.altAttributes.filter(alt => !alt.decorative and alt.alt == '').length > 0">
+        <t t-if="!this.seoContext.altAttributes.filter(alt => !alt.decorative and alt.alt == '').length > 0">
             <p><i class="fa fa-check text-success me-2"></i>No warning on images</p>
         </t>
         <div class="row">
-            <t t-foreach="this.state.altAttributes" t-as="img" t-key="img.id">
+            <t t-foreach="this.seoContext.altAttributes" t-as="img" t-key="img.id">
                 <div class="col-lg-6 col-sm-12 d-flex mb-3">
                     <div class="me-3">
                         <img class="o-img-thumbnail" alt="Preview image" t-att-src="img.src"></img>
@@ -176,7 +176,12 @@
                         <th class="text-center o_seo_mentioned_keyword"><abbr title="Used in page description">D</abbr></th>
                         <th class="text-center o_seo_mentioned_keyword"><abbr title="Used in page content">C</abbr></th>
                         <th title="Most searched topics related to your keyword, ordered by importance">Content ideas based on Google searches</th>
-                        <th class="text-center"></th>
+                        <th class="text-center" t-on-click="() => this.removeAllKeywords()">
+                            <button class="border-0 oe_remove text-danger" t-att-title="this.translatedStrings.removeAllKeywordsButton">
+                                <span class="visually-hidden" t-out="this.translatedStrings.removeAllKeywordsButton"/>
+                                <i class="fa fa-trash" aria-hidden="true"/>
+                            </button>
+                        </th>
                     </tr>
                 </thead>
                 <t t-foreach="this.seoContext.keywords" t-as="keyword" t-key="keyword">
@@ -185,17 +190,17 @@
             </table>
         </div>
         <div role="form" class="input-group w-50">
-            <t t-set="placeholderRemove">Remove a keyword first</t>
+            <t t-set="placeholderAvoidAdd">Avoid too many keywords</t>
             <t t-set="placeholderAdd">Add your keyword</t>
-            <input t-custom-model="this.state.keyword" type="text" class="form-control" t-att-placeholder="this.isFull ? placeholderRemove : placeholderAdd" t-att-readonly="this.isFull" t-on-keyup="this.onKeyup"/>
+            <input t-custom-model="this.state.keyword" type="text" class="form-control" t-att-placeholder="this.isFull ? placeholderAvoidAdd : placeholderAdd" t-on-keyup="this.onKeyup"/>
             <select t-if="this.languages.length > 1" title="The language of the keyword and related keywords."
                     t-custom-model="this.state.language" class="btn btn-outline-primary pe-5 form-select">
                 <t t-foreach="this.languages" t-as="lang" t-key="lang[0]">
                     <option t-att-value="lang[0]"><t t-out="lang[2]"/></option>
                 </t>
             </select>
-            <button t-on-click="() => this.addKeyword(this.state.keyword)" t-att-disabled="this.isFull" class="btn btn-primary" type="button">Add</button>
-            <button t-if="!this.seoContext.keywords.length" t-on-click="this.provideKeywords" class="btn btn-secondary" type="button">
+            <button t-on-click="() => this.addKeyword(this.state.keyword)" class="btn btn-primary" type="button">Add</button>
+            <button t-if="!this.seoContext.generated" t-on-click="this.provideKeywords" class="btn btn-secondary" type="button">
                 Generate keywords
             </button>
         </div>
