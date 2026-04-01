@@ -14,7 +14,7 @@ import { standardFieldProps } from "../standard_field_props";
 import { PropertyDefinition } from "./property_definition";
 import { PropertyValue } from "./property_value";
 
-import { Component, onWillStart, onWillUpdateProps, useEffect, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUpdateProps, useEffect, useRef, useState } from "@odoo/owl";
 
 export class PropertiesField extends Component {
     static template = "web.PropertiesField";
@@ -68,11 +68,15 @@ export class PropertiesField extends Component {
             isPopoverOpen: false,
         });
 
+        onMounted(() => {
+            const editable = this.env.propertiesState?.editable;
+            this.setEditMode(editable);
+        });
         // Properties can be added from the cog menu of the form controller
         if (this.env.config?.viewType === "form") {
             useBus(this.env.model.bus, "PROPERTY_FIELD:EDIT", async (ev) => {
                 if (!ev.detail.editable) {
-                    this.state.isInEditMode = false;
+                    this.setEditMode(false);
                     return;
                 }
 
@@ -90,7 +94,7 @@ export class PropertiesField extends Component {
                 }
                 const isInEditMode = canChangeDefinition && !this.props.readonly;
                 this.state.canChangeDefinition = !!canChangeDefinition;
-                this.state.isInEditMode = isInEditMode;
+                this.setEditMode(isInEditMode);
                 if (isInEditMode && this.propertiesList.length === 0) {
                     this.onPropertyCreate();
                 }
@@ -104,7 +108,7 @@ export class PropertiesField extends Component {
             this.checkDefinitionWriteAccess().then((canChangeDefinition) => {
                 if (canChangeDefinition) {
                     this.state.canChangeDefinition = true;
-                    this.state.isInEditMode = !this.props.readonly;
+                    this.setEditMode(!this.props.readonly);
                 }
             });
         });
@@ -117,10 +121,11 @@ export class PropertiesField extends Component {
                 }
                 this.checkDefinitionWriteAccess().then((canChangeDefinition) => {
                     this.state.canChangeDefinition = !!canChangeDefinition;
-                    this.state.isInEditMode =
+                    const editable =
                         canChangeDefinition &&
                         !this.props.readonly &&
                         (this.state.isInEditMode || this.props.editMode);
+                    this.setEditMode(editable);
                 });
             },
             () => [this.props.record.data[this.definitionRecordField]]
@@ -128,7 +133,7 @@ export class PropertiesField extends Component {
 
         onWillUpdateProps(async (nextProps) => {
             if (nextProps.readonly && !this.props.readonly) {
-                this.state.isInEditMode = false;
+                this.setEditMode(false);
             }
             if (
                 !nextProps.readonly &&
@@ -139,10 +144,11 @@ export class PropertiesField extends Component {
                     canChangeDefinition = await this.checkDefinitionWriteAccess();
                 }
                 this.state.canChangeDefinition = !!canChangeDefinition;
-                this.state.isInEditMode =
+                const editable =
                     canChangeDefinition &&
                     !nextProps.readonly &&
                     (this.state.isInEditMode || nextProps.editMode);
+                this.setEditMode(editable);
             }
         });
 
@@ -1006,6 +1012,13 @@ export class PropertiesField extends Component {
 
     _isPropertyDefinitionWidget() {
         return false;
+    }
+
+    setEditMode(editable) {
+        this.state.isInEditMode = !!editable;
+        if (this.env.propertiesState) {
+            this.env.propertiesState.editable = this.state.isInEditMode;
+        }
     }
 }
 
