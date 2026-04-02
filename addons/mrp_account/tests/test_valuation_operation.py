@@ -77,6 +77,40 @@ class TestMrpValuationOperationStandard(TestBomPriceOperationCommon):
     #         {'product_id': self.glass.id, 'value': 10},
     #     ])
 
+    def test_standard_finished_byproduct_price_unit(self):
+        """Standard-cost byproducts use their own standard_price when the
+        finished product is standard cost — the MO has no influence."""
+        self.dining_table.categ_id = self.category_standard
+        self.scrap_wood.categ_id = self.category_standard
+        self.scrap_wood.standard_price = 30
+        self._make_in_move(self.glass, 1, 10)
+        mo = self._create_mo(self.bom_1, 1)
+        self._produce(mo)
+        mo.button_mark_done()
+        byproduct_moves = mo.move_byproduct_ids.filtered(lambda m: m.state == 'done')
+        for move in byproduct_moves:
+            self.assertAlmostEqual(move.price_unit, 30.0)
+
+    def test_fifo_finished_standard_byproduct_price_unit(self):
+        """Standard-cost byproducts use their own standard_price even when the
+        finished product is FIFO. Their cost_share is still deducted from the
+        finished product so no value disappears from inventory."""
+        self.scrap_wood.categ_id = self.category_standard
+        self.scrap_wood.standard_price = 30
+        self._make_in_move(self.glass, 1, 10)
+        mo = self._create_mo(self.bom_1, 1)
+        self._produce(mo)
+        mo.button_mark_done()
+        byproduct_moves = mo.move_byproduct_ids.filtered(lambda m: m.state == 'done')
+        for move in byproduct_moves:
+            self.assertAlmostEqual(move.price_unit, 30.0)
+        total_cost = PRICE + 10
+        byproduct_cost_share = 0.13
+        self.assertEqual(
+            self.dining_table.total_value,
+            self.company.currency_id.round(total_cost * (1 - byproduct_cost_share)),
+        )
+
     def test_fifo_cost_scrap_kit_product(self):
         """Verify that scrapping a Kit correctly propagates FIFO valuation to the exploded component moves.
         """

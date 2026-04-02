@@ -4,7 +4,7 @@ from ast import literal_eval
 from collections import defaultdict
 
 from odoo import api, fields, models, _
-from odoo.tools import float_round
+from odoo.tools import float_compare, float_round
 
 
 class MrpProduction(models.Model):
@@ -65,6 +65,21 @@ class MrpProduction(models.Model):
         if finished_move:
             if finished_move.product_id.cost_method not in ('fifo', 'average'):
                 finished_move.price_unit = finished_move.product_id.standard_price
+                byproduct_moves = self.move_byproduct_ids.filtered(
+                    lambda m: m.state not in ('done', 'cancel') and float_compare(m.quantity, 0, precision_rounding=m.product_uom.rounding) > 0)
+                total_cost = None
+                for byproduct in byproduct_moves:
+                    if byproduct.product_id.cost_method not in ('fifo', 'average'):
+                        byproduct.price_unit = byproduct.product_id.standard_price
+                    elif byproduct.cost_share:
+                        if total_cost is None:
+                            for work_order in self.workorder_ids:
+                                work_center_cost += work_order._cal_cost()
+                            quantity = finished_move.product_uom._compute_quantity(
+                                finished_move.quantity, finished_move.product_id.uom_id)
+                            total_cost = sum(move.value for move in consumed_moves) + work_center_cost + self.extra_cost * quantity
+                        byproduct_qty = byproduct.product_uom._compute_quantity(byproduct.quantity, byproduct.product_id.uom_id)
+                        byproduct.price_unit = total_cost * byproduct.cost_share / 100 / byproduct_qty if byproduct_qty else 0
                 return True
             finished_move.ensure_one()
             for work_order in self.workorder_ids:
@@ -74,14 +89,17 @@ class MrpProduction(models.Model):
             extra_cost = self.extra_cost * quantity
 
             total_cost = sum(move.value for move in consumed_moves) + work_center_cost + extra_cost
-            byproduct_moves = self.move_byproduct_ids.filtered(lambda m: m.state not in ('done', 'cancel') and m.quantity > 0)
+            byproduct_moves = self.move_byproduct_ids.filtered(lambda m: m.state not in ('done', 'cancel') and float_compare(m.quantity, 0, precision_rounding=m.product_uom.rounding) > 0)
             byproduct_cost_share = 0
             for byproduct in byproduct_moves:
                 if byproduct.cost_share == 0:
                     continue
                 byproduct_cost_share += byproduct.cost_share
                 if byproduct.product_id.cost_method in ('fifo', 'average'):
-                    byproduct.price_unit = total_cost * byproduct.cost_share / 100 / byproduct.product_uom._compute_quantity(byproduct.quantity, byproduct.product_id.uom_id)
+                    byproduct_qty = byproduct.product_uom._compute_quantity(byproduct.quantity, byproduct.product_id.uom_id)
+                    byproduct.price_unit = total_cost * byproduct.cost_share / 100 / byproduct_qty if byproduct_qty else 0
+                else:
+                    byproduct.price_unit = byproduct.product_id.standard_price
             finished_move.price_unit = total_cost * float_round(1 - byproduct_cost_share / 100, precision_rounding=0.0001) / quantity
         return True
 
