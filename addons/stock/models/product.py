@@ -282,13 +282,15 @@ class ProductProduct(models.Model):
         incoming_moves = self.env['stock.move.line']._read_group([
                 ('product_id', 'in', self.ids),
                 ('state', '=', 'done'),
-                ('picking_code', '=', 'incoming'),
+                ('location_id.usage', '!=', 'internal'),
+                ('location_dest_id.usage', '=', 'internal'),
                 ('date', '>=', fields.Datetime.now() - relativedelta(years=1))
             ], ['product_id'], ['__count'])
         outgoing_moves = self.env['stock.move.line']._read_group([
                 ('product_id', 'in', self.ids),
                 ('state', '=', 'done'),
-                ('picking_code', '=', 'outgoing'),
+                ('location_id.usage', '=', 'internal'),
+                ('location_dest_id.usage', '!=', 'internal'),
                 ('date', '>=', fields.Datetime.now() - relativedelta(years=1))
             ], ['product_id'], ['__count'])
         res_incoming = {product.id: count for product, count in incoming_moves}
