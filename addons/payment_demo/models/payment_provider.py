@@ -25,9 +25,9 @@ class PaymentProvider(models.Model):
 
     # === CONSTRAINT METHODS ===#
 
-    @api.constrains("state", "code")
+    @api.constrains("is_test", "code")
     def _check_provider_state(self):
-        if self.filtered(lambda p: p.code == "demo" and p.state not in ("test", "disabled")):
+        if self.filtered(lambda p: p.code == "demo" and not p.is_test):
             raise UserError(_("Demo providers should never be enabled."))
 
     # === CRUD METHODS ===#

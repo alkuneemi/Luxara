@@ -11,18 +11,18 @@
                     <field
                         name="xendit_public_key"
                         string="Public Key"
-                        required="code == 'xendit' and state != 'disabled'"
+                        required="code == 'xendit'"
                     />
                     <field
                         name="xendit_secret_key"
                         string="Secret Key"
-                        required="code == 'xendit' and state != 'disabled'"
+                        required="code == 'xendit'"
                         password="True"
                     />
                     <field
                         name="xendit_webhook_token"
                         string="Webhook Token"
-                        required="code == 'xendit' and state != 'disabled'"
+                        required="code == 'xendit'"
                         password="True"
                     />
                 </group>

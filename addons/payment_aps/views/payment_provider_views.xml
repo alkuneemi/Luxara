@@ -10,18 +10,18 @@
                 <group invisible="code != 'aps'">
                     <field name="aps_merchant_identifier"
                            string="Merchant Identifier"
-                           required="code == 'aps' and state != 'disabled'"/>
+                           required="code == 'aps'"/>
                     <field name="aps_access_code"
                            string="Access Code"
-                           required="code == 'aps' and state != 'disabled'"
+                           required="code == 'aps'"
                            password="True"/>
                     <field name="aps_sha_request"
                            string="SHA Request Phrase"
-                           required="code == 'aps' and state != 'disabled'"
+                           required="code == 'aps'"
                            password="True"/>
                     <field name="aps_sha_response"
                            string="SHA Response Phrase"
-                           required="code == 'aps' and state != 'disabled'"
+                           required="code == 'aps'"
                            password="True"/>
                 </group>
             </group>

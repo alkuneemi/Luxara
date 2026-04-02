@@ -23,8 +23,8 @@
             </sheet>
             <group name="provider_credentials" position="inside">
                 <group invisible="code != 'stripe'" name="stripe_credentials">
-                    <field name="stripe_publishable_key" required="code == 'stripe' and state != 'disabled'"/>
-                    <field name="stripe_secret_key" required="code == 'stripe' and state != 'disabled'" password="True"/>
+                    <field name="stripe_publishable_key" required="code == 'stripe'"/>
+                    <field name="stripe_secret_key" required="code == 'stripe'" password="True"/>
                     <label for="stripe_webhook_secret"/>
                     <div class="o_row" col="2">
                         <field name="stripe_webhook_secret" password="True"/>

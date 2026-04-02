@@ -10,14 +10,14 @@ class AccountJournal(models.Model):
     def _get_available_payment_method_lines(self, payment_type):
         lines = super()._get_available_payment_method_lines(payment_type)
 
-        return lines.filtered(lambda l: l.payment_provider_state != 'disabled')
+        return lines.filtered(lambda l: l.payment_provider_state != 'uninstalled')
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_linked_to_payment_provider(self):
         if self.env.context.get('force_delete'):
             return
         linked_providers = self.env['payment.provider'].sudo().search([]).filtered(
-            lambda p: p.journal_id.id in self.ids and p.state != 'disabled'
+            lambda p: p.journal_id.id in self.ids and p.module_state != 'uninstalled'
         )
         if linked_providers:
             raise UserError(_(

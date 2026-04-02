@@ -11,17 +11,17 @@
                     <field
                         string="Merchant Code"
                         name="redsys_merchant_code"
-                        required="code == 'redsys' and state != 'disabled'"
+                        required="code == 'redsys'"
                     />
                     <field
                         string="Merchant Terminal"
                         name="redsys_merchant_terminal"
-                        required="code == 'redsys' and state != 'disabled'"
+                        required="code == 'redsys'"
                     />
                     <field
                         string="Secret Key"
                         name="redsys_secret_key"
-                        required="code == 'redsys' and state != 'disabled'"
+                        required="code == 'redsys'"
                         password="True"
                     />
                 </group>

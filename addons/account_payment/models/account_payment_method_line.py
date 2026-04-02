@@ -16,7 +16,7 @@ class AccountPaymentMethodLine(models.Model):
         domain="[('code', '=', code)]",
     )
     payment_provider_state = fields.Selection(
-        related='payment_provider_id.state'
+        related='payment_provider_id.module_state'
     )
 
     @api.depends('payment_provider_id.name')

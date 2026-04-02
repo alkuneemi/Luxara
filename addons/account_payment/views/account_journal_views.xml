@@ -11,7 +11,7 @@
                 <field name="payment_provider_id"
                        options="{'no_open': True, 'no_create': True}"
                        optional="hide"
-                       readonly="payment_provider_state in ('enabled', 'test')"/>
+                       readonly="payment_provider_state != 'uninstalled'"/>
                 <field name="payment_provider_state" column_invisible="True"/>
                 <button name="action_open_provider_form"
                         type="object"
@@ -21,7 +21,7 @@
                         groups="base.group_system"/>
             </xpath>
             <xpath expr="//field[@name='inbound_payment_method_line_ids']/list" position="attributes">
-                <attribute name="decoration-muted">payment_provider_state == 'disabled'</attribute>
+                <attribute name="decoration-muted">payment_provider_state == 'uninstalled'</attribute>
             </xpath>
         </field>
     </record>

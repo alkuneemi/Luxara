@@ -10,18 +10,18 @@
                 <group invisible="code != 'paypal'">
                     <field
                         name="paypal_email_account"
-                        required="code == 'paypal' and state != 'disabled'"
+                        required="code == 'paypal'"
                     />
                     <field
                         name="paypal_client_id"
                         string="Client ID"
-                        required="code == 'paypal' and state != 'disabled'"
+                        required="code == 'paypal'"
                     />
                     <field
                         name="paypal_client_secret"
                         string="Client Secret"
                         password="True"
-                        required="code == 'paypal' and state != 'disabled'"
+                        required="code == 'paypal'"
                     />
                     <label for="paypal_webhook_id" string="Webhook ID"/>
                     <div class="o_row" col="2">

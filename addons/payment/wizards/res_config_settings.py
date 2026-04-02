@@ -46,7 +46,11 @@ class ResConfigSettings(models.TransientModel):
         :rtype: Domain
         """
         return Domain.AND([
-            [("state", "=", "enabled") if enabled_only else ("state", "!=", "disabled")],
+            [
+                ("is_test", "=", False)
+                if enabled_only
+                else ("module_state", "in", ("installed", "uninstallable"))
+            ],
             self.env["payment.provider"]._check_company_domain(self.company_id),
         ])
 

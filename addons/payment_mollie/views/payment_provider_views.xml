@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <group name="provider_credentials" position="inside">
                 <group invisible="code != 'mollie'">
-                    <field name="mollie_api_key" string="API Key" required="code == 'mollie' and state != 'disabled'" password="True"/>
+                    <field name="mollie_api_key" string="API Key" required="code == 'mollie'" password="True"/>
                 </group>
             </group>
         </field>

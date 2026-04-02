@@ -12,12 +12,12 @@
                     <field
                         string="Client Key"
                         name="toss_payments_client_key"
-                        required="code == 'toss_payments' and state != 'disabled'"
+                        required="code == 'toss_payments'"
                     />
                     <field
                         string="Secret Key"
                         name="toss_payments_secret_key"
-                        required="code == 'toss_payments' and state != 'disabled'"
+                        required="code == 'toss_payments'"
                         password="True"
                     />
                     <field

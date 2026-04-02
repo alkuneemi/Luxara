@@ -11,17 +11,17 @@
                     <field
                         name="nuvei_merchant_identifier"
                         string="Merchant Identifier"
-                        required="code == 'nuvei' and state != 'disabled'"
+                        required="code == 'nuvei'"
                     />
                     <field
                         name="nuvei_site_identifier"
                         string="Site Identifier"
-                        required="code == 'nuvei' and state != 'disabled'"
+                        required="code == 'nuvei'"
                     />
                     <field
                         name="nuvei_secret_key"
                         string="Secret Key"
-                        required="code == 'nuvei' and state != 'disabled'"
+                        required="code == 'nuvei'"
                         password="True"
                     />
                 </group>

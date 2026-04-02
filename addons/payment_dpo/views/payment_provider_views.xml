@@ -11,12 +11,12 @@
                     <field
                         string="Service ID"
                         name="dpo_service_ref"
-                        required="code == 'dpo' and state != 'disabled'"
+                        required="code == 'dpo'"
                     />
                     <field
                         string="Company Token"
                         name="dpo_company_token"
-                        required="code == 'dpo' and state != 'disabled'"
+                        required="code == 'dpo'"
                         password="True"
                     />
                 </group>

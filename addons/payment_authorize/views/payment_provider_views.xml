@@ -8,9 +8,9 @@
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
                 <group invisible="code != 'authorize'">
-                    <field name="authorize_login" required="code == 'authorize' and state != 'disabled'"/>
-                    <field name="authorize_transaction_key" password="True" required="code == 'authorize' and state != 'disabled'"/>
-                    <field name="authorize_signature_key" password="True" required="code == 'authorize' and state != 'disabled'"/>
+                    <field name="authorize_login" required="code == 'authorize'"/>
+                    <field name="authorize_transaction_key" password="True" required="code == 'authorize'"/>
+                    <field name="authorize_signature_key" password="True" required="code == 'authorize'"/>
                     <label for="authorize_client_key"/>
                     <div class="o_row" col="2">
                         <field name="authorize_client_key"/>

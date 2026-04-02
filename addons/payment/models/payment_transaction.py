@@ -212,7 +212,7 @@ class PaymentTransaction(models.Model):
             if not values.get("reference"):
                 values["reference"] = self._compute_reference(provider.code, **values)
 
-            values["is_live"] = provider.state == "enabled"
+            values["is_live"] = not provider.is_test
 
             # Duplicate partner values.
             partner = self.env["res.partner"].browse(values["partner_id"])

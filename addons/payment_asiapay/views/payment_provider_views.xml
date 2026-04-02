@@ -10,17 +10,17 @@
                 <group invisible="code != 'asiapay'">
                     <field name="asiapay_brand"
                            string="Brand"
-                           required="code == 'asiapay' and state != 'disabled'"/>
+                           required="code == 'asiapay'"/>
                     <field name="asiapay_merchant_id"
                            string="Merchant ID"
-                           required="code == 'asiapay' and state != 'disabled'"/>
+                           required="code == 'asiapay'"/>
                     <field name="asiapay_secure_hash_secret"
                            string="Secure Hash Secret"
-                           required="code == 'asiapay' and state != 'disabled'"
+                           required="code == 'asiapay'"
                            password="True"/>
                     <field name="asiapay_secure_hash_function"
                            string="Secure Hash Function"
-                           required="code == 'asiapay' and state != 'disabled'"
+                           required="code == 'asiapay'"
                            groups="base.group_no_one"/>
                 </group>
             </group>
@@ -28,7 +28,7 @@
                 <attribute
                     name="required"
                     separator="or"
-                    add="(code == 'asiapay' and state != 'disabled')"
+                    add="(code == 'asiapay')"
                 />
             </field>
         </field>

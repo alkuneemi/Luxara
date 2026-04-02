@@ -8,11 +8,11 @@
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
                 <group invisible="code != 'adyen'">
-                    <field name="adyen_merchant_account" required="code == 'adyen' and state != 'disabled'"/>
-                    <field name="adyen_api_key" required="code == 'adyen' and state != 'disabled'" password="True"/>
-                    <field name="adyen_client_key" required="code == 'adyen' and state != 'disabled'"/>
-                    <field name="adyen_hmac_key" required="code == 'adyen' and state != 'disabled'" password="True"/>
-                    <field name="adyen_api_url_prefix" required="code == 'adyen' and state == 'enabled'"/>
+                    <field name="adyen_merchant_account" required="code == 'adyen'"/>
+                    <field name="adyen_api_key" required="code == 'adyen'" password="True"/>
+                    <field name="adyen_client_key" required="code == 'adyen'"/>
+                    <field name="adyen_hmac_key" required="code == 'adyen'" password="True"/>
+                    <field name="adyen_api_url_prefix" required="code == 'adyen'"/>
                 </group>
             </group>
             <group name="payment_form" position='before'>
