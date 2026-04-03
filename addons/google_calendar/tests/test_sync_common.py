@@ -73,9 +73,9 @@ class TestSyncGoogle(HttpCase):
                     self._gsync_patch_values[google_id].append((values, kwargs))
 
         with self.env.cr.savepoint(), \
-             patch.object(GoogleCalendarSync, '_google_insert', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_insert), \
-             patch.object(GoogleCalendarSync, '_google_delete', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_delete), \
-             patch.object(GoogleCalendarSync, '_google_patch', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_patch):
+             patch.object(GoogleCalendarService, 'insert', autospec=True, wraps=GoogleCalendarService, side_effect=_mock_insert), \
+             patch.object(GoogleCalendarService, 'delete', autospec=True, wraps=GoogleCalendarService, side_effect=_mock_delete), \
+             patch.object(GoogleCalendarService, 'patch', autospec=True, wraps=GoogleCalendarService, side_effect=_mock_patch):
             yield
 
     @contextmanager
