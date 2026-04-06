@@ -138,6 +138,11 @@ class AliasDomain(models.Model):
                     _("You cannot use anything else than unaccented latin characters in the domain name %(domain_name)s.",
                       domain_name=domain.name)
                 )
+            if not domain.name == domain.name.lower():
+                raise exceptions.ValidationError(
+                    _("You cannot use uppercase characters in the domain name %(domain_name)s.",
+                        domain_name=domain.name)
+                )
 
     @api.model_create_multi
     def create(self, vals_list):
