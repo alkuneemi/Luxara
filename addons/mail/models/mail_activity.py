@@ -58,6 +58,17 @@ class MailActivity(models.Model):
             return self.env['mail.activity.type'].search(['|', ('res_model', '=', model), ('res_model', '=', False)], limit=1)
         return self.env['mail.activity.type'].search([('res_model', '=', False)], limit=1)
 
+    @api.model
+    def _get_model_selection(self):
+        return [
+            (model.model, model.name)
+            for model in self.env['ir.model'].sudo().search([
+                ('is_mail_activity', '=', True),
+                ('abstract', '=', False),
+                ('transient', '=', False),
+            ])
+        ]
+
     # owner
     res_model_id = fields.Many2one(
         'ir.model', 'Document Model',
@@ -69,6 +80,9 @@ class MailActivity(models.Model):
     res_name = fields.Char(
         'Document Name', compute='_compute_res_name', compute_sudo=True, store=True,
         readonly=True)
+    res_record = fields.Reference(string="Linked to", selection='_get_model_selection',
+         compute='_compute_res_record', inverse='_inverse_res_record')
+    has_res_access = fields.Boolean(compute="_compute_has_res_access")
     res_access_read = fields.Boolean(
         groups=fields.NO_ACCESS,
         compute=lambda self: self._compute_res_access('read'),
@@ -223,6 +237,31 @@ class MailActivity(models.Model):
                 activity.user_id = activity.activity_type_id.default_user_id
             elif not activity.user_id:
                 activity.user_id = self.env.user
+
+    @api.depends('res_model', 'res_id')
+    def _compute_res_record(self):
+        for record in self:
+            record.res_record = (
+                f"{record.res_model},{record.res_id}"
+                if record.res_model and record.res_id else False
+            )
+
+    def _inverse_res_record(self):
+        for record in self:
+            if not record.res_record:
+                record.res_model_id = False
+                record.res_id = False
+                continue
+            record.res_model_id = self.env['ir.model']._get_id(record.res_record._name)
+            record.res_id = record.res_record.id
+
+    @api.depends('res_model', 'res_id')
+    def _compute_has_res_access(self):
+        for activity in self:
+            if activity.res_model and activity.res_id:
+                activity.has_res_access = self.env[activity.res_model].browse(activity.res_id).has_access('read')
+            else:
+                activity.has_res_access = False
 
     def _compute_res_access(self, operation: str):
         """ Determine the subset of ``self`` for which ``operation`` is allowed.
@@ -677,7 +716,7 @@ class MailActivity(models.Model):
         """ Opens the related record based on the model and ID, or activity if user has no
          access to the related record."""
         self.ensure_one()
-        if not self.res_model:
+        if not self.res_model or not self.has_res_access:
             view_id = self.env.ref('mail.mail_activity_view_form_popup').id
             return {
                 'res_id': self.id,
@@ -687,15 +726,6 @@ class MailActivity(models.Model):
                 'view_id': view_id,
                 'views': [(view_id, 'form')],
                 'target': 'new',
-            }
-        if not self.env[self.res_model].browse(self.res_id).has_access('read'):
-            return {
-                'res_id': self.id,
-                'res_model': 'mail.activity',
-                'target': 'current',
-                'type': 'ir.actions.act_window',
-                'view_mode': 'form',
-                'views': [(self.env.ref('mail.mail_activity_view_form_without_record_access').id, 'form')],
             }
         return {
             'res_id': self.res_id,
