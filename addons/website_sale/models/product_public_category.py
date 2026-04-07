@@ -131,7 +131,7 @@ class ProductPublicCategory(models.Model):
         By default, parent category names are included, but they can be excluded by setting the
         `show_parent_categories` context key to `False`.
         """
-        if not self.env.context.get('show_parent_categories', True):
+        if not self.env.context.get("show_parent_categories", True):
             super()._compute_display_name()
             return
         for category in self:

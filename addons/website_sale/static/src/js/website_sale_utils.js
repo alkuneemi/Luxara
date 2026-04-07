@@ -146,7 +146,7 @@ function getAttributeValueParams(attributeValueSlugs) {
     }
     // Aggregate all attribute values belonging to the same attribute into a single search param.
     return new URLSearchParams(Array.from(attributeValues.entries()).map(
-        ([attribute, attributeValue]) => [attribute, [...attributeValue].join(',')]
+        ([attribute, values]) => [attribute, [...values].join(',')]
     ));
 }
 

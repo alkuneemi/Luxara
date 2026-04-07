@@ -102,7 +102,7 @@ class TestWebsiteSaleGMC(WebsiteSaleGMCCommon, HttpCase):
     def test_gmc_items_link_redirects_to_correct_product_case_specific_pricelist(self):
         self.gmc_feed.pricelist_id = self.eur_pricelist
         self.update_items()
-        slug = self.env['ir.http']._slug
+        slug = self.env["ir.http"]._slug
 
         for product in self.red_sofa + self.blue_sofa:
             response = self.url_open(self.items[product]["link"])

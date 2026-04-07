@@ -6,8 +6,6 @@ import re
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from lxml import etree
-from werkzeug import urls
-from werkzeug.exceptions import NotFound
 
 from odoo import SUPERUSER_ID, api, fields, models
 from odoo.exceptions import AccessError, MissingError

@@ -99,15 +99,15 @@ class TableCompute:
         return rows
 
 
-def _get_parent_category_route(depth, param_name='_'):
+def _get_parent_category_route(depth, param_name="_"):
     """Recursively build the parent category part of the route."""
     if depth < 1:
-        return ''
-    parent_path = _get_parent_category_route(depth - 1, param_name + '_')
-    return f'{parent_path}/<model("product.public.category"):{param_name}>'
+        return ""
+    parent_path = _get_parent_category_route(depth - 1, param_name + "_")
+    return f"{parent_path}/<model('product.public.category'):{param_name}>"
 
 
-def _get_category_routes(suffix=''):
+def _get_category_routes(suffix=""):
     """Build all category routes with a parent category depth from 0 to 4 (i.e. in addition to the
     current category, we support up to 4 nested parent categories in the route).
 
@@ -117,8 +117,8 @@ def _get_category_routes(suffix=''):
     """
     return [
         (
-            f'{SHOP_PATH}/category{_get_parent_category_route(depth)}'
-            f'/<model("product.public.category"):category>{suffix}'
+            f"{SHOP_PATH}/category{_get_parent_category_route(depth)}"
+            f"/<model('product.public.category'):category>{suffix}"
         )
         for depth in range(5)
     ]
@@ -292,7 +292,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         if not request.website.has_ecommerce_access():
             return request.redirect(f"/web/login?redirect={request.httprequest.path}")
 
-        post = {k: v for k, v in post.items() if not k.startswith('_')}
+        post = {k: v for k, v in post.items() if not k.startswith("_")}
         is_category_in_query = category and isinstance(category, str)
         category = self._validate_and_get_category(category)
         # TODO: remove support for `category` param in version 20 (or later).
@@ -598,16 +598,16 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
     @route(
         [
-            f'{SHOP_PATH}/product/<model("product.template"):product>',
-            f'{SHOP_PATH}/<model("product.template"):product>',
-            f'{SHOP_PATH}/<model("product.public.category"):category>/<model("product.template"):product>',
+            f"{SHOP_PATH}/product/<model('product.template'):product>",
+            f"{SHOP_PATH}/<model('product.template'):product>",
+            f"{SHOP_PATH}/<model('product.public.category'):category>/<model('product.template'):product>",
         ],
         type="http",
         auth="public",
         website=True,
         sitemap=sitemap_products,
         # Return a 404 instead of a 403 error in case of an access error.
-        handle_params_access_error=lambda e, **kwargs: NotFound.code,
+        handle_params_access_error=lambda e, **_kwargs: NotFound.code,  # noqa: ARG005
     )
     def product(self, product, pricelist=None, **kwargs):
         if not request.website.has_ecommerce_access():
@@ -637,8 +637,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
             self._prepare_product_values(
                 # request context must be given to ensure context updates in overrides are correctly
                 # forwarded to `_get_combination_info` call
-                product.with_context(request.env.context), **kwargs,
-            )
+                product.with_context(request.env.context),
+                **kwargs,
+            ),
         )
 
     @route(
@@ -917,9 +918,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         return {
             "attribute_value_images": attribute_value_images,
-            "categories": request.env["product.public.category"].search(
-                [("parent_id", "=", False)]
-            ),
+            "categories": request.env["product.public.category"].search([
+                ("parent_id", "=", False)
+            ]),
             "category": category,
             'original_category': original_category,
             "combination_info": combination_info,
@@ -947,12 +948,15 @@ class WebsiteSale(payment_portal.PaymentPortal):
         return {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
-            "itemListElement": [{
-                "@type": "ListItem",
-                "position": i,
-                "name": cat.name,
-                "item": f"{base_url}{cat.website_url}",
-            } for i, cat in enumerate(category.parents_and_self, start=1)],
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": i,
+                    "name": cat.name,
+                    "item": f"{base_url}{cat.website_url}",
+                }
+                for i, cat in enumerate(category.parents_and_self, start=1)
+            ],
         }
 
     @route(

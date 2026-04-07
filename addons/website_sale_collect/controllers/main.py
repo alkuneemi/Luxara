@@ -7,7 +7,6 @@ from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 
 class WebsiteSaleCollect(WebsiteSale):
-
     def _prepare_product_values(self, product, **kwargs):
         """Override of `website_sale` to configure the Click & Collect Availability widget."""
         res = super()._prepare_product_values(product, **kwargs)

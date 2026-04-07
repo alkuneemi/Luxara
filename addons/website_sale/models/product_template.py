@@ -1,7 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
-
 from collections import defaultdict
 from urllib.parse import urlencode, urlparse
 
@@ -309,7 +308,7 @@ class ProductTemplate(models.Model):
         """
         res = defaultdict(dict)
         show_count = 20
-        slug = self.env['ir.http']._slug
+        slug = self.env["ir.http"]._slug
         for template in self:
             previewed_ptal = next(
                 (
@@ -892,10 +891,12 @@ class ProductTemplate(models.Model):
             tags = {
                 tag_id for tag in tags.split(",") if (tag_id := self.env["ir.http"]._unslug(tag)[1])
             }
-            domains.append(Domain.OR([
-                Domain("product_tag_ids", "in", tags),
-                Domain("product_variant_ids.additional_product_tag_ids", "in", tags),
-            ]))
+            domains.append(
+                Domain.OR([
+                    Domain("product_tag_ids", "in", tags),
+                    Domain("product_variant_ids.additional_product_tag_ids", "in", tags),
+                ])
+            )
         if min_price:
             domains.append([("list_price", ">=", min_price)])
         if max_price:
