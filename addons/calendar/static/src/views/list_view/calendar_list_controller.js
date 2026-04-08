@@ -3,6 +3,7 @@
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
 import { useAskRecurrenceUpdatePolicy } from "@calendar/views/ask_recurrence_update_policy_hook";
+import { user } from "@web/core/user";
 
 export class CaledarListController extends ListController {
     setup() {
@@ -21,17 +22,78 @@ export class CaledarListController extends ListController {
     /**
      * Deletes selected records with handling for recurring events.
      */
+//    async onDeleteSelectedRecords() {
+//        const selectedRecords = this.model.root.selection;
+//        let recurrenceUpdate = false;
+//        if (selectedRecords.length == 1 && selectedRecords[0]?.data.recurrency) {
+//            recurrenceUpdate = await this.askRecurrenceUpdatePolicy();
+//            console.log("get closer");
+//            if (recurrenceUpdate) {
+//                console.log("Will archive")
+//                await this.orm.call(this.model.root.resModel, "action_mass_archive", [[selectedRecords[0]?.resId], recurrenceUpdate]);
+//                this.model.load();
+//            }
+//        } else {
+//            console.log("will delete");
+//            super.onDeleteSelectedRecords(...arguments);
+//        }
+//    }
+
+    openRecurringDeletionWizard(calendarEventId, attendeeId) {
+        this.actionService.doAction(
+            {
+                type: "ir.actions.act_window",
+                res_model: "calendar.popover.delete.wizard",
+                views: [[false, "form"]],
+                view_mode: "form",
+                name: "Delete Recurring Event",
+                context: {
+                    default_calendar_event_id: calendarEventId,
+                    default_attendee_id: attendeeId,
+                    form_view_ref: 'calendar.calendar_popover_delete_view',
+                },
+                target: "new",
+            },
+            {
+                onClose: () => {
+                    this.model.load();
+                },
+            }
+        );
+    }
+
     async onDeleteSelectedRecords() {
         const selectedRecords = this.model.root.selection;
-        let recurrenceUpdate = false;
-        if (selectedRecords.length == 1 && selectedRecords[0]?.data.recurrency) {
-            recurrenceUpdate = await this.askRecurrenceUpdatePolicy();
-            if (recurrenceUpdate) {
-                await this.orm.call(this.model.root.resModel, "action_mass_archive", [[selectedRecords[0]?.resId], recurrenceUpdate]);
-                this.model.load();
+        if (selectedRecords.length == 1) {
+            const record = selectedRecords[0];
+            const userAttendeeDetail = await this.orm.call("res.partner", "get_attendee_detail", [
+                user.partnerId,
+                record.resIds,
+            ]);
+            const userAttendeeId = userAttendeeDetail[0].attendee_id;
+            if (user.userId === record.data.user_id.id) {
+                const partnerIds = record.data.partner_ids.resIds;
+                if (record.data.recurrency) {
+                    this.openRecurringDeletionWizard(record.resId, userAttendeeId);
+                } else if (partnerIds.length === 1 && partnerIds[0] === user.partnerId) {
+                    super.onDeleteSelectedRecords(...arguments);
+                } else {
+                    await this.orm.call("calendar.event", "action_unlink_event", [
+                        record.resIds,
+                        userAttendeeId,
+                    ])
+                    .then((action) => {
+                        if (action && action.context) {
+                            this.actionService.doAction(action);
+                        } else {
+                            location.reload();
+                        }
+                    });
+                }
+            } else {
+                // Decline event
+                this.orm.call("calendar.attendee", "do_decline", [[userAttendeeId]]);
             }
-        } else {
-            super.onDeleteSelectedRecords(...arguments);
         }
     }
 }

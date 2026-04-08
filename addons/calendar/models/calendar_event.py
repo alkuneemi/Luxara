@@ -1097,6 +1097,7 @@ class CalendarEvent(models.Model):
         :param recurrence: Boolean indicating if the event is recurring
         :return: Action to delete the event
         """
+        print("is passing inside the unlink event method.")
         if self.user_id._has_any_active_synchronization() or len(self.ids) > 1:
             self.unlink()
             return {
