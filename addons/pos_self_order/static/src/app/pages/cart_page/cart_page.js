@@ -11,7 +11,7 @@ import { _t } from "@web/core/l10n/translation";
 import { formatProductName } from "../../utils";
 import { makeAwaitable } from "@point_of_sale/app/utils/make_awaitable_dialog";
 import { PillsSelectionPopup } from "@pos_self_order/app/components/pills_selection_popup/pills_selection_popup";
-
+import { ChooseComboPopup } from "@pos_self_order/app/components/choose_combo_popup/choose_combo_popup";
 const { DateTime } = luxon;
 
 export class CartPage extends Component {
@@ -25,7 +25,9 @@ export class CartPage extends Component {
         this.router = useService("router");
         this.state = useState({
             orderNoteValue: "",
+            sortedPotentialCombos: { applicable: [], upsell: [] },
         });
+        this.updateSortedPotentialCombos();
 
         this.scrollShadow = useScrollShadow(useRef("scrollContainer"));
         useLayoutEffect(
@@ -38,6 +40,12 @@ export class CartPage extends Component {
                     .reduce((sum, l) => sum + (l.qty || 0) * (l.price_unit || 0), 0);
                 return [order.preset_id?.id, nonDeliveryTotal];
             }
+        );
+    }
+
+    updateSortedPotentialCombos() {
+        this.state.sortedPotentialCombos = this.selfOrder.comboSuggestion.getPotentialCombos(
+            this.selfOrder.currentOrder
         );
     }
 
@@ -74,6 +82,122 @@ export class CartPage extends Component {
         };
     }
 
+    get bestComboSuggestion() {
+        const allCombo = [
+            ...this.state.sortedPotentialCombos.applicable,
+            ...this.state.sortedPotentialCombos.upsell,
+        ];
+        const bestCombo = allCombo.find(
+            (combo) => combo.totalComboPrice <= combo.totalSplitedComboLinePrice
+        );
+
+        return bestCombo;
+    }
+
+    get hasMultipleComboSuggestions() {
+        const allCombo = [
+            ...this.state.sortedPotentialCombos.applicable,
+            ...this.state.sortedPotentialCombos.upsell,
+        ];
+
+        return (
+            allCombo.filter((combo) => combo.totalComboPrice <= combo.totalSplitedComboLinePrice)
+                .length > 1
+        );
+    }
+
+    get comboSuggestionDelta() {
+        const suggestion = this.bestComboSuggestion;
+        if (!suggestion) {
+            return 0;
+        }
+        return suggestion.totalComboPrice - suggestion.totalSplitedComboLinePrice;
+    }
+
+    /**
+     * Applies the selected combo suggestion to the current cart.
+     *
+     * The flow first records which standalone lines must be consumed, then either adds the combo
+     * directly or redirects to the combo builder when an upsell still needs customer input.
+     */
+    async applyBestComboSuggestion() {
+        if (!this.bestComboSuggestion) {
+            return;
+        }
+        const comboToApply = await makeAwaitable(this.dialog, ChooseComboPopup, {
+            potentialCombos: this.state.sortedPotentialCombos,
+        });
+        if (!comboToApply) {
+            if (this.selfOrder.pendingComboConversion) {
+                this.selfOrder.pendingComboConversion = null;
+            }
+            return;
+        }
+        if (!comboToApply?.combinations?.length) {
+            return;
+        }
+        const getConcernedLinesQty = (combinations) => {
+            const concernedLinesQty = {};
+            combinations.forEach((items) => {
+                for (const combo of Object.values(items)) {
+                    for (const [uuid, comboLine] of Object.entries(combo)) {
+                        concernedLinesQty[uuid] = (concernedLinesQty[uuid] || 0) + comboLine.qty;
+                    }
+                }
+            });
+            return concernedLinesQty;
+        };
+
+        // Persist the source-line consumption so both the direct add flow and the combo selection
+        // page can finalize the conversion after the combo parent line is created.
+        this.selfOrder.pendingComboConversion = {
+            concernedLinesQty: getConcernedLinesQty(comboToApply.combinations),
+        };
+
+        const addComboToCart = async (comboValuesByCombination) => {
+            for (const comboValues of comboValuesByCombination) {
+                await this.selfOrder.addToCart(
+                    comboToApply.product.product_tmpl_id,
+                    1,
+                    "",
+                    {},
+                    {},
+                    comboValues
+                );
+            }
+            this.selfOrder.applyPendingComboConversion();
+            this.updateSortedPotentialCombos();
+        };
+
+        const hasUpsell = comboToApply.combinations.some((combination) =>
+            Object.values(combination).some((combo) => combo.upsell)
+        );
+        if (!hasUpsell) {
+            return addComboToCart(
+                comboToApply.combinations.map((combination) =>
+                    this.selfOrder.comboSuggestion.getComboValuesFromCombination(combination)
+                )
+            );
+        }
+
+        const { show, selectedCombos } = this.selfOrder.showComboSelectionPage(
+            comboToApply.product
+        );
+        if (show) {
+            return this.router.navigate(
+                "combo_selection",
+                {
+                    id: comboToApply.product.product_tmpl_id.id,
+                },
+                { redirctPage: "cart" }
+            );
+        }
+        return addComboToCart(comboToApply.combinations.map(() => selectedCombos));
+    }
+
+    get showComboBtn() {
+        return Boolean(this.selfOrder.currentOrder.unsentLines.length && this.bestComboSuggestion);
+    }
     get optionalProducts() {
         const optionalProducts =
             this.selfOrder.currentOrder.lines.flatMap(
@@ -297,11 +421,13 @@ export class CartPage extends Component {
         const lastChange = this.selfOrder.currentOrder.uiState.lineChanges[line.uuid];
         if (lastChange) {
             line.qty = lastChange.qty;
+            this.updateSortedPotentialCombos();
             return;
         }
 
         const doRemoveLine = () => {
             this.selfOrder.removeLine(line);
+            this.updateSortedPotentialCombos();
             if (this.lines.length === 0) {
                 this.router.navigate("product_list");
             }
@@ -333,6 +459,8 @@ export class CartPage extends Component {
 
         if (line.qty <= 0) {
             this.removeLine(line);
+        } else if (!line.combo_parent_id) {
+            this.updateSortedPotentialCombos();
         }
     }
 

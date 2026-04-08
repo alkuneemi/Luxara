@@ -1,10 +1,10 @@
 import { Dialog } from "@web/core/dialog/dialog";
 import { Component } from "@odoo/owl";
-import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
+import { useSelfOrder } from "@pos_self_order/app/services/self_order_service";
 
-export class ChoseComboPopup extends Component {
-    static template = "point_of_sale.ChoseComboPopup";
+export class ChooseComboPopup extends Component {
+    static template = "pos_self_order.ChooseComboPopup";
     static components = { Dialog };
     static props = {
         potentialCombos: Object,
@@ -13,20 +13,12 @@ export class ChoseComboPopup extends Component {
     };
 
     setup() {
-        super.setup();
-        this.pos = usePos();
+        this.selfOrder = useSelfOrder();
         this.ui = useService("ui");
     }
 
     get allCombos() {
-        return this.pos.comboSuggestion.getAllComboChoices(this.props.potentialCombos);
-    }
-
-    get contentClass() {
-        if (this.ui.isSmall) {
-            return "";
-        }
-        return "mh-75";
+        return this.selfOrder.comboSuggestion.getAllComboChoices(this.props.potentialCombos);
     }
 
     confirm(combo) {
