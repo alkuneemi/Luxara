@@ -10,6 +10,8 @@
 	        fields="this.props.fields"
 	        selection="this.domState.selection"
 	        setSelection="this.setSelection.bind(this)"
+			displayField="this.props.displayField"
+    		order="this.props.order"
 	    />
 	</BuilderComponent>
 </t>
