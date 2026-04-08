@@ -2,13 +2,12 @@
 
 import { useService } from "@web/core/utils/hooks";
 import { ListController } from "@web/views/list/list_controller";
-import { useAskRecurrenceUpdatePolicy } from "@calendar/views/ask_recurrence_update_policy_hook";
+import { user } from "@web/core/user";
 
 export class CaledarListController extends ListController {
     setup() {
         super.setup();
         this.orm = useService("orm");
-        this.askRecurrenceUpdatePolicy = useAskRecurrenceUpdatePolicy();
     }
 
     get modelOptions() {
@@ -19,19 +18,38 @@ export class CaledarListController extends ListController {
     }
 
     /**
-     * Deletes selected records with handling for recurring events.
+     * Display modals to send cancellation emails or chose the deletion type for recurring events.
      */
     async onDeleteSelectedRecords() {
-        const selectedRecords = this.model.root.selection;
-        let recurrenceUpdate = false;
-        if (selectedRecords.length == 1 && selectedRecords[0]?.data.recurrency) {
-            recurrenceUpdate = await this.askRecurrenceUpdatePolicy();
-            if (recurrenceUpdate) {
-                await this.orm.call(this.model.root.resModel, "action_mass_archive", [[selectedRecords[0]?.resId], recurrenceUpdate]);
-                this.model.load();
+        const declinedAttendeeIds = [];
+        let isUnlinkActionRequired = false;
+        const unlinkActionEventIds = [];
+        for (const record of this.model.root.selection) {
+            if (user.isAdmin || user.userId === record.data.user_id.id) {
+                unlinkActionEventIds.push(record.resId);
+                const partnerIds = record.data.partner_ids.resIds;
+                if (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId)) {
+                    isUnlinkActionRequired = true;
+                }
+            } else {
+                record.selected = false;
+                if (record.data.current_attendee && record.data.current_status !== "declined") {
+                    declinedAttendeeIds.push(record.data.current_attendee.id);
+                }
             }
-        } else {
+        }
+        if (declinedAttendeeIds.length > 0) {
+            await this.orm.call("calendar.attendee", "do_decline", [declinedAttendeeIds]);
+        }
+        if (isUnlinkActionRequired) {
+            await this.orm.call("calendar.event", "action_unlink", [unlinkActionEventIds])
+            .then((action) => {
+                this.actionService.doAction(action);
+            });
+        } else if (this.model.root.selection.length > 0) {
             super.onDeleteSelectedRecords(...arguments);
+        } else {
+            this.actionService.doAction("soft_reload");
         }
     }
 }

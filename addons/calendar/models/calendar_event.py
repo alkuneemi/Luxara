@@ -1059,6 +1059,7 @@ class CalendarEvent(models.Model):
         recurrences = self.env["calendar.recurrence"].search([
             ('base_event_id', 'in', [e.id for e in self])
         ])
+        recurrences.filtered(lambda recurrence: set(recurrence.calendar_event_ids).issubset(self)).unlink()
 
         result = super().unlink()
 
@@ -1082,46 +1083,79 @@ class CalendarEvent(models.Model):
             new_event.write({'partner_ids': [(Command.set(old_event.partner_ids.ids))]})
         return new_events
 
-    def action_unlink_event(self, attendee_id=None, recurrence=False):
+    def action_unlink(self, attendee_id=None, next_action=None, recurrence_choice=None):
         """
-        Delete the event after displaying the delete wizard if necessary.
+        Delete the event(s) after displaying a delete wizard if necessary.
 
         :param attendee_id: The ID of the attendee for the event
-        :param recurrence: Boolean indicating if the event is recurring
-        :return: Action to delete the event
+        :param next_action: The action to perform once the events are deleted
+        :param recurrence_choice: The value specifying which events of a recurrence must be deleted
+        :return: Action to delete the event(s)
         """
-        if self.user_id._has_any_active_synchronization() or len(self.ids) > 1:
+        if not next_action:
+            next_action = {'type': 'ir.actions.client', 'tag': 'soft_reload'}
+
+        if not self.ids:
+            return next_action
+
+        if (
+            self.user_id._has_any_active_synchronization()
+            and not (len(self.ids) == 1 and self.recurrency and not recurrence_choice)  # To display the "Delete Recurring Events" form for recurring events.
+        ):
             self.unlink()
-            return {
-                'type': 'ir.actions.act_url',
-                'target': 'self',
-                'url': '/odoo/calendar'
-            }
+            return next_action
 
         template = self.env.ref('calendar.calendar_template_delete_event', raise_if_not_found=False)
         if not template:
             self.unlink()
             _logger.warning('Template "calendar.calendar_template_delete_event" was not found. Cannot send delete notifications.')
-            return {}
+            return next_action
 
-        if self.ids and (lang := template._render_lang(self.ids)[self.id]):
-            context = {
-                'default_use_template': bool(template),
-                'default_template_id': template.id,
-                'default_attendee_id': attendee_id,
-                'default_calendar_event_id': self.id,
-                'default_recurrence': recurrence,
-                'model_description': self.with_context(lang=lang),
-            }
-            return {
-                'name': _('Delete Event'),
-                'res_model': 'calendar.popover.delete.wizard',
-                'view_id': self.env.ref('calendar.view_event_delete_wizard_form').id,
-                'type': 'ir.actions.act_window',
-                'context': context,
-                'target': 'new',
-                'views': [(False, 'form')],
-            }
+        action_unlink = {
+            'type': 'ir.actions.act_window',
+            'views': [(False, 'form')],
+            'target': 'new',
+        }
+        if len(self.ids) > 1:
+            action_unlink.update({
+                'name': _('Delete Events'),
+                'res_model': 'calendar.event.multi.delete.wizard',
+                'context': {
+                    'active_ids': self.ids,
+                    'active_model': 'calendar.event',
+                    'dialog_size': 'small',
+                    'next_action': next_action,
+                    'template_id': template.id,
+                },
+            })
+        else:
+            if self.recurrency and not recurrence_choice:
+                action_unlink.update({
+                    'name': _('Delete Recurring Event'),
+                    'res_model': 'calendar.event.delete.wizard',
+                    'context': {
+                        'default_attendee_id': attendee_id,
+                        'default_calendar_event_id': self.id,
+                        'form_view_ref': 'calendar.recurring_calendar_event_delete_wizard_view_form',
+                        'next_action': next_action,
+                    },
+                })
+            else:
+                action_unlink.update({
+                    'name': _('Delete Event'),
+                    'res_model': 'calendar.event.delete.wizard',
+                    'context': {
+                        'default_attendee_id': attendee_id,
+                        'default_calendar_event_id': self.id,
+                        'default_delete': recurrence_choice,
+                        'default_template_id': template.id,
+                        'default_use_template': bool(template),
+                        'form_view_ref': 'calendar.calendar_event_delete_wizard_view_form',
+                        'model_description': self.with_context(lang=template._render_lang(self.ids)[self.id]),
+                        'next_action': next_action,
+                    },
+                })
+        return action_unlink
 
     def _mail_get_operation_for_mail_message_operation(self, message_operation):
         # reading messages on private events requires write access, not just read access
@@ -1289,16 +1323,6 @@ class CalendarEvent(models.Model):
         partner = self.env['res.partner'].browse(partner_id)
         if partner not in self.partner_ids:
             self.write({'partner_ids': [(4, partner.id)]})
-
-    def action_mass_deletion(self, recurrence_update_setting):
-        self.ensure_one()
-        if recurrence_update_setting == 'all_events':
-            events = self.recurrence_id.calendar_event_ids
-            self.recurrence_id.unlink()
-            events.unlink()
-        elif recurrence_update_setting == 'future_events':
-            future_events = self.recurrence_id.calendar_event_ids.filtered(lambda ev: ev.start >= self.start)
-            future_events.unlink()
 
     def action_mass_archive(self, recurrence_update_setting):
         """

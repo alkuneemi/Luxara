@@ -3,13 +3,14 @@
 from odoo import api, fields, models
 
 
-class CalendarPopoverDeleteWizard(models.TransientModel):
-    _name = 'calendar.popover.delete.wizard'
+class CalendarEventDeleteWizard(models.TransientModel):
+    _name = 'calendar.event.delete.wizard'
     _inherit = ['mail.composer.mixin']
-    _description = 'Calendar Popover Delete Wizard'
+    _description = 'Calendar Event Delete Wizard'
 
     calendar_event_id = fields.Many2one('calendar.event', 'Calendar Event')
     delete = fields.Selection([('one', 'Delete this event'), ('next', 'Delete this and following events'), ('all', 'Delete all the events')], default='one')
+    multi_delete_wizard_id = fields.Many2one('calendar.event.multi.delete.wizard', ondelete='cascade')
     recipient_ids = fields.Many2many(
         'res.partner',
         string="Recipients",
@@ -17,20 +18,11 @@ class CalendarPopoverDeleteWizard(models.TransientModel):
         readonly=False,
     )
 
-    def close(self):
+    def action_proceed_delete_choice(self):
         # Return if there are multiple attendees or if the organizer's partner_id differs
         if self.calendar_event_id.attendees_count != 1 or self.calendar_event_id.user_id.partner_id != self.calendar_event_id.partner_ids:
-            return self.calendar_event_id.action_unlink_event(self.calendar_event_id.partner_id.id, self.delete)
-        if not self.calendar_event_id or not self.delete:
-            pass
-        elif self.delete == 'one':
-            self.calendar_event_id.unlink()
-        else:
-            switch = {
-                'next': 'future_events',
-                'all': 'all_events'
-            }
-            self.calendar_event_id.action_mass_deletion(switch.get(self.delete, ''))
+            return self.calendar_event_id.action_unlink(self.calendar_event_id.partner_id.id, self.env.context.get('next_action'), self.delete)
+        return self.action_delete()
 
     @api.depends('calendar_event_id')
     def _compute_recipient_ids(self):
@@ -64,35 +56,29 @@ class CalendarPopoverDeleteWizard(models.TransientModel):
         """
         Delete the event based on the specified deletion type.
 
-        :return: Action URL to redirect to the calendar view
+        :return: Client action to reload the page.
         """
         self.ensure_one()
-        event = self.calendar_event_id
-        deletion_type = self.env.context.get('default_recurrence')
+        if self.delete in ['one', False]:
+            self.calendar_event_id.unlink()
+        elif self.delete == 'next':
+            self.calendar_event_id.recurrence_id.calendar_event_ids.filtered(lambda event: event.start >= self.calendar_event_id.start).unlink()
+        elif self.delete == 'all':
+            self.calendar_event_id.recurrence_id.calendar_event_ids.unlink()
+        return self.env.context.get('next_action')
 
-        # Unlink recurrent events.
-        if event.recurrency:
-            if deletion_type in ['one', 'self_only']:
-                event.unlink()
-            elif deletion_type in ['next', 'all']:
-                event.action_mass_deletion('future_events' if deletion_type == 'next' else 'all_events')
-        else:
-            event.unlink()
-
-        return {
-            'type': 'ir.actions.act_url',
-            'target': 'self',
-            'url': '/odoo/calendar'
-        }
-
-    def action_send_mail_and_delete(self):
-        """Send the composed email and delete the event based on the specified deletion type."""
+    def _prepare_mail_values(self):
         self.ensure_one()
-        self.env['mail.mail'].sudo().create([{
+        return {
             'auto_delete': True,
             'body_html': self.body,
             'email_from': self.env.user.email_formatted,
             'recipient_ids': self.recipient_ids.ids,
             'subject': self.subject,
-        }])
+        }
+
+    def action_send_mail_and_delete(self):
+        """Send the composed email and delete the event based on the specified deletion type."""
+        self.ensure_one()
+        self.env['mail.mail'].sudo().create([self._prepare_mail_values()])
         return self.action_delete()

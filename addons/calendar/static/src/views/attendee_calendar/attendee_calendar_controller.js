@@ -91,22 +91,15 @@ export class AttendeeCalendarController extends CalendarController {
             user.partnerId === record.attendeeId &&
             user.partnerId === record.rawRecord.partner_id[0]
         ) {
-            if (record.rawRecord.recurrency) {
-                this.openRecurringDeletionWizard(record);
-            } else if (user.partnerId === record.attendeeId &&
-                record.rawRecord.attendees_count == 1) {
+            if (!record.rawRecord.recurrency && user.partnerId === record.attendeeId && record.rawRecord.attendees_count == 1) {
                 super.deleteRecord(...arguments);
             } else {
-                this.orm.call("calendar.event", "action_unlink_event", [
+                this.orm.call("calendar.event", "action_unlink", [
                     record.id,
                     record.attendeeId,
                 ])
                 .then((action) => {
-                    if (action && action.context) {
-                        this.actionService.doAction(action);
-                    } else {
-                        location.reload();
-                    }
+                    this.actionService.doAction(action);
                 });
             }
         } else {
@@ -115,29 +108,6 @@ export class AttendeeCalendarController extends CalendarController {
                 .call("calendar.attendee", "do_decline", [record.calendarAttendeeId])
                 .then(this.model.load.bind(this.model));
         }
-    }
-
-    openRecurringDeletionWizard(record) {
-        this.actionService.doAction(
-            {
-                type: "ir.actions.act_window",
-                res_model: "calendar.popover.delete.wizard",
-                views: [[false, "form"]],
-                view_mode: "form",
-                name: "Delete Recurring Event",
-                context: {
-                    default_calendar_event_id: record.id,
-                    default_attendee_id: record.attendeeId,
-                    form_view_ref: 'calendar.calendar_popover_delete_view',
-                },
-                target: "new",
-            },
-            {
-                onClose: () => {
-                    this.model.load();
-                },
-            }
-        );
     }
 
     configureCalendarProviderSync(providerName) {
