@@ -3524,9 +3524,10 @@ class AccountMoveLine(models.Model):
         direct_children_lines = children_lines.filtered(lambda l: l.parent_id == self and l.display_type != 'line_subsection')
         section_subtotal = sum(l.price_subtotal for l in children_lines)
         section_total = sum(l.price_total for l in children_lines)
+
         result = [{
             'name': self.name,
-            'taxes': [tax.tax_label for tax in children_lines.tax_ids if tax.tax_label],
+            'taxes': [],
             'price_subtotal': section_subtotal,
             'price_total': section_total,
             'display_type': self.display_type,
@@ -3536,19 +3537,51 @@ class AccountMoveLine(models.Model):
             'discount': 0.0,
         }]
 
-        if not self.collapse_composition:
-            for line in direct_children_lines:
+        if self.collapse_composition and self.display_type in ('line_section', 'line_subsection'):
+            product_lines = children_lines.filtered(lambda l: l.display_type == 'product')
+            result = []
+            for taxes, lines_iter in groupby(product_lines, key=lambda l: l.tax_ids):
+                lines = sum(lines_iter, start=self.env['account.move.line'])
+                tax_labels = [tax.tax_label for tax in taxes if tax.tax_label]
+                subtotal = sum(lines.mapped('price_subtotal'))
+                total = sum(lines.mapped('price_total'))
+                if not subtotal and not total and not tax_labels:
+                    continue
                 result.append({
-                    'name': line.name,
-                    'taxes': [tax.tax_label for tax in line.tax_ids if tax.tax_label] if not self.collapse_prices else [],
-                    'price_subtotal': line.price_subtotal,
-                    'price_total': line.price_total,
-                    'display_type': line.display_type,
-                    'quantity': line.quantity,
-                    'line_uom': line.product_uom_id,
-                    'product_uom': line.product_id.uom_id,
-                    'discount': line.discount,
+                    'name': self.name,
+                    'taxes': tax_labels,
+                    'price_subtotal': subtotal,
+                    'price_total': total,
+                    'display_type': 'product',
+                    'quantity': 1,
+                    'line_uom': False,
+                    'product_uom': False,
+                    'discount': 0.0,
                 })
+            return result or [{
+                'name': self.name,
+                'taxes': [],
+                'price_subtotal': 0.0,
+                'price_total': 0.0,
+                'display_type': 'product',
+                'quantity': 0,
+                'line_uom': False,
+                'product_uom': False,
+                'discount': 0.0,
+            }]
+
+        for line in direct_children_lines:
+            result.append({
+                'name': line.name,
+                'taxes': [tax.tax_label for tax in line.tax_ids if tax.tax_label],
+                'price_subtotal': line.price_subtotal,
+                'price_total': line.price_total,
+                'display_type': line.display_type,
+                'quantity': line.quantity,
+                'line_uom': line.product_uom_id,
+                'product_uom': line.product_id.uom_id,
+                'discount': line.discount,
+            })
 
         for subsection_line in subsection_lines:
             lines_in_subsection = children_lines.filtered(lambda l: l.parent_id == subsection_line)
@@ -3575,7 +3608,7 @@ class AccountMoveLine(models.Model):
                     for line in subsection_line | lines_for_tax_group:
                         result.append({
                             'name': line.name,
-                            'taxes': tax_labels if line == subsection_line else [],
+                            'taxes': tax_labels if line != subsection_line else [],
                             'price_subtotal': subtotal if line == subsection_line else line.price_subtotal,
                             'price_total': total if line == subsection_line else line.price_total,
                             'display_type': line.display_type,
