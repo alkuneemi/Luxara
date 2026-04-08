@@ -44,7 +44,6 @@ class ScaleDriver(SerialDriver):
     def __init__(self, identifier: str, device: dict):
         super().__init__(identifier, device)
         self.device_type = "scale"
-        self.device_manufacturer = "Toledo"
         self._actions["read_once"] = self._read_once
 
     def _read_once(self, _):
