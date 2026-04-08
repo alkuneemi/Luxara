@@ -151,6 +151,8 @@ class AccountMove(models.Model):
         readonly=False,
     )
 
+    original_invoice_credited = fields.Char(string='Original Invoice Credited', readonly=False, store=True)
+
     def _auto_init(self):
         # Create compute stored field l10n_es_edi_facturae_reason_code and
         # l10n_es_payment_means here to avoid timeout error on large databases.
@@ -245,13 +247,7 @@ class AccountMove(models.Model):
     def _l10n_es_edi_facturae_get_corrective_data(self):
         self.ensure_one()
         if self.move_type.endswith('refund'):
-            if not self.reversed_entry_id:
-                raise UserError(_("The credit note/refund appears to have been issued manually. For the purpose of "
-                                  "generating a Facturae document, it's necessary that the credit note/refund is created "
-                                  "directly from the associated invoice/bill."))
-
-            refunded_invoice = self.env['account.move'].browse(self._l10n_es_edi_facturae_get_refunded_invoices()[self.id])
-            tax_period = refunded_invoice._l10n_es_edi_facturae_get_tax_period()
+            refunded_invoice = self.env['account.move'].browse(self._l10n_es_edi_facturae_get_refunded_invoices()[self.id]).name or self.original_invoice_credited
 
             reason_code = self.l10n_es_edi_facturae_reason_code or '10'
             reason_description = SPANISH_CREDIT_REASON_TYPE[reason_code]
@@ -260,8 +256,8 @@ class AccountMove(models.Model):
                 'ReasonCode': reason_code,
                 'Reason': reason_description,
                 'TaxPeriod': {
-                    'StartDate': tax_period.get('start'),
-                    'EndDate': tax_period.get('end'),
+                    'StartDate': self.l10n_es_invoicing_period_start_date,
+                    'EndDate': self.l10n_es_invoicing_period_end_date,
                 }
             }
         return {}
@@ -557,7 +553,11 @@ class AccountMove(models.Model):
             'Invoices': [invoice_values],
         }
 
-        if self.l10n_es_invoicing_period_start_date and self.l10n_es_invoicing_period_end_date:
+        if (
+            not self.is_refund()
+            and self.l10n_es_invoicing_period_start_date
+            and self.l10n_es_invoicing_period_end_date
+        ):
             template_values['Invoices'][0]['InvoiceIssueData']['InvoicingPeriod'] = {
                 'StartDate': self.l10n_es_invoicing_period_start_date,
                 'EndDate': self.l10n_es_invoicing_period_end_date,
@@ -916,3 +916,12 @@ class AccountMove(models.Model):
                 **self.action_invoice_download_facturae(),
             })
         return print_items
+
+    # EXTENDS account_move
+    def _reverse_moves(self, default_values_list=None, cancel=False):
+        default_values_list = list(default_values_list or [{} for _move in self])
+        for move, vals in zip(self, default_values_list):
+            vals.setdefault('original_invoice_credited', move.name or False)
+            vals.setdefault('l10n_es_invoicing_period_start_date', move._l10n_es_edi_facturae_get_tax_period()['start'] or False)
+            vals.setdefault('l10n_es_invoicing_period_end_date', move._l10n_es_edi_facturae_get_tax_period()['end'] or False)
+        return super()._reverse_moves(default_values_list=default_values_list, cancel=cancel)

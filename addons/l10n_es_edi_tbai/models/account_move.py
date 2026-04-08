@@ -8,6 +8,8 @@ from markupsafe import Markup
 from odoo import _, api, fields, models
 from odoo.exceptions import LockError, UserError
 
+from lxml import etree
+
 TBAI_REFUND_REASONS = [
     ('R1', "R1: Art. 80.1, 80.2, 80.6 and rights founded error"),
     ('R2', "R2: Art. 80.3"),
@@ -75,12 +77,18 @@ class AccountMove(models.Model):
         "Valor Añadido. Artículo 80. Modificación de la base imponible.",
         copy=False,
     )
+    l10n_es_tbai_original_invoice_date = fields.Date(
+        string="Original Invoice Date (TicketBAI)",
+        copy=False,
+    )
     l10n_es_tbai_reversed_ids = fields.Many2many(
         'account.move', 'account_move_tbai_reversed_moves', 'refund_id', 'reversed_move_id',
         string="Refunded Vendor Bills",
         domain="[('move_type', '=', 'in_invoice'), ('commercial_partner_id', '=', commercial_partner_id)]",
         help="In the case where a vendor refund has multiple original invoices, you can set them here. ",
     )
+
+    original_invoice_credited = fields.Char(string='Original Invoice Credited', readonly=False, store=True)
 
     # -------------------------------------------------------------------------
     # API-DECORATED & EXTENDED METHODS
@@ -314,12 +322,14 @@ class AccountMove(models.Model):
         }
 
     def _l10n_es_tbai_get_credit_note_values(self):
+        reversed_entry = self.reversed_entry_id
+        fallback_refunded_name = self.original_invoice_credited
         return {
             'is_refund': self.move_type == 'out_refund',
             'refund_reason': self.l10n_es_tbai_refund_reason,
-            'refunded_doc': self.reversed_entry_id.l10n_es_tbai_post_document_id,
-            'refunded_doc_invoice_date': self.reversed_entry_id.invoice_date if self.reversed_entry_id else False,
-            'refunded_name': self.reversed_entry_id.name if self.reversed_entry_id else False,
+            'refunded_doc': reversed_entry.l10n_es_tbai_post_document_id,
+            'refunded_doc_invoice_date': reversed_entry.invoice_date if reversed_entry else self.l10n_es_tbai_original_invoice_date,
+            'refunded_name': reversed_entry.name if reversed_entry else fallback_refunded_name,
         }
 
     def _l10n_es_tbai_get_vendor_bill_values_batuz(self):
@@ -387,3 +397,46 @@ class AccountMove(models.Model):
         if self.l10n_es_tbai_is_required:
             return True
         return super()._refunds_origin_required()
+
+    # EXTENDS base
+    @api.model
+    def _get_view(self, view_id=None, view_type='form', **options):
+        arch, view = super()._get_view(view_id=view_id, view_type=view_type, **options)
+
+        if view_type == 'form':
+            new_fields_xml = [
+                etree.Element('field', {'name': 'original_invoice_credited',
+                                        'invisible': 'move_type not in ["out_refund", "in_refund"] or reversed_entry_id',
+                                        'required': 'country_code =="ES" and (move_type in ["out_refund", "in_refund"] or not reversed_entry_id)'}),
+                etree.Element('field', {'name': 'l10n_es_tbai_refund_reason',
+                                        'invisible': 'country_code != "ES" or move_type not in ["out_refund", "in_refund"]'}),
+                etree.Element('field', {'name': 'l10n_es_tbai_original_invoice_date',
+                                        'invisible': 'move_type not in ["out_refund", "in_refund"] or reversed_entry_id',
+                                        'readonly': 'state != "draft"'}),
+            ]
+
+            existing_fields = arch.xpath("//field/@name")
+
+            fields_to_add = [field for field in new_fields_xml if field.get('name') not in existing_fields]
+
+            if fields_to_add:
+                target_group = arch.xpath("//group[@name='l10n_es_spanish_electronic_invoicing']")
+
+                if target_group:
+                    for field in fields_to_add:
+                        target_group[0].append(field)
+                else:
+                    anchor = arch.xpath("//page[@name='other_info']//group[@name='sale_info_group']")
+
+                    if anchor:
+                        new_group = etree.Element('group', {
+                            'string': 'Spanish Electronic Invoicing',
+                            'name': 'l10n_es_spanish_electronic_invoicing',
+                            'invisible': "country_code != 'ES'"
+                        })
+                        for field in fields_to_add:
+                            new_group.append(field)
+
+                        anchor[0].addnext(new_group)
+
+        return arch, view
