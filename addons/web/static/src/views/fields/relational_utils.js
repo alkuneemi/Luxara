@@ -628,6 +628,7 @@ export function useOpenMany2XRecord({
     resModel,
     onRecordSaved,
     onRecordDiscarded,
+    onRecordRemoved,
     fieldString,
     activeActions,
     isToMany,
@@ -639,7 +640,7 @@ export function useOpenMany2XRecord({
     const orm = useService("orm");
 
     return async function openDialog(
-        { resId = false, forceModel = null, title, context, nextRecordsContext },
+        { resId = false, forceModel = null, title, removeRecord, context, nextRecordsContext },
         immediate = false
     ) {
         const model = forceModel || resModel;
@@ -672,6 +673,7 @@ export function useOpenMany2XRecord({
                 viewId,
                 onRecordSaved,
                 onRecordDiscarded,
+                removeRecord: removeRecord ?? onRecordRemoved,
                 isToMany,
                 size,
             },
@@ -914,6 +916,7 @@ export function useOpenX2ManyRecord({
     updateRecord,
     saveRecord,
     isMany2Many,
+    Dialog = X2ManyFieldDialog,
 }) {
     const viewService = useService("view");
     const env = useEnv();
@@ -968,7 +971,7 @@ export function useOpenX2ManyRecord({
         };
 
         addDialog(
-            X2ManyFieldDialog,
+            Dialog,
             {
                 config: env.config,
                 archInfo,
