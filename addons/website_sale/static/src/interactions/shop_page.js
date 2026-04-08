@@ -21,6 +21,7 @@ export class ShopPage extends Interaction {
         },
         '.o_wsale_attribute_search_bar': { 't-on-input': this.searchAttributeValues },
         '.o_wsale_view_more_btn': { 't-on-click': this.onToggleViewMoreLabel },
+        '.o_wsale_apply_filters_btn': {'t-on-click': this._onApplyFiltersClick },
     };
 
     setup() {
@@ -47,12 +48,63 @@ export class ShopPage extends Interaction {
      *
      * @param {Event} ev
      */
-    onChangeAttribute(ev) {
-        const productGrid = this.el.querySelector('.o_wsale_products_grid_table_wrapper');
-        if (productGrid) {
-            productGrid.classList.add('opacity-50');
-        }
+    async onChangeAttribute(ev) {
         const form = ev.currentTarget.closest('form');
+        const searchParams = this._getSearchParams(form);
+        const url = new URL(form.action);
+
+        const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
+        if (isOffcanvas) {
+            const offcanvas = document.querySelector('.o_website_offcanvas');
+
+            const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+            const data = await response.text();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data;
+
+            const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas').innerHTML;
+            this.services['public.interactions'].stopInteractions(this.el);
+            offcanvas.innerHTML = newOffcanvas;
+            this.services['public.interactions'].startInteractions(this.el);
+
+            const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
+            searchParams.set('is_ajax_count', 'true');
+            const counResponse = await fetch(`${url.pathname}?${searchParams.toString()}`);
+            const countData = await counResponse.json();
+            if (applyBtn) {
+                applyBtn.textContent = `Apply Filters (${countData.count})`;
+            }
+        }
+        else {
+            const productGrid = this.el.querySelector('.o_wsale_products_grid_table_wrapper');
+            if (productGrid) {
+                productGrid.classList.add('opacity-50');
+            }
+
+            redirect(`${url.pathname}?${searchParams.toString()}`);
+        }
+    }
+
+    async _onApplyFiltersClick(ev) {
+        ev.preventDefault();
+        const form = document.querySelector('#o_wsale_offcanvas form.js_attributes');
+        const searchParams = this._getSearchParams(form);
+        const url = new URL(form.action);
+
+        const range = document.querySelector('#o_wsale_offcanvas input[type="range"]');
+
+        if (range) {
+            if (range.valueLow !== undefined) {
+                searchParams.set("min_price", range.valueLow);
+            }
+            if (range.valueHigh !== undefined) {
+                searchParams.set("max_price", range.valueHigh);
+            }
+        }
+        redirect(`${url.pathname}?${searchParams.toString()}`);
+    }
+
+    _getSearchParams(form) {
         const filters = form.querySelectorAll('input:checked, select');
         const attributeValues = new Map();
         const tags = new Set();
@@ -80,7 +132,7 @@ export class ShopPage extends Interaction {
         if (tags.size) {
             searchParams.set('tags', [...tags].join(','));
         }
-        redirect(`${url.pathname}?${searchParams.toString()}`);
+        return searchParams;
     }
 
     /**

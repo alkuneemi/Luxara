@@ -824,7 +824,7 @@
         name="Product Attribute Filters Form"
     >
         <form
-            t-attf-class="js_attributes {{('accordion accordion-flush d-flex flex-column ' + ('border-bottom' if attributes else '')) if isMobile else 'position-relative mb-2'}}"
+            t-attf-class="product_attribute_filters_form js_attributes {{('accordion accordion-flush d-flex flex-column ' + ('border-bottom' if attributes else '')) if isMobile else 'position-relative mb-2'}}"
             method="get"
             t-att-action="keep(attribute_values=0, tags=0)"
         >
@@ -954,20 +954,7 @@
     <template id="website_sale.o_wsale_offcanvas" name="Offcanvas">
         <aside id="o_wsale_offcanvas"
                class="o_website_offcanvas offcanvas offcanvas-end p-0">
-            <div class="offcanvas-header justify-content-end">
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"/>
-            </div>
-            <div
-                t-if="is_view_active('website_sale.search') and (opt_wsale_attributes or opt_wsale_attributes_top)"
-                class="offcanvas-body flex-grow-0 overflow-visible"
-            >
-                <t t-if="category" t-set="placeholder" t-valuef.translate="Search in {{category.name}}"/>
-                <t t-call="website_sale.search"
-                    placeholder="placeholder"
-                    search="original_search or search"
-                    _s_searchbar_autocomplete_classes.f="bg-primary"/>
-            </div>
-            <div id="o_wsale_offcanvas_content" class="accordion accordion-flush flex-grow-1 overflow-auto">
+            <div id="o_wsale_offcanvas_content" class="o_wsale_offcanvas_content accordion accordion-flush flex-grow-1 overflow-auto">
                 <!-- Show sorting only if it's not avavailbe in the topbar already -->
                 <div t-if="not is_view_active('website_sale.sort')" class="accordion-item">
                     <t t-if="isSortingBy" t-set="isSortingBy" t-value="isSortingBy[0][1]"/>
@@ -1043,13 +1030,21 @@
                    _classes_title.f="ms-n1 pt-3 pb-2"
                    isOffcanvas="True"/>
             </div>
-            <div class="offcanvas-body d-flex justify-content-between flex-grow-0 border-top overflow-hidden">
-                <a t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags) and 'disabled' }}"
+            <div class="offcanvas-body d-flex flex-column flex-grow-0 overflow-hidden">
+                <a t-attf-class="btn btn-link w-100 py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags) and 'disabled text-muted' or 'text-dark'}}"
                    t-att-aria-disabled="(not attrib_values and not isFilteringByPrice and not tags) and 'true' or 'false'"
                    t-att-href="keep(attribute_values=0, tags=0, min_price=0, max_price=0)"
                    title="Clear Filters">
                     Clear Filters
                 </a>
+                <button
+                    id="o_wsale_apply_filters_btn"
+                    class="o_wsale_apply_filters_btn btn btn-primary w-100"
+                    type="button"
+                    data-bs-dismiss="offcanvas"
+                >
+                    Apply Filters
+                </button>
             </div>
         </aside>
     </template>
