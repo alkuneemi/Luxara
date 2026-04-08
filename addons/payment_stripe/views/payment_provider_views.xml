@@ -16,7 +16,7 @@
                             name="action_start_onboarding"
                             class="btn-primary"
                             colspan="2"
-                            invisible="state == 'enabled'"
+                            invisible="is_test == False"
                         />
                     </div>
                 </header>

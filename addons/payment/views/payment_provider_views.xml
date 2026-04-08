@@ -79,7 +79,7 @@
                         name="web_ribbon"
                         title="Test Mode"
                         bg_color="text-bg-warning"
-                        invisible="module_state != 'installed' or is_test == 'False'"
+                        invisible="module_state != 'installed' or is_test == False"
                     />
                     <div class="oe_title">
                         <h1><field name="name" placeholder="Name"/></h1>
@@ -110,13 +110,13 @@
                                 link="False"
                                 unlink="False"
                             >
-                                <list limit="5">
+                                <list limit="500">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="name"/>
-                                    <field name="active" widget="boolean_toggle"/>
-                                    <field name="supported_country_ids" widget="many2many_tags"/>
-                                    <field name="supported_currency_ids" widget="many2many_tags"/>
-                                    <field name="brand_ids" domain="[('active','=', True)]" widget="many2many_image_tags"/>
+                                    <field name="name" nolabel="1"/>
+                                    <field name="active" widget="boolean_toggle" width="30" nolabel="1"/>
+                                    <field name="supported_country_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
+                                    <field name="supported_currency_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
+                                    <field name="brand_ids" class="o_brand_ids" domain="[('active','=', True)]" widget="many2many_image_tags" nolabel="1"/>
                                 </list>
                             </field>
                         </page>
@@ -255,7 +255,6 @@
                             </div>
                             <footer>
                                 <button t-if="!installed and !selection_mode and !to_buy" type="object" class="btn btn-sm btn-primary ms-auto" name="button_immediate_install">Install</button>
-                                <button t-if="installed and !selection_mode" type="open" class="btn btn-sm btn-secondary ms-auto">Activate</button> <!--some clause so it wouldn't always show the activate button-->
                                 <button t-if="!installed and to_buy" href="https://odoo.com/pricing?utm_source=db&amp;utm_medium=module" target="_blank" class="btn btn-sm btn-primary ms-auto">Upgrade</button>
                             </footer>
                         </main>

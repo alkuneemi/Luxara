@@ -18,7 +18,6 @@
                             string="Generate Client Key"
                             type="object"
                             name="action_update_merchant_details"
-                            invisible="state == 'disabled'"
                             class="oe_link"
                             icon="fa-refresh"
                         />
@@ -37,14 +36,14 @@
                             name="action_authorize_create_webhook"
                             type="object"
                             class="btn-primary"
-                            invisible="authorize_webhook_id or state == 'disabled'"
+                            invisible="authorize_webhook_id"
                         />
                         <button
                             string="Re-generate Your Webhook"
                             name="action_authorize_create_webhook"
                             type="object"
                             class="btn-secondary"
-                            invisible="not authorize_webhook_id or state == 'disabled'"
+                            invisible="not authorize_webhook_id"
                         />
                     </div>
                 </group>
@@ -54,7 +53,7 @@
                     string="Set Account Currency"
                     type="object"
                     name="action_update_merchant_details"
-                    invisible="code != 'authorize' or state == 'disabled'"
+                    invisible="code != 'authorize'"
                     icon="fa-refresh"
                     class="oe_link"
                 />
