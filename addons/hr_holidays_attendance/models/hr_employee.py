@@ -6,15 +6,17 @@ from odoo import models
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
-    def _get_deductible_employee_overtime(self):
+    def _get_deductible_employee_overtime(self, compensable_as_leave=True):
         # return dict {employee: number of hours}
         diff_by_employee = defaultdict(lambda: 0)
+        domain = [
+            ('employee_id', 'in', self.ids),
+            ('status', '=', 'approved'),
+        ]
+        if compensable_as_leave:
+            domain += [('compensable_as_leave', '=', True)]
         for employee, hours in self.env['hr.attendance.overtime.line'].sudo()._read_group(
-            domain=[
-                ('compensable_as_leave', '=', True),
-                ('employee_id', 'in', self.ids),
-                ('status', '=', 'approved'),
-            ],
+            domain=domain,
             groupby=['employee_id'],
             aggregates=['manual_duration:sum'],
         ):
