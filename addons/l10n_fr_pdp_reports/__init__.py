@@ -9,7 +9,6 @@ def post_init_hook(env):
     Company = env['res.company']
 
     companies = Company.search([
-        ('account_fiscal_country_id', '=', 'FR'),
-        ('l10n_fr_pdp_send_to_ppf', '=', True),
+        ('l10n_fr_f10_enable_reporting', '=', True),
     ])
     companies._l10n_fr_pdp_ensure_journal()

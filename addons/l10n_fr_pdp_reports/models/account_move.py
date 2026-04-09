@@ -67,7 +67,7 @@ class AccountMove(models.Model):
         string="PDP Note PAI",
         help="PAI note content for Flux 10.1 (TT-26/TT-27).",
     )
-    l10n_fr_pdp_display_info = fields.Boolean(related='company_id.l10n_fr_pdp_send_to_ppf')
+    l10n_fr_pdp_display_info = fields.Boolean(related='company_id.l10n_fr_f10_enable_reporting')
 
     # -------------------------------------------------------------------------
     # Compute Methods

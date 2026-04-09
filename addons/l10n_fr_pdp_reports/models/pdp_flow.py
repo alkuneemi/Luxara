@@ -581,7 +581,7 @@ class PdpFlow(models.Model):
 
     def _get_pdp_proxy_user(self):
         self.ensure_one()
-        proxy_user = self.company_id.pdp_edi_user
+        proxy_user = self.company_id.account_peppol_edi_user
         if not proxy_user:
             raise UserError(_(
                 "No active PDP proxy user is configured for company %(company)s.",
@@ -601,15 +601,15 @@ class PdpFlow(models.Model):
             'ubl': payload_value,
             'external_ref': self.tracking_id,
         }
-        if not proxy_user:
-            # Keep local test runs deterministic without requiring a remote proxy setup.
-            return {
-                'id': str(uuid.uuid4()),
-                'flow_id': self.tracking_id,
-                'status': 'DRAFT',
-                'message': _("PDP proxy mocked in test mode."),
-                'acknowledgement': [],
-            }
+        # if not proxy_user:
+        #     # Keep local test runs deterministic without requiring a remote proxy setup.
+        #     return {
+        #         'id': str(uuid.uuid4()),
+        #         'flow_id': self.tracking_id,
+        #         'status': 'DRAFT',
+        #         'message': _("PDP proxy mocked in test mode."),
+        #         'acknowledgement': [],
+        #     }
         result = proxy_user._call_pdp_proxy('/api/pdp/1/send_document', {
             'documents': [payload_doc],
         })
@@ -789,7 +789,7 @@ class PdpFlow(models.Model):
     @api.model
     def _cron_sync_transport_statuses(self):
         """Poll proxy message states and synchronize flow transport statuses."""
-        companies = self.env['res.company'].search([('l10n_fr_pdp_send_to_ppf', '=', True)])
+        companies = self.env['res.company'].search([('l10n_fr_f10_enable_reporting', '=', True)])
         if not companies:
             return True
 
@@ -858,7 +858,7 @@ class PdpFlow(models.Model):
         """Cron job to send ready flows within their send window."""
         today = fields.Date.context_today(self)
         companies = self.env['res.company'].search([
-            ('l10n_fr_pdp_send_to_ppf', '=', True),
+            ('l10n_fr_f10_enable_reporting', '=', True),
             ('l10n_fr_pdp_send_mode', '=', 'auto'),
         ])
         if not companies:

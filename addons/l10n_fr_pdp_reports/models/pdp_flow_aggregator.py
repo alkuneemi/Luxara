@@ -22,7 +22,9 @@ class PdpFlowAggregator(models.AbstractModel):
     @api.model
     def _cron_generate_daily_flows(self):
         """Cron job to generate PDP flows for all enabled companies."""
-        companies = self.env['res.company'].search([('l10n_fr_pdp_send_to_ppf', '=', True)])
+        companies = self.env['res.company'].search([
+            ('l10n_fr_f10_enable_reporting', '=', True),
+        ])
         for company in companies:
             _logger.info('Running PDP flow aggregation cron for company %s', company.id)
             try:

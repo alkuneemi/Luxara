@@ -30,7 +30,7 @@ class AccountPartialReconcile(models.Model):
                 continue
             if invoice.state != 'posted':
                 continue
-            if not invoice.company_id.l10n_fr_pdp_send_to_ppf or invoice.company_id.country_code != 'FR':
+            if not invoice.company_id.l10n_fr_f10_enable_reporting:
                 continue
             if not invoice._get_l10n_fr_pdp_transaction_type():
                 continue

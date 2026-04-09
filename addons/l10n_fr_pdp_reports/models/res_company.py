@@ -46,13 +46,28 @@ class ResCompany(models.Model):
         help="Choose whether the sending cron dispatches ready flows automatically.",
         required=True,
     )
+    l10n_fr_f10_enable_reporting = fields.Boolean(
+        string="Enable Flux 10 Reporting",
+        compute='_compute_l10n_fr_f10_enable_reporting',
+        store=True,
+        readonly=True,
+    )
+
+    @api.depends('l10n_fr_pdp_send_to_ppf', 'country_code', 'account_edi_proxy_client_ids')
+    def _compute_l10n_fr_f10_enable_reporting(self):
+        for company in self:
+            company.l10n_fr_f10_enable_reporting = (
+                company.l10n_fr_pdp_send_to_ppf
+                and company.country_code == 'FR'
+                and company.account_peppol_edi_user
+            )
 
     def _l10n_fr_pdp_ensure_journal(self):
         """Create the e-reporting journal for each FR company with PDP enabled."""
         Journal = self.env['account.journal']
 
         for company in self:
-            if company.country_code != 'FR' or not company.l10n_fr_pdp_send_to_ppf:
+            if company.l10n_fr_f10_enable_reporting:
                 continue
 
             existing = Journal.search([
@@ -74,7 +89,7 @@ class ResCompany(models.Model):
     def create(self, vals_list):
         companies = super().create(vals_list)
         for company in companies:
-            if company.country_code == 'FR' and company.l10n_fr_pdp_send_to_ppf:
+            if company.l10n_fr_f10_enable_reporting:
                 company._l10n_fr_pdp_ensure_journal()
         return companies
 
@@ -82,7 +97,7 @@ class ResCompany(models.Model):
         res = super().write(vals)
 
         if 'l10n_fr_pdp_send_to_ppf' in vals:
-            enabled = self.filtered(lambda c: c.l10n_fr_pdp_send_to_ppf and c.country_code == 'FR')
+            enabled = self.filtered(lambda c: c.l10n_fr_f10_enable_reporting)
             enabled._l10n_fr_pdp_ensure_journal()
 
         return res
