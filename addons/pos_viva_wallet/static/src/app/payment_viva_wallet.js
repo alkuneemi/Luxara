@@ -76,10 +76,11 @@ export class PaymentVivaWallet extends PaymentInterface {
         }
 
         line.uiState.vivaSessionId = order.uuid + " - " + uuidv4();
+        const cashRegisterId = this.pos.get_cashier()?.name || this.pos.config.name;
         var data = {
             sessionId: line.uiState.vivaSessionId,
             terminalId: line.payment_method_id.viva_wallet_terminal_id,
-            cashRegisterId: this.pos.get_cashier().name,
+            cashRegisterId,
             amount: roundPrecision(line.amount * 100),
             currencyCode: this.pos.currency.iso_numeric.toString(),
             merchantReference: line.uiState.vivaSessionId + "/" + this.pos.session.id,
@@ -102,9 +103,10 @@ export class PaymentVivaWallet extends PaymentInterface {
         super.send_payment_cancel(...arguments);
         const line = order.get_paymentline_by_uuid(uuid);
 
+        const cashRegisterId = this.pos.get_cashier()?.name || this.pos.config.name;
         var data = {
             sessionId: line.uiState.vivaSessionId,
-            cashRegisterId: this.pos.get_cashier().name,
+            cashRegisterId,
         };
         return this._call_viva_wallet(data, "viva_wallet_send_payment_cancel", line).then(
             (data) => {
