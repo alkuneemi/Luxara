@@ -257,7 +257,7 @@ class ProductProduct(models.Model):
                 elif cost_method == 'average':
                     std_prices, total_values = products_to_value._run_average_batch(at_date=at_date)
                 else:
-                    std_prices, total_values = products_to_value._run_fifo_batch(at_date=at_date)
+                    std_prices, total_values = products._run_fifo_batch_for_products(at_date=at_date)
 
                 std_price_by_product_id.update(std_prices)
                 total_value_by_product_id.update(total_values)
@@ -529,22 +529,18 @@ class ProductProduct(models.Model):
 
         return std_price_by_product_id, value_by_product_id
 
-    def _run_fifo(self, quantity, lot=None, at_date=None, location=None):
-        """ Returns the value for the next outgoing product base on the qty give as argument."""
-        self.ensure_one()
+    def _get_fifo_cost(self, fifo_stack, quantity, at_date, qty_on_first_move=0):
         if self.uom_id.compare(quantity, 0) <= 0:
             if at_date:
                 last_in = self._get_last_in(at_date)
                 return quantity * (last_in._get_price_unit() if last_in else self.standard_price)
             return quantity * self.standard_price
-        external_location = location and location.is_valued_external
 
         fifo_cost = 0
-        fifo_stack, qty_on_first_move = self._run_fifo_get_stack(lot=lot, at_date=at_date, location=location)
         last_move = False
-        # Going up to get the quantity in the argument
-        while quantity > 0 and fifo_stack:
-            move = fifo_stack.pop(0)
+        for move in fifo_stack:
+            if quantity <= 0:
+                break
             last_move = move
             move_value = move.value
             if at_date:
@@ -562,6 +558,7 @@ class ProductProduct(models.Model):
                 in_qty = quantity
             fifo_cost += in_value
             quantity -= in_qty
+
         # When we required more quantity than available we extrapolate with the last known price
         if quantity > 0:
             if last_move and last_move.quantity:
@@ -570,29 +567,153 @@ class ProductProduct(models.Model):
                 fifo_cost += quantity * self.standard_price
         return fifo_cost
 
-    def _run_fifo_get_stack(self, lot=None, at_date=None, location=None):
-        # TODO: return a list of tuple (move, valued_qty) instead
+    def _run_fifo_batch_for_lots(self, lots, qty_by_lot_id, at_date=None, location=None):
+        self = self.with_context(move_valued_qty_cache={}) # noqa: PLW0642
+        fifo_value_by_lot = defaultdict(int)
+        lot_ids_to_process = []
+        for lot in lots:
+            quantity = qty_by_lot_id[lot.id]
+            if lot.product_id.uom_id.compare(quantity, 0) <= 0:
+                if at_date:
+                    last_in = lot.product_id._get_last_in(at_date)
+                    fifo_value = quantity * (last_in._get_price_unit() if last_in else lot.product_id.standard_price)
+                else:
+                    fifo_value = quantity * lot.product_id.standard_price
+                fifo_value_by_lot[lot.id] = fifo_value
+            else:
+                lot_ids_to_process.append(lot.id)
+
+        fifo_stack_by_lot = self._run_fifo_get_stack_for_lots(self.env['stock.lot'].browse(lot_ids_to_process), at_date=at_date, location=location)
+
+        for lot in self.env['stock.lot'].browse(lot_ids_to_process):
+            fifo_stack, qty_on_first_move = fifo_stack_by_lot[lot.id]
+            fifo_value = lot.product_id._get_fifo_cost(fifo_stack, qty_by_lot_id[lot.id], at_date=at_date, qty_on_first_move=qty_on_first_move)
+            fifo_value_by_lot[lot.id] = fifo_value
+        return fifo_value_by_lot
+
+    def _run_fifo_batch_for_products(self, qty_by_product_id=None, at_date=None, location=None):
+        std_price_by_product_id = {}
+        value_by_product_id = {}
+        fifo_stack_by_product = self._run_fifo_get_stack_for_products(already_processed_qty_by_product_id=defaultdict(int), at_date=at_date, location=location)
+
+        for product in self:
+            quantity = product.qty_available if not qty_by_product_id else qty_by_product_id[product.id]
+            fifo_stack, qty_on_first_move = fifo_stack_by_product[product.id]
+            fifo_cost = product._get_fifo_cost(fifo_stack, quantity, at_date, qty_on_first_move)
+            std_price = fifo_cost / quantity if quantity else 0
+            std_price_by_product_id[product.id] = std_price
+            value_by_product_id[product.id] = fifo_cost
+        return std_price_by_product_id, value_by_product_id
+
+    def _run_fifo(self, quantity, lot=None, at_date=None, location=None):
+        """ Returns the value for the next outgoing product base on the qty give as argument."""
+        self.ensure_one()
+        if self.uom_id.compare(quantity, 0) <= 0:
+            if at_date:
+                last_in = self._get_last_in(at_date)
+                return quantity * (last_in._get_price_unit() if last_in else self.standard_price)
+            return quantity * self.standard_price
+
+        fifo_stack, qty_on_first_move = self._run_fifo_get_stack(lot=lot, at_date=at_date, location=location)
+        # Going up to get the quantity in the argument
+        return self._get_fifo_cost(fifo_stack, quantity, at_date, qty_on_first_move)
+
+    def _get_moves_by_lots_with_limit(self, lots, moves_domain, limit=100, offset=0):
+        """
+        Fetches stock moves associated with specific lots, applying limits per group.
+
+        :param lots: Recordset of `stock.lot` to fetch moves for.
+        :type lots: recordset
+        :param moves_domain: search domain list used to filter the `stock.move` records.
+        :type moves_domain: list
+        :param limit: Maximum number of stock moves to fetch per lot.
+        :type limit: int, optional
+        :param offset: Number of records to skip for pagination.
+        :type offset: int, optional
+        :return: A dictionary mapping lot IDs to their corresponding `stock.move` recordset,
+                 sorted by date and ID in descending order.
+        :rtype: defaultdict
+        """
+        lots.flush_recordset()
+        self.env['stock.move.line'].flush_model()
+
+        StockMove, StockLot, StockMoveLine = self.env['stock.move'], self.env['stock.lot'], self.env['stock.move.line']
+        moves_identifier, lots_identifier = StockMove._field_to_sql(StockMove._table, 'id'), StockLot._field_to_sql(StockLot._table, 'id')
+        move_line_move_id, move_line_lot_id = StockMoveLine._field_to_sql(StockMoveLine._table, 'move_id'), StockMoveLine._field_to_sql(StockMoveLine._table, 'lot_id')
+        move_product_id, lot_product_id = StockMove._field_to_sql(StockMove._table, 'product_id'), StockLot._field_to_sql(StockLot._table, 'product_id')
+
+        move_line_query = StockMoveLine._search([], limit=1)
+        moves_query = StockMove._search(moves_domain, limit=limit, offset=offset, order='date desc, id desc')
+        lots_query = StockLot._search([('id', 'in', lots.ids)])
+
+        move_lines_condition = SQL('%s = %s AND %s = %s', move_line_lot_id, lots_identifier, move_line_move_id, moves_identifier)
+        move_line_query.add_where(move_lines_condition)
+        moves_condition = SQL(SQL('%s = %s AND EXISTS %s', move_product_id, lot_product_id, move_line_query.subselect()))
+        moves_query.add_where(moves_condition)
+
+        lots_query = lots_query.select('id', SQL('ARRAY(%s)', moves_query.subselect('id')))
+
+        result = self.env.execute_query(lots_query)
+
+        moves_by_lot_id = defaultdict(lambda: self.env['stock.move'])
+        prefetch_ids = []
+        for lot_id, move_ids in result:
+            moves_by_lot_id[lot_id] = self.env['stock.move'].browse(move_ids).sorted('date desc, id desc')
+            prefetch_ids.extend(move_ids)
+
+        for lot_id in moves_by_lot_id:
+            moves_by_lot_id[lot_id] = moves_by_lot_id[lot_id].with_prefetch(prefetch_ids)
+
+        return moves_by_lot_id
+
+    def _get_moves_by_products_with_limit(self, moves_domain, limit=100, offset=0):
+        """
+        Fetches stock moves associated with the current products (`self`), applying limits per group.
+
+        :param moves_domain: search domain list used to filter the `stock.move` records.
+        :type moves_domain: list
+        :param limit: Maximum number of stock moves to fetch per product.
+        :type limit: int, optional
+        :param offset: Number of records to skip for pagination.
+        :type offset: int, optional
+        :return: A dictionary mapping product IDs to their corresponding `stock.move` recordset,
+                 sorted by date and ID in descending order.
+        :rtype: defaultdict
+        """
+
+        self.flush_recordset()
+        self.env['stock.move'].flush_model()
+
+        StockMove, Product = self.env['stock.move'], self.env['product.product']
+        products_identifier = StockMove._field_to_sql(Product._table, 'id')
+        move_product_id = StockMove._field_to_sql(StockMove._table, 'product_id')
+
+        moves_query = StockMove._search(moves_domain, limit=limit, offset=offset, order='date desc, id desc')
+        products_query = Product._search([('id', 'in', self.ids)])
+
+        moves_condition = SQL("%s = %s", move_product_id, products_identifier)
+        moves_query.add_where(moves_condition)
+        products_query = products_query.select(products_identifier, SQL('ARRAY(%s)', moves_query.subselect('id')))
+        result = self.env.execute_query(products_query)
+
+        moves_by_product_id = defaultdict(lambda: self.env['stock.move'])
+        prefetch_ids = []
+        for product_id, moves in result:
+            moves_by_product_id[product_id] = self.env['stock.move'].browse(moves).sorted('date desc, id desc')
+            prefetch_ids.extend(moves)
+
+        for product_id in moves_by_product_id:
+            moves_by_product_id[product_id] = moves_by_product_id[product_id].with_prefetch(prefetch_ids)
+
+        return moves_by_product_id
+
+    def _get_fifo_moves_domain(self, at_date, location):
         external_location = location and location.is_valued_external
-        fifo_stack = []
-        fifo_stack_size = 0
         if location:
             self = self.with_context(location=location.ids)  # noqa: PLW0642
-        if lot:
-            fifo_stack_size = lot.product_qty
-        else:
-            fifo_stack_size = self._with_valuation_context().with_context(to_date=at_date).qty_available
-        if self.env.context.get('fifo_qty_already_processed'):
-            # When validating multiple moves at the same time, the qty_available won't be up to date yet
-            fifo_stack_size -= self.env.context['fifo_qty_already_processed']
-        if self.uom_id.compare(fifo_stack_size, 0) <= 0:
-            return fifo_stack, 0
-
         moves_domain = Domain([
-            ('product_id', '=', self.id),
-            ('company_id', '=', self.env.company.id)
+            ('company_id', '=', self.env.company.id),
         ])
-        if lot:
-            moves_domain &= Domain([('move_line_ids.lot_id', 'in', lot.id)])
         if at_date:
             moves_domain &= Domain([('date', '<=', at_date)])
         if location:
@@ -601,27 +722,178 @@ class ProductProduct(models.Model):
             moves_domain &= Domain([('is_out', '=', True)])
         else:
             moves_domain &= Domain([('is_in', '=', True)])
+        return moves_domain
 
-        # Arbitrary limit as we can't guess how many moves correspond to the qty_available, but avoid fetching all moves at the same time.
-        initial_limit = 100
-        moves_in = self.env['stock.move'].search(moves_domain, order='date desc, id desc', limit=initial_limit)
+    def _process_fifo_stacks_in_batches(self, ids_to_process, uom_by_id, stack_size_by_id, fetch_moves_func):
+        """
+        Processes FIFO stacks for a given set of items in batches.
 
-        remaining_qty_on_first_stack_move = 0
-        current_offset = 0
-        # Go to the bottom of the stack
-        while self.uom_id.compare(fifo_stack_size, 0) > 0 and moves_in:
-            move = moves_in[0]
-            moves_in = moves_in[1:]
-            in_qty = move._get_valued_qty()
-            fifo_stack.append(move)
-            remaining_qty_on_first_stack_move = min(in_qty, fifo_stack_size)
-            fifo_stack_size -= in_qty
-            if self.uom_id.compare(fifo_stack_size, 0) > 0 and not moves_in:
-                # We need to fetch more moves
-                current_offset += 1
-                moves_in = self.env['stock.move'].search(moves_domain, order='date desc, id desc', offset=current_offset * initial_limit, limit=initial_limit)
-        fifo_stack.reverse()
-        return fifo_stack, remaining_qty_on_first_stack_move
+        This generalized helper loops through record IDs (must be an instance of either `product.product` or `stock.lot`) and
+        fetches their stock moves in batches using a provided
+        callback function `fetch_moves_func`.
+
+        :param ids_to_process: List of item IDs (e.g., product or lot IDs) to process.
+        :type ids_to_process: list
+        :param uom_by_id: Dictionary mapping item IDs to their respective Unit of Measure records.
+        :type uom_by_id: dict
+        :param stack_size_by_id: Dictionary mapping item IDs to the remaining quantity
+                                 needed to fulfill their FIFO stack.
+        :type stack_size_by_id: dict
+        :param fetch_moves_func: A callable `fn(ids, limit, offset)` that returns a dictionary
+                                 mapping item IDs to their corresponding `stock.move` recordsets.
+        :type fetch_moves_func: callable
+        :return: A dictionary mapping item IDs to a list containing two elements:
+                 the accumulated FIFO stack (list of `stock.move` records) and the
+                 remaining quantity consumed on the first move in that stack.
+                 Format: ``{item_id: [[stock_moves], remaining_qty_on_first_stack_move]}``
+        :rtype: dict
+        """
+
+        result_by_id = {id: [[], 0] for id in ids_to_process}
+        limit = 100
+        offset = 0
+
+        def _process_fifo_get_stack(uom_id, moves_in, fifo_stack_size):
+            fifo_stack = []
+            remaining_qty_on_first_stack_move = 0
+            for move in moves_in:
+                if uom_id.compare(fifo_stack_size, 0) <= 0:
+                    break
+                in_qty = move._get_valued_qty()
+                fifo_stack.append(move)
+                remaining_qty_on_first_stack_move = min(in_qty, fifo_stack_size)
+                fifo_stack_size -= remaining_qty_on_first_stack_move
+            return fifo_stack, fifo_stack_size, remaining_qty_on_first_stack_move
+
+        while ids_to_process:
+            moves_by_id = fetch_moves_func(ids_to_process, limit, limit * offset)
+            new_ids_to_process = []
+            for item_id in ids_to_process:
+                uom = uom_by_id[item_id]
+                moves = moves_by_id.get(item_id)
+                if not moves:
+                    result_by_id[item_id][0].reverse()
+                    continue
+                new_stack, new_qty, remaining_qty = _process_fifo_get_stack(
+                    uom, moves, stack_size_by_id[item_id],
+                )
+                result_by_id[item_id][0].extend(new_stack)
+                result_by_id[item_id][1] = remaining_qty
+                stack_size_by_id[item_id] = new_qty
+                if uom.compare(new_qty, 0) > 0 and new_stack:
+                    new_ids_to_process.append(item_id)
+                else:
+                    result_by_id[item_id][0].reverse()
+            ids_to_process = new_ids_to_process
+            offset += 1
+        return result_by_id
+
+    def _run_fifo_get_stack_for_lots(self, lots, at_date=None, location=None):
+        """
+        Calculates and retrieves the FIFO stock move stacks
+        for a given set of lots.
+
+        :param lots: Recordset of `stock.lot` to evaluate.
+        :type lots: recordset
+        :param at_date: Optional date up to which the FIFO stack should be computed
+                        (useful for historical inventory valuation).
+        :type at_date: datetime or str, optional
+        :param location: Optional `stock.location` record to restrict the move
+                         search domain to a specific location.
+        :type location: recordset, optional
+        :return: A dictionary mapping lot IDs to a list containing their FIFO stack
+                 (list of `stock.move` records) and the remaining quantity consumed
+                 on the first move in that stack.
+                 Format: ``{lot_id: [[stock_moves], remaining_qty]}``
+        :rtype: dict
+        """
+        domain = self._get_fifo_moves_domain(at_date, location)
+
+        stack_size_by_lot = {lot.id: lot.product_qty for lot in lots}
+        uom_by_lot = {lot.id: lot.product_id.uom_id for lot in lots}
+
+        lot_ids_to_process = [
+            lot.id for lot in lots
+            if uom_by_lot[lot.id].compare(stack_size_by_lot[lot.id], 0) > 0
+        ]
+
+        def fetch_moves(ids, limit, offset):
+            lots_to_process = self.env['stock.lot'].browse(ids)
+            return self._get_moves_by_lots_with_limit(lots_to_process, domain, limit, offset)
+
+        result = self._process_fifo_stacks_in_batches(
+            lot_ids_to_process,
+            uom_by_lot,
+            stack_size_by_lot,
+            fetch_moves,
+        )
+
+        for lot in lots:
+            if lot.id not in result:
+                result[lot.id] = [[], 0]
+        return result
+
+    def _run_fifo_get_stack_for_products(self, already_processed_qty_by_product_id=None, at_date=None, location=None):
+        """
+        Calculates and retrieves the FIFO stock move stacks
+        for a given set of products `self`.
+
+        :param at_date: Optional date up to which the FIFO stack should be computed
+                        (useful for historical inventory valuation).
+        :type at_date: datetime or str, optional
+        :param location: Optional `stock.location` record to restrict the move
+                         search domain to a specific location.
+        :type location: recordset, optional
+        :return: A dictionary mapping lot IDs to a list containing their FIFO stack
+                 (list of `stock.move` records) and the remaining quantity consumed
+                 on the first move in that stack.
+                 Format: ``{product_id: [[stock_moves], remaining_qty]}``
+        :rtype: dict
+        """
+        domain = self._get_fifo_moves_domain(at_date, location)
+        already_processed = already_processed_qty_by_product_id or {}
+        products_with_val = self._with_valuation_context().with_context(to_date=at_date)
+
+        result_by_product = {}
+        stack_size_by_product = {}
+        uom_by_product = {}
+
+        for product in products_with_val:
+            qty = product.qty_available - already_processed.get(product.id, 0)
+            result_by_product[product.id] = [[], 0]
+            stack_size_by_product[product.id] = qty
+            uom_by_product[product.id] = product.uom_id
+
+        product_ids_to_process = [
+            p.id for p in products_with_val
+            if uom_by_product[p.id].compare(stack_size_by_product[p.id], 0) > 0
+        ]
+
+        def fetch_moves(product_ids, limit, offset):
+            products = self.env['product.product'].browse(product_ids)
+            return products._get_moves_by_products_with_limit(domain, limit, offset)
+
+        result = self._process_fifo_stacks_in_batches(
+            product_ids_to_process,
+            uom_by_product,
+            stack_size_by_product,
+            fetch_moves,
+        )
+
+        for product in self:
+            if product.id not in result:
+                result[product.id] = [[], 0]
+        return result
+
+    def _run_fifo_get_stack(self, lot=None, at_date=None, location=None):
+        # TODO: return a list of tuple (move, valued_qty) instead
+        self.ensure_one()
+        if lot is not None:
+            return self._run_fifo_get_stack_for_lots(lot, at_date=at_date, location=location)[lot.id]
+        already_processed_qty_by_product_id = defaultdict(int)
+        if self.env.context.get('fifo_qty_already_processed'):
+            already_processed_qty_by_product_id[self.id] = self.env.context.get('fifo_qty_already_processed')
+        return self._run_fifo_get_stack_for_products(already_processed_qty_by_product_id, at_date=at_date, location=location)[self.id]
 
     def _update_standard_price(self, extra_value=None, extra_quantity=None):
         # TODO: Add extra value and extra quantity kwargs to avoid total recomputation

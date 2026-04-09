@@ -289,7 +289,7 @@ class StockMove(models.Model):
         products_to_recompute = set()
         lots_to_recompute = set()
         fifo_qty_processed = defaultdict(float)
-
+        fifo_valuated_move_ids = []
         for move in self:
             # Incoming moves
             if move.is_dropship or move.is_in:
@@ -322,6 +322,7 @@ class StockMove(models.Model):
                 continue
 
             if move.product_id.cost_method == 'fifo':
+                fifo_valuated_move_ids.append(move)
                 valued_qty = move._get_valued_qty()
                 move.value = move.product_id.with_context(fifo_qty_already_processed=fifo_qty_processed[move.product_id])._run_fifo(valued_qty)
                 fifo_qty_processed[move.product_id] += valued_qty
@@ -424,15 +425,27 @@ class StockMove(models.Model):
 
     def _get_valued_qty(self, lot=None):
         self.ensure_one()
+        move_valued_qty_cache = self.env.context.get('move_valued_qty_cache')
+        cache_key = (self.id, None if lot is None else lot.id)
+        if move_valued_qty_cache is not None:
+            if cache_key in move_valued_qty_cache:
+                return move_valued_qty_cache[cache_key]
+
+        value = 0
         if self._is_in():
-            return sum(self._get_in_move_lines(lot).mapped('quantity_product_uom'))
+            value = sum(self._get_in_move_lines(lot).mapped('quantity_product_uom'))
         if self._is_out():
-            return sum(self._get_out_move_lines(lot).mapped('quantity_product_uom'))
+            value = sum(self._get_out_move_lines(lot).mapped('quantity_product_uom'))
         if self.is_dropship:
             if lot:
-                return sum(self.move_line_ids.filtered(lambda ml: ml.lot_id == lot).mapped('quantity_product_uom'))
-            return self.product_uom._compute_quantity(self.quantity, self.product_id.uom_id)
-        return 0
+                value = sum(self.move_line_ids.filtered(lambda ml: ml.lot_id == lot).mapped('quantity_product_uom'))
+            else:
+                value = self.product_uom._compute_quantity(self.quantity, self.product_id.uom_id)
+
+        if move_valued_qty_cache is not None:
+            move_valued_qty_cache[cache_key] = value
+
+        return value
 
     def _get_manual_value(self, quantity, at_date=None):
         valuation_data = dict(VALUATION_DICT)
@@ -512,7 +525,7 @@ class StockMove(models.Model):
                 continue
             if not move_line.location_id._should_be_valued() and move_line.location_dest_id._should_be_valued():
                 res.add(move_line.id)
-        return self.env['stock.move.line'].browse(res)
+        return self.env['stock.move.line'].browse(res).with_prefetch(self.move_line_ids._prefetch_ids)
 
     def _is_in(self):
         """Check if the move should be considered as entering the company so that the cost method
