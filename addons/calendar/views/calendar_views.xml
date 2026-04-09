@@ -333,8 +333,6 @@
                         invisible="not allday"
                     />
                     <span class="text-nowrap w-auto">
-                        <!-- This is needed so that show_as can be set as 'free' when creating all day events -->
-                        <field name="show_as" invisible="1"/>
                         <label for="allday" string="All day" class="ms-md-3"/>
                         <field name="allday" widget="boolean_toggle" title="All Day" nolabel="1"/>
                     </span>
