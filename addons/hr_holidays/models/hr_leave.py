@@ -16,6 +16,7 @@ from odoo.addons.resource.models.utils import HOURS_PER_DAY
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools.date_utils import float_to_time, sum_intervals
 from odoo.fields import Command, Date, Domain
+from odoo.tools.date_utils import time_to_float
 from odoo.tools.float_utils import float_round, float_compare, float_is_zero
 from odoo.tools.intervals import Intervals
 from odoo.tools.misc import clean_context, format_date
@@ -154,6 +155,11 @@ class HrLeave(models.Model):
         tracking=True)
     allowed_work_entry_type_ids = fields.Many2many(
         'hr.work.entry.type', compute='_compute_allowed_work_entry_type_ids')
+    work_entry_type_count_as = fields.Selection(
+        related='work_entry_type_id.count_as',
+        string='Work Entry Count As',
+        readonly=True
+    )
     work_entry_type_requires_allocation = fields.Boolean(related="work_entry_type_id.requires_allocation")
     color = fields.Integer("Color", related='work_entry_type_id.color')
     validation_type = fields.Selection(string='Validation Type', related='work_entry_type_id.leave_validation_type', readonly=False)
@@ -165,7 +171,6 @@ class HrLeave(models.Model):
     employee_company_id = fields.Many2one(related='employee_id.company_id', string="Employee Company", store=True)
     company_id = fields.Many2one('res.company', compute='_compute_company_id', store=True, index=True)
     active_employee = fields.Boolean(related='employee_id.active', string='Employee Active')
-    tz_mismatch = fields.Boolean(compute='_compute_tz_mismatch')
     tz = fields.Selection(_tz_get, compute='_compute_tz')
     department_id = fields.Many2one(
         'hr.department', compute='_compute_department_id', store=True, string='Department',
@@ -186,10 +191,10 @@ class HrLeave(models.Model):
         'Duration (Days)', compute='_compute_duration', store=True, tracking=True,
         help='Number of days of the time off request. Used in the calculation.')
     number_of_hours = fields.Float(
-        'Duration (Hours)', compute='_compute_duration', store=True, tracking=True,
+        'Duration (Hours)', compute='_compute_duration', store=True, tracking=True, inverse="_inverse_number_of_hours",
         help='Number of hours of the time off request. Used in the calculation.')
     last_several_days = fields.Boolean("All day", compute="_compute_last_several_days")
-    duration_display = fields.Char('Requested', compute='_compute_duration_display', store=True)    # details
+    duration_display = fields.Char('Requested', compute='_compute_duration_display', store=True)
     # details
     meeting_id = fields.Many2one('calendar.event', string='Meeting', copy=False)
     first_approver_id = fields.Many2one(
@@ -224,6 +229,8 @@ class HrLeave(models.Model):
     # Interface fields used when using hour-based computation
     request_hour_from = fields.Float(string='Hour from', compute='_compute_request_hour_from_to', readonly=False, store=True)
     request_hour_to = fields.Float(string='Hour to', compute='_compute_request_hour_from_to', readonly=False, store=True)
+    request_date_hour_from = fields.Datetime(compute='_compute_request_date_hour_from_to')
+    request_date_hour_to = fields.Datetime(compute='_compute_request_date_hour_from_to')
     # used only when the leave is taken in half days
     request_date_from_period = fields.Selection([
         ('am', 'Morning'), ('pm', 'Afternoon')],
@@ -236,7 +243,17 @@ class HrLeave(models.Model):
     is_striked = fields.Boolean('Striked', compute='_compute_is_hatched')
     has_mandatory_day = fields.Boolean(compute='_compute_has_mandatory_day')
     work_entry_type_increases_duration = fields.Char(compute='_compute_work_entry_type_increases_duration')
-
+    request_duration = fields.Selection(
+        [
+            ("full", "Full Day"),
+            ("am", "Morning"),
+            ("pm", "Afternoon"),
+            ("specific", "Specific"),
+        ],
+        default="full",
+        string="Duration",
+    )
+    request_duration_allowed = fields.Json(compute="_compute_request_duration_allowed")
     # warning message
     dashboard_warning_message = fields.Char(compute='_compute_dashboard_warning_message')
     _date_check2 = models.Constraint(
@@ -282,6 +299,30 @@ class HrLeave(models.Model):
                 hour_from, hour_to = leave._get_hour_from_to(leave.request_date_from, leave.request_date_to)
                 leave.request_hour_from = hour_from
                 leave.request_hour_to = hour_to
+
+    @api.depends("work_entry_type_request_unit", "last_several_days")
+    def _compute_request_duration_allowed(self):
+        for leave in self:
+            leave.request_duration_allowed = leave._get_request_duration_allowed()
+
+    @api.depends('request_date_from', 'request_hour_from', 'request_date_to', 'request_hour_to')
+    def _compute_request_date_hour_from_to(self):
+        for leave in self:
+            hour_from = float_to_time(leave.request_hour_from)
+            hour_to = float_to_time(leave.request_hour_to)
+            leave.request_date_hour_from = datetime.combine(leave.request_date_from, hour_from).replace(tzinfo=ZoneInfo(self.env.user.tz)).astimezone(UTC).replace(tzinfo=None)
+            leave.request_date_hour_to = datetime.combine(leave.request_date_to, hour_to).replace(tzinfo=ZoneInfo(self.env.user.tz)).astimezone(UTC).replace(tzinfo=None)
+
+    @api.onchange('request_date_hour_from', 'request_date_hour_to')
+    def _onchange_request_date_hour_from(self):
+        for leave in self:
+            user_tz = ZoneInfo(self.env.user.tz)
+            date_hour_from_user_tz = leave.request_date_hour_from.astimezone(user_tz).replace(tzinfo=None)
+            date_hour_to_user_tz = leave.request_date_hour_to.astimezone(user_tz).replace(tzinfo=None)
+            leave.request_date_from = date_hour_from_user_tz.date()
+            leave.request_date_to = date_hour_to_user_tz.date()
+            leave.request_hour_from = time_to_float(date_hour_from_user_tz.time())
+            leave.request_hour_to = time_to_float(date_hour_to_user_tz.time())
 
     @api.depends('employee_id', 'work_entry_type_request_unit', 'request_date_from', 'request_date_to',
             'request_hour_from', 'request_hour_to', 'request_date_from_period', 'request_date_to_period')
@@ -734,7 +775,7 @@ class HrLeave(models.Model):
     def _compute_duration(self):
         durations = self._get_durations()
         for leave in self:
-            days, hours = durations[leave.id]
+            days, hours = durations.get(leave.id, (0, 0))
             leave.number_of_hours = hours
             leave.number_of_days = days
 
@@ -766,18 +807,31 @@ class HrLeave(models.Model):
     def _compute_duration_display(self):
         for leave in self:
             duration = leave.number_of_days
-            unit = _('days')
-            display = "%g %s" % (float_round(duration, precision_digits=2), unit)
+            display = "%g" % (float_round(duration, precision_digits=2))
             if leave.work_entry_type_request_unit == "hour":
                 hours, minutes = divmod(abs(leave.number_of_hours) * 60, 60)
                 minutes = round(minutes)
                 if minutes == 60:
                     minutes = 0
                     hours += 1
-                duration = '%d:%02d' % (hours, minutes)
-                unit = _("hours")
-                display = f"{duration} {unit}"
+                duration = '%02d:%02d' % (hours, minutes)
+                display = f"{duration}"
+
             leave.duration_display = display
+
+    @api.onchange('number_of_hours')
+    def _onchange_number_of_hours(self):
+        self._inverse_number_of_hours()
+
+    def _inverse_number_of_hours(self):
+        for leave in self:
+            if leave.employee_id:
+                calendar = leave.employee_id._get_version(leave.request_date_from).resource_calendar_id
+                leave_tz = ZoneInfo(leave.tz)
+                request_date_hour_to = calendar.plan_hours(leave.number_of_hours, leave.date_from, compute_leaves=False, resource=leave.employee_id.resource_id)
+                date_hour_to_leave_tz = request_date_hour_to.astimezone(leave_tz).replace(tzinfo=None)
+                leave.request_date_to = date_hour_to_leave_tz.date()
+                leave.request_hour_to = time_to_float(date_hour_to_leave_tz.time())
 
     @api.depends('state', 'employee_id', 'department_id')
     def _compute_can_approve(self):
@@ -936,9 +990,11 @@ class HrLeave(models.Model):
             date_from_utc = leave.date_from and leave.date_from.astimezone(user_tz).date()
             date_to_utc = leave.date_to and leave.date_to.astimezone(user_tz).date()
             time_off_type_display = leave.work_entry_type_id.display_code or leave.work_entry_type_id.name
+            unit = _('hours') if leave.work_entry_type_request_unit == 'hour' else _('days')
+            formatted_duration = f"{leave.duration_display} {unit}"
             if self.env.context.get('short_name'):
                 short_leave_name = leave.name or time_off_type_display or _('Time Off')
-                leave.display_name = _("%(name)s: %(duration)s", name=short_leave_name, duration=leave.duration_display)
+                leave.display_name = _("%(name)s: %(duration)s", name=short_leave_name, duration=formatted_duration)
             else:
                 target = leave.employee_id.name or ""
                 display_date = format_date(self.env, date_from_utc) or ""
@@ -961,14 +1017,14 @@ class HrLeave(models.Model):
                 elif not time_off_type_display:
                     leave.display_name = _("%(person)s: %(duration)s (%(start)s)",
                         person=target,
-                        duration=leave.duration_display,
+                        duration=formatted_duration,
                         start=display_date,
                     )
                 else:
                     leave.display_name = _("%(person)s on %(work_entry_type)s: %(duration)s (%(start)s)",
                         person=target,
                         work_entry_type=time_off_type_display,
-                        duration=leave.duration_display,
+                        duration=formatted_duration,
                         start=display_date,
                     )
 

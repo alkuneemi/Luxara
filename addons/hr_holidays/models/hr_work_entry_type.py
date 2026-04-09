@@ -512,7 +512,11 @@ class HrWorkEntryType(models.Model):
         for employee in employees:
             for work_entry_type in self:
                 lt_info = (
-                    work_entry_type.name,
+                    {
+                        'name': work_entry_type.name,
+                        'id': work_entry_type.id,
+                        'color': work_entry_type.color
+                    },
                     {
                         'remaining_leaves': 0,
                         'virtual_remaining_leaves': 0,
