@@ -156,7 +156,7 @@ class PaymentProvider(models.Model):
 
         version = const.API_ENDPOINT_VERSIONS[endpoint]
         endpoint = endpoint if not endpoint_param else endpoint.format(endpoint_param)
-        if self.state == "enabled":
+        if not self.is_test:
             domain = f"{self.adyen_api_url_prefix}-checkout-live.adyenpayments.com"
         else:  # test
             domain = "checkout-test.adyen.com"

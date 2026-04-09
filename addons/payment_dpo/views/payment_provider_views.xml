@@ -7,19 +7,19 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'dpo'">
-                    <field
-                        string="Service ID"
-                        name="dpo_service_ref"
-                        required="code == 'dpo'"
-                    />
-                    <field
-                        string="Company Token"
-                        name="dpo_company_token"
-                        required="code == 'dpo'"
-                        password="True"
-                    />
-                </group>
+                <field
+                    string="Service ID"
+                    name="dpo_service_ref"
+                    required="code == 'dpo'"
+                    invisible="code != 'dpo'"
+                />
+                <field
+                    string="Company Token"
+                    name="dpo_company_token"
+                    required="code == 'dpo'"
+                    password="True"
+                    invisible="code != 'dpo'"
+                />
             </group>
         </field>
     </record>

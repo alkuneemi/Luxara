@@ -7,13 +7,11 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'adyen'">
-                    <field name="adyen_merchant_account" required="code == 'adyen'"/>
-                    <field name="adyen_api_key" required="code == 'adyen'" password="True"/>
-                    <field name="adyen_client_key" required="code == 'adyen'"/>
-                    <field name="adyen_hmac_key" required="code == 'adyen'" password="True"/>
-                    <field name="adyen_api_url_prefix" required="code == 'adyen'"/>
-                </group>
+                <field name="adyen_merchant_account" invisible="code != 'adyen'" required="code == 'adyen'"/>
+                <field name="adyen_api_key" invisible="code != 'adyen'" required="code == 'adyen'" password="True"/>
+                <field name="adyen_client_key" invisible="code != 'adyen'" required="code == 'adyen'"/>
+                <field name="adyen_hmac_key" invisible="code != 'adyen'" required="code == 'adyen'" password="True"/>
+                <field name="adyen_api_url_prefix" invisible="code != 'adyen'" required="code == 'adyen'"/>
             </group>
             <group name="payment_form" position='before'>
                 <div invisible="code != 'adyen' or not capture_manually"

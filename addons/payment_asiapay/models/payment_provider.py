@@ -89,7 +89,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        environment = "production" if self.state == "enabled" else "test"
+        environment = "production" if not self.is_test else "test"
         api_urls = const.API_URLS[environment]
         return api_urls.get(self.asiapay_brand, api_urls["paydollar"])
 

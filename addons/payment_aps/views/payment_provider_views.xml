@@ -7,23 +7,33 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'aps'">
-                    <field name="aps_merchant_identifier"
-                           string="Merchant Identifier"
-                           required="code == 'aps'"/>
-                    <field name="aps_access_code"
-                           string="Access Code"
-                           required="code == 'aps'"
-                           password="True"/>
-                    <field name="aps_sha_request"
-                           string="SHA Request Phrase"
-                           required="code == 'aps'"
-                           password="True"/>
-                    <field name="aps_sha_response"
-                           string="SHA Response Phrase"
-                           required="code == 'aps'"
-                           password="True"/>
-                </group>
+                <field
+                    name="aps_merchant_identifier"
+                    string="Merchant Identifier"
+                    invisible="code != 'aps'"
+                    required="code == 'aps'"
+                />
+                <field
+                    name="aps_access_code"
+                    string="Access Code"
+                    invisible="code != 'aps'"
+                    required="code == 'aps'"
+                    password="True"
+                />
+                <field
+                    name="aps_sha_request"
+                    string="SHA Request Phrase"
+                    invisible="code != 'aps'"
+                    required="code == 'aps'"
+                    password="True"
+                />
+                <field
+                    name="aps_sha_response"
+                    string="SHA Response Phrase"
+                    invisible="code != 'aps'"
+                    required="code == 'aps'"
+                    password="True"
+                />
             </group>
         </field>
     </record>

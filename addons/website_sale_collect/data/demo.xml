@@ -2,7 +2,7 @@
 <odoo noupdate="1">
 
     <record id="website_sale_collect.payment_provider_on_site" model="payment.provider">
-        <field name="state">disabled</field>
+        <field name="is_test">False</field>
     </record>
 
 </odoo>

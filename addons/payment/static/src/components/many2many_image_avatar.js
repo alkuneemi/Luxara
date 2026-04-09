@@ -9,6 +9,11 @@ export class Many2ManyImageTags extends Many2ManyTagsAvatarField {
 
     static template = "payment.Many2ManyImage";
 
+    static defaultProps = {
+        ...Many2ManyTagsAvatarField.defaultProps,
+        tagLimit: 10,
+    };
+
     getTagProps(record) {
         const props = super.getTagProps(record);
         props.imageUrl = imageUrl(this.relation, record.resId, "image")

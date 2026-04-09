@@ -8,24 +8,25 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position="inside">
-                <group invisible="code != 'toss_payments'">
-                    <field
-                        string="Client Key"
-                        name="toss_payments_client_key"
-                        required="code == 'toss_payments'"
-                    />
-                    <field
-                        string="Secret Key"
-                        name="toss_payments_secret_key"
-                        required="code == 'toss_payments'"
-                        password="True"
-                    />
-                    <field
-                        string="Webhook URL"
-                        name="toss_payments_webhook_url"
-                        widget="CopyClipboardChar"
-                    />
-                </group>
+                <field
+                    string="Client Key"
+                    name="toss_payments_client_key"
+                    required="code == 'toss_payments'"
+                    invisible="code != 'toss_payments'"
+                />
+                <field
+                    string="Secret Key"
+                    name="toss_payments_secret_key"
+                    required="code == 'toss_payments'"
+                    invisible="code != 'toss_payments'"
+                    password="True"
+                />
+                <field
+                    string="Webhook URL"
+                    name="toss_payments_webhook_url"
+                    invisible="code != 'toss_payments'"
+                    widget="CopyClipboardChar"
+                />
             </group>
         </field>
     </record>

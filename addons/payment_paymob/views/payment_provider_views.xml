@@ -6,49 +6,60 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
+            <sheet position="before">
+                <header invisible="code != 'paymob'">
+                    <div>
+                        <button
+                            string="Synchronize With Paymob"
+                            help="Make the payment methods compatible with the Paymob portal."
+                            type="object"
+                            name="action_sync_paymob_payment_methods"
+                            invisible="code != 'paymob'"
+                            class="btn-secondary"
+                        />
+                    </div>
+                </header>
+            </sheet>
+            <sheet position="before">
+
+            </sheet>
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'paymob'">
-                    <field
-                        name="paymob_account_country_id"
-                        string="Account Country"
-                        required="code == 'paymob'"
-                        options="{'no_create': True}"
-                    />
-                    <field
-                        name="paymob_hmac_key"
-                        string="HMAC Key"
-                        password="True"
-                        required="code == 'paymob'"
-                    />
-                    <field
-                        name="paymob_api_key"
-                        string="API Key"
-                        password="True"
-                        required="code == 'paymob'"
-                    />
-                    <field
-                        name="paymob_secret_key"
-                        string="Secret Key"
-                        password="True"
-                        required="code == 'paymob'"
-                    />
-                    <field
-                        name="paymob_public_key"
-                        string="Public Key"
-                        required="code == 'paymob'"
-                    />
-                </group>
-            </group>
-            <a name="action_view_payment_methods" position="after">
-                <button
-                    string="Synchronize With Paymob"
-                    help="Make the payment methods compatible with the Paymob portal."
-                    type="object"
-                    name="action_sync_paymob_payment_methods"
+                <field
+                    name="paymob_account_country_id"
+                    string="Account Country"
+                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
-                    class="btn-secondary"
+                    options="{'no_create': True}"
                 />
-            </a>
+                <field
+                    name="paymob_hmac_key"
+                    string="HMAC Key"
+                    password="True"
+                    required="code == 'paymob'"
+                    invisible="code != 'paymob'"
+                />
+                <field
+                    name="paymob_api_key"
+                    string="API Key"
+                    password="True"
+                    required="code == 'paymob'"
+                    invisible="code != 'paymob'"
+                />
+                <field
+                    name="paymob_secret_key"
+                    string="Secret Key"
+                    password="True"
+                    required="code == 'paymob'"
+                    invisible="code != 'paymob'"
+                />
+                <field
+                    name="paymob_public_key"
+                    string="Public Key"
+                    required="code == 'paymob'"
+                    invisible="code != 'paymob'"
+                />
+
+            </group>
             <field name="available_currency_ids" position="attributes">
                 <attribute name="readonly" separator="or" add="code == 'paymob'"/>
             </field>

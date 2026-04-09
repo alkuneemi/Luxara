@@ -7,24 +7,25 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'nuvei'">
-                    <field
-                        name="nuvei_merchant_identifier"
-                        string="Merchant Identifier"
-                        required="code == 'nuvei'"
-                    />
-                    <field
-                        name="nuvei_site_identifier"
-                        string="Site Identifier"
-                        required="code == 'nuvei'"
-                    />
-                    <field
-                        name="nuvei_secret_key"
-                        string="Secret Key"
-                        required="code == 'nuvei'"
-                        password="True"
-                    />
-                </group>
+                <field
+                    name="nuvei_merchant_identifier"
+                    string="Merchant Identifier"
+                    required="code == 'nuvei'"
+                    invisible="code != 'nuvei'"
+                />
+                <field
+                    name="nuvei_site_identifier"
+                    string="Site Identifier"
+                    required="code == 'nuvei'"
+                    invisible="code != 'nuvei'"
+                />
+                <field
+                    name="nuvei_secret_key"
+                    string="Secret Key"
+                    required="code == 'nuvei'"
+                    invisible="code != 'nuvei'"
+                    password="True"
+                />
             </group>
         </field>
     </record>

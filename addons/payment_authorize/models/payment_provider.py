@@ -91,9 +91,6 @@ class PaymentProvider(models.Model):
         """Fetch the merchant details to update the client key and the account currency."""
         self.ensure_one()
 
-        if self.state == "disabled":
-            raise UserError(_("This action cannot be performed while the provider is disabled."))
-
         authorize_API = AuthorizeAPI(self)
 
         # Validate the API Login ID and Transaction Key
@@ -121,9 +118,6 @@ class PaymentProvider(models.Model):
         :rtype: dict
         """
         self.ensure_one()
-
-        if self.state == "disabled":
-            raise UserError(_("This action cannot be performed while the provider is disabled."))
 
         webhook_url = urls.urljoin(self.get_base_url(), const.WEBHOOK_ROUTE)
         # Authorize.Net allows only letters, numbers, and underscores in webhook names.
@@ -192,7 +186,7 @@ class PaymentProvider(models.Model):
         if self.code != "authorize":
             return super()._build_request_url(endpoint, **kwargs)
 
-        if self.state == "enabled":
+        if not self.is_test:
             return f"https://api.authorize.net{endpoint}"
         return f"https://apitest.authorize.net{endpoint}"
 

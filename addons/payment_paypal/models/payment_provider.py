@@ -126,7 +126,7 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        if self.state == "enabled":
+        if not self.is_test:
             api_url = "https://api-m.paypal.com"
         else:  # test
             api_url = "https://api-m.sandbox.paypal.com"

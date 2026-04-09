@@ -11,6 +11,9 @@
             <field name="code" invisible="1" position="after">
                 <field name="custom_mode" invisible="1"/>
             </field>
+            <field name="is_test" position="attributes">
+                <attribute name="invisible" separator="or" add="code == 'custom'"/>
+            </field>
             <page name="payment_methods" position="attributes">
                 <attribute name="invisible" separator="or" add="code == 'custom'"/>
             </page>

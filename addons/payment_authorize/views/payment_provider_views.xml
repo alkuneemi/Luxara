@@ -7,46 +7,58 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'authorize'">
-                    <field name="authorize_login" required="code == 'authorize'"/>
-                    <field name="authorize_transaction_key" password="True" required="code == 'authorize'"/>
-                    <field name="authorize_signature_key" password="True" required="code == 'authorize'"/>
-                    <label for="authorize_client_key"/>
-                    <div class="o_row" col="2">
-                        <field name="authorize_client_key"/>
-                        <button
-                            string="Generate Client Key"
-                            type="object"
-                            name="action_update_merchant_details"
-                            class="oe_link"
-                            icon="fa-refresh"
-                        />
-                    </div>
-                    <label
-                        for="authorize_webhook_id"
-                        invisible="not (authorize_login and authorize_transaction_key and authorize_signature_key)"
+                <field
+                    name="authorize_login"
+                    required="code == 'authorize'"
+                    invisible="code != 'authorize'"
+                />
+                <field
+                    name="authorize_transaction_key"
+                    password="True"
+                    required="code == 'authorize'"
+                    invisible="code != 'authorize'"
+                />
+                <field
+                    name="authorize_signature_key"
+                    password="True"
+                    required="code == 'authorize'"
+                    invisible="code != 'authorize'"
+                />
+                <label for="authorize_client_key" invisible="code != 'authorize'"/>
+                <div class="o_row" col="2" invisible="code != 'authorize'">
+                    <field name="authorize_client_key"/>
+                    <button
+                        string="Generate Client Key"
+                        type="object"
+                        name="action_update_merchant_details"
+                        class="oe_link"
+                        icon="fa-refresh"
                     />
-                    <div
-                        class="o_row"
-                        invisible="not (authorize_login and authorize_transaction_key and authorize_signature_key)"
-                    >
-                        <field string="Webhook ID" name="authorize_webhook_id"/>
-                        <button
-                            string="Generate Your Webhook"
-                            name="action_authorize_create_webhook"
-                            type="object"
-                            class="btn-primary"
-                            invisible="authorize_webhook_id"
-                        />
-                        <button
-                            string="Re-generate Your Webhook"
-                            name="action_authorize_create_webhook"
-                            type="object"
-                            class="btn-secondary"
-                            invisible="not authorize_webhook_id"
-                        />
-                    </div>
-                </group>
+                </div>
+                <label
+                    for="authorize_webhook_id"
+                    invisible="not (authorize_login and authorize_transaction_key and authorize_signature_key) or code != 'authorize'"
+                />
+                <div
+                    class="o_row"
+                    invisible="not (authorize_login and authorize_transaction_key and authorize_signature_key) or code != 'authorize'"
+                >
+                    <field string="Webhook ID" name="authorize_webhook_id"/>
+                    <button
+                        string="Generate Your Webhook"
+                        name="action_authorize_create_webhook"
+                        type="object"
+                        class="btn-primary"
+                        invisible="authorize_webhook_id"
+                    />
+                    <button
+                        string="Re-generate Your Webhook"
+                        name="action_authorize_create_webhook"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not authorize_webhook_id"
+                    />
+                </div>
             </group>
             <div name="available_currencies" position="inside">
                 <button

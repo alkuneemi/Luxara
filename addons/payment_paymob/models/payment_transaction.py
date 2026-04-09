@@ -88,7 +88,7 @@ class PaymentTransaction(models.Model):
             payment_method_codes.append("card")
 
         # Suffix to all payment methods with the environment.
-        environment = "live" if self.provider_id.state == "enabled" else "test"
+        environment = "live" if not self.provider_id.is_test else "test"
         payment_method_codes = [
             f"{code.replace('_', '')}{environment}" for code in payment_method_codes
         ]

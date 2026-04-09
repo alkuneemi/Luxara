@@ -7,24 +7,25 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'redsys'">
-                    <field
-                        string="Merchant Code"
-                        name="redsys_merchant_code"
-                        required="code == 'redsys'"
-                    />
-                    <field
-                        string="Merchant Terminal"
-                        name="redsys_merchant_terminal"
-                        required="code == 'redsys'"
-                    />
-                    <field
-                        string="Secret Key"
-                        name="redsys_secret_key"
-                        required="code == 'redsys'"
-                        password="True"
-                    />
-                </group>
+                <field
+                    string="Merchant Code"
+                    name="redsys_merchant_code"
+                    required="code == 'redsys'"
+                    invisible="code != 'redsys'"
+                />
+                <field
+                    string="Merchant Terminal"
+                    name="redsys_merchant_terminal"
+                    required="code == 'redsys'"
+                    invisible="code != 'redsys'"
+                />
+                <field
+                    string="Secret Key"
+                    name="redsys_secret_key"
+                    required="code == 'redsys'"
+                    invisible="code != 'redsys'"
+                    password="True"
+                />
             </group>
         </field>
     </record>

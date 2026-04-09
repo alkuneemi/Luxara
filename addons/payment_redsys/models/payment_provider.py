@@ -63,7 +63,7 @@ class PaymentProvider(models.Model):
         if self.code != "redsys":
             return super()._build_request_url(endpoint, **kwargs)
 
-        if self.state == "enabled":
+        if not self.is_test:
             base = "https://sis.redsys.es/sis"
         else:  # 'test'
             base = "https://sis-t.redsys.es:25443/sis"

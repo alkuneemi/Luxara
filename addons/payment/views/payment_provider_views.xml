@@ -112,11 +112,11 @@
                             >
                                 <list limit="500">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="name" nolabel="1"/>
-                                    <field name="active" widget="boolean_toggle" width="30" nolabel="1"/>
+                                    <field name="name" width="200" nolabel="1"/>
+                                    <field name="active" widget="boolean_toggle" width="100" nolabel="1"/>
                                     <field name="supported_country_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
                                     <field name="supported_currency_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
-                                    <field name="brand_ids" class="o_brand_ids" domain="[('active','=', True)]" widget="many2many_image_tags" nolabel="1"/>
+                                    <field name="brand_ids" domain="[('active','=', True)]" widget="many2many_image_tags" nolabel="1"/>
                                 </list>
                             </field>
                         </page>
