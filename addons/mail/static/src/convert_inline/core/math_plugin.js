@@ -4,6 +4,7 @@ import { Plugin } from "../plugin";
 export class MathPlugin extends Plugin {
     static id = "math";
     static shared = [
+        "areRectEqual",
         "pixelTolerance",
         "isNegativeZero",
         "isPositiveZero",
@@ -21,6 +22,15 @@ export class MathPlugin extends Plugin {
         return Math.min(
             1,
             Math.max(0.25, 1 / this.config.referenceDocument.defaultView.devicePixelRatio)
+        );
+    }
+
+    areRectEqual(rect1, rect2) {
+        return (
+            this.isZero(rect1.width - rect2.width) &&
+            this.isZero(rect1.height - rect2.height) &&
+            this.isZero(rect1.width - this.overlapX(rect1, rect2)) &&
+            this.isZero(rect1.height - this.overlapY(rect1, rect2))
         );
     }
 

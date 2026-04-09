@@ -11,7 +11,6 @@ export class StylePlugin extends Plugin {
     resources = {
         on_layout_dimensions_updated_handlers: this.onLayoutDimensionsUpdated.bind(this),
         on_parse_layout_with_dimensions_handlers: this.registerCSSRule.bind(this),
-        on_reference_content_loaded_handlers: this.registerCSSRules.bind(this),
     };
 
     setup() {
@@ -58,7 +57,7 @@ export class StylePlugin extends Plugin {
 
     computeDynamicValues(element, styleInfo) {
         let computedStyle;
-        for (const [propertyName, propertyInfo] of styleInfo.entries()) {
+        for (const [propertyName, propertyInfo] of styleInfo) {
             // TODO EGGMAIL: using the computed value is not equivalent
             // to resolving the calc|var, (e.g. line-height can be defined
             // without units and multiplied by the font-height, but the

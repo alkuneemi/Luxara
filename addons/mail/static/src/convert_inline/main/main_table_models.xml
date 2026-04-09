@@ -5,7 +5,7 @@
                 <tr t-att="model.renderAttributes('tr')">
                     <td t-att="model.renderAttributes('td')">
                         <t t-call="{{nodePositionManager.template}}"
-                            t-call-context="nodePositionManager.renderContext(model.childNodes)"/>
+                            t-call-context="nodePositionManager.renderContext({ nodes: model.childNodes })"/>
                     </td>
                 </tr>
             </tbody>

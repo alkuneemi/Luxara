@@ -7,9 +7,13 @@ import { StyleInfo } from "../core/style_models";
 
 export class MainTableStrategyPlugin extends Plugin {
     static id = "mainTableStrategy";
-    static dependencies = ["filterContent", "measurementSnapshot", "rules", "style", "vDom"];
+    static dependencies = ["filterContent", "measurementSnapshot", "rules", "style", "nodeInfo"];
     resources = {
         apply_layout_strategy_overrides: withSequence(2, this.applyLayoutStrategy.bind(this)),
+        element_identity_analysis_processors: withSequence(
+            2,
+            this.analyzeElementIdentity.bind(this)
+        ),
         on_reference_content_loaded_handlers: this.identifyLayout.bind(this),
     };
 
@@ -44,6 +48,31 @@ export class MainTableStrategyPlugin extends Plugin {
 
     identifyLayout() {
         this.layout = this.config.reference.querySelector(".o_layout");
+    }
+
+    /**
+     * TODO EGGMAIL: mutually exclusive identities? Does having this identity
+     * prevent another plugin from claiming another identity? To think about.
+     * evaluate withSequence
+     */
+    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
+        if (analysis.isFrozen) {
+            return;
+        }
+        let hasMainTable = this.detectMainTableLayout(nodeInfo);
+        if (hasMainTable) {
+            analysis.facts.isMainTableLayout = true;
+        } else if ((hasMainTable = this.detectMainTableWrapper(nodeInfo))) {
+            analysis.facts.isMainTableWrapper = true;
+        }
+        if (hasMainTable) {
+            analysis.freeze();
+            Object.assign(analysis.parsingConstraints, {
+                canMerge: false,
+                canParentMerge: false,
+            });
+            identity.pluginIds.add(MainTableStrategyPlugin.id);
+        }
     }
 
     applyLayoutStrategy(nodeInfo) {

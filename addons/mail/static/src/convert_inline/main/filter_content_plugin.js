@@ -3,6 +3,8 @@ import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
 import { Rules } from "../core/rules_models";
 import { DIRECTION_VARIANTS } from "../core/utils";
+import { withSequence } from "@html_editor/utils/resource";
+import { DIMENSIONS } from "../hooks";
 
 const BLOCKED_PSEUDO_CLASSES = new Set([
     "active",
@@ -21,24 +23,58 @@ const INDIRECT_CSS_PROPERTY_VALUES = new Set([
     "revert-layer",
 ]);
 const ALLOWED_CSS_DISPLAY_VALUES = new Set(["block", "inline", "inline-block", "none"]);
+const { DESKTOP, MOBILE } = DIMENSIONS;
 
 export class FilterContentPlugin extends Plugin {
     static id = "filterContent";
-    static dependencies = ["measurementSnapshot", "responsiveBlock", "rules", "style", "vDom"];
+    static dependencies = [
+        "math",
+        "measurementSnapshot",
+        "responsiveBlock",
+        "rules",
+        "style",
+        "nodeInfo",
+    ];
     static shared = ["getBodyGlobalStyleInfo", "getBodyTextStyleInfo", "isInvisible"];
     resources = {
         attribute_rules_processors: [
             [this.provideAttributeRules.bind(this), FilterContentPlugin.id],
         ],
+        element_identity_analysis_processors: withSequence(1, this.analyzeElementIdentity.bind(this)),
         style_rules_processors: [[this.provideStyleRules.bind(this), FilterContentPlugin.id]],
         is_blocked_rule_selector_predicates: this.blockUserContextSelectors.bind(this),
-        should_use_discard_strategy_predicates: this.isInvisible.bind(this),
+        should_discard_reference_node_predicates: this.isInvisible.bind(this),
     };
 
     setup() {
         this.bodyTextStyleRules = new Rules();
         this.bodyGlobalStyleRules = new Rules();
         this.provideBodyStyleRules();
+    }
+
+    analyzeElementIdentity({ analysis }, { nodeInfo, parentNodeAnalysis }) {
+        const node = nodeInfo.referenceNode;
+        let parentNode;
+        if (
+            !parentNodeAnalysis ||
+            parentNodeAnalysis.nodeInfos.size === 0 ||
+            !this.isBlock(node) ||
+            !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo)) ||
+            parentNode.referenceNode.nodeName !== "DIV"
+        ) {
+            analysis.parsingConstraints.canParentMerge = false;
+            return;
+        }
+        const mobileParentBlock = this.getLayoutBlock(parentNode, MOBILE);
+        const mobileBlock = this.getLayoutBlock(node, MOBILE);
+        const desktopParentBlock = this.getLayoutBlock(parentNode, DESKTOP);
+        const desktopBlock = this.getLayoutBlock(node, DESKTOP);
+        if (
+            !this.areRectEqual(mobileParentBlock.rect, mobileBlock.rect) ||
+            !this.areRectEqual(desktopParentBlock.rect, desktopBlock.rect)
+        ) {
+            analysis.parsingConstraints.canParentMerge = false;
+        }
     }
 
     provideBodyStyleRules() {

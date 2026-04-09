@@ -10,14 +10,21 @@ export class ImageStrategyPlugin extends Plugin {
         "measurementSnapshot",
         "responsiveBlock",
         "rules",
-        "vDom",
+        "nodeInfo",
     ];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
-        style_rules_processors: [[this.provideStyleRules.bind(this), ImageStrategyPlugin.id]],
+        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
+        attribute_rules_processors: [
+            [this.provideAttributeRules.bind(this), ImageStrategyPlugin.id],
+        ],
     };
 
     // fix images padding
+    // padding concern is only there for microsoft outlook => should be solved then
+    // that concern is actually there for any node which is not a td
+    // either keep padding on image to stay coherent with the current padding logic
+    // OR remove padding everywhere and make it a MSO concern?
     // background images => vml strategy?
     // attachment thumbnails
     // media list img without height?
@@ -29,22 +36,53 @@ export class ImageStrategyPlugin extends Plugin {
     // img with font-family simple quote/double quote issue?
     // font icons to images
 
-    applyLayoutStrategy(nodeInfo) {
-        let analysis;
-        if ((analysis = this.detectLinkImage(nodeInfo))) {
-            this.buildLinkImageFragment(analysis);
-        } else if ((analysis = this.detectImage(nodeInfo))) {
-            this.buildImageFragment(analysis);
+    provideAttributeRules(rules) {
+        // height and width attributes are specified through applyLayoutStrategy
+        rules.block("height", { when: this.isImg.bind(this) });
+        rules.block("width", { when: this.isImg.bind(this) });
+    }
+
+    isImg({ nodeInfo }) {
+        return nodeInfo.referenceNode.nodeName === "IMG";
+    }
+
+    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
+        if (analysis.isFrozen) {
+            return;
         }
-        if (analysis) {
-            for (const nodeInfo of analysis.nodeInfos) {
+        let detectionResult = this.detectImageLink(nodeInfo);
+        if (detectionResult) {
+            analysis.facts.isImageLink = true;
+            analysis.facts.imageLinkData = detectionResult;
+        } else if ((detectionResult = this.detectImage(nodeInfo))) {
+            analysis.facts.isImage = true;
+            analysis.facts.imageData = detectionResult;
+        }
+        if (detectionResult) {
+            Object.assign(analysis.parsingConstraints, {
+                canMerge: false,
+                canParentMerge: false,
+            });
+            identity.pluginIds.add(ImageStrategyPlugin.id);
+        }
+    }
+
+    applyLayoutStrategy(nodeInfo) {
+        let detectionResult;
+        if ((detectionResult = this.detectImageLink(nodeInfo))) {
+            this.buildImageLinkFragment(detectionResult);
+        } else if ((detectionResult = this.detectImage(nodeInfo))) {
+            this.buildImageFragment(detectionResult);
+        }
+        if (detectionResult) {
+            for (const nodeInfo of detectionResult.nodeInfos) {
                 nodeInfo.defineLayoutStrategy({ pluginId: ImageStrategyPlugin.id });
             }
             return true;
         }
     }
 
-    detectLinkImage(nodeInfo) {
+    detectImageLink(nodeInfo) {
         if (nodeInfo.referenceNode.nodeName === "A") {
             const visibleChildNodes = this.processChildNodes(
                 nodeInfo.referenceNode,
@@ -55,17 +93,17 @@ export class ImageStrategyPlugin extends Plugin {
                 return {
                     imageInfo: imageNodeInfo,
                     linkInfo: nodeInfo,
-                    nodeInfos: [nodeInfo, imageNodeInfo],
+                    shouldBeBlock: this.shouldBeBlock(nodeInfo),
                 };
             }
         }
     }
 
     detectImage(nodeInfo) {
-        if (nodeInfo.referenceNode.nodeName === "IMG") {
+        if (this.isImg(nodeInfo)) {
             return {
-                nodeInfo,
-                nodeInfos: [nodeInfo],
+                imageInfo: nodeInfo,
+                shouldBeBlock: this.shouldBeBlock(nodeInfo),
             };
         }
     }
@@ -86,31 +124,24 @@ export class ImageStrategyPlugin extends Plugin {
         );
     }
 
-    buildLinkImageFragment({ imageInfo, linkInfo }) {
-        const shouldBeBlock = this.shouldBeBlock(linkInfo);
+    buildImageLinkFragment({ imageInfo, linkInfo, shouldBeBlock }) {
         const styleInfo = new StyleInfo();
         styleInfo.setProperty("text-decoration", "none");
         if (shouldBeBlock) {
             styleInfo.setProperty("display", "block");
         }
         styleInfo.applyOnElement(linkInfo.fragment.firstElementChild);
-        this.buildImageFragment({ nodeInfo: imageInfo, shouldBeBlock });
+        this.buildImageFragment({ imageInfo, shouldBeBlock });
     }
 
-    buildImageFragment({ nodeInfo, shouldBeBlock }) {
-        shouldBeBlock ??= this.shouldBeBlock(nodeInfo);
-        const img = nodeInfo.fragment.firstElementChild;
+    buildImageFragment({ imageInfo, shouldBeBlock }) {
+        const img = imageInfo.fragment.firstElementChild;
         img.replaceChildren();
         const style = Object.assign(
             { "border-width": { value: "0", priority: "important" } },
             shouldBeBlock ? { display: "block" } : {}
         );
-        img.style.removeProperty("height");
-        img.style.removeProperty("width");
-        img.style.removeProperty("max-width");
-        img.removeAttribute("width");
-        img.removeAttribute("height");
-        const dimensions = this.extractImageDimensions(nodeInfo);
+        const dimensions = this.extractImageDimensions(imageInfo);
         Object.assign(style, dimensions.style);
         StyleInfo.from(style).applyOnElement(img);
         for (const [name, value] of Object.entries(dimensions.attributes)) {
@@ -158,18 +189,6 @@ export class ImageStrategyPlugin extends Plugin {
             }
         }
         return { attributes, style };
-    }
-
-    provideStyleRules(rules) {
-        rules.allow("height", {
-            when: ({ nodeInfo }) => nodeInfo.referenceNode.nodeName === "IMG",
-        });
-        rules.allow("width", {
-            when: ({ nodeInfo }) => nodeInfo.referenceNode.nodeName === "IMG",
-        });
-        rules.allow("max-width", {
-            when: ({ nodeInfo }) => nodeInfo.referenceNode.nodeName === "IMG",
-        });
     }
 }
 

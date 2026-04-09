@@ -7,10 +7,23 @@ const { DESKTOP, MOBILE } = DIMENSIONS;
 
 export class TableStrategyPlugin extends Plugin {
     static id = "tableStrategy";
-    static dependencies = ["responsiveBlock", "vDom"];
+    static dependencies = ["responsiveBlock", "nodeInfo"];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
+        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
     };
+
+    analyzeElementIdentity({ identity, analysis }, { nodeInfo, parentNodeAnalysis }) {
+        if (analysis.isFrozen || !this.detectTableLayout(nodeInfo)) {
+            return;
+        }
+        if (parentNodeAnalysis.identity.tag === "TABLE") {
+            analysis.parsingConstraints.canParentMerge = true;
+        }
+        analysis.parsingConstraints.canMerge = false;
+        analysis.facts.isTable = true;
+        identity.pluginIds.add(TableStrategyPlugin.id);
+    }
 
     // TODO EGGMAIL NOW: special case for the first element inside the reference:
     // - basic editor case (investigate)

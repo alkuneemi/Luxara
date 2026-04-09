@@ -2,11 +2,10 @@ import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
 import { memoize } from "@web/core/utils/functions";
 import { Band, Block, Cluster } from "./responsive_models";
-import { blockTagNames } from "@html_editor/utils/blocks";
 
 export class ResponsiveBlockPlugin extends Plugin {
     static id = "responsiveBlock";
-    static dependencies = ["measurementSnapshot", "math", "vDom"];
+    static dependencies = ["measurementSnapshot", "math", "nodeInfo"];
     static shared = ["getLayoutBlock", "isBlock"];
     resources = {
         on_parse_layout_with_dimensions_handlers: this.computeBlocks.bind(this),
@@ -65,26 +64,6 @@ export class ResponsiveBlockPlugin extends Plugin {
             });
         }
         return this.layoutToFilters.get(this.layoutDimensions);
-    }
-
-    /**
-     * Custom `isBlock` function using the email_layout_snapshot_cache.
-     * Determine if a node is to be considered as a Block for the purpose
-     * of email layout.
-     */
-    isBlock(node) {
-        if (!node || node.nodeType !== Node.ELEMENT_NODE || !node.isConnected) {
-            return false;
-        }
-        if (node.nodeName === "BR") {
-            // see html_editor isBlock for explanation (browser compatibility)
-            return false;
-        }
-        const display = this.getStylePropertyValue(node, "display");
-        if (display && display !== "none") {
-            return !display.includes("inline") && display !== "contents";
-        }
-        return blockTagNames.includes(node.nodeName);
     }
 
     // Algorithm to organize blocks between each other in a email sensible way.

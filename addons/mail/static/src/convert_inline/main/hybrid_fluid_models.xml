@@ -3,7 +3,7 @@
         <div t-att="model.renderAttributes()">
             <t t-foreach="model.cells" t-as="cell" t-key="cell_index">
                 <t t-call="{{cell.template}}"
-                    t-call-context="cell.renderContext(nodePositionManager)"/>
+                    t-call-context="cell.renderContext({ nodePositionManager })"/>
             </t>
         </div>
     </t>
@@ -11,16 +11,16 @@
         <div t-att="model.renderAttributes()">
             <div t-if="model.childNodes.length" t-att="model.renderAttributes('styleContext')">
                 <t t-call="{{nodePositionManager.template}}"
-                    t-call-context="nodePositionManager.renderContext(model.childNodes)"/>
+                    t-call-context="nodePositionManager.renderContext({ nodes: model.childNodes })"/>
             </div>
         </div>
     </t>
     <t t-name="mail.HybridFluidCellWithOffset">
         <div t-att="model.renderAttributes()">
             <t t-call="{{model.offset.template}}"
-                t-call-context="model.offset.renderContext(nodePositionManager)"/>
+                t-call-context="model.offset.renderContext({ nodePositionManager })"/>
             <t t-call="{{model.cell.template}}"
-                t-call-context="model.cell.renderContext(nodePositionManager)"/>
+                t-call-context="model.cell.renderContext({ nodePositionManager })"/>
         </div>
     </t>
 </templates>

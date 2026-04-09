@@ -7,7 +7,7 @@ export class StyleInfoMap extends Map {
     }
     assign(source, key) {
         const styleInfo = this.get(key);
-        styleInfo.merge(StyleInfo.from(source));
+        styleInfo.merge(StyleInfo.from(source), styleInfo.maxSequence);
         return styleInfo;
     }
 }
@@ -47,6 +47,7 @@ export class StyleInfo extends Map {
 
     dirty = true;
     sortedEntries = null;
+    maxSequence = 0;
     getPropertyValue(propertyName) {
         return this.get(propertyName)?.value ?? "";
     }
@@ -71,6 +72,9 @@ export class StyleInfo extends Map {
             value = { value };
         }
         value = new PropertyInfo(value);
+        if (this.maxSequence < value.sequence) {
+            this.maxSequence = value.sequence;
+        }
         return super.set(key, value);
     }
     delete() {
@@ -89,7 +93,7 @@ export class StyleInfo extends Map {
      * @param {number} [sequence]
      */
     merge(styleInfo, sequence) {
-        for (const [propertyName, propertyInfo] of styleInfo.entries()) {
+        for (const [propertyName, propertyInfo] of styleInfo) {
             const thisPriority = this.getPropertyPriority(propertyName);
             const thisSequence = this.getPropertySequence(propertyName);
             const priority = styleInfo.getPropertyPriority(propertyName);
@@ -118,7 +122,7 @@ export class StyleInfo extends Map {
             // overwrite what a shorthand property with lower specificity defines.
             // Example: in the final inline style, border-radius with sequence 1
             // should be written BEFORE border-top-left-radius with sequence 2.
-            this.sortedEntries = [...this.entries()].sort(
+            this.sortedEntries = [...this].sort(
                 ([, propertyInfoA], [, propertyInfoB]) =>
                     propertyInfoA.sequence - propertyInfoB.sequence
             );

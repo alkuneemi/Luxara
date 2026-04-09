@@ -43,7 +43,7 @@ export class DynamicStyleSheetPlugin extends Plugin {
     }
 
     renderRules(rules, aggregator, separator, indent) {
-        for (const [selector, styleInfo] of rules.entries()) {
+        for (const [selector, styleInfo] of rules) {
             const styleInfoSeparator = `${separator}${indent}`;
             aggregator.push(
                 [`${selector} {`, `${indent}${styleInfo.serialize(styleInfoSeparator)}`, "}"].join(
@@ -63,7 +63,7 @@ export class DynamicStyleSheetPlugin extends Plugin {
         const indent = "    ";
         const separator = `\n`;
         this.renderRules(this.rules, cssTextArray, separator, indent);
-        for (const [media, rules] of this.mediaRules.entries()) {
+        for (const [media, rules] of this.mediaRules) {
             const ruleSeparator = `${separator}${indent}`;
             const mediaCssTextArray = [];
             this.renderRules(rules, mediaCssTextArray, ruleSeparator, indent);

@@ -221,7 +221,7 @@ export class Rules {
             }
             onPass(name, value, fix);
         };
-        for (const [name, value] of dataMap.entries()) {
+        for (const [name, value] of dataMap) {
             let fixingRule;
             try {
                 const fixingRules = this.getRules(
@@ -271,7 +271,7 @@ export class Rules {
                 }
             }
         }
-        for (const [name, value] of missing.entries()) {
+        for (const [name, value] of missing) {
             const requiredRules = this.getRules(name, this.requiredNameRules);
             if (
                 requiredRules.length > 0 &&
@@ -334,7 +334,7 @@ export class Rules {
         if (!matcherKeyRules) {
             return matchingRules;
         }
-        for (const [matcherKey, rules] of matcherKeyRules.entries()) {
+        for (const [matcherKey, rules] of matcherKeyRules) {
             const { matcher } = this.matcherCache.matcherInfos.get(matcherKey);
             if (matcher(name)) {
                 matchingRules.push(...rules);

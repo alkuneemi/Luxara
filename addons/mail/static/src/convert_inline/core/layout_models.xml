@@ -1,7 +1,38 @@
 <templates>
     <t t-name="mail.NodePositionManager">
-        <t t-foreach="nodeIds" t-as="nodeId" t-key="id_index">
+        <t t-foreach="nodeIds" t-as="nodeId" t-key="nodeId_index">
             <node-position t-att-data-id="nodeId"/>
+        </t>
+    </t>
+    <t t-name="mail.LayoutModelRef">
+        <t t-if="model.hooks.before">
+            <t t-if="model.hooks.before.isTemplate" t-call="{{model.hooks.before.template}}"/>
+            <t t-else="" t-call="{{model.hooks.before.template}}"
+                t-call-context="model.hooks.before.renderContext({ nodePositionManager })"/>
+        </t>
+        <t t-if="model.hooks.content.isTemplate" t-call="{{model.hooks.content.template}}"/>
+        <t t-else="" t-call="{{model.hooks.content.template}}"
+            t-call-context="model.hooks.content.renderContext({ nodePositionManager })"/>
+        <t t-if="model.hooks.after">
+            <t t-if="model.hooks.after.isTemplate" t-call="{{model.hooks.after.template}}"/>
+            <t t-else="" t-call="{{model.hooks.after.template}}"
+                t-call-context="model.hooks.after.renderContext({ nodePositionManager })"/>
+        </t>
+    </t>
+    <t t-name="mail.LayoutModelChildNodes">
+        <t t-call="{{nodePositionManager.template}}"
+            t-call-context="nodePositionManager.renderContext({ nodes: model.childNodes })"/>
+    </t>
+    <t t-name="mail.LayoutModelTag">
+        <t t-tag="model.tag" t-att="model.renderAttributes()">
+            <t t-call="mail.LayoutModelChildNodes"/>
+        </t>
+    </t>
+    <t t-name="mail.LayoutModelList">
+        <t t-foreach="model.modelList" t-as="child" t-key="child_index">
+            <t t-if="child.isTemplate" t-call="{{child.template}}"/>
+            <t t-else="" t-call="{{child.template}}"
+                t-call-context="child.renderContext({ nodePositionManager })"/>
         </t>
     </t>
 </templates>

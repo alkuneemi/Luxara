@@ -9,6 +9,7 @@ import {
     FONT_VARIANTS,
 } from "@mail/convert_inline/core/utils";
 import { ComputedStyle } from "./style_models";
+import { blockTagNames } from "@html_editor/utils/blocks";
 
 export class MeasurementSnapshotPlugin extends Plugin {
     static id = "measurementSnapshot";
@@ -342,6 +343,26 @@ export class MeasurementSnapshotPlugin extends Plugin {
      */
     getRectValue(element, propertyName, layoutDimensions = this.layoutDimensions) {
         return this.getBoundingClientRect(element, layoutDimensions)[propertyName];
+    }
+
+    /**
+     * Custom `isBlock` function using the cache.
+     * Determine if a node is to be considered as a Block for the purpose
+     * of email layout.
+     */
+    isBlock(node) {
+        if (!node || node.nodeType !== Node.ELEMENT_NODE || !node.isConnected) {
+            return false;
+        }
+        if (node.nodeName === "BR") {
+            // see html_editor isBlock for explanation (browser compatibility)
+            return false;
+        }
+        const display = this.getStylePropertyValue(node, "display");
+        if (display && display !== "none") {
+            return !display.includes("inline") && display !== "contents";
+        }
+        return blockTagNames.includes(node.nodeName);
     }
 }
 

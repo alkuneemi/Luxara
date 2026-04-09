@@ -55,11 +55,14 @@ export class EmailHtmlConverter extends PluginManager {
         // 3 notify plugins that the reference is ready to be used as such (e.g. for style computations)
         this.trigger("on_reference_content_loaded_handlers");
 
-        // 4 apply layout strategies for every node in the reference
-        this.trigger("on_apply_layout_strategies_handlers");
+        // 4 build the analysis tree (discard/absorb/annotate reference nodes)
+        this.trigger("on_build_analysis_tree_handlers");
+
+        // 5 build the render tree (from analysis constraints)
+        this.trigger("on_build_render_tree_handlers");
 
         this.canRenderEmailTemplate = true;
-        // 5 render the email template
+        // 6 render the email template from the render tree
         return this.renderEmailTemplate();
     }
 

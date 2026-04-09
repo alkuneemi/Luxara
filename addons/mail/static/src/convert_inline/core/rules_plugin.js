@@ -6,22 +6,22 @@ import { Rules } from "./rules_models";
 export class RulesPlugin extends Plugin {
     static id = "rules";
     static dependencies = ["measurementSnapshot", "style"];
-    static shared = ["applyAttributeRules", "applyStyleRules", "filterStyleInfo", "getStyleInfo"];
+    static shared = [
+        "applyAttributeRules",
+        "applyStyleRules",
+        "cloneReferenceNode",
+        "filterAttributes",
+        "filterStyleInfo",
+        "getAttributes",
+        "getStyleInfo",
+    ];
     resources = {
         on_layout_dimensions_updated_handlers: this.onLayoutDimensionsUpdated.bind(this),
         on_will_load_reference_content_handlers: this.specifyRules.bind(this),
-        template_node_processors: this.applyAttributeRules.bind(this),
     };
 
     setup() {
         this.nodeInfoToStyleInfos = new WeakMap();
-    }
-
-    getStyleInfoToFiltered(nodeInfo) {
-        if (!this.nodeInfoToStyleInfos.has(nodeInfo)) {
-            this.nodeInfoToStyleInfos.set(nodeInfo, new WeakMap());
-        }
-        return this.nodeInfoToStyleInfos.get(nodeInfo);
     }
 
     specifyRules() {
@@ -32,47 +32,89 @@ export class RulesPlugin extends Plugin {
         this.styleRules = this.processRules("style_rules_processors", new Rules());
     }
 
-    applyAttributeRules(targetElement, nodeInfo, rules = this.attributeRules) {
-        if (!rules || !targetElement || targetElement.nodeType !== Node.ELEMENT_NODE) {
+    cloneReferenceNode(nodeInfo, layoutDimensions = this.layoutDimensions) {
+        const { referenceNode } = nodeInfo;
+        let clone;
+        if (referenceNode.nodeType === Node.ELEMENT_NODE) {
+            clone = this.config.referenceDocument.createElement(referenceNode.tagName);
+            this.applyAttributeRules(clone, this.getAttributes(nodeInfo));
+            this.applyStyleRules(clone, this.getStyleInfo(nodeInfo, layoutDimensions));
+        } else {
+            clone = referenceNode.cloneNode();
+        }
+        return clone;
+    }
+
+    getStyleInfoToFiltered(nodeInfo) {
+        if (!this.nodeInfoToStyleInfos.has(nodeInfo)) {
+            this.nodeInfoToStyleInfos.set(nodeInfo, new WeakMap());
+        }
+        return this.nodeInfoToStyleInfos.get(nodeInfo);
+    }
+
+    applyAttributeRules(targetElement, attributes) {
+        if (!targetElement || targetElement.nodeType !== Node.ELEMENT_NODE) {
             return targetElement;
         }
-        const attributes = new Map(
-            targetElement
-                .getAttributeNames()
-                .map((name) => [name, targetElement.getAttribute(name)])
-        );
-        rules.processData(attributes, {
+        for (const attributeName of targetElement.getAttributeNames()) {
+            targetElement.removeAttribute(attributeName);
+        }
+        for (const [attributeName, attributeValue] of Object.entries(attributes)) {
+            targetElement.setAttribute(attributeName, attributeValue);
+        }
+        return targetElement;
+    }
+
+    filterAttributes(attributes, nodeInfo, rules = this.attributeRules) {
+        let attributesMap = attributes;
+        if (attributes instanceof Array) {
+            attributesMap = new Map(attributes);
+        } else if (!(attributes instanceof Map)) {
+            attributesMap = new Map(Object.entries(attributes));
+        }
+        if (!rules) {
+            return Object.fromEntries(attributesMap);
+        }
+        const filteredAttributes = {};
+        rules.processData(attributesMap, {
             getRuleArgs: (attributeName, attributeValue) => [
                 {
                     attributeName,
                     attributeValue,
                     nodeInfo,
-                    templateNode: targetElement,
                 },
             ],
-            onPass: (attributeName, _, fixedAttributeValue) => {
-                if (fixedAttributeValue !== undefined) {
-                    targetElement.setAttribute(attributeName, fixedAttributeValue);
-                }
+            onPass: (attributeName, attributeValue, fixedArgs = {}) => {
+                filteredAttributes[attributeName] = fixedArgs.attributeValue ?? attributeValue;
             },
             onFail: (attributeName) => {
-                targetElement.removeAttribute(attributeName);
+                delete filteredAttributes[attributeName];
             },
             onMiss: (attributeName) => {
                 console.warn(
-                    `Attribute ${attributeName} is missing or was marked as blocked on the target element`,
-                    targetElement
+                    `Attribute ${attributeName} is missing or was marked as blocked on the given attributes, in relation to nodeInfo`,
+                    attributes,
+                    nodeInfo
                 );
             },
         });
-        return targetElement;
+        return filteredAttributes;
     }
 
-    applyStyleRules(targetElement, nodeInfo, rules = this.styleRules) {
-        if (!rules || !targetElement || targetElement.nodeType !== Node.ELEMENT_NODE) {
+    getAttributes(nodeInfo) {
+        return this.filterAttributes(
+            nodeInfo.referenceNode
+                .getAttributeNames()
+                .map((name) => [name, nodeInfo.referenceNode.getAttribute(name)]),
+            nodeInfo
+        );
+    }
+
+    applyStyleRules(targetElement, styleInfo) {
+        if (!targetElement || targetElement.nodeType !== Node.ELEMENT_NODE) {
             return targetElement;
         }
-        const styleInfo = this.getStyleInfo(nodeInfo);
+        targetElement.removeAttribute("style");
         styleInfo.applyOnElement(targetElement);
         return targetElement;
     }

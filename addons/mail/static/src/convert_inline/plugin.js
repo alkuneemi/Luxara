@@ -47,7 +47,7 @@ export class Plugin {
                 }
             }
         }
-        for (const [functionName, functionObject] of shortHands.entries()) {
+        for (const [functionName, functionObject] of shortHands) {
             this[functionName] = functionObject;
         }
     }

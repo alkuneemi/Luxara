@@ -22,10 +22,12 @@ export class HybridFluidStrategyPlugin extends Plugin {
         "math",
         "responsiveBlock",
         "rules",
-        "vDom",
+        "nodeInfo",
     ];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
+        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
+        synthetic_node_analysis_processors: this.addSyntheticNodeAnalysis.bind(this),
     };
 
     setup() {
@@ -34,6 +36,32 @@ export class HybridFluidStrategyPlugin extends Plugin {
             { "max-width": { value: "100%", priority: "important" } },
             768
         );
+    }
+
+    addSyntheticNodeAnalysis(nodeAnalysis) {
+        // TODO EGGMAIL NOW:
+        // we have a container which is supposed to be a hybrid fluid table
+        // with potentially multiple rows, each with potentially multiple
+        // cells.
+        // however right now, we only have one container and its children
+        // we have to create a NodeAnalysis for each row, and a NodeAnalysis
+        // for each cell.
+        // some of the existing children can be used as is as a cell
+        // the current nodeAnalysis should be replaced with the list of rows
+        // need feature to insert multiple nodes as children of another
+        // nodeAnalysis
+    }
+
+    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
+        if (analysis.isFrozen || !this.detectHybridFluidLayout(nodeInfo)) {
+            return;
+        }
+        Object.assign(analysis.parsingConstraints, {
+            canMerge: false,
+            addSyntheticNodeAnalysis: true,
+        });
+        analysis.facts.isHybridFluidRow = true;
+        identity.pluginIds.add(HybridFluidStrategyPlugin.id);
     }
 
     /**
@@ -56,6 +84,9 @@ export class HybridFluidStrategyPlugin extends Plugin {
         return true;
     }
 
+    /**
+     * TODO EGGMAIL: can I get an hybrid fluid row with only inline children? to investigate
+     */
     detectHybridFluidLayout(nodeInfo) {
         let isHybridFluidCandidate;
         const mobileBlock = this.getLayoutBlock(nodeInfo.referenceNode, MOBILE);
@@ -154,8 +185,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
             }
         }
         const fragment = this.config.referenceDocument.createDocumentFragment();
-        const templateNode = this.createTemplateNode(nodeInfo);
-        this.applyStyleRules(templateNode, nodeInfo);
+        const templateNode = this.cloneReferenceNode(nodeInfo);
         templateNode.append(...rows.map((row) => row.renderToFragment()));
         fragment.append(templateNode);
         nodeInfo.fragment = fragment;

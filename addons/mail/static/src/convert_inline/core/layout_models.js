@@ -2,9 +2,10 @@ import { xml } from "@odoo/owl";
 import { renderToFragment } from "@web/core/utils/render";
 import { ObjectMap, SetMap } from "../maps";
 import { StyleInfo, StyleInfoMap } from "./style_models";
+import { renderAttributes } from "./utils";
 
 export class NodePositionManager extends Array {
-    registerNodes(nodes) {
+    registerNodes(nodes = []) {
         const nodeIds = [];
         for (const node of nodes) {
             nodeIds.push(this.length);
@@ -23,10 +24,9 @@ export class NodePositionManager extends Array {
         }
     }
 
-    renderContext(nodes) {
-        return {
-            nodeIds: this.registerNodes(nodes),
-        };
+    renderContext(context = {}) {
+        const { nodes } = context;
+        return { ...context, nodeIds: this.registerNodes(nodes) };
     }
 
     get template() {
@@ -109,25 +109,70 @@ export class LayoutModel {
     }
 
     renderAttributes(ref = "root") {
-        return Object.assign(
-            {},
-            this.refToAttributes.get(ref),
-            { class: [...this.refToClassNames.get(ref).values()].join(" ") || undefined },
-            { style: this.refToStyleInfo.get(ref).toString() || undefined }
-        );
+        return renderAttributes({
+            attributes: this.refToAttributes.get(ref),
+            classNames: this.refToClassNames.get(ref),
+            styleInfo: this.refToStyleInfo.get(ref),
+        });
     }
 
-    renderContext(nodePositionManager) {
-        return { model: this, nodePositionManager };
+    renderContext(context = {}) {
+        return { ...context, model: this };
     }
 
     renderToFragment() {
         const nodePositionManager = new NodePositionManager();
-        const fragment = renderToFragment(this.template, this.renderContext(nodePositionManager));
+        const fragment = renderToFragment(
+            this.template,
+            this.renderContext({ nodePositionManager })
+        );
         nodePositionManager.setNodePositions(fragment);
         return fragment;
     }
 }
+
+export class LayoutModelRef extends LayoutModel {
+    static template = "mail.LayoutModelRef";
+
+    constructor({ hooks = {} } = {}) {
+        super(...arguments);
+        this.hooks = hooks;
+    }
+}
+
+export class LayoutModelRefChildNodes extends LayoutModelRef {
+    constructor({ childNodes = [], hooks = {} } = {}) {
+        super(...arguments);
+        this.childNodes = childNodes;
+        if (!hooks.content) {
+            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelChildNodes" };
+        }
+    }
+}
+
+export class LayoutModelRefTag extends LayoutModelRefChildNodes {
+    constructor({ hooks = {}, tag } = {}) {
+        super(...arguments);
+        this.tag = tag;
+        if (!hooks.content) {
+            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelTag" };
+        }
+    }
+}
+
+export class LayoutModelList extends LayoutModelRef {
+    constructor({ hooks = {}, modelList = [] } = {}) {
+        super(...arguments);
+        this.modelList = modelList;
+        if (!hooks.content) {
+            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelList" };
+        }
+    }
+}
+
+/**
+ * TODO EGGMAIL: remove/move/adapt ?
+ */
 
 export class LayoutTable extends LayoutModel {
     rows = [];

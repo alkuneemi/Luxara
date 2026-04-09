@@ -1,3 +1,5 @@
+import { StyleInfo } from "./style_models";
+
 export const BACKGROUND_VARIANTS = ["color", "image", "repeat", "size"];
 export const CONTOUR_VARIANTS = ["width", "style", "color"];
 export const DIRECTION_VARIANTS = ["top", "right", "bottom", "left"];
@@ -26,4 +28,15 @@ export function generateLonghands(propertyName, suffixArrays = []) {
         );
     }
     return result;
+}
+
+export function renderAttributes({
+    attributes = {},
+    classNames = new Set(),
+    styleInfo = new StyleInfo(),
+} = {}) {
+    return Object.assign({}, attributes, {
+        class: [...classNames.values()].join(" ") || undefined,
+        style: styleInfo.toString() || undefined,
+    });
 }
