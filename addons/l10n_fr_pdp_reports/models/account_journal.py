@@ -10,11 +10,7 @@ class AccountJournal(models.Model):
 
         # Filter journals for PDP-enabled companies
         pdp_enabled_journals = self.filtered(
-            lambda j: (
-                j.type == 'sale'
-                and j.company_id.country_code == 'FR'
-                and j.company_id.l10n_fr_pdp_send_to_ppf
-            ),
+            lambda j: (j.type == 'sale' and j.company_id.l10n_fr_f10_enable_reporting)
         )
         if not pdp_enabled_journals:
             return dashboard_data
