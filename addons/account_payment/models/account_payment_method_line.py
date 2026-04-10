@@ -68,7 +68,7 @@ class AccountPaymentMethodLine(models.Model):
         if providers := self.payment_provider_id:
             raise UserError(_(
                 "You can't delete a payment method that is linked to a provider."
-                "\n""Linked providers(s): %s",
+                "\n Linked providers(s): %s",
                 ', '.join(a.display_name for a in providers),
             ))
 
