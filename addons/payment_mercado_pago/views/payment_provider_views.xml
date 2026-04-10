@@ -31,24 +31,24 @@
                 <field
                     string="Account Country"
                     name="mercado_pago_account_country_id"
+                    invisible="code != 'mercado_pago'"
                     required="code == 'mercado_pago'"
                     readonly="mercado_pago_access_token and mercado_pago_account_country_id"
-                    invisible="code != 'mercado_pago'"
                     options="{'no_create': True}"
                 />
                 <label
                     for="mercado_pago_access_token"
-                    invisible="not mercado_pago_access_token or code != 'mercado_pago'"
+                    invisible="code != 'mercado_pago' or not mercado_pago_access_token"
                 />
                 <div
                     class="o_row"
-                    invisible="not mercado_pago_access_token or code != 'mercado_pago'"
+                    invisible="code != 'mercado_pago' or not mercado_pago_access_token"
                 >
                     <field
                         string="Access Token"
                         name="mercado_pago_access_token"
-                        readonly="True"
                         invisible="code != 'mercado_pago'"
+                        readonly="True"
                         password="True"
                     />
                     <button
@@ -56,7 +56,7 @@
                         type="object"
                         name="action_reset_credentials"
                         confirm="Are you sure you want to disconnect?"
-                        invisible="not (mercado_pago_access_token and mercado_pago_public_key) or code != 'mercado_pago'"
+                        invisible="code != 'mercado_pago' or not (mercado_pago_access_token and mercado_pago_public_key) "
                         class="btn-secondary ms-2"
                     />
                 </div>

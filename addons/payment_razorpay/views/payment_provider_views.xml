@@ -33,24 +33,24 @@
             <group name="provider_credentials" position='inside'>
                 <field name="razorpay_account_id"
                     string="Account ID"
-                    invisible="not razorpay_is_oauth_supported or code != 'razorpay'"
+                    invisible="code != 'razorpay' or not razorpay_is_oauth_supported"
                     readonly="True"
                        required="True"
                 />
                 <field
                     name="razorpay_key_id"
                     string="Key Id"
+                    invisible="code != 'razorpay' or razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
                     required="code == 'razorpay'"
-                    invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret) or code != 'razorpay'"
                     readonly="razorpay_account_id"
                 />
                 <field
                     name="razorpay_key_secret"
                     string="Key Secret"
+                    invisible="code != 'razorpay' or razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
                     required="code == 'razorpay'"
                     readonly="razorpay_account_id"
                     password="True"
-                    invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret) or code != 'razorpay'"
                 />
                 <label for="razorpay_webhook_secret" invisible="code != 'razorpay'"/>
                 <div class="o_row" invisible="code != 'razorpay'">

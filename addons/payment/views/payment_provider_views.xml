@@ -12,30 +12,34 @@
                     <!-- === Stat Buttons === -->
                     <div class="oe_button_box" name="button_box"
                          invisible="module_state != 'installed'">
-                        <button name="action_toggle_is_published"
-                                invisible="not is_published"
-                                class="oe_stat_button"
-                                type="object"
-                                icon="fa-globe">
+                        <button
+                            name="action_toggle_is_published"
+                            invisible="not is_published"
+                            class="oe_stat_button"
+                            type="object"
+                            icon="fa-globe"
+                        >
                             <div class="o_stat_info o_field_widget">
                                 <span class="o_stat_text text-success">Published</span>
                             </div>
                         </button>
-                        <button name="action_toggle_is_published"
-                                invisible="is_published"
-                                class="oe_stat_button"
-                                type="object"
-                                icon="fa-eye-slash">
+                        <button
+                            name="action_toggle_is_published"
+                            invisible="is_published"
+                            class="oe_stat_button"
+                            type="object"
+                            icon="fa-eye-slash"
+                        >
                             <div class="o_stat_info o_field_widget">
                                 <span class="o_stat_text text-danger">Unpublished</span>
                             </div>
                         </button>
                         <button
-                                name="action_view_payment_transactions"
-                                invisible="transaction_count == 0"
-                                class="oe_stat_button"
-                                type="object"
-                                icon="fa-dollar"
+                            name="action_view_payment_transactions"
+                            type="object"
+                            invisible="transaction_count == 0"
+                            class="oe_stat_button"
+                            icon="fa-dollar"
                         >
                             <div class="o_stat_info">
                                 <span class="o_stat_value order-first d-flex gap-1">
@@ -54,27 +58,31 @@
                             </div>
                         </button>
                         <button
-                                name="action_view_payment_tokens"
-                                invisible="token_count == 0"
-                                class="oe_stat_button"
-                                type="object"
-                                icon="fa-credit-card"
+                            name="action_view_payment_tokens"
+                            type="object"
+                            invisible="token_count == 0"
+                            class="oe_stat_button"
+                            icon="fa-credit-card"
                         >
                             <div class="o_stat_info o_field_widget align-items-start">
                                 <span class="o_stat_value order-first d-flex gap-1">
                                     <field
-                                            name="token_count"
-                                            widget="statinfo"
-                                            nolabel="1"
-                                            class="oe_inline"
+                                        name="token_count"
+                                        widget="statinfo"
+                                        nolabel="1"
+                                        class="oe_inline"
                                     />
                                     Tokens
                                 </span>
                             </div>
                         </button>
                     </div>
-                    <field name="image_128" widget="image" class="oe_avatar"
-                           readonly="module_state != 'installed'"/>
+                    <field
+                        name="image_128"
+                        widget="image"
+                        class="oe_avatar"
+                        readonly="module_state != 'installed'"
+                    />
                     <widget
                         name="web_ribbon"
                         title="Test Mode"
@@ -114,19 +122,47 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="name" width="200" nolabel="1"/>
                                     <field name="active" widget="boolean_toggle" width="100" nolabel="1"/>
-                                    <field name="supported_country_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
-                                    <field name="supported_currency_ids" widget="many2many_tags" nolabel="1" optional="hide"/>
-                                    <field name="brand_ids" domain="[('active','=', True)]" widget="many2many_image_tags" nolabel="1"/>
+                                    <field
+                                        name="supported_country_ids"
+                                        widget="many2many_tags"
+                                        nolabel="1"
+                                        optional="hide"
+                                    />
+                                    <field
+                                        name="supported_currency_ids"
+                                        widget="many2many_tags"
+                                        nolabel="1"
+                                        optional="hide"
+                                    />
+                                    <field
+                                        name="brand_ids"
+                                        domain="[('active','=', True)]"
+                                        widget="many2many_image_tags"
+                                        nolabel="1"
+                                    />
                                 </list>
                             </field>
                         </page>
                         <page string="Configuration" name="configuration">
                             <group name="provider_config">
-                                <group string="Credentials" name="provider_credentials" invisible="code == 'none'"/>
+                                <group
+                                    string="Credentials"
+                                    name="provider_credentials"
+                                    invisible="code == 'none'"
+                                />
                                 <group string="Options" name="payment_form">
-                                    <field name="allow_tokenization" invisible="not support_tokenization"/>
-                                    <field name="allow_express_checkout" invisible="not support_express_checkout"/>
-                                    <field name="capture_manually" invisible="not support_manual_capture"/>
+                                    <field
+                                        name="allow_tokenization"
+                                        invisible="not support_tokenization"
+                                    />
+                                    <field
+                                        name="allow_express_checkout"
+                                        invisible="not support_express_checkout"
+                                    />
+                                    <field
+                                        name="capture_manually"
+                                        invisible="not support_manual_capture"
+                                    />
                                 </group>
                                 <group string="Others" name="payment_followup" invisible="1"/>
                             </group>

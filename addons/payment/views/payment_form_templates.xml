@@ -268,7 +268,7 @@
                            t-att-data-payment-method-code="pm_sudo.code"
                            t-att-data-provider-id="provider_sudo.id"
                            t-att-data-provider-code="provider_sudo._get_code()"
-                           t-att-data-provider-state="provider_sudo.state"
+                           t-att-data-provider-state="provider_sudo.is_test"
                     />
                     <div class="d-flex gap-2 flex-grow-1 me-auto">
                         <!-- === Method label === -->

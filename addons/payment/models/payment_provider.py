@@ -352,12 +352,6 @@ class PaymentProvider(models.Model):
 
     # === CRUD METHODS === #
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        providers = super().create(vals_list)
-        providers._check_required_if_provider()
-        return providers
-
     def write(self, vals):
         if "is_test" in vals:
             self._archive_linked_tokens()
@@ -370,9 +364,8 @@ class PaymentProvider(models.Model):
     def _check_required_if_provider(self):
         """Check that provider-specific required fields have been filled.
 
-        The fields that have the `required_if_provider='<provider_code>'` attribute are made
-        required for all `payment.provider` records with the `code` field equal to `<provider_code>`
-        .
+        The fields that have the `required_if_provider='<provider_code>'` attribute are required
+        for all `payment.provider` records with the `code` field equal to `<provider_code>`.
 
         Provider-specific views should make the form fields required under the same conditions.
 
@@ -380,14 +373,13 @@ class PaymentProvider(models.Model):
         :raise ValidationError: If a provider-specific required field is empty.
         """
         field_names = []
-        installed_providers = self.filtered(
-            lambda p: p.module_state in ("installed", "uninstallable")
-        )
         for field_name, field in self._fields.items():
             required_for_provider_code = getattr(field, "required_if_provider", None)
             if required_for_provider_code and any(
                 required_for_provider_code == provider._get_code() and not provider[field_name]
-                for provider in installed_providers
+                for provider in self.filtered(
+                    lambda provider: provider.module_state in ["installed", "uninstallable"]
+                )
             ):
                 ir_field = self.env["ir.model.fields"]._get(self._name, field_name)
                 field_names.append(ir_field.field_description)
@@ -561,17 +553,6 @@ class PaymentProvider(models.Model):
             "res_model": "payment.token",
             "view_mode": "list,kanban,form",
             "domain": [("id", "in", self.with_context(active_test=False).payment_token_ids.ids)],
-            "context": {"active_test": False, "create": False},
-        }
-
-    def action_view_payment_methods(self):
-        self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Payment Methods"),
-            "res_model": "payment.method",
-            "view_mode": "list,kanban,form",
-            "domain": [("id", "in", self.with_context(active_test=False).payment_method_ids.ids)],
             "context": {"active_test": False, "create": False},
         }
 

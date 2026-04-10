@@ -9,21 +9,21 @@
             <group name="provider_credentials" position='inside'>
                 <field
                     name="paypal_email_account"
-                    required="code == 'paypal'"
                     invisible="code != 'paypal'"
+                    required="code == 'paypal'"
                 />
                 <field
                     name="paypal_client_id"
                     string="Client ID"
-                    required="code == 'paypal'"
                     invisible="code != 'paypal'"
+                    required="code == 'paypal'"
                 />
                 <field
                     name="paypal_client_secret"
                     string="Client Secret"
                     password="True"
-                    required="code == 'paypal'"
                     invisible="code != 'paypal'"
+                    required="code == 'paypal'"
                 />
                 <label for="paypal_webhook_id" string="Webhook ID" invisible="code != 'paypal'"/>
                 <div class="o_row" col="2" invisible="code != 'paypal'">

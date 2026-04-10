@@ -14,7 +14,6 @@
                             help="Make the payment methods compatible with the Paymob portal."
                             type="object"
                             name="action_sync_paymob_payment_methods"
-                            invisible="code != 'paymob'"
                             class="btn-secondary"
                         />
                     </div>
@@ -27,36 +26,36 @@
                 <field
                     name="paymob_account_country_id"
                     string="Account Country"
-                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
+                    required="code == 'paymob'"
                     options="{'no_create': True}"
                 />
                 <field
                     name="paymob_hmac_key"
                     string="HMAC Key"
                     password="True"
-                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
+                    required="code == 'paymob'"
                 />
                 <field
                     name="paymob_api_key"
                     string="API Key"
                     password="True"
-                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
+                    required="code == 'paymob'"
                 />
                 <field
                     name="paymob_secret_key"
                     string="Secret Key"
                     password="True"
-                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
+                    required="code == 'paymob'"
                 />
                 <field
                     name="paymob_public_key"
                     string="Public Key"
-                    required="code == 'paymob'"
                     invisible="code != 'paymob'"
+                    required="code == 'paymob'"
                 />
 
             </group>

@@ -8,8 +8,7 @@
         <field name="arch" type="xml">
             <sheet position="before">
                 <header invisible="context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key or stripe_publishable_key)">
-                    <div
-                     name="stripe_onboarding_group">
+                    <div name="stripe_onboarding_group">
                         <button
                             string="Connect"
                             type="object"

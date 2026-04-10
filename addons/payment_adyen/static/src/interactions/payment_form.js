@@ -87,7 +87,7 @@ patch(PaymentForm.prototype, {
                     amount: formattedAmount,
                     locale: pyToJsLocale(document.documentElement.getAttribute('lang')) || 'en-US',
                     countryCode: response['country_code'],
-                    environment: providerState === 'enabled' ? 'live' : 'test',
+                    environment: providerState === false ? 'live' : 'test',
                     onAdditionalDetails: this._adyenOnSubmitAdditionalDetails.bind(this),
                     onPaymentCompleted: this._adyenOnPaymentResolved.bind(this),
                     onPaymentFailed: this._adyenOnPaymentResolved.bind(this),
