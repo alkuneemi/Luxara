@@ -1131,6 +1131,22 @@ class CalendarEvent(models.Model):
                 'views': [(False, 'form')],
             }
 
+    def action_unlink_events(self):
+        print("pass inside the unlink events")
+        if not self.ids:
+            return
+        print("will try to send template but must check the template")
+        if template :=self.env.ref('calendar.calendar_template_delete_event', raise_if_not_found=False):
+            print("The template exist")
+            for event in self:
+                print("Is passing inside the template")
+                template.send_mail(
+                    event.id, email_layout_xmlid='mail.mail_notification_light', force_send=True
+                )
+        else:
+            _logger.warning('Template "calendar.calendar_template_delete_event" was not found. Cannot send delete notifications.')
+        self.unlink()
+
     def _mail_get_operation_for_mail_message_operation(self, message_operation):
         # reading messages on private events requires write access, not just read access
         operations = super()._mail_get_operation_for_mail_message_operation(message_operation)
