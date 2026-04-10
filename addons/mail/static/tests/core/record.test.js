@@ -1,14 +1,14 @@
+import { reactive } from "@web/owl2/utils";
 import { toRawValue } from "@mail/utils/common/local_storage";
 import { defineMailModels, start as start2 } from "@mail/../tests/mail_test_helpers";
 import { afterEach, beforeEach, describe, expect, test, tick } from "@odoo/hoot";
-import { markup, reactive, toRaw } from "@odoo/owl";
+import { immediateEffect, markup, toRaw } from "@odoo/owl";
 import { mockService, patchWithCleanup } from "@web/../tests/web_test_helpers";
 
 import { Record, Store, makeStore } from "@mail/model/export";
 import { AND, fields, makeRecordFieldLocalId, normalizeManyCommands } from "@mail/model/misc";
 import { serializeDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
-import { effect } from "@web/core/utils/reactive";
 import { browser } from "@web/core/browser/browser";
 
 const Markup = markup().constructor;
@@ -414,7 +414,7 @@ test("Computed fields: lazy (default) vs. eager", async () => {
     expect(thread.typeLazy).toBe("empty chat");
     expect.verifySteps(["LAZY"]);
     members.add("John");
-    expect.verifySteps(["EAGER"]);
+    expect.verifySteps(["EAGER", "LAZY"]); // extra-lazy because "in-need" release observed only on lazy observers no longer observing.
     expect(thread.typeEager).toBe("self-chat");
     expect.verifySteps([]);
     members.add("Antony");
@@ -561,14 +561,16 @@ test("record list sort should be manually observable", async () => {
         observedMessages.sort((m1, m2) => (m1.body < m2.body ? -1 : 1));
         expect.step(`sortMessages`);
     }
-    const observedMessages = reactive(thread.messages, sortMessages);
+    const observedMessages = reactive(thread.messages);
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
-    sortMessages();
+    immediateEffect(() => {
+        sortMessages();
+    });
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
     expect.verifySteps(["sortMessages"]);
     messages[0].body = "c";
     expect(`${thread.messages.map((m) => m.id)}`).toBe("2,1");
-    expect.verifySteps(["sortMessages", "sortMessages"]);
+    expect.verifySteps(["sortMessages"]);
     messages[0].body = "d";
     expect(`${thread.messages.map((m) => m.id)}`).toBe("2,1");
     expect.verifySteps(["sortMessages"]);
@@ -669,25 +671,27 @@ test("lazy compute should re-compute while they are observed", async () => {
     const store = await start();
     const channel = store.Channel.insert(1);
     let observe = true;
+    const reactiveChannel = reactive(channel);
     function render() {
-        if (observe) {
-            expect.step(`render ${reactiveChannel.multiplicity}`);
-        }
+        expect.step(`render ${reactiveChannel.multiplicity}`);
     }
-    const reactiveChannel = reactive(channel, render);
-    render();
-    expect.verifySteps(["computing", "render few", "render few"]);
+    immediateEffect(() => {
+        if (observe) {
+            render();
+        }
+    });
+    expect.verifySteps(["computing", "render few"]);
     channel.count = 2;
     expect.verifySteps(["computing"]);
     channel.count = 5;
     expect.verifySteps(["computing", "render many"]);
     observe = false;
     channel.count = 6;
-    expect.verifySteps(["computing"]);
+    expect.verifySteps([]);
     channel.count = 7;
-    expect.verifySteps(["computing"]);
+    expect.verifySteps([]);
     channel.count = 1;
-    expect.verifySteps(["computing"]);
+    expect.verifySteps([]);
     channel.count = 0;
     expect.verifySteps([]);
     channel.count = 7;
@@ -696,8 +700,9 @@ test("lazy compute should re-compute while they are observed", async () => {
     expect.verifySteps([]);
     expect(channel.multiplicity).toBe("few");
     expect.verifySteps(["computing"]);
-    observe = true;
-    render();
+    immediateEffect(() => {
+        render();
+    });
     expect.verifySteps(["render few"]);
     channel.count = 7;
     expect.verifySteps(["computing", "render many"]);
@@ -722,12 +727,15 @@ test("lazy sort should re-sort while they are observed", async () => {
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
     let observe = true;
     function render() {
-        if (observe) {
-            expect.step(`render ${reactiveChannel.messages.map((m) => m.id)}`);
-        }
+        expect.step(`render ${reactiveChannel.messages.map((m) => m.id)}`);
     }
-    const reactiveChannel = reactive(thread, render);
-    render();
+    const reactiveChannel = reactive(thread);
+    immediateEffect(() => {
+        if (!observe) {
+            return;
+        }
+        render();
+    });
     const message = thread.messages[0];
     expect.verifySteps(["render 1,2"]);
     message.sequence = 3;
@@ -753,8 +761,9 @@ test("lazy sort should re-sort while they are observed", async () => {
         )}`
     ).toBe("2,1", { message: "no longer observed" });
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
-    observe = true;
-    render();
+    immediateEffect(() => {
+        render();
+    });
     expect.verifySteps(["render 1,2"]);
     message.sequence = 10;
     expect.verifySteps(["render 2,1"]);
@@ -774,12 +783,15 @@ test("sort works on fields.Attr()", async () => {
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
     let observe = true;
     function render() {
-        if (observe) {
-            expect.step(`render ${reactiveChannel.messages.map((m) => m.id)}`);
-        }
+        expect.step(`render ${reactiveChannel.messages.map((m) => m.id)}`);
     }
     const reactiveChannel = reactive(thread, render);
-    render();
+    immediateEffect(() => {
+        if (!observe) {
+            return;
+        }
+        render();
+    });
     const message = thread.messages[0];
     expect.verifySteps(["render 1,2"]);
     message.sequence = 3;
@@ -801,8 +813,9 @@ test("sort works on fields.Attr()", async () => {
         message: "no longer observed",
     });
     expect(`${thread.messages.map((m) => m.id)}`).toBe("1,2");
-    observe = true;
-    render();
+    immediateEffect(() => {
+        render();
+    });
     expect.verifySteps(["render 1,2"]);
     message.sequence = 10;
     expect.verifySteps(["render 2,1"]);
@@ -814,8 +827,10 @@ test("store updates can be observed", async () => {
         expect.step(`abc:${reactiveStore.abc}`);
     }
     const rawStore = toRaw(store)._raw;
-    const reactiveStore = reactive(store, onUpdate);
-    onUpdate();
+    const reactiveStore = reactive(store);
+    immediateEffect(() => {
+        onUpdate();
+    });
     expect.verifySteps(["abc:undefined"]);
     store.abc = 1;
     expect.verifySteps(["abc:1"]); // observable from makeStore"
@@ -1575,19 +1590,16 @@ test("Record exists is reactive", async () => {
     }).register(localRegistry);
     const store = await start();
     const thread = store.Thread.insert("General");
-    effect(
-        (rec) => {
-            if (rec.exists()) {
-                expect.step("thread exists");
-            } else {
-                expect.step("thread does not exist");
-            }
-        },
-        [thread]
-    );
-    await expect.waitForSteps(["thread exists"]);
+    immediateEffect(() => {
+        if (thread.exists()) {
+            expect.step("thread exists");
+        } else {
+            expect.step("thread does not exist");
+        }
+    });
+    expect.verifySteps(["thread exists"]);
     thread.delete();
-    await expect.waitForSteps(["thread does not exist"]);
+    expect.verifySteps(["thread does not exist"]);
 });
 
 test("Normalize many commands", () => {

@@ -4,7 +4,7 @@
     <t t-name="web.KanbanMany2One">
         <div>
             <t t-if="this.props.value">
-                <t t-slot="avatar"/>
+                <t t-call-slot="avatar"/>
             </t>
             <t t-elif="!this.props.readonly">
                 <span class="o_avatar o_m2o_avatar d-flex">
@@ -30,10 +30,10 @@
             </t>
             <t t-else="">
                 <div class="o_field_many2one_selection" t-custom-ref="root">
-                    <Many2XAutocomplete t-props="many2XAutocompleteProps"/>
+                    <Many2XAutocomplete t-props="this.many2XAutocompleteProps"/>
                     <t t-if="this.hasLinkButton">
                         <button class="o_external_button btn btn-link text-action px-1 py-0" draggable="false" tabindex="-1" type="button" aria-label="Internal link" data-tooltip="Internal link" t-custom-click="(_, isMiddleClick) => this.openRecord(isMiddleClick ? 'tab' : this.env.inDialog ? 'dialog' : 'action')">
-                            <i class="oi" t-att-class="env.inDialog ? 'oi-launch' : 'oi-arrow-right'"/>
+                            <i class="oi" t-att-class="this.env.inDialog ? 'oi-launch' : 'oi-arrow-right'"/>
                         </button>
                     </t>
                     <t t-if="this.hasBarcodeButton">

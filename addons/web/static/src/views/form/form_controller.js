@@ -1,11 +1,4 @@
-import {
-    onRendered,
-    useComponent,
-    useLayoutEffect,
-    useRef,
-    useState,
-    useSubEnv,
-} from "@web/owl2/utils";
+import { useComponent, useLayoutEffect, useRef, useState, useSubEnv } from "@web/owl2/utils";
 import { _t } from "@web/core/l10n/translation";
 import { hasTouch } from "@web/core/browser/feature_detection";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
@@ -39,9 +32,8 @@ import { FormErrorDialog } from "./form_error_dialog/form_error_dialog";
 import { FormStatusIndicator } from "./form_status_indicator/form_status_indicator";
 import { FormCogMenu } from "./form_cog_menu/form_cog_menu";
 
-import { Component, onError, onMounted, onWillUnmount, status } from "@odoo/owl";
+import { Component, onError, onMounted, onWillUnmount, status, useEffect } from "@odoo/owl";
 import { FetchRecordError } from "@web/model/relational_model/errors";
-import { effect } from "@web/core/utils/reactive";
 
 const viewRegistry = registry.category("views");
 
@@ -149,6 +141,7 @@ export class FormController extends Component {
         offlineId: { type: String, optional: true },
     };
     static defaultProps = {
+        onSave: () => {},
         preventCreate: false,
         preventEdit: false,
         readonly: false,
@@ -213,21 +206,17 @@ export class FormController extends Component {
         };
         this.model = useState(useModel(this.props.Model, this.modelParams, { beforeFirstLoad }));
         useSubEnv({ model: this.model });
-        onMounted(() => {
-            effect(
-                (model) => {
-                    if (status(this) === "mounted") {
-                        this.props.updateActionState({ resId: model.root.resId });
-                    }
-                },
-                [this.model]
-            );
+        useEffect(() => {
+            this.model.root?.resId; // consume signal
+            if (status(this) === "mounted") {
+                this.props.updateActionState({ resId: this.model.root.resId });
+            }
         });
 
         onError((error) => {
-            const suggestedCompany = error.cause?.data?.context?.suggested_company;
+            const suggestedCompany = error.data?.context?.suggested_company;
             if (
-                error.cause?.data?.name === "odoo.exceptions.AccessError" &&
+                error.data?.name === "odoo.exceptions.AccessError" &&
                 suggestedCompany &&
                 !this.env.inDialog
             ) {
@@ -309,10 +298,6 @@ export class FormController extends Component {
                     onUpdate: ({ offset }) => this.onPagerUpdate({ offset, resIds }),
                 };
             }
-        });
-
-        onRendered(() => {
-            this.env.config.setDisplayName(this.displayName());
         });
 
         const { disableAutofocus } = this.archInfo;
@@ -400,8 +385,9 @@ export class FormController extends Component {
         this.duplicateId = undefined;
     }
 
-    onRootLoaded() {
-        return this.model.root.setOfflineChanges(this.props.offlineId);
+    async onRootLoaded() {
+        await this.model.root.setOfflineChanges(this.props.offlineId);
+        this.env.config.setDisplayName(this.displayName());
     }
 
     onRecordChanged() {
@@ -504,6 +490,7 @@ export class FormController extends Component {
             } else {
                 await this.model.load({ resId: resIds[offset] });
             }
+            this.env.config.setDisplayName(this.displayName());
         } catch (e) {
             if (e instanceof FetchRecordError) {
                 this.model.load({
@@ -688,7 +675,8 @@ export class FormController extends Component {
                 const params = { reload: !(this.env.inDialog && clickParams.close) };
                 saved = await record.save(params);
             }
-            if (saved !== false && this.props.onSave) {
+            if (saved !== false) {
+                this.env.config.setDisplayName(this.displayName());
                 this.props.onSave(record, clickParams);
             }
             return saved;
@@ -722,7 +710,8 @@ export class FormController extends Component {
                 ...params,
             });
         }
-        if (saved && this.props.onSave) {
+        if (saved) {
+            this.env.config.setDisplayName(this.displayName());
             this.props.onSave(record, params);
         }
         return saved;
