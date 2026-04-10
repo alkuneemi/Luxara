@@ -477,7 +477,7 @@ class BaseModel(metaclass=MetaModel):
     """
 
     _translate: bool = True           # False disables translations export for this model (Old API) TODO deprecate/remove
-    _check_company_auto: bool = False
+    _check_company_auto: bool | None = None
     """On write and create, call ``_check_company`` to ensure companies
     consistency on the relational fields having ``check_company=True``
     as attribute.
@@ -512,7 +512,9 @@ class BaseModel(metaclass=MetaModel):
     @api.model
     def _post_model_setup__(self):
         """ Method called after the model has been setup. """
-        pass
+        cls = self.env.registry[self._name]
+        if cls._check_company_auto is not None and ('company_id' not in cls._fields and 'company_ids' not in cls._fields and not any(f.check_company for f in cls._fields.values() if f.relational and f.company_dependent)) and self._name != 'res.company':
+            _logger.warning("%s._check_company_auto attribute will be ignored because it doesn't have a company_id/s field", self._name)
 
     @property
     def _table_sql(self) -> SQL:

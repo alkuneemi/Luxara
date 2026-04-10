@@ -237,7 +237,6 @@ class SaleOrder(models.Model):
         readonly=False,
         precompute=True,
         check_company=True,  # Unrequired company
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
     )
     preferred_payment_method_line_id = fields.Many2one(
         comodel_name="account.payment.method.line",
@@ -247,7 +246,7 @@ class SaleOrder(models.Model):
         precompute=True,
         readonly=False,
         check_company=True,
-        domain="[('payment_type', '=', 'inbound'), ('company_id', '=', company_id)]",
+        domain="[('payment_type', '=', 'inbound')]",
     )
     pricelist_id = fields.Many2one(
         comodel_name="product.pricelist",
@@ -258,7 +257,6 @@ class SaleOrder(models.Model):
         precompute=True,
         check_company=True,  # Unrequired company
         tracking=1,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
         help="If you change the pricelist, only newly added lines will be affected.",
     )
     currency_id = fields.Many2one(
@@ -302,7 +300,6 @@ class SaleOrder(models.Model):
         check_company=True,  # Unrequired company
         tracking=True,
         index=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
     )
     incoterm = fields.Many2one(
         comodel_name="account.incoterms",

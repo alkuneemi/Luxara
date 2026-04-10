@@ -18,7 +18,6 @@ class SaleOrder(models.Model):
         readonly=False,
         check_company=True,
         precompute=True,
-        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
     )
 
     # === COMPUTE METHODS ===#
