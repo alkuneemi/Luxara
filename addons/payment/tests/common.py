@@ -62,7 +62,7 @@ class PaymentCommon(BaseCommon):
         cls.dummy_provider = cls.env["payment.provider"].create({
             "name": "Dummy Provider",
             "code": "none",
-            "state": "test",
+            "is_test": True,
             "is_published": True,
             "payment_method_ids": [Command.set([cls.pm_unknown.id])],
             "allow_tokenization": True,
@@ -134,7 +134,7 @@ class PaymentCommon(BaseCommon):
             _logger.error("No payment.provider found for code %s in company %s", code, company.name)
             return cls.env["payment.provider"]
 
-        update_values["state"] = "test"
+        update_values["is_test"] = True
         provider.write(update_values)
         return provider
 

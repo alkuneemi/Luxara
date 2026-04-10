@@ -15,9 +15,6 @@ class AccountPaymentMethodLine(models.Model):
         readonly=False,
         domain="[('code', '=', code)]",
     )
-    payment_provider_state = fields.Selection(
-        related='payment_provider_id.module_state'
-    )
 
     @api.depends('payment_provider_id.name')
     def _compute_name(self):
@@ -65,11 +62,14 @@ class AccountPaymentMethodLine(models.Model):
     def _unlink_except_active_provider(self):
         """ Ensure we don't remove an account.payment.method.line that is linked to a provider.
         """
-        if providers := self.payment_provider_id:
+        installed_provider = self.payment_provider_id.filtered(
+            lambda provider: provider.module_state in ['installed', 'uninstallable']
+        )
+        if installed_provider:
             raise UserError(_(
-                "You can't delete a payment method that is linked to a provider."
+                "You can't delete a payment method that is linked to an installed provider."
                 "\n Linked providers(s): %s",
-                ', '.join(a.display_name for a in providers),
+                ', '.join(a.display_name for a in installed_provider),
             ))
 
     def action_open_provider_form(self):
