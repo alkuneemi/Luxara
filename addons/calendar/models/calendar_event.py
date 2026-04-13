@@ -676,11 +676,11 @@ class CalendarEvent(models.Model):
                 if vals.get('user_id'):
                     organizer_ids.add(vals['user_id'])
                 # attendee_ids structure = [[2, partner_id_to_remove], [0, 0, {'partner_id': partner_id_to_add}], ...]
-                partner_ids_from_attendees = {
+                partner_ids_from_attendees = list(dict.fromkeys(
                     attendee_vals[2]['partner_id']
                     for attendee_vals in vals['attendee_ids']
                     if len(attendee_vals) > 2 and isinstance(attendee_vals[2], dict) and 'partner_id' in attendee_vals[2]
-                }
+                ))
                 partner_ids.update(partner_ids_from_attendees)
                 vals_partner_list.append(partner_ids_from_attendees)
             organizers = self.env['res.users'].browse(organizer_ids).with_prefetch(organizer_ids)
@@ -1651,7 +1651,7 @@ class CalendarEvent(models.Model):
     @api.model
     def _get_contact_details_description(self, organizer, partners):
         """Build sanitized HTML with the organizer details and the details
-        of the contact partner (the first partner which is not the organizer).
+        of the contact partner (only when there is a single non-organizer attendee).
         """
         odoobot = self.env.ref('base.user_root')
         contact_description = []
@@ -1659,11 +1659,11 @@ class CalendarEvent(models.Model):
         if organizer and organizer != odoobot:
             contact_description.extend(self._prepare_partner_contact_details_html(_("Organized by"), organizer.partner_id))
         # First contact partner
-        first_partner = partners.filtered(lambda partner: partner not in (odoobot.partner_id + organizer.partner_id))[:1]
-        if first_partner:
+        contact_partners = partners.filtered(lambda partner: partner not in (odoobot.partner_id + organizer.partner_id))
+        if len(contact_partners) == 1:
             if contact_description:
                 contact_description.append("")  # To add a blank line between the organizer and partner details
-            contact_description.extend(self._prepare_partner_contact_details_html(_("Contact Details"), first_partner))
+            contact_description.extend(self._prepare_partner_contact_details_html(_("Contact Details"), contact_partners))
         return Markup("<br/>").join(contact_description)
 
     @api.model
