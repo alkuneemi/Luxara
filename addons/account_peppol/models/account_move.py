@@ -89,3 +89,18 @@ class AccountMove(models.Model):
                 'partner_on_peppol': invoice.commercial_partner_id.peppol_verification_state in ('valid', 'not_valid_format'),
             }
         return render_context
+
+    def action_peppol_cancel_and_remove_sequence(self):
+        self.button_cancel()
+        self.write({'name': '/'})
+
+    @api.ondelete(at_uninstall=False)
+    def _delete_documents(self):
+        peppol_moves = self.filtered(lambda m: m.peppol_message_uuid)
+        if peppol_moves:
+            raise UserError(_(
+                "Cannot delete the following invoices:\n\n%s\n\n"
+                "Documents sent/received via Peppol cannot be deleted.\n"
+                'Please cancel them instead of deleting them.',
+                "\n".join(peppol_moves.mapped("display_name")),
+            ))
