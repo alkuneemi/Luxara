@@ -167,6 +167,7 @@ class CalendarEvent(models.Model):
         help="""When synchronization with an external calendar is active, this description is synchronized \
         with the one of the associated meeting in that external calendar. Any update will be propagated there \
         and vice versa.""")
+    is_draft = fields.Boolean()
     user_id = fields.Many2one('res.users', 'Organizer', default=lambda self: self.env.user, index='btree_not_null')
     partner_id = fields.Many2one(
         'res.partner', string='Scheduled by', related='user_id.partner_id', readonly=True)
@@ -190,7 +191,7 @@ class CalendarEvent(models.Model):
     )
     show_as = fields.Selection(
         [('free', 'Available'),
-         ('busy', 'Busy')], 'Show as', default='busy', required=True,
+         ('busy', 'Busy')], 'Show as', compute='_compute_show_as', readonly=False, store=True,
         help="If the time is shown as 'busy', this event will be visible to other people with either the full \
         information or simply 'busy' written depending on its privacy. Use this option to let other people know \
         that you are unavailable during that period of time. \n If the event is shown as 'free', other users know \
@@ -307,10 +308,10 @@ class CalendarEvent(models.Model):
     awaiting_count = fields.Integer(compute="_compute_attendees_count")
     user_can_edit = fields.Boolean(compute='_compute_user_can_edit')
 
-    @api.onchange("allday")
-    def _onchange_allday(self):
+    @api.depends('allday', 'is_draft')
+    def _compute_show_as(self):
         for event in self:
-            event.show_as = 'free' if event.allday else 'busy'
+            event.show_as = 'free' if event.allday or event.is_draft else 'busy'
 
     @api.depends("attendee_ids")
     def _compute_should_show_status(self):
@@ -713,6 +714,7 @@ class CalendarEvent(models.Model):
                 'meeting_activity_ids': vals.get('meeting_activity_ids', defaults.get('meeting_activity_ids')),
                 'allday': vals.get('allday', defaults.get('allday')),
                 'description': vals.get('description', defaults.get('description')),
+                'is_draft': vals.get('is_draft', defaults.get('is_draft')),
                 'name': vals.get('name', defaults.get('name')),
                 # when res_id is not defined or vals['res_id'] == 0, fallback on default
                 'res_id': vals.get('res_id') or defaults.get('res_id'),
@@ -765,8 +767,8 @@ class CalendarEvent(models.Model):
                 }
                 if values['description']:
                     activity_vals['note'] = values['description']
-                if values['name']:
-                    activity_vals['summary'] = values['name']
+                if values['name'] or values['is_draft']:
+                    activity_vals['summary'] = f'{'[Draft] ' if values['is_draft'] else ''}{values['name']}'
                 if values['start']:
                     activity_vals['date_deadline'] = self._get_activity_deadline_from_start(fields.Datetime.from_string(values['start']), values['allday'])
                 if values['user_id']:
@@ -829,7 +831,7 @@ class CalendarEvent(models.Model):
                 detached_events = event.with_context(skip_contact_description=True)._apply_recurrence_values(recurrence_values)
                 detached_events.active = False
 
-        events.filtered(lambda event: event.start > fields.Datetime.now()).attendee_ids._send_invitation_emails()
+        events.attendee_ids._send_invitation_emails()
 
         # update activities based on calendar event data, unless already prepared
         # above manually. Heuristic: a new command (0, 0, vals) is considered as
@@ -967,12 +969,10 @@ class CalendarEvent(models.Model):
 
         current_attendees = self.filtered('active').attendee_ids
         skip_attendee_notification = self.env.context.get('skip_attendee_notification')
-        if not skip_attendee_notification and 'partner_ids' in values:
+        invited_attendees = self._get_new_invited_attendees(current_attendees, previous_attendees, vals)
+        if not skip_attendee_notification and invited_attendees:
             # we send to all partners and not only the new ones
-            (current_attendees - previous_attendees)._notify_attendees(
-                self.env.ref('calendar.calendar_template_meeting_invitation', raise_if_not_found=False),
-                force_send=True,
-            )
+            invited_attendees._send_invitation_emails()
         if not skip_attendee_notification and not self.env.context.get('is_calendar_event_new') and 'start' in values:
             start_date = fields.Datetime.to_datetime(values.get('start'))
             # Only notify on future events
@@ -1085,6 +1085,10 @@ class CalendarEvent(models.Model):
             new_event.write({'partner_ids': [(Command.set(old_event.partner_ids.ids))]})
         return new_events
 
+    def action_confirm(self):
+        self.ensure_one()
+        self.is_draft = False
+
     def action_unlink_event(self, attendee_id=None, recurrence=False):
         """
         Delete the event after displaying the delete wizard if necessary.
@@ -1093,6 +1097,7 @@ class CalendarEvent(models.Model):
         :param recurrence: Boolean indicating if the event is recurring
         :return: Action to delete the event
         """
+        print("is passing inside the unlink event method.")
         if self.user_id._has_any_active_synchronization() or len(self.ids) > 1:
             self.unlink()
             return {
@@ -1125,6 +1130,22 @@ class CalendarEvent(models.Model):
                 'target': 'new',
                 'views': [(False, 'form')],
             }
+
+    def action_unlink_events(self):
+        print("pass inside the unlink events")
+        if not self.ids:
+            return
+        print("will try to send template but must check the template")
+        if template :=self.env.ref('calendar.calendar_template_delete_event', raise_if_not_found=False):
+            print("The template exist")
+            for event in self:
+                print("Is passing inside the template")
+                template.send_mail(
+                    event.id, email_layout_xmlid='mail.mail_notification_light', force_send=True
+                )
+        else:
+            _logger.warning('Template "calendar.calendar_template_delete_event" was not found. Cannot send delete notifications.')
+        self.unlink()
 
     def _mail_get_operation_for_mail_message_operation(self, message_operation):
         # reading messages on private events requires write access, not just read access
@@ -1322,6 +1343,8 @@ class CalendarEvent(models.Model):
                 self.recurrence_id.unlink()
             elif self == self.recurrence_id.base_event_id:
                 self.recurrence_id._select_new_base_event()
+        elif not recurrence_update_setting:
+            self.write({'active': False})
 
     # ------------------------------------------------------------
     # MAILING
@@ -1340,8 +1363,8 @@ class CalendarEvent(models.Model):
         for event in self:
             if event.meeting_activity_ids:
                 activity_values = {}
-                if 'name' in fields:
-                    activity_values['summary'] = event.name
+                if 'name' in fields or 'is_draft' in fields:
+                    activity_values['summary'] = f'{'[Draft] ' if event.is_draft else ''}{event.name}'
                 if 'description' in fields:
                     activity_values['note'] = event.description
                 # protect against loops in case of ill-managed timezones
@@ -1783,6 +1806,11 @@ class CalendarEvent(models.Model):
                 contact_description.append("")  # To add a blank line between the organizer and partner details
             contact_description.extend(self._prepare_partner_contact_details_html(_("Contact Details"), first_partner))
         return Markup("<br/>").join(contact_description)
+
+    def _get_new_invited_attendees(self, current_attendees, previous_attendees, vals):
+        """Get the attendees who must receive an invitation for a modified calendar event. All of them must get it
+        when the draft state is removed as this one previously prevented invitations from being sent."""
+        return current_attendees if vals.get('is_draft') is False else current_attendees - previous_attendees
 
     @api.model
     def _prepare_partner_contact_details_html(self, section_title, partner):

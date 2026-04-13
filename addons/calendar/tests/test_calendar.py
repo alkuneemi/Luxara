@@ -232,6 +232,7 @@ class TestCalendar(SavepointCaseWithUserDemo):
         })
         _test_emails_has_attachment(self, partners=[partner_staff, new_partner], attachments_names=[a.name for a in attachments])
 
+    @freezegun.freeze_time('2011-04-30 10:00:00')
     def test_event_creation_internal_user_invitation_ics(self):
         """ Check that internal user can read invitation.ics attachment """
         internal_user = new_test_user(self.env, login='internal_user', groups='base.group_user')
