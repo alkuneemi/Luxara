@@ -2,7 +2,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
-from odoo.fields import Command, Domain
+from odoo.fields import Domain
 
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.const import REPORT_REASONS_MAPPING
@@ -15,7 +15,11 @@ class PaymentMethod(models.Model):
 
     name = fields.Char(string="Name", required=True, translate=True)
     code = fields.Char(
-        string="Code", help="The technical code of this payment method.", required=True
+        string="Code", help="The technical code of this payment method in Odoo.", required=True
+    )
+    provider_code = fields.Char(  # TODO: default value?
+        string="Provider Code",
+        help="The technical code of this payment method on the provider's side, if different from.",
     )
     sequence = fields.Integer(string="Sequence", default=1)
     primary_payment_method_id = fields.Many2one(
@@ -36,10 +40,11 @@ class PaymentMethod(models.Model):
         compute="_compute_is_primary",
         search="_search_is_primary",
     )
-    provider_ids = fields.Many2many(
-        string="Providers",
-        help="The list of providers supporting this payment method.",
+    provider_id = fields.Many2one(
+        string="Provider",
+        help="The provider supporting this payment method.",
         comodel_name="payment.provider",
+        required=True,
     )
     active = fields.Boolean(string="Active", default=True)
     image = fields.Image(
@@ -119,7 +124,7 @@ class PaymentMethod(models.Model):
 
     # === ONCHANGE METHODS === #
 
-    @api.onchange("active", "provider_ids", "support_tokenization")
+    @api.onchange("active", "provider_id", "support_tokenization")
     def _onchange_warn_before_disabling_tokens(self):
         """Display a warning about the consequences of archiving the payment method, detaching it
         from a provider, or removing its support for tokenization.
@@ -130,16 +135,14 @@ class PaymentMethod(models.Model):
         :rtype: dict
         """
         disabling = self._origin.active and not self.active
-        detached_providers = self._origin.provider_ids.filtered(
-            lambda p: p.id not in self.provider_ids.ids
-        )  # Cannot use recordset difference operation because self.provider_ids is a set of NewIds.
+        detached_provider = self._origin.provider_id
         blocking_tokenization = self._origin.support_tokenization and not self.support_tokenization
-        if disabling or detached_providers or blocking_tokenization:
+        if disabling or detached_provider or blocking_tokenization:
             related_tokens_domain = Domain(
                 "payment_method_id", "in", (self._origin + self._origin.brand_ids).ids
             )
-            if detached_providers:
-                related_tokens_domain &= Domain("provider_id", "in", detached_providers.ids)
+            if detached_provider:
+                related_tokens_domain &= Domain("provider_id", "=", detached_provider.id)
             related_tokens = (
                 self
                 .env["payment.token"]
@@ -158,24 +161,21 @@ class PaymentMethod(models.Model):
                     }
                 }
 
-    @api.onchange("provider_ids")
-    def _onchange_provider_ids_warn_before_attaching_payment_method(self):
+    @api.onchange("provider_id")
+    def _onchange_provider_id_warn_before_attaching_payment_method(self):
         """Display a warning before attaching a payment method to a provider.
 
         :return: A client action with the warning message, if any.
         :rtype: dict
         """
-        attached_providers = self.provider_ids.filtered(
-            lambda p: p.id.origin not in self._origin.provider_ids.ids
-        )
-        if attached_providers:
+        if self.provider_id:
             return {
                 "warning": {
                     "title": _("Warning"),
                     "message": _(
                         "Please make sure that %(payment_method)s is supported by %(provider)s.",
                         payment_method=self.name,
-                        provider=", ".join(attached_providers.mapped("name")),
+                        provider=self.provider_id.name,
                     ),
                 }
             }
@@ -188,7 +188,7 @@ class PaymentMethod(models.Model):
             lambda pm: (
                 pm.active
                 and (pm.primary_payment_method_id or pm).support_manual_capture == "none"
-                and any(provider.capture_manually for provider in pm.provider_ids)
+                and pm.provider_id.capture_manually
             )
         )
         if incompatible_pms:
@@ -205,10 +205,8 @@ class PaymentMethod(models.Model):
     def write(self, vals):
         # Handle payment methods being archived, detached from providers, or blocking tokenization.
         archiving = vals.get("active") is False
-        if "provider_ids" in vals:
-            detached_provider_ids = [
-                v[0] for command, *v in vals["provider_ids"] if command == Command.UNLINK
-            ]
+        if "provider_id" in vals:
+            detached_provider_ids = self.provider_id
         else:
             detached_provider_ids = []
         blocking_tokenization = vals.get("support_tokenization") is False
@@ -230,7 +228,7 @@ class PaymentMethod(models.Model):
                 primary_pm = pm if pm.is_primary else pm.primary_payment_method_id
                 if (
                     not primary_pm.active  # Don't bother for already enabled payment methods.
-                    and all(p.state == "disabled" for p in primary_pm.provider_ids)
+                    and primary_pm.provider_id.state == "disabled"
                 ):
                     raise UserError(
                         _(
@@ -248,8 +246,8 @@ class PaymentMethod(models.Model):
             raise UserError(_("You cannot delete the default payment method."))
 
     @api.ondelete(at_uninstall=False)
-    def _unlink_if_not_linked_to_providers(self):
-        if any(record.provider_ids for record in self):
+    def _unlink_if_not_linked_to_providers(self):  # TODO can we now?
+        if any(record.provider_id for record in self):
             raise UserError(_("You cannot delete a payment method linked to a provider."))
 
     # === BUSINESS METHODS === #
@@ -290,9 +288,7 @@ class PaymentMethod(models.Model):
 
         # Filter by compatible providers.
         unfiltered_pms = payment_methods
-        payment_methods = payment_methods.filtered(
-            lambda pm: any(p in provider_ids for p in pm.provider_ids.ids)
-        )
+        payment_methods = payment_methods.filtered(lambda pm: pm.provider_id.id in provider_ids)
         payment_utils.add_to_report(
             report,
             unfiltered_pms - payment_methods,
@@ -354,7 +350,10 @@ class PaymentMethod(models.Model):
                 reason=REPORT_REASONS_MAPPING["express_checkout_not_supported"],
             )
 
-        return payment_methods
+        # Remove duplicates. TODO should we extract it in a separate method?
+        pms_sorted = payment_methods.sorted(key=lambda pm: (pm.provider_id.sequence, pm.sequence))
+        seen = set()
+        return pms_sorted.filtered(lambda pm: not (pm.code in seen or seen.add(pm.code)))
 
     def _get_from_code(self, code, mapping=None):
         """Get the payment method corresponding to the given provider-specific code.

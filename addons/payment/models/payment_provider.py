@@ -63,8 +63,10 @@ class PaymentProvider(models.Model):
         related="company_id.currency_id",
         help="The main currency of the company, used to display monetary fields.",
     )
-    payment_method_ids = fields.Many2many(
-        string="Supported Payment Methods", comodel_name="payment.method"
+    payment_method_ids = fields.One2many(
+        string="Supported Payment Methods",
+        comodel_name="payment.method",
+        inverse_name="provider_id",
     )
     allow_tokenization = fields.Boolean(
         string="Allow Saving Payment Methods",
@@ -455,7 +457,7 @@ class PaymentProvider(models.Model):
         :return: None
         """
         unsupported_pms = self.payment_method_ids.filtered(
-            lambda pm: all(p.state == "disabled" for p in pm.provider_ids)
+            lambda pm: pm.provider_id.state == "disabled"
         )
         (unsupported_pms + unsupported_pms.brand_ids).active = False
 
@@ -471,7 +473,7 @@ class PaymentProvider(models.Model):
         ])
         compatible_pms = self.with_context(active_test=False).payment_method_ids.filtered(
             lambda pm: (
-                not pm.provider_ids & manual_capture_providers
+                not pm.provider_id in manual_capture_providers
                 or pm.support_manual_capture != "none"
             )
         )
@@ -1017,6 +1019,7 @@ class PaymentProvider(models.Model):
         for company in companies_needing_provider:
             # Create a copy of the provider for each company.
             main_provider.copy({"company_id": company.id})
+        # TODO: for each provider create their
 
     @api.model
     def _remove_provider(self, provider_code, **kwargs):

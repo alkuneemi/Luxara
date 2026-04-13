@@ -16,6 +16,7 @@
                         <field name="code" readonly="id" groups="base.group_no_one"/>
                         <field name="primary_payment_method_id" invisible="is_primary"/>
                         <field name="active"/>
+                        <field name="provider_id" readonly="1" string="Supported by"/>
                         <label for="supported_country_ids"/>
                         <div>
                             <field name="supported_country_ids"
@@ -40,14 +41,6 @@
                         </div>
                     </group>
                     <notebook>
-                        <page string="Providers" name="providers">
-                            <field name="provider_ids" readonly="1">
-                                <list decoration-muted="state == 'disabled'" editable="bottom">
-                                    <field name="name"/>
-                                    <field name="state"/>
-                                </list>
-                            </field>
-                        </page>
                         <page string="Brands" name="brands" invisible="not is_primary">
                             <field name="brand_ids"/>
                         </page>
@@ -74,10 +67,7 @@
                                        widget="many2many_tags"
                                        placeholder="Select currencies. Leave empty to allow any."
                                 />
-                                <field name="provider_ids"
-                                       string="Supported by"
-                                       widget="many2many_tags"
-                                />
+                                <field name="provider_id" string="Supported by"/>
                             </group>
                         </page>
                     </notebook>
@@ -123,7 +113,7 @@
                 <field name="name" string="Name"/>
                 <filter name="available_pms"
                         string="Available methods"
-                        domain="[('provider_ids.state', '!=', 'disabled')]"
+                        domain="[('provider_id.state', '!=', 'disabled')]"
                 />
             </search>
         </field>

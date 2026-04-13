@@ -15,7 +15,7 @@ class TestPaymentMethod(PaymentCommon):
         """Test that the active tokens of a payment method created through a provider are archived
         when the method is unlinked from the provider."""
         token = self._create_token()
-        self.payment_method.provider_ids = [Command.unlink(self.payment_method.provider_ids[:1].id)]
+        self.payment_method.provider_id = [Command.unlink(self.payment_method.provider_id.id)]
         self.assertFalse(token.active)
 
     def test_payment_method_requires_provider_to_be_activated(self):
@@ -34,7 +34,7 @@ class TestPaymentMethod(PaymentCommon):
             "code": "dumbrand",
             "primary_payment_method_id": self.payment_method.id,
             "active": False,
-            "provider_ids": self.provider.ids,
+            "provider_id": self.provider.id,
         })
         self._assert_does_not_raise(ValidationError, brand_payment_method.action_unarchive)
         self.assertTrue(brand_payment_method.active)
@@ -44,7 +44,7 @@ class TestPaymentMethod(PaymentCommon):
         payment_method_with_provider = self.env["payment.method"].create({
             "name": "Dummy Method",
             "code": "dummymethod",
-            "provider_ids": self.provider.ids,
+            "provider_id": self.provider.id,
         })  # self.payment_method is already checked by _unlink_if_not_default_payment_method.
         with self.assertRaises(UserError):
             payment_method_with_provider.unlink()
@@ -54,7 +54,7 @@ class TestPaymentMethod(PaymentCommon):
         payment_method_without_provider = self.env["payment.method"].create({
             "name": "Dummy Method",
             "code": "dummymethod",
-            "provider_ids": [],
+            "provider_id": False,
         })  # self.payment_method is already checked by _unlink_if_not_default_payment_method.
         self._assert_does_not_raise(UserError, payment_method_without_provider.unlink)
 
@@ -198,7 +198,7 @@ class TestPaymentMethod(PaymentCommon):
         unavailable_provider = self.provider.copy()
         payment_utils.add_to_report(report, unavailable_provider, available=False, reason="test")
         no_provider_pm = self.payment_method.copy()
-        no_provider_pm.provider_ids = [Command.set([unavailable_provider.id])]
+        no_provider_pm.provider_id = unavailable_provider.id
         unavailable_provider.payment_method_ids = [Command.set([no_provider_pm.id])]
 
         # Prepare a payment method with an incompatible country.

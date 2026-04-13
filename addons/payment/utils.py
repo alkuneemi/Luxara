@@ -86,7 +86,7 @@ def add_to_report(report, records, available=True, reason=""):
         if category == "payment_methods" and "providers" in report:
             report[category][r]["supported_providers"] = [
                 (p, report["providers"][p]["available"])
-                for p in r.provider_ids
+                for p in r.provider_id
                 if p in report["providers"]
             ]
 

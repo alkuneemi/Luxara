@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- https://docs.direct.worldline-solutions.com/en/payment-methods-and-features/index -->
+
+    <record id="payment_method_alipay_plus" model="payment.method">
+        <field name="name">Worldline Alipay+</field>
+        <field name="code">alipay_plus</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/alipay_plus.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.at'), ref('base.au'), ref('base.be'), ref('base.bg'),
+                         ref('base.ch'), ref('base.cr'), ref('base.cy'), ref('base.de'),
+                         ref('base.dk'), ref('base.ee'), ref('base.es'), ref('base.fi'),
+                         ref('base.fr'), ref('base.gr'), ref('base.hk'), ref('base.hr'),
+                         ref('base.hu'), ref('base.ie'), ref('base.is'), ref('base.it'),
+                         ref('base.kr'), ref('base.li'), ref('base.lt'), ref('base.lu'),
+                         ref('base.lv'), ref('base.mt'), ref('base.my'), ref('base.nl'),
+                         ref('base.no'), ref('base.ph'), ref('base.pl'), ref('base.pt'),
+                         ref('base.ro'), ref('base.se'), ref('base.si'), ref('base.sk'),
+                         ref('base.th'), ref('base.uk'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.AUD'), ref('base.CHF'), ref('base.DKK'), ref('base.EUR'),
+                         ref('base.GBP'), ref('base.HKD'), ref('base.KRW'), ref('base.MYR'),
+                         ref('base.NOK'), ref('base.PHP'), ref('base.SEK'), ref('base.THB'),
+                     ])]"
+        />
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_bancontact" model="payment.method">
+        <field name="name">Worldline Bancontact</field>
+        <field name="code">bancontact</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bancontact.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.be')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_bizum" model="payment.method">
+        <field name="name">Worldline Bizum</field>
+        <field name="code">bizum</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bizum.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.es')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_card" model="payment.method">
+        <field name="name">Worldline Card</field>
+        <field name="code">card</field>
+        <field name="sequence">10</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_cofidis" model="payment.method">
+        <field name="name">Worldline cofidis</field>
+        <field name="code">cofidis</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/cofidis.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.be'), ref('base.fr')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_eps" model="payment.method">
+        <field name="name">Worldline EPS</field>
+        <field name="code">eps</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/eps.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.at')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_floa_bank" model="payment.method">
+        <field name="name">Worldline Floa Bank</field>
+        <field name="code">floa_bank</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/floa_bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.br'), ref('base.es'), ref('base.fr'),
+                         ref('base.it'), ref('base.pt'),
+                     ])]"
+        />
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_ideal" model="payment.method">
+        <field name="name">Worldline iDEAL</field>
+        <field name="code">ideal</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/ideal_wero.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.nl')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_klarna" model="payment.method">
+        <field name="name">Worldline Klarna</field>
+        <field name="code">klarna</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/klarna.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.au'), ref('base.at'), ref('base.be'), ref('base.ca'),
+                         ref('base.cz'), ref('base.dk'), ref('base.fi'), ref('base.fr'),
+                         ref('base.de'), ref('base.gr'), ref('base.ie'), ref('base.it'),
+                         ref('base.nl'), ref('base.nz'), ref('base.no'), ref('base.pl'),
+                         ref('base.pt'), ref('base.es'), ref('base.se'), ref('base.ch'),
+                         ref('base.uk'), ref('base.us'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.AUD'), ref('base.EUR'), ref('base.CAD'), ref('base.CZK'),
+                         ref('base.DKK'), ref('base.NZD'), ref('base.NOK'), ref('base.PLN'),
+                         ref('base.SEK'), ref('base.CHF'), ref('base.GBP'), ref('base.USD'),
+                     ])]"
+        />
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_mbway" model="payment.method">
+        <field name="name">Worldline MB WAY</field>
+        <field name="code">mbway</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/mbway.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.pt')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_multibanco" model="payment.method">
+        <field name="name">Worldline Multibanco</field>
+        <field name="code">multibanco</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/multibanco.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.pt')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_p24" model="payment.method">
+        <field name="name">Worldline P24</field>
+        <field name="code">p24</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/p24.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.pl')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.EUR'), ref('base.PLN')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_paypal" model="payment.method">
+        <field name="name">Worldline Paypal</field>
+        <field name="code">paypal</field>
+        <field name="sequence">20</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/paypal.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_post_finance" model="payment.method">
+        <field name="name">Worldline PostFinance Pay</field>
+        <field name="code">post_finance_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/pf_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.at'), ref('base.be'), ref('base.bg'), ref('base.ch'),
+                         ref('base.cy'), ref('base.cz'), ref('base.de'), ref('base.dk'),
+                         ref('base.ee'), ref('base.es'), ref('base.fi'), ref('base.fr'),
+                         ref('base.gr'), ref('base.hr'), ref('base.hu'), ref('base.ie'),
+                         ref('base.it'), ref('base.lt'), ref('base.lu'), ref('base.lv'),
+                         ref('base.mt'), ref('base.nl'), ref('base.pl'), ref('base.pt'),
+                         ref('base.ro'), ref('base.se'), ref('base.si'), ref('base.sk'),
+                         ref('base.uk'),
+                     ])]"
+        />
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.CHF'), ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_twint" model="payment.method">
+        <field name="name">Worldline Twint</field>
+        <field name="code">twint</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/twint.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.ch')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.CHF')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+    <record id="payment_method_wechat_pay" model="payment.method">
+        <field name="name">Worldline WeChat Pay</field>
+        <field name="code">wechat_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/wechat_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.AUD'), ref('base.EUR'), ref('base.CAD'), ref('base.CNY'),
+                         ref('base.HKD'), ref('base.JPY'), ref('base.MYR'), ref('base.NZD'),
+                         ref('base.GBP'), ref('base.USD'), ref('base.SGD'), ref('base.THB'),
+                     ])]"
+        />
+        <field name="provider_id" ref="payment.payment_provider_worldline"/>
+    </record>
+
+</odoo>

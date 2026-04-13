@@ -9,7 +9,6 @@
     "data": [
         # Record data.
         "data/ir_actions_server_data.xml",
-        "data/payment_method_data.xml",
         "data/payment_provider_data.xml",
         "data/payment_cron.xml",
         "data/portal_entry_data.xml",
