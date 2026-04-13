@@ -12,8 +12,8 @@ The system is able to add and compute the shipping line.
     "depends": ["sale", "payment_custom"],
     "data": [
         "data/delivery_data.xml",
+        "data/payment_provider_data.xml",
         "data/payment_method_data.xml",
-        "data/payment_provider_data.xml",  # Depends on `payment_method_cash_on_delivery`.
         "security/ir.model.access.csv",
         "security/ir_rules.xml",
         "report/ir_actions_report_templates.xml",

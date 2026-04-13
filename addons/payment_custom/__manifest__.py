@@ -11,8 +11,8 @@
     "data": [
         "views/payment_custom_templates.xml",
         "views/payment_provider_views.xml",
+        "data/payment_provider_data.xml",
         "data/payment_method_data.xml",
-        "data/payment_provider_data.xml",  # Depends on `payment_method_wire_transfer`.
     ],
     "assets": {
         "web.assets_frontend": ["payment_custom/static/src/interactions/post_processing.js"]
