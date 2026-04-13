@@ -5,6 +5,7 @@ from base64 import b64encode
 from odoo import _, api, fields, models, modules, tools
 from odoo.exceptions import UserError
 
+from odoo.addons.account.models.company import PEPPOL_DEFAULT_COUNTRIES
 from odoo.addons.account_edi_proxy_client.models.account_edi_proxy_user import AccountEdiProxyError
 
 
@@ -71,7 +72,12 @@ class AccountInvoiceSend(models.TransientModel):
     @api.depends('peppol_invoice_ids')
     def _compute_checkbox_send_peppol(self):
         for wizard in self:
-            wizard.checkbox_send_peppol = wizard.enable_peppol and wizard.peppol_invoice_ids
+            countries = wizard.invoice_ids.partner_id.commercial_partner_id.mapped('country_code')
+            wizard.checkbox_send_peppol = (
+                wizard.enable_peppol
+                and wizard.peppol_invoice_ids
+                and any(country in PEPPOL_DEFAULT_COUNTRIES for country in countries)
+            )
 
     @api.depends('peppol_invoice_ids')
     def _compute_checkbox_send_peppol_readonly(self):
