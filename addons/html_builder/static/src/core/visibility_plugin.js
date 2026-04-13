@@ -39,6 +39,7 @@ export class VisibilityPlugin extends Plugin {
             Component: InvisibleElementsPanel,
             props: { state: this.invisibleElementsPanelState },
         }),
+        on_editor_started_handlers: () => this.refreshInvisibleElementsPanel(),
         on_step_added_handlers: ({ step: { type, extraStepInfos }, isPreviewing }) => {
             if (isPreviewing) {
                 return;
