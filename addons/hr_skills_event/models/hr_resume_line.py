@@ -9,7 +9,8 @@ class HrResumeLine(models.Model):
     event_id = fields.Many2one(
         'event.event', string="Onsite Course", compute='_compute_event_id',
         store=True, readonly=True, index='btree_not_null',
-        domain="[('is_multi_slots', '=', True), ('registration_ids', 'any', [('partner_id.employee', '=', True)])]"
+        domain="[('registration_ids', 'any', [('partner_id.employee', '=', True)])]",
+        context={'is_onsite': True},
     )
     course_type = fields.Selection(
         selection_add=[('onsite', 'Onsite')],
