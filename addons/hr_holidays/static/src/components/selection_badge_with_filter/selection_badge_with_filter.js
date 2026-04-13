@@ -9,7 +9,8 @@ export class HrHolidaysBadgeSelectionWithFilterField extends BadgesSelectionFiel
     get options() {
         const { name, record } = this.props;
         const forceFullDuration = record.context?.force_full_duration;
-        if (forceFullDuration && name === "request_duration") {
+        const isHalfDay = record.data.work_entry_type_request_unit === 'half_day';
+        if (forceFullDuration && name === "request_duration" && !isHalfDay) {
             return record.fields[name].selection.filter(([value]) => value === "full");
         }
         return super.options;
@@ -19,7 +20,7 @@ export class HrHolidaysBadgeSelectionWithFilterField extends BadgesSelectionFiel
 export const hrHolidaysBadgeSelectionFieldWithFilter = {
     ...badgesSelectionField,
     component: HrHolidaysBadgeSelectionWithFilterField,
-    displayName: _t("Badges for Selection With Filter (Full Day)"),
+    displayName: _t("Badges for Selection With Work Entry Request Unit Type Filter"),
 };
 
-registry.category("fields").add("selection_badge_with_filter_full_day", hrHolidaysBadgeSelectionFieldWithFilter);
+registry.category("fields").add("selection_badge_with_filter", hrHolidaysBadgeSelectionFieldWithFilter);

@@ -32,8 +32,8 @@ export class LeaveStatsComponent extends Component {
         });
         this.date_format = {year: "numeric", month: "2-digit", day: "2-digit"};
         this.hour_format = {hour: "2-digit", minute: "2-digit"};
-        this.state.date_from = this.props.record.data.request_date_from || DateTime.now();
-        this.state.date_to = this.props.record.data.request_date_to || DateTime.now();
+        this.state.date_from = this.props.record.data.date_from || DateTime.now();
+        this.state.date_to = this.props.record.data.date_to || DateTime.now();
         this.state.employee = this.props.record.data.employee_id;
         this.state.department = this.props.record.data.department_id;
 
@@ -138,11 +138,22 @@ export class LeaveStatsComponent extends Component {
             return;
         }
         const allocation_data = await this.orm.call("hr.work.entry.type", "get_allocation_data_request", [this.state.date_from], { context: { employee_id: employee.id } })
+        const typeIds = allocation_data.map(data => data[0].id);
+        let colorMap = {};
+        if (typeIds.length > 0) {
+            const typesWithColors = await this.orm.searchRead(
+                "hr.work.entry.type",
+                [["id", "in", typeIds]],
+                ["id", "color"]
+            );
+            typesWithColors.forEach(t => { colorMap[t.id] = t.color; });
+        }
         this.state.leaves = allocation_data
             .filter((data) => data[1].leaves_approved > 0)
             .map((data) => {
                 let work_entry_data = {}
                 work_entry_data.data = data[0]
+                work_entry_data.data.color = colorMap[data[0].id] || 0;
                 work_entry_data.unit_of_measure = data[1].unit_of_measure
                 if (data[1].unit_of_measure == 'hour') {
                     work_entry_data.leaves_approved = data[1].leaves_approved ? formatFloatTime(data[1].leaves_approved.toFixed(2)) : 0
@@ -155,22 +166,6 @@ export class LeaveStatsComponent extends Component {
                 }
                 return work_entry_data
             });
-    }
-    arrangeData(leaves) {
-        return leaves.map((leave) => {
-            let resultLeave = {};
-            resultLeave.data = {
-                id: leave.id,
-                color: leave.color,
-                work_entry_type_id: leave.work_entry_type_id,
-                work_entry_type_request_unit: leave.work_entry_type_request_unit,
-                number_of_hours: formatFloatTime(Number(leave.number_of_hours.toFixed(2))),
-                number_of_days: Number(leave.number_of_days.toFixed(2)),
-                max_leaves: leave.max_leaves,
-                virtual_remaining_leaves: leave.virtual_remaining_leaves,
-            }
-            return resultLeave;
-        })
     }
 }
 
