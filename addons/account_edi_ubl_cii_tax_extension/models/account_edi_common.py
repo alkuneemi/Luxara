@@ -95,6 +95,7 @@ TAX_EXEMPTION_MAPPING = {
 class AccountEdiCommon(models.AbstractModel):
     _inherit = "account.edi.common"
 
+<<<<<<< c30fe7e41d993e3a28a61c7ff9b613cc723b3f11
     def _get_tax_category_code(self, customer, supplier, tax):
         if tax and tax.ubl_cii_tax_category_code:
             return tax.ubl_cii_tax_category_code
@@ -102,6 +103,24 @@ class AccountEdiCommon(models.AbstractModel):
 
     def _get_tax_exemption_reason(self, customer, supplier, tax):
         if tax and (code := tax.ubl_cii_tax_exemption_reason_code):
+||||||| 611b2aecd541a5ca9c172be3d4c30aa5cda27bed
+    def _get_tax_unece_codes(self, customer, supplier, tax):
+        if tax.ubl_cii_tax_category_code:
+            reason_code = tax.ubl_cii_tax_exemption_reason_code
+            reason_code = FIX_WRONG_CODES_MAPPING.get(reason_code, reason_code)
+            tax_exemption_reason = TAX_EXEMPTION_MAPPING.get(reason_code, _("Exempt from tax") if tax.ubl_cii_requires_exemption_reason else None)
+=======
+    def _get_tax_unece_codes(self, customer, supplier, tax):
+        if tax.ubl_cii_tax_category_code:
+            reason_code = tax.ubl_cii_tax_exemption_reason_code
+            reason_code = FIX_WRONG_CODES_MAPPING.get(reason_code, reason_code)
+            cocontractant_note = self._get_belgian_cocontractant_note(customer, supplier)
+            if cocontractant_note:
+                tax_exemption_reason = TAX_EXEMPTION_MAPPING.get(reason_code)
+                tax_exemption_reason = f"{tax_exemption_reason} - {cocontractant_note}" if tax_exemption_reason else cocontractant_note
+            else:
+                tax_exemption_reason = TAX_EXEMPTION_MAPPING.get(reason_code, _("Exempt from tax") if tax.ubl_cii_requires_exemption_reason else None)
+>>>>>>> 894629916891a05c837536a63d416f106d330917
             return {
                 'tax_exemption_reason_code': code,
                 'tax_exemption_reason': TAX_EXEMPTION_MAPPING.get(code, _("Exempt from tax") if tax.ubl_cii_requires_exemption_reason else None),
