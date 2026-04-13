@@ -25,11 +25,6 @@ export class WebsiteVisibilityPlugin extends Plugin {
                 toggle: (el, show) => el.classList.toggle("o_conditional_hidden", !show),
             },
         ],
-        on_snippet_dropped_handlers: ({ snippetEl }) => {
-            for (const el of selectElements(snippetEl, "[data-visibility=conditional]")) {
-                el.classList.remove("o_conditional_hidden");
-            }
-        },
         normalize_processors: (root) => {
             const allowedDeviceOverride = this.config.isMobileView(this.editable)
                 ? ".o_snippet_mobile_invisible"
@@ -51,10 +46,8 @@ export class WebsiteVisibilityPlugin extends Plugin {
             for (const el of selectElements(root, ".o_snippet_override_invisible")) {
                 el.classList.remove("o_snippet_override_invisible");
             }
-            for (const el of selectElements(root, "[data-visibility=conditional]")) {
-                // we add `o_conditional_hidden` in the saved version,
-                // and it will be removed on load in `unhideConditionalElements`
-                el.classList.add("o_conditional_hidden");
+            for (const el of selectElements(root, ".o_conditional_hidden")) {
+                el.classList.remove("o_conditional_hidden");
             }
         },
         on_mobile_view_switched_handlers: () => {
@@ -68,6 +61,9 @@ export class WebsiteVisibilityPlugin extends Plugin {
                 }
                 this.dependencies.visibility.invalidateVisibility();
             }
+        },
+        snippet_preview_dialog_iframe_processors: ({ iframe }) => {
+            iframe.contentDocument.body.classList.add("o_conditional_visibility_ready");
         },
     };
 
