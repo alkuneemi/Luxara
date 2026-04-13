@@ -7,6 +7,11 @@ import { ThemeShadowOption } from "./theme_shadow_option";
 import { ThemeButtonOption } from "./theme_button_option";
 import { ThemeColorsOption } from "./theme_colors_option";
 import { ThemeHeadingsOption } from "./theme_headings_option";
+import { CustomizeWebsiteFontFamilyAction } from "./theme_fontfamily_option";
+import {
+    CustomizeWebsiteFontWeightAction,
+    ThemeFontWeightOption,
+} from "./theme_font_weight_option";
 import { setBuilderCSSVariables } from "@html_builder/utils/utils_css";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { _t } from "@web/core/l10n/translation";
@@ -26,8 +31,10 @@ import { ImageSize } from "@html_builder/plugins/image/image_size";
 /**
  * @typedef { Object } ThemeTabShared
  * @property { ThemeTabPlugin['buildGray'] } buildGray
+ * @property { ThemeTabPlugin['getCachedFontWeights'] } getCachedFontWeights
  * @property { ThemeTabPlugin['getGrays'] } getGrays
  * @property { ThemeTabPlugin['getGrayParams'] } getGrayParams
+ * @property { ThemeTabPlugin['setCachedFontWeights'] } setCachedFontWeights
  * @property { ThemeTabPlugin['setGrays'] } setGrays
  * @property { ThemeTabPlugin['setGrayParams'] } setGrayParams
  */
@@ -55,15 +62,26 @@ export const OPTION_POSITIONS = {
 
 export class ThemeTabPlugin extends Plugin {
     static id = "themeTab";
-    static shared = ["getGrayParams", "getGrays", "setGrays", "setGrayParams", "buildGray"];
+    static shared = [
+        "getGrayParams",
+        "getGrays",
+        "setGrays",
+        "setGrayParams",
+        "buildGray",
+        "getCachedFontWeights",
+        "setCachedFontWeights",
+    ];
     grayParams = {};
     grays = reactive({});
+    fontWeightsCache = new Map();
 
     /** @type {import("plugins").WebsiteResources} */
     resources = {
         builder_actions: {
             CustomizeGrayAction,
             ChangeColorPaletteAction,
+            CustomizeWebsiteFontFamilyAction,
+            CustomizeWebsiteFontWeightAction,
             EditCustomCodeAction,
             ConfigureApiKeyAction,
         },
@@ -91,6 +109,7 @@ export class ThemeTabPlugin extends Plugin {
                     _t("Paragraph"),
                     class ThemeParagraphOption extends BaseOptionComponent {
                         static template = "website.ThemeParagraphOption";
+                        static components = { ThemeFontWeightOption };
                     }
                 )
             ),
@@ -206,8 +225,14 @@ export class ThemeTabPlugin extends Plugin {
     getGrayParams() {
         return this.grayParams;
     }
+    getCachedFontWeights(fontName) {
+        return this.fontWeightsCache.get(fontName);
+    }
     getGrays() {
         return this.grays;
+    }
+    setCachedFontWeights(fontName, weights) {
+        this.fontWeightsCache.set(fontName, weights);
     }
     setGrayParams(key, value) {
         this.grayParams[key] = value;
