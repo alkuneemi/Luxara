@@ -193,6 +193,33 @@ class ResConfigSettings(models.TransientModel):
         domain="[('account_type', 'in', ('income', 'income_other', 'expense', 'expense_other'))]",
     )
 
+    # Intercompany clearing
+    account_interco_clearing_journal_id = fields.Many2one(
+        comodel_name='account.journal',
+        string='Intercompany Clearing Journal',
+        readonly=False,
+        check_company=True,
+        related='company_id.account_interco_clearing_journal_id',
+        domain=[('type', '=', 'general')],
+        help='The accounting journal where Intercompany payments will be cleared',
+    )
+    account_interco_payable_id = fields.Many2one(
+        comodel_name='account.account',
+        string="Intercompany Clearing Payable Account",
+        readonly=False,
+        related='company_id.account_interco_payable_id',
+        domain=[('account_type', '=', 'liability_payable'), ('reconcile', '=', True)],
+        help='The account where Intercompany invoice payments will be cleared',
+    )
+    account_interco_receivable_id = fields.Many2one(
+        comodel_name='account.account',
+        string="Intercompany Clearing Receivable Account",
+        readonly=False,
+        related='company_id.account_interco_receivable_id',
+        domain=[('account_type', '=', 'asset_receivable'), ('reconcile', '=', True)],
+        help='The account where Intercompany credit note payments will be cleared',
+    )
+
     # PEPPOL
     is_account_peppol_eligible = fields.Boolean(
         string='PEPPOL eligible',

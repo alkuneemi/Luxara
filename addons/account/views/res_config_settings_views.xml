@@ -307,6 +307,26 @@
                                         </div>
                                     </div>
                                 </setting>
+                                <setting
+                                    id="interco_clearing"
+                                    string="Intercompany Clearing"
+                                    groups="base.group_multi_company"
+                                >"
+                                    <div class="content-group">
+                                        <div class="row mt8">
+                                            <label for="account_interco_clearing_journal_id" class="col-lg-5 o_light_label" string="Journal"/>
+                                            <field name="account_interco_clearing_journal_id"/>
+                                        </div>
+                                        <div class="row mt8">
+                                            <label for="account_interco_payable_id" class="col-lg-5 o_light_label" string="Account Payable"/>
+                                            <field name="account_interco_payable_id" context="{'sort_by_non_trade': True}"/>
+                                        </div>
+                                        <div class="row mt8">
+                                            <label for="account_interco_receivable_id" class="col-lg-5 o_light_label" string="Account Receivable"/>
+                                            <field name="account_interco_receivable_id" context="{'sort_by_non_trade': True}"/>
+                                        </div>
+                                    </div>
+                                </setting>
                                 <setting id="product_accounts" string="Product Accounts:">
                                     <div class="content-group">
                                         <div class="row mt8">
