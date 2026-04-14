@@ -1011,9 +1011,9 @@ class PosConfig(models.Model):
     def _get_special_products(self):
         return self.env.ref('point_of_sale.product_product_tip', raise_if_not_found=False) or self.env['product.product']
 
-    def update_customer_display(self, order, device_uuid):
+    def update_customer_display(self, order, identifier):
         self.ensure_one()
-        self._notify(f"UPDATE_CUSTOMER_DISPLAY-{device_uuid}", order)
+        self._notify(f"UPDATE_CUSTOMER_DISPLAY-{identifier}", order)
 
     def _get_customer_display_data(self):
         self.ensure_one()

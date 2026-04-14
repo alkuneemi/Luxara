@@ -219,6 +219,7 @@
             ('remove', 'web/static/src/webclient/actions/**/*css'),
             'google_address_autocomplete/static/src/**/*',
             'point_of_sale/static/src/backend/pos_res_partner_view/*',
+            'point_of_sale/static/src/customer_display/customer_display_service.js',
         ],
         'point_of_sale.base_tests': [
             "web/static/lib/hoot-dom/**/*",
@@ -246,6 +247,7 @@
             "point_of_sale/static/src/app/hooks/time_hook.js",
             "point_of_sale/static/src/app/pos_app.scss",
             "point_of_sale/static/src/app/screens/login_screen/login_screen.scss",
+            "point_of_sale/static/src/app/utils/pretty_console_log.js",
         ],
         'point_of_sale.customer_display_assets_test': [
             ('include', 'point_of_sale.base_tests'),
