@@ -560,7 +560,7 @@ export const accountTaxHelpers = {
 
         const results = {};
 
-        if (extra_tax_data && extra_tax_data.computation_key) {
+        if (extra_tax_data && extra_tax_data.computation_key && !base_line.record?.is_downpayment) {
             results.computation_key = extra_tax_data.computation_key;
         }
 
