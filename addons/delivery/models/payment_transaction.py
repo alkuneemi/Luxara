@@ -57,11 +57,11 @@ class PaymentTransaction(models.Model):
 
             # Ensure the last transaction is not outdated.
             assert order.currency_id == last_tx.currency_id
-            if order.currency_id.compare_amounts(remaining_balance, last_tx.amount):
+            if order.currency_id.compare_amounts(remaining_balance, last_tx.amount) > 0:
                 raise UserError(
                     self.env._(
-                        "The amount authorized by the customer does not match the remaining"
-                        " balance of the order. Please consider generating a new payment link."
+                        "The remaining balance of the order cannot exceed the amount authorized by"
+                        " the customer. Please consider generating a new payment link."
                         "\n\n- Remaining Balance (%(order)s): %(remaining_balance)s"
                         "\n- Authorized Amount (%(tx)s): %(tx_amount)s",
                         order=order.display_name,
@@ -113,8 +113,15 @@ class PaymentTransaction(models.Model):
                 )
             )
 
-        # The order was not entirely delivered. Create a new transaction for the delivered amount,
-        # and a followup transaction for the remaining payment.
+        remaining_balance = order.amount_total - order.amount_paid
+        if not self.currency_id.compare_amounts(remaining_balance, order.amount_on_delivery):
+            # If both amounts are equal, no followup transaction is needed. We still create a new
+            # transaction because `order.amount_on_delivery` is lower than `self.amount`.
+            skip_followup = True
+
+        # The order was either not fully delivered, or its remaining balance decreased since this
+        # transaction was created. Create a transaction for the delivered amount and, unless
+        # `skip_followup` is set, another one for the remaining payment.
         split_vals = self._prepare_delivery_transaction_split_vals(skip_followup=skip_followup)
 
         txs = Tx.create(split_vals)

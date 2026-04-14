@@ -117,19 +117,32 @@ class TestPayOnDelivery(CashOnDeliveryCommon):
         self.assertRecordValues(self.cod_tx + new_cod_tx, [{"state": "cancel"}, {"state": "done"}])
 
     def test_raises_if_order_total_increased(self):
-        self.product_line.update({"product_uom_qty": 10, "qty_delivered": 10})
+        self.product_line.write({"product_uom_qty": 10, "qty_delivered": 10})
 
         with self.assertRaisesRegex(UserError, "Please consider generating a new payment link."):
             self.sale_order._confirm_payment_on_delivery()
 
-    def test_raises_if_order_total_decreased(self):
-        self.product_line.update({"qty_delivered": 2, "product_uom_qty": 2})
+    def test_confirm_order_with_prepayment(self):
+        prepaid_amount = self.sale_order.currency_id.round(self.sale_order.amount_total / 3)
+        self._create_transaction(
+            flow="direct",
+            sale_order_ids=[Command.set(self.sale_order.ids)],
+            partner_id=self.sale_order.partner_id.id,
+            amount=prepaid_amount,
+            currency_id=self.sale_order.currency_id.id,
+            state="done",
+        )
+        self.assertEqual(self.sale_order.amount_paid, prepaid_amount, 2)
 
-        with self.assertRaisesRegex(UserError, "Please consider generating a new payment link."):
-            self.sale_order._confirm_payment_on_delivery()
+        delivered_txs = self.sale_order._confirm_payment_on_delivery()
+
+        self.assertRecordValues(self.cod_tx + delivered_txs, [
+            {"state": "cancel", "amount": self.sale_order.amount_total},
+            {"state": "done", "amount": self.sale_order.amount_total - prepaid_amount},
+        ])  # fmt: skip
 
     def test_confirm_payment_on_delivery_with_new_transaction_after_order_total_changed(self):
-        self.product_line.update({"product_uom_qty": 10, "qty_delivered": 10})
+        self.product_line.write({"product_uom_qty": 10, "qty_delivered": 10})
         with self.assertRaisesRegex(UserError, "Please consider generating a new payment link."):
             self.sale_order._confirm_payment_on_delivery()
         new_cod_tx = self._create_cod_transaction()  # Simulate the creation of a new payment link
