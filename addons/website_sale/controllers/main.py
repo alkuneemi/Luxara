@@ -394,9 +394,6 @@ class WebsiteSale(payment_portal.PaymentPortal):
             options, post, search, website
         )
 
-        if post.get("is_ajax_count") == "true":
-            return request.make_response(json.dumps({"count": product_count}))
-
         filter_by_price_enabled = website.is_view_active("website_sale.filter_products_price")
         if filter_by_price_enabled:
             # TODO Find an alternative way to obtain the domain through the search metadata.
@@ -585,6 +582,16 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 indent=2,
             )
         values.update(self._get_additional_shop_values(values, **post))
+
+        if post.get("is_ajax") == "true":
+            html_content = request.env["ir.ui.view"]._render_template(
+                "website_sale.products", values
+            )
+
+            return request.make_response(
+                json.dumps({"count": product_count, "html": str(html_content)}),
+                headers=[("Content-Type", "application/json")],
+            )
         return request.render("website_sale.products", values)
 
     @route(

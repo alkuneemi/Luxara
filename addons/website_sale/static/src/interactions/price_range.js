@@ -24,10 +24,11 @@ export class PriceRange extends Interaction {
         const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
         if (isOffcanvas) {
             const offcanvas = document.querySelector('.o_website_offcanvas');
-            const offcanvasResponse = await fetch(`${url.pathname}?${searchParams.toString()}`);
-            const offcanvaData = await offcanvasResponse.text();
+            searchParams.set('is_ajax', 'true');
+            const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+            const data = await response.json();
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = offcanvaData;
+            tempDiv.innerHTML = data.html;
 
             const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas').innerHTML;
             const shopPageEl = document.querySelector('.o_wsale_products_page');
@@ -35,13 +36,9 @@ export class PriceRange extends Interaction {
             offcanvas.innerHTML = newOffcanvas;
             this.services['public.interactions'].startInteractions(shopPageEl);
 
-            searchParams.set('is_ajax_count', 'true');
-            const countResponse = await fetch(`${url.pathname}?${searchParams.toString()}`);
-            const countData = await countResponse.json();
-
-            const applyBtn = document.querySelector('#o_wsale_offcanvas #o_wsale_apply_filters_btn');
+            const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
             if (applyBtn) {
-                applyBtn.textContent = `Apply Filters (${countData.count})`;
+                applyBtn.textContent = `Apply Filters (${data.count})`;
             }
         } else {
             const product_list_div = document.querySelector('.o_wsale_products_grid_table_wrapper');

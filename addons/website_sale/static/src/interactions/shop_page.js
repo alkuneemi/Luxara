@@ -21,7 +21,7 @@ export class ShopPage extends Interaction {
         },
         '.o_wsale_attribute_search_bar': { 't-on-input': this.searchAttributeValues },
         '.o_wsale_view_more_btn': { 't-on-click': this.onToggleViewMoreLabel },
-        '.o_wsale_apply_filters_btn': {'t-on-click': this._onApplyFiltersClick },
+        '#o_wsale_apply_filters_btn': {'t-on-click': this._onApplyFiltersClick },
     };
 
     setup() {
@@ -56,23 +56,20 @@ export class ShopPage extends Interaction {
         const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
         if (isOffcanvas) {
             const offcanvas = document.querySelector('.o_website_offcanvas');
-
+            searchParams.set('is_ajax', 'true');
             const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
-            const data = await response.text();
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data;
-
-            const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas').innerHTML;
-            this.services['public.interactions'].stopInteractions(this.el);
-            offcanvas.innerHTML = newOffcanvas;
-            this.services['public.interactions'].startInteractions(this.el);
-
+            const data = await response.json();
+            if(data.count > 0){
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.html;
+                const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas').innerHTML;
+                this.services['public.interactions'].stopInteractions(this.el);
+                offcanvas.innerHTML = newOffcanvas;
+                this.services['public.interactions'].startInteractions(this.el);
+            }
             const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
-            searchParams.set('is_ajax_count', 'true');
-            const counResponse = await fetch(`${url.pathname}?${searchParams.toString()}`);
-            const countData = await counResponse.json();
             if (applyBtn) {
-                applyBtn.textContent = `Apply Filters (${countData.count})`;
+                applyBtn.textContent = `Apply Filters (${data.count})`;
             }
         }
         else {

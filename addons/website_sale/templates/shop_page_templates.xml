@@ -954,7 +954,7 @@
     <template id="website_sale.o_wsale_offcanvas" name="Offcanvas">
         <aside id="o_wsale_offcanvas"
                class="o_website_offcanvas offcanvas offcanvas-end p-0">
-            <div id="o_wsale_offcanvas_content" class="o_wsale_offcanvas_content accordion accordion-flush flex-grow-1 overflow-auto">
+            <div id="o_wsale_offcanvas_content" class="accordion accordion-flush flex-grow-1 overflow-auto">
                 <!-- Show sorting only if it's not avavailbe in the topbar already -->
                 <div t-if="not is_view_active('website_sale.sort')" class="accordion-item">
                     <t t-if="isSortingBy" t-set="isSortingBy" t-value="isSortingBy[0][1]"/>
@@ -1039,7 +1039,7 @@
                 </a>
                 <button
                     id="o_wsale_apply_filters_btn"
-                    class="o_wsale_apply_filters_btn btn btn-primary w-100"
+                    class="btn btn-primary w-100"
                     type="button"
                     data-bs-dismiss="offcanvas"
                 >
