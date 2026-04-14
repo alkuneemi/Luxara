@@ -37,7 +37,7 @@
                             t-out="' (' + order_line.product_uom_id.name + ')'"
                         />
                     </div>
-                    <div t-out="order_line._get_shop_warning()"/>
+                    <div t-out="order_line._get_shop_warning(clear=False)"/>
                     <div
                         name="o_wsale_unavailable_line_button_container"
                         class="mt-2 mt-md-1 d-flex align-items-center gap-2"

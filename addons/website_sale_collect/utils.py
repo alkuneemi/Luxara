@@ -29,7 +29,7 @@ def format_product_stock_values(product, wh_id=None, uom=None, free_qty=None, ca
             product.show_availability and in_stock and product.available_threshold >= free_qty
         )
         return {
-            "in_stock": in_stock or product.allow_out_of_stock_order,
+            "in_stock": in_stock,
             "uom_name": uom.name,
             "show_quantity": show_quantity,
             "quantity": free_qty_in_uom,
