@@ -38,11 +38,12 @@ import { WebsiteBuilder } from "@website/builder/website_builder";
 import { session } from "@web/session";
 import { getTranslatedElements } from "./translated_elements_getter.hoot";
 import { BackgroundShapeOptionPlugin } from "@html_builder/plugins/background_option/background_shape_option_plugin";
+import { getWebsiteId } from "./get_website_id.hoot";
 
 class Website extends models.Model {
     _name = "website";
-    get_current_website() {
-        return [1];  // When we try to retrieve the assets, they do not correspond to this website, which may not even exist.
+    async get_current_website() {
+        return getWebsiteId();
     }
 }
 
@@ -338,10 +339,11 @@ export async function setupWebsiteBuilder(
 }
 
 async function openBuilderSidebar(editAssetsLoaded) {
+    const websiteId = await getWebsiteId();
     // The next line allow us to await asynchronous fetches and cache them before it is used
     await Promise.all([
         getWebsiteSnippets(),
-        loadBundle("website.website_builder_assets?website_id=1"),  // We use id 1 for get_current_website.
+        loadBundle("website.website_builder_assets?website_id=" + websiteId[0]),
         loadBundle("html_editor.assets_image_cropper"),
     ]);
 

@@ -2904,12 +2904,12 @@ class IrQweb(models.AbstractModel):
         """
         rtl = self.env['res.lang'].sudo()._lang_get(code=(self.env.lang or self.env.user.lang)).direction == 'rtl'
         assets_params = self.env['ir.asset']._get_asset_params() # website_id
+        IrQweb = self.env['ir.qweb'].with_context({})
         debug_assets = debug and 'assets' in debug
-
         if debug_assets:
-            return self._generate_asset_links(bundle, css=css, js=js, binary=binary, debug_assets=True, assets_params=assets_params, rtl=rtl, autoprefix=autoprefix)
+            return IrQweb._generate_asset_links(bundle, css=css, js=js, binary=binary, debug_assets=True, assets_params=assets_params, rtl=rtl, autoprefix=autoprefix)
         else:
-            return self._generate_asset_links_cache(bundle, css=css, js=js, binary=binary, assets_params=assets_params, rtl=rtl, autoprefix=autoprefix)
+            return IrQweb._generate_asset_links_cache(bundle, css=css, js=js, binary=binary, assets_params=assets_params, rtl=rtl, autoprefix=autoprefix)
 
     # other methods used for the asset bundles
     @tools.conditional(
@@ -2923,8 +2923,9 @@ class IrQweb(models.AbstractModel):
 
     def _get_asset_content(self, bundle, assets_params=None):
         if assets_params is None:
-            assets_params = self.env['ir.asset']._get_asset_params()  # website_id
-        asset_paths = self.env['ir.asset']._get_asset_paths(bundle=bundle, assets_params=assets_params)
+            assets_params = self.env['ir.asset']._get_asset_params()
+        asset_paths = self.env['ir.asset'].with_context({})._get_asset_paths(bundle=bundle, assets_params=assets_params)
+
         files = []
         external_asset = []
         for path, full_path, definition_bundle, last_modified in asset_paths:
@@ -2941,10 +2942,14 @@ class IrQweb(models.AbstractModel):
         return (files, external_asset)
 
     def _get_asset_bundle(self, bundle_name, css=True, js=True, binary=False, debug_assets=False, rtl=False, assets_params=None, autoprefix=False):
+        files, external_assets = self._get_asset_content(bundle_name, assets_params)
         if assets_params is None:
             assets_params = self.env['ir.asset']._get_asset_params()
-        files, external_assets = self._get_asset_content(bundle_name, assets_params)
-        return AssetsBundle(bundle_name, files, external_assets, env=self.env, css=css, js=js, binary=binary, debug_assets=debug_assets, rtl=rtl, assets_params=assets_params, autoprefix=autoprefix)
+        env = self.env(context=assets_params)
+        return AssetsBundle(bundle_name, files, external_assets,
+            env=env, css=css, js=js, binary=binary,
+            debug_assets=debug_assets, rtl=rtl,
+            assets_params=assets_params, autoprefix=autoprefix)
 
     def _links_to_nodes(self, paths, defer_load=False, lazy_load=False, media=None):
         return [self._link_to_node(path, defer_load=defer_load, lazy_load=lazy_load, media=media) for path in paths]

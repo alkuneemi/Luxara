@@ -1,7 +1,34 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 from odoo import http
+from odoo.exceptions import AccessError
 from odoo.http import request
+
+from odoo.addons.web.controllers.home import Home
+from odoo.addons.web.controllers.webclient import WebClient
+
+def _request_update_context_website_id(env, website_id):
+    if not website_id:
+        return
+
+    error_msg = env._("You do not have access to that website.")
+    try:
+        website_id = int(website_id)
+    except (TypeError, ValueError):
+        raise AccessError(error_msg)
+
+    if website_id not in env['website'].get_all().ids:
+        raise AccessError(error_msg)
+
+    if (website_id not in (env.context.get('website_id'), env.context.get('fallback_website_id'))
+        and not (
+            (user := env.user or env['res.users'].sudo().browse(request.session.uid))
+            and user.has_group('website.group_multi_website')
+            and user.has_group('website.group_website_restricted_editor')
+        )
+    ):
+        raise AccessError(error_msg)
+
+    request.update_context(website_id=website_id)
 
 
 class WebsiteBackend(http.Controller):
@@ -54,3 +81,20 @@ class WebsiteBackend(http.Controller):
             'nbInstalled': total_features - len(features_not_installed)
         }
         return features_info
+
+
+class WebsiteWebHome(Home):
+
+    @http.route()
+    def web_client(self, s_action=None, *, website_id=None, **kw):
+        if kw.get('subpath') == 'action-website.website_preview':
+            _request_update_context_website_id(self.env, website_id)
+        return super().web_client(s_action, **kw)
+
+
+class WebsiteWebClient(WebClient):
+
+    @http.route()
+    def bundle(self, bundle_name, *, website_id=None, **bundle_params):
+        _request_update_context_website_id(self.env, website_id)
+        return super().bundle(bundle_name, **bundle_params)
