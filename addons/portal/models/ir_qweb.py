@@ -14,15 +14,12 @@ class IrQweb(models.AbstractModel):
         """
         irQweb = super()._prepare_environment(values)
 
-        if irQweb.env.context.get('minimal_qcontext'):
-            return irQweb
-
-        values.update(
-            is_html_empty=is_html_empty,
-            frontend_languages=lazy(lambda: irQweb.env['res.lang']._get_frontend())
-        )
-        for key in irQweb.env.context:
-            if key not in values:
-                values[key] = irQweb.env.context[key]
+        if not irQweb.env.context.get('minimal_qcontext'):
+            values.update(
+                is_html_empty=is_html_empty,
+                frontend_languages=lazy(lambda: irQweb.env['res.lang']._get_frontend())
+            )
+            for key in irQweb.env.context:
+                values.setdefault(key, irQweb.env.context[key])
 
         return irQweb

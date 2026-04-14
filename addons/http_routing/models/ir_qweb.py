@@ -37,11 +37,6 @@ class IrQweb(models.AbstractModel):
         irQweb = super()._prepare_environment(values)
         values['slug'] = self.env['ir.http']._slug
         values['unslug_url'] = self.env['ir.http']._unslug_url
-
-        if irQweb.env.context.get('minimal_qcontext'):
-            return irQweb
-
         values['url_for'] = self.env['ir.http']._url_for
         values['url_localized'] = self.env['ir.http']._url_localized
-
         return irQweb
