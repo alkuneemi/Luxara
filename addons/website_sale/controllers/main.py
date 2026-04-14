@@ -224,8 +224,24 @@ class WebsiteSale(payment_portal.PaymentPortal):
         min_price=0.0,
         max_price=0.0,
         conversion_rate=1,
+        attr_range_filters=None,
         **post,
     ):
+        if attr_range_filters:
+            attribute_value_dict = dict(attribute_value_dict or {})
+            for attribute_id, (min_pav_id, max_pav_id) in attr_range_filters.items():
+                attribute = request.env['product.attribute'].browse(attribute_id)
+                pavs = attribute.value_ids.sorted(key=lambda v: v.sequence)
+                if not pavs:
+                    continue
+                # Find PAVs between min and max ids by sequence
+                min_pav = request.env['product.attribute.value'].browse(min_pav_id)
+                max_pav = request.env['product.attribute.value'].browse(max_pav_id)
+                selected_pavs = pavs.filtered(
+                    lambda p: min_pav.sequence <= p.sequence <= max_pav.sequence
+                )
+                if selected_pavs:
+                    attribute_value_dict[attribute_id] = selected_pavs.ids
         return {
             "allowFuzzy": not post.get("noFuzzy"),
             "category": str(category.id) if category else None,
@@ -257,7 +273,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         self, search, min_price, max_price, order=None, tags=None, **_kwargs
     ):
         attribute_values = request.session.get("attribute_values", [])
-        return {
+        res = {
             "search": search,
             "min_price": min_price,
             "max_price": max_price,
@@ -265,6 +281,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "tags": tags,
             "attribute_values": attribute_values,
         }
+        if _kwargs.get('attribute_range'):
+            res['attribute_range'] = _kwargs['attribute_range']
+        return res
 
     def _get_additional_shop_values(self, _values, **_kwargs):
         """Update values used for rendering website_sale.products template."""
@@ -346,6 +365,18 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 post["tags"] = None
                 tags = {}
 
+        attribute_range = request.httprequest.args.get('attribute_range', '')
+        attr_range_filters = {}
+        if attribute_range:
+            for part in attribute_range.split(','):
+                try:
+                    attr_id, rest = part.split('-')
+                    min_pav_id, max_pav_id = rest.split('<')
+                    attr_range_filters[int(attr_id)] = (int(min_pav_id), int(max_pav_id))
+                except (ValueError, AttributeError):
+                    continue
+
+        post['attribute_range'] = attribute_range
         url = self._get_shop_path(category)
         keep = QueryURL(
             url, **self._shop_get_query_url_kwargs(search, min_price, max_price, **post)
@@ -382,6 +413,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             max_price=max_price,
             conversion_rate=conversion_rate,
             display_currency=website.currency_id,
+            attr_range_filters=attr_range_filters,
             extra_domain=Domain.OR([
                 Domain("public_categ_ids", "=", False),
                 Domain("public_categ_ids.not_in_shop", "=", False),
@@ -564,6 +596,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 lambda: products._get_previewed_attribute_values(category, product_query_params)
             ),
             "pavs_per_attribute": pavs_per_attribute,
+            "attr_range_filters": attr_range_filters,
         }
         if filter_by_price_enabled:
             values["min_price"] = min_price or available_min_price

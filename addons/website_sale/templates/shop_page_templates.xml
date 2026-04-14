@@ -237,13 +237,13 @@
                                     t-value="opt_wsale_filter_price and opt_wsale_attributes"
                                 />
                                 <div
-                                    t-if="attrib_values or tags or (
+                                    t-if="attrib_values or tags or attr_range_filters or (
                                         show_price_filter and isFilteringByPrice
                                     )"
                                     class="py-3 border-bottom"
                                 >
                                     <a
-                                        t-att-href="keep(attribute_values=0, tags=0, min_price=0, max_price=0)"
+                                        t-att-href="keep(attribute_range=0, attribute_values=0, tags=0, min_price=0, max_price=0)"
                                         t-attf-class="btn btn-{{navClass}} d-flex align-items-center py-1"
                                         title="Clear Filters"
                                     >
@@ -819,6 +819,39 @@
         </t>
     </template>
 
+    <template id="website_sale.filter_range_attributes" name="Range attributes in Filter">
+        <t t-set="values" t-value="sorted(pavs_per_attribute[a], key=lambda v: v.sequence)"/>
+        <t t-if="values and len(values) > 1">
+            <t t-set="value_names" t-value="[v.name for v in values]"/>
+            <t t-set="value_ids" t-value="[v.id for v in values]"/>
+            <t t-set="attribute_range" t-value="request.httprequest.args.get('attribute_range', '')"/>
+            <t t-set="min_idx" t-value="0"/>
+            <t t-set="max_idx" t-value="len(values) - 1"/>
+            <t t-foreach="attribute_range.split(',') if attribute_range else []" t-as="part">
+                <t t-if="part.startswith(str(a.id) + '-')">
+                    <t t-set="rest" t-value="part.split('-')[1]"/>
+                    <t t-set="min_pav_id" t-value="int(rest.split('&lt;')[0])"/>
+                    <t t-set="max_pav_id" t-value="int(rest.split('&lt;')[1])"/>
+                    <t t-set="min_idx" t-value="value_ids.index(min_pav_id) if min_pav_id in value_ids else 0"/>
+                    <t t-set="max_idx" t-value="value_ids.index(max_pav_id) if max_pav_id in value_ids else len(values) - 1"/>
+            </t>
+                </t>
+            </t>
+            <input
+                type="range"
+                multiple="multiple"
+                class="form-range range-with-input o_attr_range"
+                t-att-data-attribute-id="a.id"
+                t-att-data-values="json.dumps(value_names)"
+                t-att-data-value-ids="json.dumps(value_ids)"
+                min="0"
+                t-att-max="len(values) - 1"
+                t-att-value="'%d,%d' % (min_idx, max_idx)"
+                step="1"
+                form=""
+            />
+    </template>
+
     <template
         id="website_sale.product_attribute_filters_form"
         name="Product Attribute Filters Form"
@@ -828,83 +861,97 @@
             method="get"
             t-att-action="keep(attribute_values=0, tags=0)"
         >
-            <t t-foreach="attributes" t-as="a">
-                <t t-set="_status" t-value="'inactive'"/>
-                <t t-set="current_attribute_pavs" t-value="pavs_per_attribute[a]" />
-                <t
-                    t-foreach="current_attribute_pavs"
-                    t-as="v"
-                    t-if="v.id in attrib_set"
-                    t-set="_status"
-                    t-value="'active'"
-                />
-                <t
-                    t-set="_expand_attributes"
-                    t-value="_status == 'active' or len(attributes) &lt; 4"
-                />
-                <div
-                    t-if="current_attribute_pavs"
-                    t-attf-class="accordion-item {{('border-top-0 ' + ('order-1' if _status == 'active' else 'order-2')) if isMobile else 'nav-item mb-1 rounded-0'}}"
-                >
-                    <h2
-                        t-if="isMobile"
-                        class="accordion-header mb-0"
-                        t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}_header"
-                    >
-                        <button
-                            t-attf-class="o_wsale_offcanvas_title accordion-button rounded-0 {{'' if _expand_attributes else 'collapsed'}}"
-                            type="button"
-                            t-att-data-status="_status"
-                            data-bs-toggle="collapse"
-                            t-attf-data-bs-target="#o_wsale_offcanvas_attribute_{{a.id}}"
-                            t-att-aria-expanded="_expand_attributes"
-                            t-attf-aria-controls="o_wsale_offcanvas_attribute_{{a.id}}"
-                        >
-                            <b t-out="a.name"/>
-                        </button>
-                    </h2>
-                    <h6 t-else="" class="mb-3">
-                        <b class="d-none d-lg-block" t-field="a.name"/>
-                    </h6>
+           <t t-foreach="attributes" t-as="a">
+                <t t-set="values" t-value="pavs_per_attribute[a]"/>
+
+                <t t-if="not (a.display_type == 'range' and len(values) &lt;= 1)">
+                    <t t-set="_status" t-value="'inactive'"/>
+                    <t t-set="current_attribute_pavs" t-value="pavs_per_attribute[a]" />
+                    <t
+                        t-foreach="current_attribute_pavs"
+                        t-as="v"
+                        t-if="v.id in attrib_set"
+                        t-set="_status"
+                        t-value="'active'"
+                    />
+                    <t t-if="a.display_type == 'range' and a.id in attr_range_filters"
+                        t-set="_status"
+                        t-value="'active'"
+                    />
+                    <t
+                        t-set="_expand_attributes"
+                        t-value="_status == 'active' or len(attributes) &lt; 4"
+                    />
                     <div
-                        t-attf-id="{{'o_wsale_offcanvas_attribute_' + str(a.id) if isMobile else 'o_products_attributes_' + str(a.id)}}"
-                        t-attf-class="{{'accordion-collapse collapse ' + ('show' if _expand_attributes else '') if isMobile else ''}}"
+                        t-if="current_attribute_pavs"
+                        t-attf-class="accordion-item {{('border-top-0 ' + ('order-1' if _status == 'active' else 'order-2')) if isMobile else 'nav-item mb-1 rounded-0'}}"
                     >
-                        <div t-attf-class="{{'accordion-body pt-0' if isMobile else ''}}">
-                            <div
-                                t-if="a.display_type == 'select'"
-                                t-attf-class="{{'my-2' if isMobile else 'mb-3'}}"
+                        <h2
+                            t-if="isMobile"
+                            class="accordion-header mb-0"
+                            t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}_header"
+                        >
+                            <button
+                                t-attf-class="o_wsale_offcanvas_title accordion-button rounded-0 {{'' if _expand_attributes else 'collapsed'}}"
+                                type="button"
+                                t-att-data-status="_status"
+                                data-bs-toggle="collapse"
+                                t-attf-data-bs-target="#o_wsale_offcanvas_attribute_{{a.id}}"
+                                t-att-aria-expanded="_expand_attributes"
+                                t-attf-aria-controls="o_wsale_offcanvas_attribute_{{a.id}}"
                             >
-                                <t t-call="website_sale.filter_select_attributes"/>
-                            </div>
-                            <div
-                                t-elif="a.display_type == 'color'"
-                                t-attf-class="d-flex flex-wrap gap-2 {{'pt-1 pb-3' if isMobile else 'mb-3'}}"
-                            >
-                                <t t-call="website_sale.filter_color_attributes"/>
-                            </div>
-                            <div
-                                t-elif="a.display_type == 'image'"
-                                t-attf-class="d-flex flex-wrap gap-2 #{'pt-1 pb-3' if isMobile else 'mb-3'}"
-                            >
-                                <t t-call="website_sale.filter_image_attributes"/>
-                            </div>
-                            <div
-                                t-elif="a.display_type in ('radio', 'multi')"
-                                t-attf-class="{{'list-group list-group-flush' if isMobile else 'flex-column mb-3'}}"
-                            >
-                                <t t-call="website_sale.filter_radio_and_multi_attributes" isMobile="isMobile"/>
-                            </div>
-                            <div
-                                t-elif="a.display_type == 'pills'"
-                                t-attf-class="d-flex flex-wrap gap-2 {{'my-2' if isMobile else 'mb-3'}}"
-                                data-bs-toggle="buttons"
-                            >
-                                <t t-call="website_sale.filter_pills_attributes"/>
+                                <b t-out="a.name"/>
+                            </button>
+                        </h2>
+                        <h6 t-else="" class="mb-3">
+                            <b class="d-none d-lg-block" t-field="a.name"/>
+                        </h6>
+                        <div
+                            t-attf-id="{{'o_wsale_offcanvas_attribute_' + str(a.id) if isMobile else 'o_products_attributes_' + str(a.id)}}"
+                            t-attf-class="{{'accordion-collapse collapse ' + ('show' if _expand_attributes else '') if isMobile else ''}}"
+                        >
+                            <div t-attf-class="{{'accordion-body pt-0' if isMobile else ''}}">
+                                <div
+                                    t-if="a.display_type == 'select'"
+                                    t-attf-class="{{'my-2' if isMobile else 'mb-3'}}"
+                                >
+                                    <t t-call="website_sale.filter_select_attributes"/>
+                                </div>
+                                <div
+                                    t-elif="a.display_type == 'color'"
+                                    t-attf-class="d-flex flex-wrap gap-2 {{'pt-1 pb-3' if isMobile else 'mb-3'}}"
+                                >
+                                    <t t-call="website_sale.filter_color_attributes"/>
+                                </div>
+                                <div
+                                    t-elif="a.display_type == 'image'"
+                                    t-attf-class="d-flex flex-wrap gap-2 #{'pt-1 pb-3' if isMobile else 'mb-3'}"
+                                >
+                                    <t t-call="website_sale.filter_image_attributes"/>
+                                </div>
+                                <div
+                                    t-elif="a.display_type in ('radio', 'multi')"
+                                    t-attf-class="{{'list-group list-group-flush' if isMobile else 'flex-column mb-3'}}"
+                                >
+                                    <t t-call="website_sale.filter_radio_and_multi_attributes" isMobile="isMobile"/>
+                                </div>
+                                <div
+                                    t-elif="a.display_type == 'pills'"
+                                    t-attf-class="d-flex flex-wrap gap-2 {{'my-2' if isMobile else 'mb-3'}}"
+                                    data-bs-toggle="buttons"
+                                >
+                                    <t t-call="website_sale.filter_pills_attributes"/>
+                                </div>
+                                <div
+                                    t-elif="a.display_type == 'range'"
+                                    t-attf-class="{{'my-2' if isMobile else 'mb-3'}}"
+                                >
+                                    <t t-call="website_sale.filter_range_attributes"/>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </t>
             </t>
             <t t-if="isMobile">
                 <t t-if="opt_wsale_filter_tags and (opt_wsale_attributes or opt_wsale_attributes_top)">
@@ -1044,9 +1091,9 @@
                    isOffcanvas="True"/>
             </div>
             <div class="offcanvas-body d-flex justify-content-between flex-grow-0 border-top overflow-hidden">
-                <a t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags) and 'disabled' }}"
-                   t-att-aria-disabled="(not attrib_values and not isFilteringByPrice and not tags) and 'true' or 'false'"
-                   t-att-href="keep(attribute_values=0, tags=0, min_price=0, max_price=0)"
+                <a t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not attr_range_filters and not isFilteringByPrice and not tags) and 'disabled' }}"
+                   t-att-aria-disabled="(not attrib_values and not attr_range_filters and not isFilteringByPrice and not tags) and 'true' or 'false'"
+                   t-att-href="keep(attribute_range=0, attribute_values=0, tags=0, min_price=0, max_price=0)"
                    title="Clear Filters">
                     Clear Filters
                 </a>
