@@ -5,7 +5,7 @@ from odoo.http import request
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    def _get_sales_prices(self, website):
+    def _get_sales_prices(self, website, pricelist=None, fiscal_position=None):
         '''
         Resolution 4/2025 requires us to display both prices on the e-commerce site:
             - Price including taxes
@@ -15,7 +15,7 @@ class ProductTemplate(models.Model):
         price separately. This tax-excluded price is displayed on the shop page (on both list and grid views).
         '''
 
-        res = super()._get_sales_prices(website)
+        res = super()._get_sales_prices(website, pricelist=pricelist, fiscal_position=fiscal_position)
 
         if (
             website
@@ -23,12 +23,14 @@ class ProductTemplate(models.Model):
             and website.l10n_ar_website_sale_show_both_prices
             and website.show_line_subtotals_tax_selection == 'tax_included'
         ):
-            pricelist_prices = request.pricelist._compute_price_rule(self, 1.0)
+            effective_pricelist = pricelist if pricelist is not None else request.pricelist
+            pricelist_prices = effective_pricelist._compute_price_rule(self, 1.0)
+            effective_fiscal_position = fiscal_position if fiscal_position is not None else request.fiscal_position
             for template_id, template_val in res.items():
                 # Get applicable taxes for the product and map them using the website's FPOS
                 template = self.env['product.template'].browse(template_id)
                 product_taxes = template.sudo().taxes_id._filter_taxes_by_company(self.env.company)
-                mapped_taxes = request.fiscal_position.map_tax(product_taxes)
+                mapped_taxes = effective_fiscal_position.map_tax(product_taxes)
 
                 # Compute the tax-excluded value
                 total_excluded_value = mapped_taxes.compute_all(
@@ -42,9 +44,12 @@ class ProductTemplate(models.Model):
 
         return res
 
-    def _get_additionnal_combination_info(self, product_or_template, quantity, uom, date, website):
+    def _get_additionnal_combination_info(
+        self, product_or_template, quantity, uom, date, website, pricelist=None, fiscal_position=None
+    ):
         combination_info = super()._get_additionnal_combination_info(
-            product_or_template, quantity, uom, date, website
+            product_or_template, quantity, uom, date, website,
+            pricelist=pricelist, fiscal_position=fiscal_position,
         )
         if (
             website
@@ -54,10 +59,12 @@ class ProductTemplate(models.Model):
         ):
             # Get applicable taxes for the product and map them using the website's FPOS
             product_taxes = product_or_template.sudo().taxes_id._filter_taxes_by_company(self.env.company)
-            mapped_taxes = request.fiscal_position.map_tax(product_taxes)
+            effective_fiscal_position = fiscal_position if fiscal_position is not None else request.fiscal_position
+            mapped_taxes = effective_fiscal_position.map_tax(product_taxes)
 
             # Compute price per unit of product or template
-            pricelist_prices = request.pricelist._compute_price_rule(product_or_template, quantity)
+            effective_pricelist = pricelist if pricelist is not None else request.pricelist
+            pricelist_prices = effective_pricelist._compute_price_rule(product_or_template, quantity)
             unit_price = pricelist_prices[product_or_template.id][0]
 
             # Compute the tax-excluded value
