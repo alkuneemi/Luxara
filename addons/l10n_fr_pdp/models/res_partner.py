@@ -74,7 +74,7 @@ class ResPartner(models.Model):
 
     def _get_suggested_pdp_identifier(self):
         self.ensure_one()
-        siret = self.siret or (self.company_registry if siren_siret_re.match(self.company_registry) else '')
+        siret = self.siret or (self.company_registry if siren_siret_re.match(self.company_registry or '') else '')
         siren = siret[:9]
         if len(siret) == 9:
             return siret[:9]
