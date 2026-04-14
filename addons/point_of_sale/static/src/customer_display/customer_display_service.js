@@ -1,7 +1,6 @@
 import { registry } from "@web/core/registry";
 import { reactive } from "@web/owl2/utils";
-import { session } from "@web/session";
-import { getOnNotified, uuidv4 } from "@point_of_sale/utils";
+import { uuidv4 } from "@point_of_sale/utils";
 import { logPosMessage } from "@point_of_sale/app/utils/pretty_console_log";
 
 export const CONSOLE_COLOR = "#F5B427";
@@ -11,10 +10,9 @@ export class CustomerDisplayService {
         this.setup(...args);
     }
 
-    async setup(env, { orm, bus_service }) {
+    async setup(env, { pos_webrtc }) {
         this.env = env;
-        this.orm = orm;
-        this.bus = bus_service;
+        this.posWebrtc = pos_webrtc;
         this.data = reactive({});
 
         // Fallback communication channel used when WebRTC is unavailable (e.g., network loss).
@@ -25,7 +23,8 @@ export class CustomerDisplayService {
     async initSender(identifier, models, GeneratePrinterData) {
         this.models = models;
         this.GeneratePrinterData = GeneratePrinterData;
-        this.identifier = identifier;
+
+        await this.posWebrtc.init(identifier);
     }
 
     /**
@@ -80,29 +79,14 @@ export class CustomerDisplayService {
 
     send(payload) {
         const payloadStr = JSON.stringify(payload);
-        this.orm
-            .call("pos.config", "update_customer_display", [
-                [odoo.pos_config_id],
-                payloadStr,
-                this.identifier,
-            ])
-            .catch((error) => {
-                logPosMessage(
-                    "CustomerDisplay",
-                    "dispatch",
-                    "Failed to update customer display",
-                    CONSOLE_COLOR,
-                    [error]
-                );
-            });
+        this.posWebrtc.send(payloadStr);
         this.channel.postMessage(payloadStr);
     }
 
     async initReceiver(identifier) {
-        getOnNotified(this.bus, session.access_token)(
-            `UPDATE_CUSTOMER_DISPLAY-${identifier}`,
-            (payload) => this._onDataReceived(payload)
-        );
+        this.posWebrtc.addListener(this._onDataReceived.bind(this));
+        this.posWebrtc.shouldInitiateOffer = true;
+        await this.posWebrtc.init(identifier);
 
         this.channel.onmessage = (event) => this._onDataReceived(event.data);
     }
@@ -133,7 +117,7 @@ export class CustomerDisplayService {
 }
 
 export const customerDisplayService = {
-    dependencies: ["bus_service", "orm"],
+    dependencies: ["pos_webrtc"],
     async start(env, services) {
         return new CustomerDisplayService(env, services);
     },

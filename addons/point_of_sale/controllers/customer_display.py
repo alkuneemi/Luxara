@@ -19,3 +19,9 @@ class PosCustomerDisplay(http.Controller):
                 },
             },
         )
+
+    @http.route('/pos_webrtc_signaling', auth='public', type='jsonrpc')
+    def pos_webrtc_signaling(self, pos_config_id, payload, identifier=0):
+        pos_config_sudo = request.env['pos.config'].sudo().browse(int(pos_config_id)).exists()
+        if pos_config_sudo:
+            pos_config_sudo._notify(f'POS_WEBRTC_SIGNALING-{identifier}', payload)
