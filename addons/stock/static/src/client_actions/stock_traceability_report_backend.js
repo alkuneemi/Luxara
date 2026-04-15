@@ -12,6 +12,10 @@ function processLine(line) {
     return { ...line, lines: [], isFolded: true };
 }
 
+function countUnfoldableLines(lines) {
+    return lines.filter((line) => line.unfoldable).length;
+}
+
 function extractPrintData(lines) {
     const data = [];
     for (const line of lines) {
@@ -43,11 +47,15 @@ export class TraceabilityReport extends Component {
         useSetupAction({
             getLocalState: () => ({
                 lines: [...this.state.lines],
+                foldedUnfoldableCount: this.state.foldedUnfoldableCount,
+                totalUnfoldableCount: this.state.totalUnfoldableCount,
             }),
         });
 
         this.state = useState({
             lines: this.props.state?.lines || [],
+            foldedUnfoldableCount: this.props.state?.foldedUnfoldableCount || 0,
+            totalUnfoldableCount: this.props.state?.totalUnfoldableCount || 0,
         });
 
         const { active_id, active_model, auto_unfold, context, lot_name, ttype, url, lang } =
@@ -80,7 +88,17 @@ export class TraceabilityReport extends Component {
                 this.context,
             ]);
             this.state.lines = mainLines.map(processLine);
+            this.state.foldedUnfoldableCount = countUnfoldableLines(this.state.lines);
+            this.state.totalUnfoldableCount = countUnfoldableLines(this.state.lines);
         }
+    }
+
+    get hasUnfoldableLines() {
+        return this.state.totalUnfoldableCount > 0;
+    }
+
+    get hasFoldedLines() {
+        return this.state.foldedUnfoldableCount > 0;
     }
 
     onClickBoundLink(line) {
@@ -141,7 +159,34 @@ export class TraceabilityReport extends Component {
         });
     }
 
+    async onClickUnfold() {
+        const unfoldLines = async (lines) => {
+            for (const line of lines) {
+                if (line.unfoldable) {
+                    if (line.isFolded) {
+                        await this.toggleLine(line);
+                    }
+                    await unfoldLines(line.lines);
+                }
+            }
+        };
+        await unfoldLines(this.state.lines);
+    }
+
+    onClickFold() {
+        const foldLines = (lines) => {
+            for (const line of lines) {
+                if (!line.isFolded) {
+                    this.toggleLine(line);
+                }
+                foldLines(line.lines);
+            }
+        };
+        foldLines(this.state.lines);
+    }
+
     async toggleLine(line) {
+        const wasFolded = line.isFolded;
         line.isFolded = !line.isFolded;
         if (!line.lines.length) {
             line.lines = (
@@ -151,6 +196,12 @@ export class TraceabilityReport extends Component {
                     level: line.level + 30 || 1,
                 })
             ).map(processLine);
+            const newUnfoldableLines = countUnfoldableLines(line.lines);
+            this.state.foldedUnfoldableCount += newUnfoldableLines;
+            this.state.totalUnfoldableCount += newUnfoldableLines;
+        }
+        if (line.unfoldable) {
+            this.state.foldedUnfoldableCount += wasFolded ? -1 : 1;
         }
     }
 }
