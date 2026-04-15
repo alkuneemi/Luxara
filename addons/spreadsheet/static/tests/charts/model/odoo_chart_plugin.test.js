@@ -1418,6 +1418,26 @@ test("Show values is taken into account in the runtime", async () => {
     expect(runtime.chartJsConfig.options.plugins.chartShowValuesPlugin.type).toBe("bar");
 });
 
+test("Show totals is taken into account in the runtime", async () => {
+    const { model } = await createSpreadsheetWithChart({ type: "bar" });
+    const sheetId = model.getters.getActiveSheetId();
+    const chartId = model.getters.getChartIds(sheetId)[0];
+    const definition = model.getters.getChartDefinition(chartId);
+    model.dispatch("UPDATE_CHART", {
+        definition: {
+            ...definition,
+            showTotals: true,
+        },
+        chartId,
+        figureId: model.getters.getFigureIdFromChartId(chartId),
+        sheetId,
+    });
+    const runtime = model.getters.getChartRuntime(chartId);
+    expect(model.getters.getChartDefinition(chartId).showTotals).toBe(true);
+    expect(runtime.chartJsConfig.options.plugins.chartShowValuesPlugin.showTotals).toBe(true);
+    expect(runtime.chartJsConfig.options.plugins.chartShowValuesPlugin.type).toBe("bar");
+});
+
 test("Odoo line and bar charts display only horizontal grid lines", async () => {
     const { model } = await createSpreadsheetWithChart({
         type: "line",
