@@ -14,6 +14,7 @@ import { MenuDialog } from "@website/components/dialog/edit_menu";
 import { SavePlugin } from "@html_builder/core/save_plugin";
 import { insertText } from "@html_editor/../tests/_helpers/user_actions";
 import { browser } from "@web/core/browser/browser";
+import { getWebsiteId } from "../get_website_id.hoot";
 
 defineWebsiteModels();
 
@@ -203,11 +204,12 @@ describe("EditMenuDialog", () => {
         is_homepage: false,
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const websiteId = await getWebsiteId();
         mockService("website", {
             get currentWebsite() {
                 return {
-                    id: 1,
+                    id: websiteId,
                     default_lang_id: {
                         code: "en_US",
                     },

@@ -443,6 +443,7 @@ export async function waitForSnippetDialog() {
  * @param {string | string[]} snippetName
  */
 export async function setupWebsiteBuilderWithSnippet(snippetName, options = {}) {
+    const websiteId = await getWebsiteId();
     patchDOMParser();
     mockService("website", {
         get currentWebsite() {
