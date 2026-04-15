@@ -467,7 +467,7 @@ export const snippetService = {
         };
 
         const snippetModelsMap = new Map();
-        const getSnippetModel = (snippetsName) => {
+        const getSnippetModel = (snippetsName, additionalContext) => {
             if (snippetModelsMap.has(snippetsName)) {
                 return snippetModelsMap.get(snippetsName);
             }
@@ -478,7 +478,7 @@ export const snippetService = {
                 snippetsName,
                 new Model(services, {
                     snippetsName,
-                    context,
+                    context: Object.assign({}, context, additionalContext),
                 })
             );
             return snippetModelsMap.get(snippetsName);

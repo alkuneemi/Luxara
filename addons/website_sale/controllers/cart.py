@@ -29,7 +29,8 @@ class Cart(PaymentPortal):
         :return: The rendered cart page.
         :rtype: str
         """
-        if not request.website.has_ecommerce_access():
+        website = self.env["website"].get_current_website()
+        if not website.has_ecommerce_access():
             return request.redirect("/web/login")
 
         order_sudo = request.cart
@@ -71,7 +72,7 @@ class Cart(PaymentPortal):
             values["suggested_products"] = order_sudo._cart_accessories()
             values.update(self._get_express_shop_payment_values(order_sudo))
 
-        values.update(request.website._get_checkout_step_values())
+        values.update(website._get_checkout_step_values())
         values.update(self._cart_values(**post))
         values.update(self._prepare_order_history())
         return request.render("website_sale.cart", values)
@@ -120,7 +121,8 @@ class Cart(PaymentPortal):
         :return: The values
         :rtype: dict
         """
-        order_sudo = request.cart or request.website._create_cart()
+        website = self.env["website"].get_current_website()
+        order_sudo = request.cart or website._create_cart()
         # Do not allow float values in ecommerce by default
         quantity = (quantity and int(quantity)) or 1
 
@@ -250,9 +252,9 @@ class Cart(PaymentPortal):
     def quick_add(self, product_template_id, product_id, quantity=1.0, **kwargs):
         values = self.add_to_cart(product_template_id, product_id, quantity=quantity, **kwargs)
 
-        IrUiView = request.env["ir.ui.view"]
+        website = self.env["website"].get_current_website()
         order_sudo = request.cart
-        values["website_sale.cart_lines"] = IrUiView._render_template(
+        values["website_sale.cart_lines"] = website._render_template(
             "website_sale.cart_lines",
             {
                 "website_sale_order": order_sudo,
@@ -260,16 +262,16 @@ class Cart(PaymentPortal):
                 "suggested_products": order_sudo._cart_accessories(),
             },
         )
-        values["website_sale.shorter_cart_summary"] = IrUiView._render_template(
+        values["website_sale.shorter_cart_summary"] = website._render_template(
             "website_sale.shorter_cart_summary",
             {
                 "website_sale_order": order_sudo,
                 "show_shorter_cart_summary": True,
                 **self._get_express_shop_payment_values(order_sudo),
-                **request.website._get_checkout_step_values(),
+                **website._get_checkout_step_values(),
             },
         )
-        values["website_sale.quick_reorder_history"] = IrUiView._render_template(
+        values["website_sale.quick_reorder_history"] = website._render_template(
             "website_sale.quick_reorder_history",
             {"website_sale_order": order_sudo, **self._prepare_order_history()},
         )
@@ -277,8 +279,9 @@ class Cart(PaymentPortal):
         return values
 
     def _get_express_shop_payment_values(self, order, **_kwargs):
+        website = self.env["website"].get_current_website()
         payment_form_values = CustomerPortal._get_payment_values(
-            self, order, website_id=request.website.id, is_express_checkout=True
+            self, order, website_id=website.id, is_express_checkout=True
         )
         payment_form_values.update({
             "payment_access_token": payment_form_values.pop("access_token"),  # Rename the key.
@@ -286,7 +289,7 @@ class Cart(PaymentPortal):
             "minor_amount": payment_utils.to_minor_currency_units(
                 order._get_amount_total_excluding_delivery(), order.currency_id
             ),
-            "merchant_name": request.website.name,
+            "merchant_name": website.name,
             "transaction_route": f"/shop/payment/transaction/{order.id}",
             "express_checkout_route": WebsiteSale._express_checkout_route,
             "landing_route": "/shop/payment/validate",
@@ -299,7 +302,7 @@ class Cart(PaymentPortal):
             ),
             "shipping_address_update_route": WebsiteSale._express_checkout_delivery_route,
         })
-        if request.website.is_public_user():
+        if website.is_public_user():
             payment_form_values["partner_id"] = -1
         return payment_form_values
 
@@ -324,7 +327,6 @@ class Cart(PaymentPortal):
         """
         order_sudo = request.cart
         quantity = int(quantity)  # Do not allow float values in ecommerce by default
-        IrUiView = request.env["ir.ui.view"]
 
         # This method must be only called from the cart page BUT in some advanced logic
         # eg. website_sale_loyalty, a cart line could be a temporary record without id.
@@ -345,7 +347,8 @@ class Cart(PaymentPortal):
                 order_sudo.amount_total, order_sudo.currency_id
             )
         ) or 0.0
-        values["website_sale.cart_lines"] = IrUiView._render_template(
+        website = self.env["website"].get_current_website()
+        values["website_sale.cart_lines"] = website._render_template(
             "website_sale.cart_lines",
             {
                 "website_sale_order": order_sudo,
@@ -353,10 +356,10 @@ class Cart(PaymentPortal):
                 "suggested_products": order_sudo._cart_accessories(),
             },
         )
-        values["website_sale.total"] = IrUiView._render_template(
+        values["website_sale.total"] = website._render_template(
             "website_sale.total", {"website_sale_order": order_sudo}
         )
-        values["website_sale.quick_reorder_history"] = IrUiView._render_template(
+        values["website_sale.quick_reorder_history"] = website._render_template(
             "website_sale.quick_reorder_history",
             {"website_sale_order": order_sudo, **self._prepare_order_history()},
         )
@@ -385,6 +388,8 @@ class Cart(PaymentPortal):
             """Check if two combo lines have the same linked product combination."""
             return line1_.linked_line_ids.product_id.ids == line2_.linked_line_ids.product_id.ids
 
+        website = request.env["website"].get_current_website()
+
         # Get the last 10 confirmed orders from the current website user.
         previous_orders_lines_sudo = (
             request
@@ -394,7 +399,7 @@ class Cart(PaymentPortal):
                 [
                     ("partner_id", "=", request.env.user.partner_id.id),
                     ("state", "=", "sale"),
-                    ("website_id", "=", request.website.id),
+                    ("website_id", "=", website.id),
                 ],
                 order="date_order desc",
                 limit=10,
@@ -414,8 +419,8 @@ class Cart(PaymentPortal):
                 line_sudo.linked_line_id.product_type == "combo"
                 or not line_sudo._is_sellable()
                 or (
-                    request.website.prevent_sale
-                    and request.website._prevent_product_sale(
+                    website.prevent_sale
+                    and website._prevent_product_sale(
                         line_sudo.product_id,
                         line_sudo.product_id._get_combination_info_variant()["price"] == 0,
                     )

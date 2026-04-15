@@ -8,7 +8,6 @@ import json
 import logging
 import re
 import requests
-import threading
 import types
 import werkzeug.routing
 
@@ -28,7 +27,7 @@ from odoo.fields import Domain
 from odoo.http import request
 from odoo.models import Query
 from odoo.modules.module import get_manifest
-from odoo.tools import BinaryBytes, file_open
+from odoo.tools import BinaryBytes, file_open, lazy
 from odoo.tools.image import image_process
 from odoo.tools.sql import SQL, escape_psql
 from odoo.tools.translate import _
@@ -113,10 +112,16 @@ class Website(models.CachedModel):
     # translatable field, such as contact_us_link_url by website_sale, as
     # translating to an invalid language would result in an error.
     _clear_cache_name = 'default'
-    _cached_data_fields = (
-        'user_id', 'company_id', 'default_lang_id', 'homepage_url',
-        'domain', 'cookies_bar',
-    )
+
+    @property
+    def _cached_data_fields(self):
+        return [
+            f.name
+            for f in self._fields.values()
+            if f.name != 'id'
+            if f.prefetch is True
+            if not f.groups
+        ]
 
     @tools.ormcache(cache='default')
     def _cached_data(self):
@@ -212,7 +217,7 @@ class Website(models.CachedModel):
     plausible_shared_key = fields.Char()
     plausible_site = fields.Char()
 
-    user_id = fields.Many2one('res.users', string='Public User', required=True)
+    user_id = fields.Many2one('res.users', string='Public User', required=True)  # TODO to rename user_id into public_user_id
     cdn_activated = fields.Boolean('Content Delivery Network (CDN)')
     cdn_url = fields.Char('CDN Base URL', default='')
     cdn_filters = fields.Text('CDN Filters', default=lambda s: '\n'.join(DEFAULT_CDN_FILTERS), help="URL matching those filters will be rewritten using the CDN Base URL")
@@ -272,10 +277,19 @@ class Website(models.CachedModel):
 
     def _compute_menu(self):
         # prefetch all accessible menus at once
-        all_menus = self.env['website.menu'].search_fetch(Domain('website_id', 'in', self.ids))
+        all_menus = self.env['website.menu'].search_fetch(Domain('website_id', 'in', self.ids + [False]))
 
         for website in self:
             menus = all_menus.filtered(lambda m: m.website_id == website)
+
+            # add the child menu without contained into menu with a website
+            for menu in all_menus.filtered(lambda m: not m.website_id):
+                parent = menu.parent_id
+                while parent:
+                    if parent.website_id == website:
+                        menus += menu
+                        break
+                    parent = parent.parent_id
 
             # use field parent_id (1 query) to determine field child_id (2 queries by level)"
             children = dict.fromkeys(menus, ())
@@ -368,7 +382,7 @@ class Website(models.CachedModel):
 
         result = super(Website, self - public_user_to_change_websites).write(values)
 
-        if 'cdn_activated' in values or 'cdn_url' in values or 'cdn_filters' in values:
+        if any(key in values for key in ["cdn_activated", "cdn_url", "cdn_filters", "domain"]):
             # invalidate the caches from static node at compile time
             if any(self._ids):
                 self.env.registry.clear_cache()
@@ -441,8 +455,8 @@ class Website(models.CachedModel):
 
             try:
                 parsed = urlparse(record.domain)
-            except ValueError:
-                raise ValidationError(_("The provided website domain is not a valid URL."))
+            except ValueError as e:
+                raise ValidationError(_("The provided website domain is not a valid URL.")) from e
 
             if tools.urls._contains_dot_segments(parsed.path):
                 raise ValidationError(_("The domain path cannot contain relative path segments like '/./' or '/../'."))
@@ -682,7 +696,7 @@ class Website(models.CachedModel):
     @api.model
     def configurator_init(self):
         r = dict()
-        current_website = self.get_current_website()
+        current_website = self.get_current_website(fallback=True)
         company = current_website.company_id
         configurator_features = self.env['website.configurator.feature'].search([])
         r['features'] = [{
@@ -708,7 +722,7 @@ class Website(models.CachedModel):
 
     @api.model
     def configurator_recommended_themes(self, industry_id, palette, result_nbr_max=3):
-        Module = request.env['ir.module.module']
+        Module = self.env['ir.module.module']
         domain = Module.get_themes_domain()
         domain = Domain.AND([[('name', '!=', 'theme_default')], domain])
         client_themes = Module.search(domain).mapped('name')
@@ -744,7 +758,7 @@ class Website(models.CachedModel):
 
     @api.model
     def configurator_apply(self, **kwargs):
-        website = self.get_current_website()
+        website = self.get_current_website(fallback=True)
         theme_name = kwargs['theme_name']
         theme = self.env['ir.module.module'].search([('name', '=', theme_name)])
         redirect_url = theme.button_choose_theme()
@@ -914,7 +928,7 @@ class Website(models.CachedModel):
         industry = kwargs['industry_name']
 
         IrQweb = self.env['ir.qweb'].with_context(website_id=website.id, lang=website.default_lang_id.code)
-        text_generation_target_lang = self.get_current_website().default_lang_id.code
+        text_generation_target_lang = self.get_current_website(fallback=True).default_lang_id.code
         # If the target language is not English, we need a good translation
         # coverage. But if the target lang is en_XX it's ok to have en_US text.
         text_must_be_translated_for_openai = not text_generation_target_lang.startswith('en_')
@@ -1233,7 +1247,8 @@ class Website(models.CachedModel):
             name = 'Home'
             page_key = 'home'
 
-        template_record = self.env.ref(template)
+        website = self.get_current_website()
+        template_record = self.env.ref(template).with_context(website_id=website.id)
         arch = template_record.arch
         if sections_arch:
             tree = html.fromstring(arch)
@@ -1241,9 +1256,8 @@ class Website(models.CachedModel):
             for section in html.fromstring(f'<wrap>{sections_arch}</wrap>'):
                 wrap.append(section)
             arch = etree.tostring(tree, encoding="unicode")
-        website_id = self.env.context.get('website_id')
         key = self.get_unique_key(page_key, template_module)
-        view = template_record.copy({'website_id': website_id, 'key': key})
+        view = template_record.copy({'website_id': website.id, 'key': key})
 
         view.with_context(lang=None).write({
             'arch': arch.replace(template, key),
@@ -1411,127 +1425,62 @@ class Website(models.CachedModel):
     # ----------------------------------------------------------
 
     @api.model
-    def get_current_website(self, fallback=True):
-        """ The current website is returned in the following order:
+    def get_current_website(self, fallback=None):
+        """Get the current website id from the context.
 
-        - the website forced in session `force_website_id`
-        - the website set in context
-        - (if frontend or fallback) the website matching the request's "domain"
-        - arbitrary the first website found in the database if `fallback` is set
-          to `True`
-        - empty browse record
+        First find the website from 'website_id' in the context.
+        The context value are automatically set set in env['ir.http']._match
+        and env['ir.http']._pre_dispatch
+
+        If it's not found, and the fallback is not False, get
+        'fallback_website_id'.
+
+        If the 'fallback_website_id' is not present in the context then check
+        the url directely on the current thread.
+
+        If the website is not found, and the fallback is True, then search the
+        first existing website.
+
+        :type fallback: bool
+        :return: website recordset
         """
-        is_frontend_request = request and getattr(request, 'is_frontend', False)
-        if request and request.session.get('force_website_id'):
-            website_id = self.browse(request.session['force_website_id']).exists()
-            if not website_id:
-                # Don't crash is session website got deleted
-                request.session.pop('force_website_id')
-            else:
-                return website_id
+        existing_ids = self.get_all().ids
+        if website_id := self.env.context.get('website_id'):
+            # during the match of env['ir.http'], the website information was
+            # added from the request.
+            if website_id in existing_ids:
+                return self.browse(website_id)
 
-        website_id = self.env.context.get('website_id')
-        if website_id:
-            return self.browse(website_id)
-
-        if not is_frontend_request and not fallback:
-            # It's important than backend requests with no fallback requested
-            # don't go through
+        if fallback is False:
             return self.browse(False)
 
-        # Reaching this point means that:
-        # - We didn't find a website in the session or in the context.
-        # - And we are either:
-        #   - in a frontend context
-        #   - in a backend context (or early in the dispatch stack) and a
-        #     fallback website is requested.
-        # We will now try to find a website matching the request host/domain (if
-        # there is one on request) or return a random one.
+        if 'fallback_website_id' in self.env.context:
+            # during the match of env['ir.http'], the website information was
+            # added from the request.
+            website_id = self.env.context.get('fallback_website_id')
+        else:
+            # The request is not currently accessible for this route; you must
+            # call the fallback which will be done with respect to the URL on
+            # the current thread.
+            website_id = self.env['ir.http']._get_current_website_fallback()
 
-        # The format of `httprequest.host` is `domain:port`
-        domain_name = (
-            request and request.httprequest.host
-            or hasattr(threading.current_thread(), 'url') and threading.current_thread().url
-            or '')
-        website_id = self.sudo()._get_current_website_id(domain_name, fallback=fallback)
-        return self.browse(website_id)
+        if website_id not in existing_ids:
+            if fallback and existing_ids:
+                # TODO: check if we can remove it
+                website_id = existing_ids[0]
+            else:
+                website_id = False
 
-    @api.model
-    @tools.ormcache('domain_name', 'fallback')
-    def _get_current_website_id(self, domain_name, fallback=True):
-        """Get the current website id.
-
-        First find the website for which the configured `domain` (after
-        ignoring a potential scheme) is equal to the given
-        `domain_name`. If a match is found, return it immediately.
-
-        If there is no website found for the given `domain_name`, either
-        fallback to the first found website (no matter its `domain`) or return
-        False depending on the `fallback` parameter.
-
-        :param domain_name: the domain for which we want the website.
-            In regard to the `url_parse` method, only the `netloc` part should
-            be given here, no `scheme`.
-        :type domain_name: string
-
-        :param fallback: if True and no website is found for the specificed
-            `domain_name`, return the first website (without filtering them)
-        :type fallback: bool
-
-        :return: id of the found website, or False if no website is found and
-            `fallback` is False
-        :rtype: int or False
-
-        :raises: if `fallback` is True but no website at all is found
-        """
-        def _remove_port(domain_name):
-            return (domain_name or '').split(':')[0]
-
-        def _filter_domain(website, domain_name, ignore_port=False):
-            """Ignore `scheme` from the `domain`, just match the `netloc` which
-            is host:port in the version of `url_parse` we use."""
-            website_domain = get_base_domain(website.domain_punycode)
-            if ignore_port:
-                website_domain = _remove_port(website_domain)
-                domain_name = _remove_port(domain_name)
-            return website_domain.lower() == (domain_name or '').lower()
-
-        # We need to test two possibilities unicode or punycode (safety guard)
-        domain_name = domain_name.encode("idna").decode("ascii")
-        domain_name_idna = domain_name.encode("ascii").decode("idna")
-
-        # TODO: in master, store the computed field domain_punycode to avoid
-        #       the need to search on domain_name and domain_name_idna.
-        found_websites = self.search([
-            '|',
-            ('domain', 'ilike', _remove_port(domain_name)),
-            ('domain', 'ilike', _remove_port(domain_name_idna)),
-        ])
-        # Filter for the exact domain (to filter out potential subdomains) due
-        # to the use of ilike.
-        # `domain_name` could be an empty string, in that case multiple website
-        # without a domain will be returned
-        websites = found_websites.filtered(lambda w: _filter_domain(w, domain_name))
-        # If there is no domain matching for the given port, ignore the port.
-        websites = websites or found_websites.filtered(lambda w: _filter_domain(w, domain_name, ignore_port=True))
-
-        if not websites:
-            if not fallback:
-                return False
-            return self.search([], limit=1).id
-
-        return websites[0].id
+        return self.browse(website_id).with_context(website_id=website_id)
 
     def _force(self):
-        self._force_website(self.id)
-
-    def _force_website(self, website_id):
         if request:
-            request.session['force_website_id'] = website_id and str(website_id).isdigit() and int(website_id)
+            request.session['force_website_id'] = self.id
 
     @api.model
     def is_public_user(self):
-        return request.env.user == request.website.user_id
+        website = self.get_current_website()
+        return self.env.user == website.user_id
 
     @api.model
     def viewref(self, view_id, raise_if_not_found=True):
@@ -1550,17 +1499,90 @@ class Website(models.CachedModel):
         return self.env['ir.ui.view'].sudo().with_context(active_test=False)._get_template_view(view_id, raise_if_not_found=raise_if_not_found)
 
     @api.model
+    def _render_template(self, template, values=None):
+        """ Render the template. If website is enabled on request, then extend rendering context with website values. """
+        self.ensure_one()
+
+        user = self.env.user
+        IrUiView = self.env['ir.ui.view'].with_context(website_id=self.id)
+        IrHttp = self.env['ir.http'].with_context(website_id=self.id)
+
+        view = IrUiView._get_template_view(template).sudo()
+        if isinstance(template, int) and view.key:
+            view = IrUiView._get_template_view(view.key).sudo()
+        view._handle_visibility(do_raise=True)
+
+        if values is None:
+            values = {}
+        if 'main_object' not in values:
+            values['main_object'] = view
+
+        editable = user.has_group('website.group_website_designer')
+        has_group_restricted_editor = user.has_group('website.group_website_restricted_editor')
+        if not editable and has_group_restricted_editor and 'main_object' in values:
+            try:
+                main_object = values['main_object'].with_user(user.id)
+                self._check_user_can_modify(main_object)
+                editable = True
+            except AccessError:
+                pass
+        translatable = has_group_restricted_editor and self.env.context.get('lang') != IrHttp._get_default_lang().code
+        editable = editable and not translatable
+
+        if has_group_restricted_editor and user.has_group('website.group_multi_website'):
+            values['multi_website_websites_current'] = self.name
+            values['multi_website_websites'] = [
+                {'website_id': website.id, 'name': website.name, 'domain': website.domain}
+                for website in self.get_all() if website != self
+            ]
+
+            cur_company = self.env.company
+            values['multi_website_companies_current'] = {'company_id': cur_company.id, 'name': cur_company.name}
+            values['multi_website_companies'] = lazy(lambda: [
+                {'company_id': comp.id, 'name': comp.name}
+                for comp in user.company_ids if comp != cur_company
+            ])
+
+        # update values
+
+        values.update(dict(
+            website=self,
+            is_view_active=self.is_view_active,
+            res_company=self.company_id.sudo(),
+            translatable=translatable,
+            editable=editable,
+        ))
+
+        if editable:
+            # form editable object, add the backend configuration link
+            if 'main_object' in values and has_group_restricted_editor:
+                func = getattr(values['main_object'], 'get_backend_menu_id', False)
+                values['backend_menu_id'] = lazy(lambda: func and func() or self.env['ir.model.data']._xmlid_to_res_id('website.menu_website_configuration'))
+
+        # update context
+
+        # Avoid cache inconsistencies: if the cookies have been accepted, the
+        # DOM structure should reflect it after a reload and not be stuck in its
+        # previous state (see the part related to cookies in
+        # `_post_processing_att`).
+        is_allowed_optional_cookies = self.env['ir.http']._is_allowed_cookie('optional')
+        context = {'website_id': self.id, 'cookies_allowed': is_allowed_optional_cookies}
+        if 'inherit_branding' not in self.env.context and not self.env.context.get('rendering_bundle'):
+            if editable:
+                # in edit mode add branding on ir.ui.view tag nodes
+                context['inherit_branding'] = True
+            elif has_group_restricted_editor:
+                # will add the branding on fields (into values)
+                context['inherit_branding_auto'] = True
+
+        return self.env['ir.qweb'].with_context(**context)._render(view.id, values)
+
+    @api.model
     def is_view_active(self, key):
         """
             Return True if active, False if not active, None if not found
         """
         return self.env['ir.ui.view'].with_context(active_test=False)._get_cached_template_info(key).get('active')
-
-    @api.model
-    def get_template(self, template):
-        if isinstance(template, str) and '.' not in template:
-            template = 'website.%s' % template
-        return self.env['ir.ui.view']._get_template_view(template).sudo()
 
     @api.model
     def pager(self, url, total, page=1, step=30, scope=5, url_args=None):
@@ -1881,6 +1903,8 @@ class Website(models.CachedModel):
             action_params["enable_editor"] = 1
         if mode_debug:
             action_params["debug"] = mode_debug
+        if self:
+            action_params["website_id"] = self.id
         return "/odoo/action-website.website_preview?" + urls.url_encode(action_params)
 
     def get_client_action(self, url, mode_edit=False, website_id=False):

@@ -61,7 +61,7 @@ class WebsitePage(models.Model):
 
     # don't use mixin website_id but use website_id on ir.ui.view instead
     website_id = fields.Many2one(related='view_id.website_id', store=True, readonly=False, ondelete='cascade')
-    arch = fields.Text(related='view_id.arch', readonly=False, depends_context=('website_id',))
+    arch = fields.Text(related='view_id.arch', readonly=False)
 
     @api.depends('view_id.name')
     def _compute_name(self):
@@ -376,7 +376,7 @@ class WebsitePage(models.Model):
         the cache serves the correct version of a page based on specific
         parameters like user language or currency.
         """
-        return (request.website.id, request.lang.code, request.httprequest.path, request.session.debug)
+        return (self.env.context.get('website_id'), self.env.context.get('lang'), request.httprequest.path, request.session.debug)
 
     def _get_response(self, request):
         """ Returns the response corresponding to the request.
@@ -464,6 +464,8 @@ class WebsitePage(models.Model):
         fields_to_fetch = [name for name, field in self.view_id._fields.items() if field.prefetch]
         self.view_id.fetch(fields_to_fetch)
 
+        website = self.env["website"].get_current_website()
+
         if (
             (self.env.user.has_group('website.group_website_designer') or self.is_visible)
             and (
@@ -471,7 +473,7 @@ class WebsitePage(models.Model):
                 # page received a URL change, it should not let you access the
                 # generic page anymore, despite having a different URL.
                 self.website_id
-                or self.view_id.id == self.env['ir.ui.view'].with_context(website_id=request.website.id)._get_cached_template_info(self.view_id.key)['id']
+                or self.view_id.id == self.env['ir.ui.view'].with_context(website_id=website.id)._get_cached_template_info(self.view_id.key)['id']
             )
         ):
             _, ext = os.path.splitext(req_page)
@@ -485,25 +487,33 @@ class WebsitePage(models.Model):
 
     @tools.conditional(
         'xml' not in tools.config['dev_mode'],
-        tools.ormcache('(request.httprequest.path, self.env.context.get("website_id"))', cache='templates.cached_values'),
+        tools.ormcache(
+            'request.httprequest.path',
+            'self.env.context.get("website_id") or None',
+            'self.env.context.get("fallback_website_id") or None',
+            cache='templates.cached_values'
+        ),
     )
     @api.model
     def _get_page_info(self, request) -> dict | None:
         req_page = request.httprequest.path
 
+        website = self.env["website"].get_current_website()
+
         # specific page first
-        page_domain = Domain('url', '=', req_page) & request.website.website_domain()
+        page_domain = Domain('url', '=', req_page) & website.website_domain()
         page = self.sudo().search_fetch(page_domain, order='website_id asc', limit=1)
 
         # case insensitive search
         if not page:
-            page_domain = Domain('url', '=ilike', req_page) & request.website.website_domain()
+            page_domain = Domain('url', '=ilike', req_page) & website.website_domain()
             page = self.sudo().search_fetch(page_domain, order='website_id asc', limit=1)
 
         if page:
             return {
                 'id': page.id,
                 'url': page.url,
+                'website_id': page.website_id.id,
                 'view_id': page.view_id.id,
                 'group_ids': page.group_ids.ids,
             }

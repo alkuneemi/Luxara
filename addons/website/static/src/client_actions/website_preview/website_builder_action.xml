@@ -7,7 +7,7 @@
         <CreatePageMessage t-if="show_404_page_message" createPage="() => this.onNewPage(true)"/>
         <div class="o_website_preview flex-grow-1" t-att-class="this.state.isEditing ? '' : 'border-top'" t-custom-ref="website_preview">
             <div class="o_iframe_container">
-                <iframe t-if="!this.testMode" t-att-src="this.iframeFallbackUrl"
+                <iframe t-if="!this.testMode" t-att-src="this.iframeFallbackUrl + '?website_id=' + this.websiteService.currentWebsiteId"
                     class="o_ignore_in_tour"
                     t-custom-ref="iframefallback"/>
                 <iframe t-att-src="this.initialUrl" t-custom-ref="iframe" t-on-load="this.onIframeLoad" />
@@ -22,7 +22,7 @@
         <LocalOverlayContainer localOverlay="this.overlayRef" identifier="this.env.localOverlayContainerKey"/>
         <div t-att-class="{'o_builder_sidebar_open': this.state.isEditing and this.state.showSidebar, 'o_is_microsoft_edge': this.isMicrosoftEdge}"
             class="o-website-builder_sidebar border-start border-dark" t-custom-ref="builder_sidebar">
-            <LazyComponent  t-if="this.state.isEditing" Component="'website.WebsiteBuilder'" props="() => this.websiteBuilderProps" bundle="'website.website_builder_assets'" t-key="this.state.key"/>
+            <LazyComponent  t-if="this.state.isEditing" Component="'website.WebsiteBuilder'" props="() => this.websiteBuilderProps" bundle="'website.website_builder_assets?website_id=' + this.websiteId" t-key="this.state.key"/>
         </div>
     </div>
 </t>

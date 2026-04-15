@@ -38,11 +38,12 @@ import { WebsiteBuilder } from "@website/builder/website_builder";
 import { session } from "@web/session";
 import { getTranslatedElements } from "./translated_elements_getter.hoot";
 import { BackgroundShapeOptionPlugin } from "@html_builder/plugins/background_option/background_shape_option_plugin";
+import { getWebsiteId } from "./get_website_id.hoot";
 
 class Website extends models.Model {
     _name = "website";
-    get_current_website() {
-        return [1];
+    async get_current_website() {
+        return [await getWebsiteId()];
     }
 }
 
@@ -338,10 +339,11 @@ export async function setupWebsiteBuilder(
 }
 
 async function openBuilderSidebar(editAssetsLoaded) {
+    const websiteId = await getWebsiteId();
     // The next line allow us to await asynchronous fetches and cache them before it is used
     await Promise.all([
         getWebsiteSnippets(),
-        loadBundle("website.website_builder_assets"),
+        loadBundle("website.website_builder_assets?website_id=" + websiteId),
         loadBundle("html_editor.assets_image_cropper"),
     ]);
 
@@ -441,6 +443,7 @@ export async function waitForSnippetDialog() {
  * @param {string | string[]} snippetName
  */
 export async function setupWebsiteBuilderWithSnippet(snippetName, options = {}) {
+    const websiteId = await getWebsiteId();
     patchDOMParser();
     mockService("website", {
         get currentWebsite() {

@@ -158,6 +158,7 @@ class TestWebsiteAssets(odoo.tests.HttpCase):
 
         # Verify that CSS contains link to binary asset
         css = self.url_open(f'/web/assets/{website_id}/_______/web.assets_frontend.min.css').text
+        self.assertNotIn('Could not get content for', css)
         self.assertNotIn('''/web/static/src/libs/fontawesome/fonts/fontawesome-webfont.woff''', css, "Fonts should have been replaced")
         fontface = re.findall(rf'''@font-face{{font-family: 'FontAwesome'; src: url\("/web/assets/{website_id}/\w{{7}}/web.fontawesome.min.woff2"\) format\('woff2'\), url\("/web/assets/{website_id}/\w{{7}}/web.fontawesome.min.woff"\) format\('woff'\);''', css)
         self.assertTrue(fontface, "Font should have been replaced")
