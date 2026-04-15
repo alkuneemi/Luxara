@@ -17,6 +17,13 @@ from odoo.tools.pdf import (
 class IrActionsReport(models.Model):
     _inherit = "ir.actions.report"
 
+    @api.model
+    def _get_product_documents_before_and_after_quote(self, documents):
+        documents_before_quote = documents.filtered(
+            lambda doc: doc.attached_on_sale in {"hidden", "shown_on_product_page"},
+        )
+        return documents_before_quote, documents - documents_before_quote
+
     def _render_qweb_pdf_prepare_streams(self, report_ref, data, res_ids=None):
         """Override to add and fill headers, footers and product documents to the sale quotation."""
         result = super()._render_qweb_pdf_prepare_streams(report_ref, data, res_ids=res_ids)
@@ -34,9 +41,24 @@ class IrActionsReport(models.Model):
                 quotation_documents = order.quotation_document_ids
                 headers = quotation_documents.filtered(lambda doc: doc.document_type == "header")
                 footers = quotation_documents - headers
-                has_product_document = any(line.product_document_ids for line in order.order_line)
+                product_documents_before_quote = []
+                product_documents_after_quote = []
 
-                if not headers and not has_product_document and not footers:
+                for line in order.order_line:
+                    documents_before_quote, documents_after_quote = (
+                        self._get_product_documents_before_and_after_quote(line.product_document_ids)
+                    )
+                    if documents_before_quote:
+                        product_documents_before_quote.append((line, documents_before_quote))
+                    if documents_after_quote:
+                        product_documents_after_quote.append((line, documents_after_quote))
+
+                if (
+                    not headers
+                    and not product_documents_before_quote
+                    and not product_documents_after_quote
+                    and not footers
+                ):
                     continue
 
                 form_fields_values_mapping = {}
@@ -52,16 +74,23 @@ class IrActionsReport(models.Model):
                         self_with_order_context._update_mapping_and_add_pages_to_writer(
                             writer, header, form_fields_values_mapping, prefix, order
                         )
-                if has_product_document:
-                    for line in order.order_line:
-                        for doc in line.product_document_ids:
-                            # Use both the id of the line and the doc as variants could use the same
-                            # document.
-                            prefix = f"sol_id_{line.id}_product_document_id_{doc.id}__"
-                            self_with_order_context._update_mapping_and_add_pages_to_writer(
-                                writer, doc, form_fields_values_mapping, prefix, order, line
-                            )
+                for line, documents in product_documents_before_quote:
+                    for doc in documents:
+                        # Use both the id of the line and the doc as variants could use the same
+                        # document.
+                        prefix = f"sol_id_{line.id}_product_document_id_{doc.id}__"
+                        self_with_order_context._update_mapping_and_add_pages_to_writer(
+                            writer, doc, form_fields_values_mapping, prefix, order, line
+                        )
                 self._add_pages_to_writer(writer, initial_stream.getvalue())
+                for line, documents in product_documents_after_quote:
+                    for doc in documents:
+                        # Use both the id of the line and the doc as variants could use the same
+                        # document.
+                        prefix = f"sol_id_{line.id}_product_document_id_{doc.id}__"
+                        self_with_order_context._update_mapping_and_add_pages_to_writer(
+                            writer, doc, form_fields_values_mapping, prefix, order, line
+                        )
                 if footers:
                     for footer in footers:
                         prefix = f"quotation_document_id_{footer.id}__"

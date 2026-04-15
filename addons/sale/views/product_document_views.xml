@@ -6,11 +6,14 @@
         <field name="model">product.document</field>
         <field name="inherit_id" ref="product.product_document_form"/>
         <field name="arch" type="xml">
-            <sheet position="inside">
-                <group name="sale" string="Sales">
-                    <field name="attached_on_sale" class="oe_inline"/>
-                </group>
-            </sheet>
+            <notebook position="inside">
+                <page name="sale" string="Sales">
+                    <div class="d-flex mt-2">
+                        <span>Accessible</span>
+                        <field name="attached_on_sale" class="oe_inline ms-2" widget="selection"/>
+                    </div>
+                </page>
+            </notebook>
         </field>
     </record>
 
@@ -21,7 +24,7 @@
         <field name="arch" type="xml">
             <xpath expr="//main/div" position="inside">
                 <div class="d-flex mt-2">
-                    <span>Sales visibility</span>
+                    <span>Accessible</span>
                     <field name="attached_on_sale" class="ms-2" widget="selection"/>
                 </div>
             </xpath>

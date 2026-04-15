@@ -654,7 +654,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         if not document or not document.active:
             return request.redirect(self._get_shop_path())
 
-        if not document.shown_on_product_page or not (
+        if document.attached_on_sale != "shown_on_product_page" or not (
             document.res_id == product_template.id and document.res_model == "product.template"
         ):
             return request.redirect(self._get_shop_path())

@@ -1024,6 +1024,15 @@ class SaleOrder(models.Model):
 
     # === TOOLING ===#
 
+    def _filter_product_documents(self, documents):
+        return documents.filtered(
+            lambda document: (
+                document.attached_on_sale == "quotation"
+                or (self.state == "sale" and document.attached_on_sale == "sale_order")
+                or document.attached_on_sale == "shown_on_product_page"
+            )
+        )
+
     def _is_anonymous_cart(self):
         """Return whether the cart was created by the public user and no address was added yet.
 
