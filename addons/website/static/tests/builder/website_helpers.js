@@ -43,7 +43,7 @@ import { getWebsiteId } from "./get_website_id.hoot";
 class Website extends models.Model {
     _name = "website";
     async get_current_website() {
-        return getWebsiteId();
+        return [await getWebsiteId()];
     }
 }
 
@@ -343,7 +343,7 @@ async function openBuilderSidebar(editAssetsLoaded) {
     // The next line allow us to await asynchronous fetches and cache them before it is used
     await Promise.all([
         getWebsiteSnippets(),
-        loadBundle("website.website_builder_assets?website_id=" + websiteId[0]),
+        loadBundle("website.website_builder_assets?website_id=" + websiteId),
         loadBundle("html_editor.assets_image_cropper"),
     ]);
 

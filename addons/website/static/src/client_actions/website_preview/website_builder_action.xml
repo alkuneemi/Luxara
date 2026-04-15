@@ -7,7 +7,7 @@
         <CreatePageMessage t-if="show_404_page_message" createPage="() => this.onNewPage(true)"/>
         <div class="o_website_preview flex-grow-1" t-att-class="this.state.isEditing ? '' : 'border-top'" t-custom-ref="website_preview">
             <div class="o_iframe_container">
-                <iframe t-if="!this.testMode" t-att-src="this.iframeFallbackUrl"
+                <iframe t-if="!this.testMode" t-att-src="this.iframeFallbackUrl + '?website_id=' + this.websiteService.currentWebsiteId"
                     class="o_ignore_in_tour"
                     t-custom-ref="iframefallback"/>
                 <iframe t-att-src="this.initialUrl" t-custom-ref="iframe" t-on-load="this.onIframeLoad" />

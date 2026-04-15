@@ -59,7 +59,8 @@ class WebsiteBackend(http.Controller):
         return dashboard_data
 
     @http.route('/website/iframefallback', type="http", auth='user', website=True, readonly=True)
-    def get_iframe_fallback(self):
+    def get_iframe_fallback(self, website_id=None):
+        _request_update_context_website_id(self.env, website_id)
         return request.render('website.iframefallback')
 
     @http.route('/website/track_installing_modules', type='jsonrpc', auth='user', readonly=True)
@@ -89,6 +90,7 @@ class WebsiteWebHome(Home):
     def web_client(self, s_action=None, *, website_id=None, **kw):
         if kw.get('subpath') == 'action-website.website_preview':
             _request_update_context_website_id(self.env, website_id)
+        request.update_context(website_id=request.env.context.get('fallback_website_id'))
         return super().web_client(s_action, **kw)
 
 

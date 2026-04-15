@@ -142,7 +142,7 @@ export class WebsiteBuilderClientAction extends Component {
                 // preload builder and snippets so clicking on "edit" is faster
                 loadBundle("website.website_builder_assets?website_id=" + this.websiteId).then(() => {
                     this.env.services["html_builder.snippets"]
-                        .getSnippetModel(this.snippetsTemplate)
+                        .getSnippetModel(this.snippetsTemplate, {website_id: this.websiteId})
                         .reload({
                             lang: this.websiteService.currentWebsite?.default_lang_id.code,
                             website_id: this.websiteService.currentWebsite?.id,

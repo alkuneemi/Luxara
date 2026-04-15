@@ -1,4 +1,6 @@
 import { unmockedOrm } from "@web/../tests/_framework/module_set.hoot";
+import { getWebsiteId } from "./get_website_id.hoot";
+
 
 function removeImageSrc(xmlString) {
     const doc = new DOMParser().parseFromString(xmlString, "text/html");
@@ -15,13 +17,17 @@ function removeImageSrc(xmlString) {
 }
 
 let websiteSnippetsPromise;
-export const getWebsiteSnippets = () => {
+export const getWebsiteSnippets = async () => {
     if (!websiteSnippetsPromise) {
         websiteSnippetsPromise = unmockedOrm(
             "ir.ui.view",
             "render_public_asset",
             ["website.snippets"],
-            {}
+            {
+                context: {
+                    website_id: await getWebsiteId(),
+                },
+            },
         ).then((snippets) => removeImageSrc(snippets.trim()));
     }
     return websiteSnippetsPromise;
