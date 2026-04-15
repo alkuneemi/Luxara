@@ -16,6 +16,10 @@ $filter-panel-width: 300px;
   }
 }
 
+header img {
+  height: 32px;
+}
+
 .o-public-spreadsheet-filters {
   background-color: #E7E9ED;
   gap: 20px 70px;
@@ -51,5 +55,12 @@ $filter-panel-width: 300px;
   }
   #spreadsheet-mount-anchor {
     overflow: unset;
+  }
+}
+
+
+.o-spreadsheet {
+  .o-figure-menu {
+    display: none !important;
   }
 }
