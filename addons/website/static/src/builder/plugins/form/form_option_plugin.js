@@ -45,6 +45,7 @@ import { BuilderAction } from "@html_builder/core/builder_action";
 import { isSmallInteger } from "@html_builder/utils/utils";
 import { localization } from "@web/core/l10n/localization";
 import { formatDate } from "@web/core/l10n/dates";
+import { user } from "@web/core/user";
 import { getParsedDataFor } from "@website/js/utils";
 import { isTargetVisible } from "@html_builder/core/visibility_plugin";
 import { nodeSize } from "@html_editor/utils/position";
@@ -65,10 +66,11 @@ import { nodeSize } from "@html_editor/utils/position";
  * @property { FormOptionPlugin['clearValidationDataset'] } clearValidationDataset
  * @property { FormOptionPlugin['defaultMessage'] } defaultMessage
  * @property { FormOptionPlugin['fetchModels'] } fetchModels
+ * @property { FormOptionPlugin['getDefaultEmailTo'] } getDefaultEmailTo
+ * @property { FormOptionPlugin['getDataForEmailTo'] } getDataForEmailTo
  */
 
 const { DateTime } = luxon;
-const DEFAULT_EMAIL_TO_VALUE = "info@yourcompany.example.com";
 export class FormOptionPlugin extends Plugin {
     static id = "websiteFormOption";
     static dependencies = ["builderActions", "builderOptions", "savePlugin"];
@@ -87,6 +89,8 @@ export class FormOptionPlugin extends Plugin {
         "clearValidationDataset",
         "defaultMessage",
         "fetchModels",
+        "getDefaultEmailTo",
+        "getDataForEmailTo",
     ];
     /** @type {import("plugins").WebsiteResources} */
     resources = {
@@ -129,13 +133,13 @@ export class FormOptionPlugin extends Plugin {
                 const model = models?.find((model) => model.model === modelName);
                 const fieldName = getFieldName(el);
                 return model
-                        ? _t(
-                              'The field "%(fieldName)s" is mandatory for the action "%(actionName)s".',
-                              { fieldName, actionName: model.website_form_label }
-                          )
-                        : _t("The field “%(fieldName)s” is mandatory for the selected action.", {
-                              fieldName,
-                          });
+                    ? _t(
+                          'The field "%(fieldName)s" is mandatory for the action "%(actionName)s".',
+                          { fieldName, actionName: model.website_form_label }
+                      )
+                    : _t("The field “%(fieldName)s” is mandatory for the selected action.", {
+                          fieldName,
+                      });
             }
         },
         builder_actions: {
@@ -183,9 +187,8 @@ export class FormOptionPlugin extends Plugin {
             ".s_website_form_recaptcha",
             ".row > div:not(.s_website_form_field, .s_website_form_submit, .s_website_form_field *, .s_website_form_submit *)",
         ].map((selector) => `.s_website_form form ${selector}`),
-        clean_for_save_processors: (rootEl) => {
-            this.removeSuccessMessagePreviews(rootEl);
-        },
+        clean_for_save_processors: this.cleanForSave.bind(this),
+        on_will_save_handlers: this.onWillSave.bind(this),
         dropzone_selectors: [
             {
                 selector: ".s_website_form",
@@ -207,6 +210,7 @@ export class FormOptionPlugin extends Plugin {
     setup() {
         this.modelsCache = new SyncCache(this._fetchModels.bind(this));
         this.fieldRecordsCache = new SyncCache(this._fetchFieldRecords.bind(this));
+        this.defaultEmailTo = null;
         this.authorizedFieldsCache = new Cache(
             this._fetchAuthorizedFields.bind(this),
             ({ cacheKey }) => cacheKey
@@ -229,6 +233,32 @@ export class FormOptionPlugin extends Plugin {
     }
     async fetchModels(formEl) {
         return this.modelsCache.preload();
+    }
+    /**
+     * Return the default recipient email used when a form has no explicit recipient.
+     * Prefer the current website company's email, then fallback to the current user's email.
+     *
+     * @returns {Promise<string>}
+     */
+    async getDefaultEmailTo() {
+        if (this.defaultEmailTo !== null) {
+            return this.defaultEmailTo;
+        }
+        const companyId = this.services.website.currentWebsite?.company_id;
+        // Condition to prevent error in tests
+        if (companyId) {
+            const companies = await this.services.orm.read("res.company", [companyId], ["email"]);
+            this.defaultEmailTo = companies[0].email;
+        }
+        if (!this.defaultEmailTo && user.userId) {
+            const users = await this.services.orm.read("res.users", [user.userId], ["email"]);
+            this.defaultEmailTo = users[0].email;
+        }
+        this.defaultEmailTo ||= "";
+        return this.defaultEmailTo;
+    }
+    getDataForEmailTo(el) {
+        return getParsedDataFor(el.id, el.ownerDocument)?.["email_to"] || "";
     }
     async _fetchModels() {
         return await this.services.orm.call("ir.model", "get_compatible_form_models");
@@ -297,14 +327,27 @@ export class FormOptionPlugin extends Plugin {
         const formKey = activeForm?.website_form_key;
         const formInfo = registry.category("website.form_editor_actions").get(formKey, null);
         if (formInfo) {
+            let preparedFormInfo = formInfo;
+            const emailToField = formInfo.fields?.find((field) => field.name === "email_to");
+            if (emailToField) {
+                const defaultEmailTo =
+                    this.getDataForEmailTo(el) || (await this.getDefaultEmailTo());
+                preparedFormInfo = {
+                    ...formInfo,
+                    fields: formInfo.fields.map((field) =>
+                        field === emailToField ? { ...field, defaultValue: defaultEmailTo } : field
+                    ),
+                };
+            }
             const formatInfo = getDefaultFormat(el);
             await Promise.all(
-                formInfo.formFields.map((field) => {
+                preparedFormInfo.formFields.map((field) => {
                     field.formatInfo = formatInfo;
                     return this.fetchFieldRecords(field, formEl);
                 })
             );
-            await this.fetchFormInfoFields(formInfo);
+            await this.fetchFormInfoFields(preparedFormInfo);
+            return preparedFormInfo;
         }
         return formInfo;
     }
@@ -320,11 +363,6 @@ export class FormOptionPlugin extends Plugin {
             `.s_website_form_dnone:has(input[name="${fieldName}"])`
         )) {
             hiddenEl.remove();
-        }
-        // For the email_to field, we keep the field even if it has no value so
-        // that the email is sent to data-for value or to the default email.
-        if (fieldName === "email_to" && !value && !this.dataForEmailTo) {
-            value = DEFAULT_EMAIL_TO_VALUE;
         }
         if (value || fieldName === "email_to") {
             const hiddenField = renderToElement("website.form_field_hidden", {
@@ -395,13 +433,12 @@ export class FormOptionPlugin extends Plugin {
                 );
                 locationEl.insertAdjacentElement("beforebegin", renderField(_field));
             });
-            // Special case: handle hidden fields separately.
-            // In some forms (e.g., contact forms), the "email_to" field must be included as hidden.
-            // For example, this may force the 'email_to' value to a dummy/default one on the
-            // contact us form just by interacting with it.
+            // Hidden action fields are rendered separately. email_to is always
+            // kept as a hidden field, while preserving dynamic data-for
+            // recipients when applicable.
             formInfo.fields?.forEach((field) => {
-                if (field.defaultValue) {
-                    this.addHiddenField(el, field.defaultValue, field.name);
+                if (field.defaultValue || field.name === "email_to") {
+                    this.addHiddenField(el, field.defaultValue || "", field.name);
                 }
             });
         }
@@ -786,6 +823,22 @@ export class FormOptionPlugin extends Plugin {
     async onSnippetDropped({ snippetEl }) {
         // Re-render the fields to ensure each field gets a unique ID.
         await this.rerenderFieldsInElement(snippetEl);
+        const mailFormEls = selectElements(
+            snippetEl,
+            ".s_website_form form[data-model_name='mail.mail']"
+        ).filter((formEl) => {
+            const emailToValue =
+                formEl.querySelector(`.s_website_form_dnone input[name="email_to"]`)?.value ||
+                this.getDataForEmailTo(formEl);
+            return !emailToValue;
+        });
+        if (!mailFormEls.length) {
+            return;
+        }
+        const defaultEmailTo = await this.getDefaultEmailTo();
+        for (const formEl of mailFormEls) {
+            this.addHiddenField(formEl, defaultEmailTo, "email_to");
+        }
     }
     /**
      * Handler called when an element is cloned.
@@ -798,6 +851,53 @@ export class FormOptionPlugin extends Plugin {
         await this.rerenderFieldsInElement(cloneEl);
 
         this.removeSuccessMessagePreviews(cloneEl);
+    }
+    /**
+     * Removes success message previews and completes empty mail recipient fields.
+     *
+     * For mail forms without data-for values, an empty hidden email_to input
+     * is filled from the default recipient cached by onWillSave.
+     *
+     * @param {HTMLElement} rootEl
+     */
+    cleanForSave(rootEl) {
+        this.removeSuccessMessagePreviews(rootEl);
+        for (const formEl of selectElements(
+            rootEl,
+            ".s_website_form form[data-model_name='mail.mail']"
+        )) {
+            const emailToInputEl = formEl.querySelector(
+                `.s_website_form_dnone input[name="email_to"]`
+            );
+            if (emailToInputEl && !emailToInputEl.value && !this.getDataForEmailTo(formEl)) {
+                emailToInputEl.value = this.defaultEmailTo;
+            }
+        }
+    }
+    /**
+     * Loads the default mail recipient needed by cleanForSave.
+     *
+     * This is only done when a mail form has an empty hidden email_to input and
+     * no data-for recipient, because cleanForSave later runs synchronously on
+     * cloned dirty elements.
+     *
+     * @param {HTMLElement} rootEl
+     */
+    async onWillSave(rootEl) {
+        const mailFormEls = selectElements(
+            rootEl,
+            ".s_website_form form[data-model_name='mail.mail']"
+        );
+        if (
+            mailFormEls.some((formEl) => {
+                const emailToInputEl = formEl.querySelector(
+                    `.s_website_form_dnone input[name="email_to"]`
+                );
+                return emailToInputEl && !emailToInputEl.value && !this.getDataForEmailTo(formEl);
+            })
+        ) {
+            await this.getDefaultEmailTo();
+        }
     }
     /**
      * Re-renders all valid fields inside the given element to ensure
@@ -995,18 +1095,7 @@ export class AddActionFieldAction extends BuilderAction {
             `.s_website_form_dnone input[name="${params.fieldName}"]`
         )?.value;
         if (params.fieldName === "email_to") {
-            // For email_to, we try to find a value in this order:
-            // 1. The current value of the input
-            // 2. The data-for value if it exists
-            // 3. The default value (`defaultEmailToValue`)
-            if (value && value !== DEFAULT_EMAIL_TO_VALUE) {
-                return value;
-            }
-            // Get the email_to value from the data-for attribute if it exists.
-            // We use it if there is no value on the email_to input.
-            const formId = el.id;
-            const dataForValues = getParsedDataFor(formId, el.ownerDocument);
-            return dataForValues?.["email_to"] || DEFAULT_EMAIL_TO_VALUE;
+            return value || this.dependencies.websiteFormOption.getDataForEmailTo(el);
         }
         if (value) {
             return value;

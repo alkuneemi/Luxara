@@ -1,5 +1,6 @@
 import { BuilderAction } from "@html_builder/core/builder_action";
 import { BaseOptionComponent } from "@html_builder/core/base_option_component";
+import { selectElements } from "@html_editor/utils/dom_traversal";
 import { Plugin } from "@html_editor/plugin";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
@@ -19,6 +20,7 @@ registry.category("website-options").add(DonationOption.id, DonationOption);
 
 export class DonationOptionPlugin extends Plugin {
     static id = "donationOption";
+    static dependencies = ["websiteFormOption"];
 
     resources = {
         builder_actions: {
@@ -31,7 +33,39 @@ export class DonationOptionPlugin extends Plugin {
             SetMaximumAmountAction,
             SetSliderStepAction,
         },
+        clean_for_save_processors: this.cleanForSave.bind(this),
+        on_will_save_handlers: this.onWillSave.bind(this),
+        on_snippet_dropped_handlers: this.onSnippetDropped.bind(this),
     };
+
+    async onWillSave(rootEl) {
+        const donationEls = selectElements(rootEl, ".s_donation");
+        if (donationEls.some((donationEl) => !donationEl.dataset.donationEmail)) {
+            this.defaultDonationEmail =
+                await this.dependencies.websiteFormOption.getDefaultEmailTo();
+        }
+    }
+
+    cleanForSave(rootEl) {
+        for (const donationEl of selectElements(rootEl, ".s_donation")) {
+            if (!donationEl.dataset.donationEmail) {
+                donationEl.dataset.donationEmail = this.defaultDonationEmail;
+            }
+        }
+    }
+
+    async onSnippetDropped({ snippetEl }) {
+        const donationEls = selectElements(snippetEl, ".s_donation").filter(
+            (donationEl) => !donationEl.dataset.donationEmail
+        );
+        if (!donationEls.length) {
+            return;
+        }
+        const defaultDonationEmail = await this.dependencies.websiteFormOption.getDefaultEmailTo();
+        for (const donationEl of donationEls) {
+            donationEl.dataset.donationEmail = defaultDonationEmail;
+        }
+    }
 }
 
 export class BaseDonationAction extends BuilderAction {

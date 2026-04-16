@@ -1367,7 +1367,7 @@ registerWebsitePreviewTour(
         compareIds({
             content: "Check if both, original and cloned name fields have unique IDs",
             firstElSelector: ".s_title_form .s_website_form input[name='name']",
-            secondElSelector: ".s_title_form [data-name='Field']:nth-of-type(3) input[name='name']",
+            secondElSelector: ".s_title_form [data-name='Field']:nth-of-type(2) input[name='name']",
             errorMessage: "Original and cloned fields have the same ID",
         }),
     ]
