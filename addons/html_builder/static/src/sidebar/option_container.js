@@ -17,8 +17,8 @@ export class OptionsContainer extends BaseOptionComponent {
         options: { type: Array },
         editingElement: true, // HTMLElement from iframe
         isRemovable: { type: Boolean, optional: true },
-        toggleFold: { type: Function, optional: true },
-        folded: { type: Boolean, optional: true },
+        toggleUnfold: { type: Function, optional: true },
+        unfolded: { type: Boolean, optional: true },
         removeDisabledReason: { type: String, optional: true },
         isClonable: { type: Boolean, optional: true },
         cloneDisabledReason: { type: String, optional: true },
