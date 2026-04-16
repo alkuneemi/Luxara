@@ -14,13 +14,6 @@
                        decoration-success="pdp_ppf_move_state == 'done'"
                        decoration-info="pdp_ppf_move_state in ('in_progress', 'sent')"
                        invisible="not pdp_ppf_move_state"/>
-                <field name="pdp_ppf_lifecycle_state"
-                       widget="badge"
-                       optional="hide"
-                       decoration-danger="pdp_ppf_lifecycle_state == 'error'"
-                       decoration-success="pdp_ppf_lifecycle_state == 'done'"
-                       decoration-info="pdp_ppf_lifecycle_state in ('in_progress', 'sent')"
-                       invisible="not pdp_ppf_lifecycle_state"/>
             </field>
         </field>
     </record>
@@ -37,13 +30,6 @@
                        decoration-success="pdp_ppf_move_state == 'done'"
                        decoration-info="pdp_ppf_move_state in ('in_progress', 'sent')"
                        invisible="not pdp_ppf_move_state"/>
-                <field name="pdp_ppf_lifecycle_state"
-                       widget="badge"
-                       optional="hide"
-                       decoration-danger="pdp_ppf_lifecycle_state == 'error'"
-                       decoration-success="pdp_ppf_lifecycle_state == 'done'"
-                       decoration-info="pdp_ppf_lifecycle_state in ('in_progress', 'sent')"
-                       invisible="not pdp_ppf_lifecycle_state"/>
             </field>
         </field>
     </record>
@@ -67,7 +53,6 @@
             </xpath>
             <xpath expr="//div[@name='peppol_div']" position="after">
                 <field name="pdp_ppf_move_state" invisible="not pdp_ppf_move_state"/>
-                <field name="pdp_ppf_lifecycle_state" invisible="not pdp_ppf_lifecycle_state"/>
             </xpath>
         </field>
     </record>
