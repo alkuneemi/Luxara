@@ -201,6 +201,7 @@
         'views/snippets/s_banner_categories.xml',
         'views/snippets/s_age_verification_popup.xml',
         'views/new_page_template_templates.xml',
+        'views/website_form_templates.xml',
         'views/website_views.xml',
         'views/website_pages_views.xml',
         'views/website_controller_pages_views.xml',
