@@ -55,6 +55,7 @@ class ResCompany(models.Model):
         help="This account will be used on Downpayment invoices.",
         tracking=True,
     )
+    show_sale_line_numbers = fields.Boolean(string="Line Numbers")
 
     @api.constrains("prepayment_percent")
     def _check_prepayment_percent(self):

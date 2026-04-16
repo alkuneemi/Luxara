@@ -8,6 +8,7 @@
     "data": [
         "data/ir_cron.xml",
         "data/sale_pdf_form_field.xml",
+        "report/ir_actions_report_templates.xml",
         "report/ir_actions_report.xml",
         "security/ir.model.access.csv",
         "security/ir_rules.xml",
