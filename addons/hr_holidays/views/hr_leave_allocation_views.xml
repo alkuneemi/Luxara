@@ -145,7 +145,7 @@
                                     invisible="allocation_type == 'regular'"/>
                                 <field name="date_to" nolabel="1"
                                     placeholder="No Limit"
-                                    readonly="state == 'refuse' or (allocation_type == 'accrual' and state != 'confirm')"
+                                    readonly="state == 'refuse'"
                                     invisible="allocation_type == 'regular' and state != 'confirm'"/>
                                 <div id="no_limit_label" class="oe_read_only"
                                     invisible="not id or date_to or state != 'confirm'">No limit</div>
@@ -215,7 +215,7 @@
             <field name="accrual_plan_id" position="before">
                 <field name="allocation_type"
                     widget="radio"
-                    readonly="not is_officer or state == 'validate'"/>
+                    readonly="not is_officer or state in ['refuse', 'validate']"/>
             </field>
             <label for="date_from" position="replace">
                 <label for="date_from" string="Validity Period" invisible="allocation_type == 'accrual'"/>

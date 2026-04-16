@@ -8,7 +8,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 from odoo.tools import format_date
 from odoo.addons.hr_holidays.models.hr_leave import get_employee_from_context
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import RedirectWarning, UserError, ValidationError
 from odoo.fields import Domain
 from odoo.tools.float_utils import float_round
 from odoo.tools.date_utils import get_timedelta
@@ -821,6 +821,69 @@ class HrLeaveAllocation(models.Model):
                 allocation.action_approve()
         return allocations
 
+    def _raise_conflicting_time_off_requests_warning(self, msg, conflicting_leave_ids=None):
+        self.ensure_one()
+        action_domain = [('id', 'in', conflicting_leave_ids)] if conflicting_leave_ids else [
+            ('employee_id', '=', self.employee_id.id),
+            ('work_entry_type_id', '=', self.work_entry_type_id.id),
+            ('state', '=', 'validate'),
+            ('request_date_to', '>=', self.date_from),
+        ]
+        if not conflicting_leave_ids and self.date_to:
+            action_domain.append(('request_date_from', '<=', self.date_to))
+        action = {
+            'type': 'ir.actions.act_window',
+            'name': self.env._('Conflicting Time Off Requests'),
+            'res_model': 'hr.leave',
+            'view_mode': 'list',
+            'views': [(False, 'list')],
+            'domain': action_domain,
+            'target': 'current',
+        }
+        raise RedirectWarning(
+            msg,
+            action,
+            self.env._('Time Off Requests'),
+        )
+
+    def _get_invalid_approved_time_off_request(self, date_from=None):
+        """Return the first approved leave that becomes uncovered after editing this allocation.
+
+        Each leave is evaluated on its own start date so future accrual-funded
+        requests are rechecked against the allocation validity after the write.
+        """
+        self.ensure_one()
+        if not self.work_entry_type_id.requires_allocation:
+            return self.env['hr.leave']
+
+        allocation_date_from = fields.Date.to_date(self.date_from)
+        date_from = fields.Date.to_date(date_from)
+        domain = [
+            ('employee_id', '=', self.employee_id.id),
+            ('work_entry_type_id', '=', self.work_entry_type_id.id),
+            ('state', '=', 'validate'),
+            ('date_to', '>=', datetime.combine(allocation_date_from, time.min)),
+        ]
+        if date_from:
+            domain.append(('date_to', '>', datetime.combine(date_from, time.max)))
+
+        approved_leaves = self.env['hr.leave'].search(domain, order='date_from desc')
+        ignored_later_leave_ids = []
+        work_entry_type = self.work_entry_type_id
+        employee = self.employee_id
+        excess_limit = work_entry_type.max_allowed_negative if work_entry_type.allows_negative else 0
+        allows_negative = work_entry_type.allows_negative
+        for leave in approved_leaves:
+            leave_data = work_entry_type.with_context(
+                ignored_leave_ids=ignored_later_leave_ids,
+            ).get_allocation_data(employee, leave.date_from.date())[employee][0][1]
+            exceeding_duration = -min(leave_data['exceeding_duration'], 0)
+            uncovered_amount = max(leave_data['total_virtual_excess'], exceeding_duration)
+            if (not leave_data['max_leaves'] and not allows_negative) or uncovered_amount > excess_limit:
+                return leave
+            ignored_later_leave_ids.append(leave.id)
+        return self.env['hr.leave']
+
     def write(self, vals):
         values = vals
         employee_id = values.get('employee_id', False)
@@ -829,33 +892,90 @@ class HrLeaveAllocation(models.Model):
 
         self.add_follower(employee_id)
 
-        if 'number_of_days_display' not in values and 'number_of_hours_display' not in values and 'state' not in values:
+        tracked_fields = {'number_of_days_display', 'number_of_hours_display', 'state', 'date_to'}
+
+        if not tracked_fields.intersection(vals):
             res = super().write(values)
             if 'allocation_type' in values:
                 self._add_lastcalls()
             return res
 
         previous_consumed_leaves = self.employee_id._get_consumed_leaves(work_entry_types=self.work_entry_type_id)
+        previous_invalid_approved_leaves = {
+            allocation.id: allocation._get_invalid_approved_time_off_request(values.get('date_to'))
+            for allocation in self
+            if 'date_to' in values or values.get('state') == 'refuse'
+        }
         result = super().write(values)
         consumed_leaves = self.employee_id._get_consumed_leaves(work_entry_types=self.work_entry_type_id)
 
         if 'allocation_type' in values:
             self._add_lastcalls()
         for allocation in self:
-            current_excess = dict(consumed_leaves[1]).get(allocation.employee_id, {}) \
-                .get(allocation.work_entry_type_id, {}).get('excess_days', {})
-            previous_excess = dict(previous_consumed_leaves[1]).get(allocation.employee_id, {}) \
-                .get(allocation.work_entry_type_id, {}).get('excess_days', {})
-            total_current_excess = sum(leave_date['amount'] for leave_date in current_excess.values() if not leave_date['is_virtual'])
-            total_previous_excess = sum(leave_date['amount'] for leave_date in previous_excess.values() if not leave_date['is_virtual'])
+            current_employee_data = dict(consumed_leaves[1]).get(allocation.employee_id, {}) \
+                .get(allocation.work_entry_type_id, {})
+            previous_employee_data = dict(previous_consumed_leaves[1]).get(allocation.employee_id, {}) \
+                .get(allocation.work_entry_type_id, {})
+            current_excess = current_employee_data.get('excess_days', {})
+            previous_excess = previous_employee_data.get('excess_days', {})
+            total_current_excess = sum(
+                leave_date['amount']
+                for leave_date in current_excess.values()
+                if not leave_date['is_virtual']
+            )
+            total_previous_excess = sum(
+                leave_date['amount']
+                for leave_date in previous_excess.values()
+                if not leave_date['is_virtual']
+            )
+            total_current_exceeding = -min(current_employee_data.get('exceeding_duration', 0), 0)
+            total_previous_exceeding = -min(previous_employee_data.get('exceeding_duration', 0), 0)
+            invalid_approved_leaves = (
+                allocation._get_invalid_approved_time_off_request(values.get('date_to'))
+                - previous_invalid_approved_leaves.get(allocation.id, self.env['hr.leave'])
+            )
 
-            if total_current_excess <= total_previous_excess:
+            if (
+                total_current_excess <= total_previous_excess
+                and total_current_exceeding <= total_previous_exceeding
+                and not invalid_approved_leaves
+            ):
                 continue
             lt = allocation.work_entry_type_id
-            if lt.allows_negative and total_current_excess <= lt.max_allowed_negative:
+            if (
+                not invalid_approved_leaves
+                and lt.allows_negative
+                and max(total_current_excess, total_current_exceeding) <= lt.max_allowed_negative
+            ):
                 continue
-            raise ValidationError(
-                _('You cannot reduce the duration below the duration of leaves already taken by the employee.'))
+
+            if values.get('state') == 'refuse':
+                msg = self.env._(
+                    "You cannot refuse an allocation already used in approved time off requests. "
+                    "Cancel or adjust the related requests first."
+                )
+            elif 'date_to' in values:
+                msg = self.env._(
+                    "You cannot set this end date because it would make approved "
+                    "time off requests exceed the available allocation."
+                )
+            else:
+                raise ValidationError(
+                    self.env._('You cannot reduce the duration below the duration of leaves already taken by the employee.')
+                )
+
+            conflicting_leave_ids = list({
+                leave_date['leave_id']
+                for leave_date in current_excess.values()
+                if not leave_date['is_virtual']
+            }
+                | set(current_employee_data.get('to_recheck_leaves', self.env['hr.leave']).ids)
+                | set(invalid_approved_leaves.ids)
+            )
+            allocation._raise_conflicting_time_off_requests_warning(
+                msg,
+                conflicting_leave_ids=conflicting_leave_ids,
+            )
 
         return result
 

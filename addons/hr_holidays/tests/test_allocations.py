@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from freezegun import freeze_time
 
-from odoo.exceptions import ValidationError
+from odoo.exceptions import RedirectWarning, ValidationError
 from odoo.fields import Date, Datetime
 from odoo.tests import Form, tagged, users
 from odoo.tools import format_date
@@ -598,7 +598,7 @@ class TestAllocations(TestHrHolidaysCommon):
         self.assertEqual(allocation_3_days.state, 'validate')
 
         # Can't Refuse 5 days allocation
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(RedirectWarning):
             allocation_5_days.action_refuse()
         self.assertEqual(allocation_5_days.state, 'validate')
 
@@ -617,7 +617,7 @@ class TestAllocations(TestHrHolidaysCommon):
         allocation_5_days.action_refuse()
         self.assertEqual(allocation_5_days.state, 'refuse')
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(RedirectWarning):
             allocation_3_days.action_refuse()
         self.assertEqual(allocation_3_days.state, 'validate')
 
@@ -639,3 +639,221 @@ class TestAllocations(TestHrHolidaysCommon):
             'date_from': '2023-12-25'
         })
         self.assertEqual(1, self.work_entry_type.allocation_count)
+
+    def test_change_date_to_when_leave_is_validated(self):
+        """
+        Setting date_to before validated leave must raise RedirectWarning.
+        But setting date_to on the validated leave end date is valid.
+        """
+        allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Initial Allocation',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 20,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 30),
+        })
+        allocation.action_approve()
+
+        leave_request = self.env['hr.leave'].create({
+            'name': 'Leave Request',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'request_date_from': date(2024, 1, 5),
+            'request_date_to': date(2024, 1, 10),
+            'employee_id': self.employee.id,
+        })
+        leave_request.action_approve()
+        allocation.write({'date_to': date(2024, 1, 10)})
+        self.assertEqual(allocation.date_to, date(2024, 1, 10))
+
+        with self.assertRaises(RedirectWarning):
+            allocation.write({'date_to': date(2024, 1, 9)})
+
+    def test_change_date_to_when_other_allocation_can_cover_leave(self):
+        first_allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Primary Allocation',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 30),
+        })
+        second_allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Secondary Allocation',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 20,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 12, 31),
+        })
+        first_allocation.action_approve()
+        second_allocation.action_approve()
+
+        leave_request = self.env['hr.leave'].create({
+            'name': 'Leave Request',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'request_date_from': date(2024, 1, 22),
+            'request_date_to': date(2024, 1, 23),
+            'employee_id': self.employee.id,
+        })
+        leave_request.action_approve()
+
+        # This remains valid because the second allocation still covers the approved leave.
+        first_allocation.write({'date_to': date(2024, 1, 10)})
+        self.assertEqual(first_allocation.date_to, date(2024, 1, 10))
+
+    def test_change_date_to_when_multiple_allocations_segment_cover_leave(self):
+        primary_allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Primary Allocation',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 31),
+        })
+        segment_allocation_1 = self.env['hr.leave.allocation'].create({
+            'name': 'Segment Allocation 1',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 20),
+        })
+        segment_allocation_2 = self.env['hr.leave.allocation'].create({
+            'name': 'Segment Allocation 2',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 21),
+            'date_to': date(2024, 1, 31),
+        })
+        (primary_allocation + segment_allocation_1 + segment_allocation_2).action_approve()
+
+        leave_request = self.env['hr.leave'].create({
+            'name': 'Leave Request',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'request_date_from': date(2024, 1, 19),
+            'request_date_to': date(2024, 1, 22),
+            'employee_id': self.employee.id,
+        })
+        leave_request.action_approve()
+
+        # No single allocation covers the leave, but the 2 segment allocations do together.
+        primary_allocation.write({'date_to': date(2024, 1, 10)})
+        self.assertEqual(primary_allocation.date_to, date(2024, 1, 10))
+
+    def test_change_date_to_with_negative_cap_within_limit(self):
+        work_entry_type_negative = self.env['hr.work.entry.type'].create({
+            'name': 'Negative Paid Time Off',
+            'code': 'Negative PTO',
+            'count_as': 'absence',
+            'requires_allocation': True,
+            'allocation_validation_type': 'no_validation',
+            'leave_validation_type': 'no_validation',
+            'allows_negative': True,
+            'max_allowed_negative': 2,
+            'request_unit': 'day',
+            'unit_of_measure': 'day',
+        })
+
+        allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Negative Allocation',
+            'work_entry_type_id': work_entry_type_negative.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 30),
+        })
+        allocation.action_approve()
+
+        leave_request = self.env['hr.leave'].create({
+            'name': 'Leave Request',
+            'work_entry_type_id': work_entry_type_negative.id,
+            'request_date_from': date(2024, 1, 22),
+            'request_date_to': date(2024, 1, 23),
+            'employee_id': self.employee.id,
+        })
+        leave_request.action_approve()
+
+        allocation.write({'date_to': date(2024, 1, 21)})
+        self.assertEqual(allocation.date_to, date(2024, 1, 21))
+
+    def test_change_date_to_with_negative_cap_exceeds_limit(self):
+        work_entry_type_negative = self.env['hr.work.entry.type'].create({
+            'name': 'Negative Cap Strict',
+            'code': 'Negative Cap Strict',
+            'count_as': 'absence',
+            'requires_allocation': True,
+            'allocation_validation_type': 'no_validation',
+            'leave_validation_type': 'no_validation',
+            'allows_negative': True,
+            'max_allowed_negative': 1,
+            'request_unit': 'day',
+            'unit_of_measure': 'day',
+        })
+
+        allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Negative Allocation',
+            'work_entry_type_id': work_entry_type_negative.id,
+            'number_of_days': 5,
+            'employee_id': self.employee.id,
+            'date_from': date(2024, 1, 1),
+            'date_to': date(2024, 1, 30),
+        })
+        allocation.action_approve()
+
+        leave_request = self.env['hr.leave'].create({
+            'name': 'Leave Request',
+            'work_entry_type_id': work_entry_type_negative.id,
+            'request_date_from': date(2024, 1, 22),
+            'request_date_to': date(2024, 1, 23),
+            'employee_id': self.employee.id,
+        })
+        leave_request.action_approve()
+
+        with self.assertRaises(RedirectWarning):
+            allocation.write({'date_to': date(2024, 1, 21)})
+
+    def test_change_accrual_date_to_before_future_leave_raises(self):
+        with freeze_time('2024-01-05'):
+            accrual_plan = self.env['hr.leave.accrual.plan'].with_context(tracking_disable=True).create({
+                'name': 'Accrual Plan For Future Leave Test',
+                'accrued_gain_time': 'end',
+                'level_ids': [(0, 0, {
+                    'added_value': 1,
+                    'added_value_type': 'day',
+                    'frequency': 'daily',
+                })],
+            })
+            work_entry_type = self.env['hr.work.entry.type'].create({
+                'name': 'Accrual Leave Type',
+                'code': 'Accrual Leave Type',
+                'count_as': 'absence',
+                'requires_allocation': True,
+                'allocation_validation_type': 'no_validation',
+                'leave_validation_type': 'no_validation',
+                'request_unit': 'day',
+                'unit_of_measure': 'day',
+            })
+            allocation = self.env['hr.leave.allocation'].create({
+                'name': 'Accrual Allocation',
+                'employee_id': self.employee.id,
+                'work_entry_type_id': work_entry_type.id,
+                'number_of_days': 0,
+                'allocation_type': 'accrual',
+                'accrual_plan_id': accrual_plan.id,
+                'date_from': date(2024, 1, 1),
+            })
+            allocation.action_approve()
+
+            leave_request = self.env['hr.leave'].create({
+                'name': 'Future Leave Request',
+                'work_entry_type_id': work_entry_type.id,
+                'request_date_from': date(2024, 1, 10),
+                'request_date_to': date(2024, 1, 10),
+                'employee_id': self.employee.id,
+            })
+            leave_request.action_approve()
+
+            with self.assertRaises(RedirectWarning):
+                allocation.write({'date_to': date(2024, 1, 8)})
