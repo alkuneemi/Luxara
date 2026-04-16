@@ -35,12 +35,13 @@ class PortalWebClientController(WebclientController):
         if name == "/mail/chatter_fetch":
             # Only search into website_message_ids, so apply the same domain to perform only one search
             # extract domain from the 'website_message_ids' field
+            access_params = params.get("access_params", {})
             fetch_params = params.pop("fetch_params", None)
             model = request.env[params.pop("thread_model")]
             thread = ThreadController._get_thread_with_access(
                 model._name,
                 params.pop("thread_id"),
-                token=params.get('token'),
+                token=access_params.get('token'),
             )
             if not thread:
                 return
@@ -48,7 +49,7 @@ class PortalWebClientController(WebclientController):
                 thread,
                 _hash=None,
                 pid=None,
-                token=params.get("token"),
+                token=access_params.get("token"),
             ):
                 request.update_context(
                     portal_data={"portal_partner": portal_partner, "portal_thread": thread},
@@ -139,17 +140,6 @@ class PortalWebClientController(WebclientController):
             predicate=lambda t: t in portal_partner_by_thread,
             value=portal_partner_by_thread.get,
         )
-
-    @classmethod
-    def _get_non_empty_message_domain(self):
-        return (
-            Domain("body", "!=", False)
-            & Domain(
-                "body",
-                "not =like",
-                '<span class="o-mail-Message-edited" data-o-datetime="%"></span>',
-            )
-        ) | Domain("attachment_ids", "!=", False)
 
     @classmethod
     def _setup_portal_message_fetch_extra_domain(self, data) -> Domain:
