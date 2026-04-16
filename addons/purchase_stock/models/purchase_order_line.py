@@ -70,7 +70,7 @@ class PurchaseOrderLine(models.Model):
                             # receive the product physically in our stock. To avoid counting the
                             # quantity twice, we do nothing.
                             pass
-                        elif move.origin_returned_move_id and move.origin_returned_move_id._is_purchase_return() and not move.to_refund:
+                        elif move.origin_returned_move_id and move.origin_returned_move_id._is_purchase_return() and not move.to_refund or move.picking_type_id != move.purchase_line_id.order_id.picking_type_id:
                             pass
                         else:
                             total += move.product_uom._compute_quantity(move.quantity, line.product_uom, rounding_method='HALF-UP')
