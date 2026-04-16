@@ -179,15 +179,16 @@ export class HistoryPlugin extends Plugin {
      * Create a commit from data and write it to history.
      *
      * @param { object } params
-     * @param { boolean } [params.batchable = false]
+     * @param { HistoryCommitData<"standard"> } [initialData = {}]
      * @returns { HistoryCommit<"standard"> | false }
      */
-    commit({ batchable = false } = {}) {
+    commit(initialData = {}) {
         // Set the type of the commit here. That way, the state of undo and redo
         // is truly accessible when executing the `onChange` callback. It is
         // useful for external components if they execute `can(Undo|Redo)`.
         const data = this.processCommitData({
-            batchable,
+            batchable: false, // possibly overridden by `initialData`
+            ...initialData,
             authorTimestamp: this.authorTimestamp,
         });
         const commit = new HistoryCommit({ data });

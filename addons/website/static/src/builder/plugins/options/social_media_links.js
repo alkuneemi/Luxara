@@ -10,6 +10,10 @@ export class SocialMediaLinks extends BaseOptionComponent {
     static template = "website.SocialMediaLinks";
     static dependencies = ["socialMediaOptionPlugin", "history", "operation"];
 
+    resources = {
+        history_commit_data_properties: ["areSocialMediaLinksPrefilled"],
+    }
+
     setup() {
         super.setup();
 
@@ -22,7 +26,7 @@ export class SocialMediaLinks extends BaseOptionComponent {
             this.dependencies.operation.next(async () => {
                 const prefilled = await prefillSocialMediaLinks(this.env.getEditingElement());
                 if (prefilled) {
-                    this.dependencies.history.commit({ extraStepInfos: { prefill: true } });
+                    this.dependencies.history.commit({ areSocialMediaLinksPrefilled: true });
                 }
             });
         });
