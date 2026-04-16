@@ -70,26 +70,17 @@ class SaleOrder(models.Model):
             return qty_delivered_by_line.get(line_) or line_.qty_delivered
 
         for order in orders_paid_on_delivery:
-            delivered_amount = sum(
-                get_qty_delivered(line) / line.product_uom_qty * line.price_total
-                for line in order.order_line & deliverable_lines
-            )
-            if order.currency_id.is_zero(delivered_amount):
+            if not any(map(get_qty_delivered, order.order_line & deliverable_lines)):
                 # If nothing was delivered yet, no payment should be collected.
                 order.amount_on_delivery = 0
                 continue
 
-            downpayment_lines = order.order_line.filtered("is_downpayment")
-            # Posted downpayments.
-            downpayment_amount = sum(downpayment_lines.mapped("amount_invoiced"))
-            # Anything that can't physically be delivered (services, delivery fees, etc.).
-            undeliverable_amount = sum(
-                (order.order_line - deliverable_lines - downpayment_lines).mapped("price_total")
+            undelivered_amount = sum(
+                (1 - get_qty_delivered(line) / line.product_uom_qty) * line.price_total
+                for line in order.order_line & deliverable_lines
             )
 
-            order.amount_on_delivery = max(
-                undeliverable_amount + delivered_amount - downpayment_amount - order.amount_paid, 0
-            )
+            order.amount_on_delivery = order.remaining_balance - undelivered_amount
 
     @api.onchange("order_line", "partner_id", "partner_shipping_id")
     def onchange_order_line(self):

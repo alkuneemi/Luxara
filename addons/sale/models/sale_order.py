@@ -339,6 +339,7 @@ class SaleOrder(models.Model):
     amount_total = fields.Monetary(
         string="Total", store=True, compute="_compute_amounts", tracking=4
     )
+    remaining_balance = fields.Monetary(compute="_compute_remaining_balance")
     amount_to_invoice = fields.Monetary(
         string="Un-invoiced Balance", compute="_compute_amount_to_invoice"
     )
@@ -708,6 +709,26 @@ class SaleOrder(models.Model):
             order.amount_untaxed = tax_totals["base_amount_currency"]
             order.amount_tax = tax_totals["tax_amount_currency"]
             order.amount_total = tax_totals["total_amount_currency"]
+
+    @api.depends("amount_total", "amount_invoiced", "amount_paid")
+    def _compute_remaining_balance(self):
+        for order in self:
+            downpayment_lines = order.order_line.filtered("is_downpayment")
+            downpayment_txs = (
+                downpayment_lines.invoice_lines.move_id.reconciled_payment_ids.payment_transaction_id
+                & order.transaction_ids
+            )
+
+            # Posted downpayments.
+            downpayment_amount = sum(downpayment_lines.mapped("amount_invoiced"))
+            reconciled_amount = sum(downpayment_txs.mapped("amount"))
+            # Even if we only sum downpayment related transactions, they might pay for more than
+            # just the downpayments. Clip at zero.
+            unreconciled_downpayment_amount = max(downpayment_amount - reconciled_amount, 0)
+
+            order.remaining_balance = max(
+                order.amount_total - order.amount_paid - unreconciled_downpayment_amount, 0
+            )
 
     def _add_base_lines_for_early_payment_discount(self):
         """Add the necessary lines in case of mixed early payment discount.

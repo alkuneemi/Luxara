@@ -53,11 +53,10 @@ class PaymentTransaction(models.Model):
         ):
             order.ensure_one()
             last_tx = pending_delivery_txs._get_last()
-            remaining_balance = order.amount_total - order.amount_paid
 
             # Ensure the last transaction is not outdated.
             assert order.currency_id == last_tx.currency_id
-            if order.currency_id.compare_amounts(remaining_balance, last_tx.amount) > 0:
+            if order.currency_id.compare_amounts(order.remaining_balance, last_tx.amount) > 0:
                 raise UserError(
                     self.env._(
                         "The remaining balance of the order cannot exceed the amount authorized by"
@@ -65,7 +64,7 @@ class PaymentTransaction(models.Model):
                         "\n\n- Remaining Balance (%(order)s): %(remaining_balance)s"
                         "\n- Authorized Amount (%(tx)s): %(tx_amount)s",
                         order=order.display_name,
-                        remaining_balance=order.currency_id.format(remaining_balance),
+                        remaining_balance=order.currency_id.format(order.remaining_balance),
                         tx=last_tx.display_name,
                         tx_amount=order.currency_id.format(last_tx.amount),
                     )
@@ -113,8 +112,7 @@ class PaymentTransaction(models.Model):
                 )
             )
 
-        remaining_balance = order.amount_total - order.amount_paid
-        if not self.currency_id.compare_amounts(remaining_balance, order.amount_on_delivery):
+        if not self.currency_id.compare_amounts(order.remaining_balance, order.amount_on_delivery):
             # If both amounts are equal, no followup transaction is needed. We still create a new
             # transaction because `order.amount_on_delivery` is lower than `self.amount`.
             skip_followup = True

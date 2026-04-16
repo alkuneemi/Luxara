@@ -75,7 +75,7 @@ class PaymentProvider(models.Model):
             # contains physical products.
             reason = self.env._("no in-store delivery methods available")
         elif not currency.is_zero(amount) and (
-            currency.compare_amounts(amount, order.amount_total - order.amount_paid) < 0
+            currency.compare_amounts(amount, order.remaining_balance) < 0
         ):
             reason = self.env._("in-store not allowed to pay less than the order remaining balance")
 
