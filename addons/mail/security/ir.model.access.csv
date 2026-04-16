@@ -34,6 +34,7 @@ access_mail_message_reaction_system,mail.message.reaction.system,model_mail_mess
 access_mail_message_subtype_public,mail.message.subtype.all,model_mail_message_subtype,base.group_public,1,0,0,0
 access_mail_message_subtype_portal,mail.message.subtype.all,model_mail_message_subtype,base.group_portal,1,0,0,0
 access_mail_message_subtype_user,mail.message.subtype.user,model_mail_message_subtype,base.group_user,1,0,0,0
+access_mail_message_subtype_user_lite,mail.message.subtype.user.lite,model_mail_message_subtype,base.group_user_lite,1,0,0,0
 access_mail_message_subtype_system,mail.message.subtype.system,model_mail_message_subtype,base.group_system,1,1,1,1
 access_mail_presence,mail.presence,model_mail_presence,base.group_system,1,1,1,1
 access_mail_tracking_value_system,mail.tracking.value.system,model_mail_tracking_value,base.group_system,1,1,1,1
