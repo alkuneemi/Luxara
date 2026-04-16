@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- https://paymentservices.amazon.com/docs/EN/24.html -->
+
+    <record id="payment_method_card" model="payment.method">
+        <field name="name">Card</field>
+        <field name="code">card</field>
+        <field name="sequence">10</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_mada" model="payment.method">
+        <field name="name">Mada</field>
+        <field name="code">mada</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/mada.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sa'), ref('base.ae')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SAR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_knet" model="payment.method">
+        <field name="name">KNET</field>
+        <field name="code">knet</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/knet.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.kw')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.KWD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_meeza" model="payment.method">
+        <field name="name">Meeza</field>
+        <field name="code">meeza</field>
+        <field name="primary_payment_method_id" eval="ref('payment_aps.payment_method_card')"/>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/meeza.png"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_naps" model="payment.method">
+        <field name="name">NAPS</field>
+        <field name="code">naps</field>
+        <field name="primary_payment_method_id" eval="ref('payment_aps.payment_method_card')"/>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/naps.png"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_omannet" model="payment.method">
+        <field name="name">OmanNet</field>
+        <field name="code">omannet</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/omannet.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.om')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.OMR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+    <record id="payment_method_benefit" model="payment.method">
+        <field name="name">Benefit</field>
+        <field name="code">benefit</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/benefit.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.bh')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.BHD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_aps"/>
+    </record>
+
+</odoo>

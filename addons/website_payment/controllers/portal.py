@@ -216,14 +216,14 @@ class PaymentPortal(payment_portal.PaymentPortal):
         # Select the brands, i.e. non-primary payment methods. E.g., Amex for Card.
         brands_domain = Domain([
             ('is_primary', '=', False),
-            ('primary_payment_method_id.provider_ids', 'in', compatible_providers_sudo.ids),
+            ('primary_payment_method_id.provider_id', 'in', compatible_providers_sudo.ids),
             ('primary_payment_method_id.active', '=', True),
         ])
         # Or, select the primary payment methods without any brands. E.g., PayPal.
         primary_without_brands_domain = Domain([
             ('is_primary', '=', True),
             ('brand_ids', '=', False),
-            ('provider_ids', 'in', compatible_providers_sudo.ids),
+            ('provider_id', 'in', compatible_providers_sudo.ids),
         ])
 
         supported_pms = request.env['payment.method'].search(

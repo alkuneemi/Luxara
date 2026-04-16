@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- https://www.authorize.net/solutions/merchantsolutions/onlinemerchantaccount/ -->
+
+    <record id="payment_method_ach_direct_debit" model="payment.method">
+        <field name="name">ACH Direct Debit</field>
+        <field name="code">ach_direct_debit</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/ach_direct_debit.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.pr'), ref('base.us')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.USD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_authorize"/>
+    </record>
+
+    <record id="payment_method_card" model="payment.method">
+        <field name="name">Card</field>
+        <field name="code">card</field>
+        <field name="sequence">10</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_authorize"/>
+    </record>
+
+</odoo>

@@ -9,6 +9,7 @@
     "depends": ["payment"],
     "data": [
         "data/payment_provider_data.xml",
+        "data/payment_method_data.xml",
         "views/payment_provider_views.xml",
         "views/payment_toss_payments_templates.xml",
     ],

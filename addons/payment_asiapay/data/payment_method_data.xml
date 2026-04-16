@@ -1,0 +1,790 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- https://www.asiapay.com/payment.html#option -->
+
+    <record id="payment_method_card" model="payment.method">
+        <field name="name">Card</field>
+        <field name="code">card</field>
+        <field name="sequence">10</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_alipay" model="payment.method">
+        <field name="name">Alipay</field>
+        <field name="code">alipay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/alipay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_wechat_pay" model="payment.method">
+        <field name="name">WeChat Pay</field>
+        <field name="code">wechat_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/wechat_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.AUD'), ref('base.EUR'), ref('base.CAD'), ref('base.CNY'), ref('base.HKD'), ref('base.JPY'), ref('base.MYR'), ref('base.NZD'), ref('base.GBP'), ref('base.USD'), ref('base.SGD'), ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_poli" model="payment.method">
+        <field name="name">POLi</field>
+        <field name="code">poli</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/poli.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.au'), ref('base.nz')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.AUD'), ref('base.NZD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_afterpay" model="payment.method">
+        <field name="name">Afterpay</field>
+        <field name="code">afterpay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/afterpay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.au'), ref('base.nz'), ref('base.us'), ref('base.ca')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.CAD'), ref('base.USD'), ref('base.AUD'), ref('base.NZD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_clearpay" model="payment.method">
+        <field name="name">Clearpay</field>
+        <field name="code">clearpay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/clearpay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.uk')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.GBP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_humm" model="payment.method">
+        <field name="name">Humm</field>
+        <field name="code">humm</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/humm.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.au'), ref('base.nz'), ref('base.uk'), ref('base.ie')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.AUD'), ref('base.NZD'), ref('base.GBP'), ref('base.EUR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_zip" model="payment.method">
+        <field name="name">Zip</field>
+        <field name="code">zip</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/zip.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.au'), ref('base.ca'), ref('base.nz'), ref('base.us')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.AUD'), ref('base.CAD'), ref('base.NZD'), ref('base.USD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_paypal" model="payment.method">
+        <field name="name">Paypal</field>
+        <field name="code">paypal</field>
+        <field name="sequence">20</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/paypal.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_atome" model="payment.method">
+        <field name="name">Atome</field>
+        <field name="code">atome</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/atome.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my'), ref('base.sg')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.MYR'), ref('base.SGD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_pace" model="payment.method">
+        <field name="name">Pace.</field>
+        <field name="code">pace</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/pace.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg'), ref('base.jp'), ref('base.my'), ref('base.hk'), ref('base.tw'), ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD'), ref('base.MYR'), ref('base.JPY'), ref('base.HKD'), ref('base.THB'), ref('base.TWD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_shopback" model="payment.method">
+        <field name="name">ShopBack</field>
+        <field name="code">shopback</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/shopback.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_grabpay" model="payment.method">
+        <field name="name">GrabPay</field>
+        <field name="code">grabpay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/grabpay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my'), ref('base.sg'), ref('base.ph')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD'), ref('base.MYR'), ref('base.PHP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_samsung_pay" model="payment.method">
+        <field name="name">Samsung Pay</field>
+        <field name="code">samsung_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/samsung_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">partial</field>
+        <field name="support_refund">partial</field>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_hoolah" model="payment.method">
+        <field name="name">Hoolah</field>
+        <field name="code">hoolah</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/hoolah.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg'), ref('base.my'), ref('base.hk'), ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD'), ref('base.MYR'), ref('base.HKD'), ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_boost" model="payment.method">
+        <field name="name">Boost</field>
+        <field name="code">boost</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/boost.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.MYR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_duitnow" model="payment.method">
+        <field name="name">DuitNow</field>
+        <field name="code">duitnow</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/duitnow.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.MYR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_touch_n_go" model="payment.method">
+        <field name="name">Touch'n Go</field>
+        <field name="code">touch_n_go</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/touch_n_go.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.MYR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_bancnet" model="payment.method">
+        <field name="name">BancNet</field>
+        <field name="code">bancnet</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bancnet.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.ph')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.PHP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_gcash" model="payment.method">
+        <field name="name">GCash</field>
+        <field name="code">gcash</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/gcash.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.ph')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.PHP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_paynow" model="payment.method">
+        <field name="name">PayNow</field>
+        <field name="code">paynow</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/paynow.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_linepay" model="payment.method">
+        <field name="name">LINE Pay</field>
+        <field name="code">linepay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/linepay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.jp'), ref('base.tw'), ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.JPY'), ref('base.TWD'), ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_bangkok_bank" model="payment.method">
+        <field name="name">Bangkok Bank</field>
+        <field name="code">bangkok_bank</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_krungthai_bank" model="payment.method">
+        <field name="name">KrungThai Bank</field>
+        <field name="code">krungthai_bank</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_uob" model="payment.method">
+        <field name="name">United Overseas Bank</field>
+        <field name="code">uob</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_scb" model="payment.method">
+        <field name="name">Siam Commerical Bank</field>
+        <field name="code">scb</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_bank_of_ayudhya" model="payment.method">
+        <field name="name">Bank of Ayudhya</field>
+        <field name="code">bank_of_ayudhya</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_kasikorn_bank" model="payment.method">
+        <field name="name">Kasikorn Bank</field>
+        <field name="code">kasikorn_bank</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_rabbit_line_pay" model="payment.method">
+        <field name="name">Rabbit LINE Pay</field>
+        <field name="code">rabbit_line_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/rabbit_line_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_truemoney" model="payment.method">
+        <field name="name">TrueMoney</field>
+        <field name="code">truemoney</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/truemoney.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_fpx" model="payment.method">
+        <field name="name">FPX</field>
+        <field name="code">fpx</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/fpx.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.my')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.MYR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_fps" model="payment.method">
+        <field name="name">FPS</field>
+        <field name="code">fps</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.hk')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.HKD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_hd" model="payment.method">
+        <field name="name">HD Bank</field>
+        <field name="code">hd</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.vn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.VND')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_maybank" model="payment.method">
+        <field name="name">Maybank</field>
+        <field name="code">maybank</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/maybank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.id')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.IDR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_pay_id" model="payment.method">
+        <field name="name">PayID</field>
+        <field name="code">pay_id</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/pay_id.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.au'), ref('base.nz')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.AUD'), ref('base.NZD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_promptpay" model="payment.method">
+        <field name="name">Prompt Pay</field>
+        <field name="code">promptpay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/promptpay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_techcom" model="payment.method">
+        <field name="name">Techcombank</field>
+        <field name="code">techcom</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/techcom.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.vn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.VND')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_tienphong" model="payment.method">
+        <field name="name">Tienphong</field>
+        <field name="code">tienphong</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.vn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.VND')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_ttb" model="payment.method">
+        <field name="name">TTB</field>
+        <field name="code">ttb</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_upi" model="payment.method">
+        <field name="name">UPI</field>
+        <field name="code">upi</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/upi.png"/>
+        <field name="support_tokenization">True</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_vietcom" model="payment.method">
+        <field name="name">Vietcombank</field>
+        <field name="code">vietcom</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/vietcom.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.vn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.VND')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_tendopay" model="payment.method">
+        <field name="name">TendoPay</field>
+        <field name="code">tendopay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/tendopay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.ph')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.PHP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_alipay_hk" model="payment.method">
+        <field name="name">AliPayHK</field>
+        <field name="code">alipay_hk</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/alipay_hk.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.hk')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.HKD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_bharatqr" model="payment.method">
+        <field name="name">BharatQR</field>
+        <field name="code">bharatqr</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bharatqr.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_momo" model="payment.method">
+        <field name="name">MoMo</field>
+        <field name="code">momo</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/momo.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.vn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.VND')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_octopus" model="payment.method">
+        <field name="name">Octopus</field>
+        <field name="code">octopus</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/octopus.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.hk')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.HKD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_maya" model="payment.method">
+        <field name="name">Maya</field>
+        <field name="code">maya</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/maya.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.ph')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.PHP')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_uatp" model="payment.method">
+        <field name="name">Universal Air Travel Plan</field>
+        <field name="code">uatp</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/uatp.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_tenpay" model="payment.method">
+        <field name="name">TENPAY</field>
+        <field name="code">tenpay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/tenpay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.cn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.CNY')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_enets" model="payment.method">
+        <field name="name">eNETS</field>
+        <field name="code">enets</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/enets.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.sg')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.SGD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_jkopay" model="payment.method">
+        <field name="name">Jkopay</field>
+        <field name="code">jkopay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/jkopay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.cn')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.CNY')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_payme" model="payment.method">
+        <field name="name">PayMe</field>
+        <field name="code">payme</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/payme.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.hk')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.HKD')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+    <record id="payment_method_tmb" model="payment.method">
+        <field name="name">Tamilnad Mercantile Bank Limited</field>
+        <field name="code">tmb</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/tmb.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.th')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.THB')])]"/>
+        <field name="provider_id" ref="payment.payment_provider_asiapay"/>
+    </record>
+
+</odoo>

@@ -10,6 +10,7 @@
         <field name="support_express_checkout">False</field>
         <field name="support_manual_capture">none</field>
         <field name="support_refund">none</field>
+        <field name="provider_id" ref="website_sale_collect.payment_provider_on_site"/>
     </record>
 
 </odoo>
