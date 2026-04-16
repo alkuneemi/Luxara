@@ -175,11 +175,13 @@ class AccountEdiProxyClientUser(models.Model):
         processed_message_uuids = []
         other_messages = {}
         for uuid, content in messages.items():
-            if content['document_type'] != 'ApplicationResponse':
+            peppol_response = uuid_to_record[uuid]
+            # TODO: check against "normal" Peppol
+            # In case of error we do not have a 'document_type'
+            if peppol_response._name != 'account.peppol.response' or content['document_type'] != 'ApplicationResponse':
                 other_messages[uuid] = content
                 continue
 
-            peppol_response = uuid_to_record[uuid]
             if content.get('error'):
                 if content['error'].get('code') == 702:
                     # "Peppol request not ready" error:

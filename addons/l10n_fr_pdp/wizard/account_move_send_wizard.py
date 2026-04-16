@@ -1,5 +1,7 @@
 from odoo import models
 
+from odoo.addons.account_peppol.models.account_move import UNSENT_PEPPOL_MOVE_STATES
+
 
 class AccountMoveSendWizard(models.TransientModel):
     _inherit = 'account.move.send.wizard'
@@ -22,4 +24,8 @@ class AccountMoveSendWizard(models.TransientModel):
             return super()._get_peppol_checkbox_addendum_disable_reason()
         partner_is_valid = pdp_partner.peppol_verification_state == 'valid'
         verification_display_state_map = dict(pdp_partner._fields['pdp_verification_display_state']._description_selection(self.env))
-        return "" if partner_is_valid else f" ({verification_display_state_map[pdp_partner.pdp_verification_display_state]})"
+        if not partner_is_valid:
+            return f" ({verification_display_state_map[pdp_partner.pdp_verification_display_state]})"
+        if self.move_id.peppol_move_state not in UNSENT_PEPPOL_MOVE_STATES:
+            return f" ({self.env._("Previously sent")})"
+        return ""
