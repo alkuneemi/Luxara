@@ -1134,7 +1134,7 @@ class ProductTemplate(models.Model):
         ]
 
     @api.model
-    def _search_get_detail(self, website, order, options):
+    def _search_get_detail(self, website, order, options):  # noqa: ARG002
         domains = [website.sale_product_domain()]
         category = options.get("category")
         tags = options.get("tags")
@@ -1176,12 +1176,31 @@ class ProductTemplate(models.Model):
         mapping = {
             "name": {"name": "name", "type": "text", "match": True},
             "website_url": {"name": "website_url", "type": "text", "truncate": False},
-            "search_item_metadata": {"name": "price", "type": "html", "display_currency": options["display_currency"]},
+            "search_item_metadata": {
+                "name": "price",
+                "type": "html",
+                "display_currency": options["display_currency"],
+            },
             "image_url": {"name": "image_url", "type": "html"},
-            "description": {"name": "description_ecommerce", "type": "text", "html": True, "match": True},
+            "description": {
+                "name": "description_ecommerce",
+                "type": "text",
+                "html": True,
+                "match": True,
+            },
             "tags": {"name": "product_tag_ids", "type": "tags", "match": True},
-            "attribute_value_ids": {"name": "attribute_value_ids", "type": "tags", "match": True, "force_show": True},
-            "description_sale": {"name": "description_sale", "type": "text", "html": True, "match": True},
+            "attribute_value_ids": {
+                "name": "attribute_value_ids",
+                "type": "tags",
+                "match": True,
+                "force_show": True,
+            },
+            "description_sale": {
+                "name": "description_sale",
+                "type": "text",
+                "html": True,
+                "match": True,
+            },
         }
         return {
             "model": "product.template",
@@ -1201,9 +1220,7 @@ class ProductTemplate(models.Model):
             values = product.mapped("attribute_line_ids.value_ids")
             data["attribute_value_ids"] = values.read(["id", "name"])
             data["product_tag_ids"] = product.product_tag_ids.read(["name"])
-            price = self._search_render_results_prices(
-                mapping, combination_info
-            )
+            price = self._search_render_results_prices(mapping, combination_info)
             if price:
                 data["price"] = price
             data["image_url"] = "/web/image/product.template/%s/image_128" % data["id"]
@@ -1212,12 +1229,10 @@ class ProductTemplate(models.Model):
     def _search_render_results_prices(self, mapping, combination_info):
         if combination_info.get("hide_price"):
             return None
-
         monetary_options = {"display_currency": mapping["search_item_metadata"]["display_currency"]}
-        price = self.env["ir.qweb.field.monetary"].value_to_html(
+        return self.env["ir.qweb.field.monetary"].value_to_html(
             combination_info["price"], monetary_options
         )
-        return price
 
     def _get_google_analytics_data(self, product, combination_info):
         self.ensure_one()
@@ -1235,6 +1250,13 @@ class ProductTemplate(models.Model):
         if request and request.is_frontend and not pricelist:
             return request.pricelist
         return pricelist
+
+    def _is_sold_out(self):
+        """Return whether the product is sold out. Overridden in ``website_sale_stock``.
+
+        :rtype: bool
+        """
+        return False
 
     def _website_show_quick_add(self):
         self.ensure_one()

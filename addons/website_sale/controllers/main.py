@@ -254,7 +254,15 @@ class WebsiteSale(payment_portal.PaymentPortal):
         return fuzzy_search_term, product_count, search_result
 
     def _shop_get_query_url_kwargs(
-        self, search, min_price, max_price, order=None, tags=None, **_kwargs
+        self,
+        search,
+        min_price,
+        max_price,
+        order=None,
+        tags=None,
+        on_sale=None,
+        in_stock=None,
+        **_kwargs,
     ):
         attribute_values = request.session.get("attribute_values", [])
         return {
@@ -264,6 +272,8 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "order": order,
             "tags": tags,
             "attribute_values": attribute_values,
+            "on_sale": on_sale,
+            "in_stock": in_stock,
         }
 
     def _get_additional_shop_values(self, _values, **_kwargs):
@@ -295,7 +305,18 @@ class WebsiteSale(payment_portal.PaymentPortal):
         # Sends a 404 error in case of any Access error instead of 403.
         handle_params_access_error=lambda e, **_kwargs: NotFound.code,  # noqa: ARG005
     )
-    def shop(self, page=0, category=None, search="", min_price=0.0, max_price=0.0, tags="", **post):
+    def shop(
+        self,
+        page=0,
+        category=None,
+        search="",
+        min_price=0.0,
+        max_price=0.0,
+        tags="",
+        on_sale=None,
+        in_stock=None,
+        **post,
+    ):
         if not request.website.has_ecommerce_access():
             return request.redirect(f"/web/login?redirect={request.httprequest.path}")
 
@@ -348,7 +369,10 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         url = self._get_shop_path(category)
         keep = QueryURL(
-            url, **self._shop_get_query_url_kwargs(search, min_price, max_price, **post)
+            url,
+            **self._shop_get_query_url_kwargs(
+                search, min_price, max_price, on_sale=on_sale, in_stock=in_stock, **post
+            ),
         )
 
         # Check if we need to refresh the cached pricelist
@@ -429,6 +453,28 @@ class WebsiteSale(payment_portal.PaymentPortal):
                         max_price if max_price >= available_min_price else available_max_price
                     )
                     post["max_price"] = max_price
+
+        # Dynamic ribbon filters ("On sale" / "In stock")
+        on_sale_active = on_sale == "1"
+        in_stock_active = in_stock == "1"
+        auto_assign_ribbons = (
+            request.env["product.ribbon"].sudo().search([("assign", "!=", "manual")])
+        )
+        ribbon_assign_values = set(auto_assign_ribbons.mapped("assign"))
+        has_sale_ribbon = "sale" in ribbon_assign_values
+        has_out_of_stock_ribbon = "out_of_stock" in ribbon_assign_values
+        unfiltered_products = search_product
+        unfiltered_prices = {}
+
+        if on_sale_active and has_sale_ribbon:
+            unfiltered_prices = unfiltered_products._get_sales_prices(website)
+            on_sale_ids = {tid for tid, pv in unfiltered_prices.items() if "base_price" in pv}
+            search_product = search_product.filtered(lambda p: p.id in on_sale_ids)
+            product_count = len(search_product)
+        if in_stock_active and has_out_of_stock_ribbon:
+            sold_out_ids = {p.id for p in search_product.sudo() if p._is_sold_out()}
+            search_product = search_product.filtered(lambda p: p.id not in sold_out_ids)
+            product_count = len(search_product)
 
         ProductTag = request.env["product.tag"]
         if filter_by_tags_enabled and search_product:
@@ -530,11 +576,25 @@ class WebsiteSale(payment_portal.PaymentPortal):
             .grouped("attribute_id")
         )
 
+        has_on_sale_filter = False
+        has_in_stock_filter = False
+        if has_sale_ribbon:
+            if not unfiltered_prices:
+                unfiltered_prices = unfiltered_products._get_sales_prices(website)
+            has_on_sale_filter = on_sale_active or any(
+                "base_price" in pv for pv in unfiltered_prices.values()
+            )
+        if has_out_of_stock_ribbon:
+            has_in_stock_filter = in_stock_active or any(
+                p._is_sold_out() for p in unfiltered_products.sudo()
+            )
+
         values = {
-            "auto_assign_ribbons": self
-            .env["product.ribbon"]
-            .sudo()
-            .search([("assign", "!=", "manual")]),
+            "auto_assign_ribbons": auto_assign_ribbons,
+            "has_on_sale_filter": has_on_sale_filter,
+            "has_in_stock_filter": has_in_stock_filter,
+            "on_sale_active": on_sale_active,
+            "in_stock_active": in_stock_active,
             "search": fuzzy_search_term or search,
             "original_search": fuzzy_search_term and search,
             "order": post.get("order", ""),
@@ -896,8 +956,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         if last_attributes_search := request.session.get("attribute_values", []):
             keep = QueryURL(
-                self._get_shop_path(original_category),
-                attribute_values=last_attributes_search
+                self._get_shop_path(original_category), attribute_values=last_attributes_search
             )
         else:
             keep = QueryURL(self._get_shop_path(original_category))
@@ -934,7 +993,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "attribute_value_images": attribute_value_images,
             "categories": ProductCategory.search([("parent_id", "=", False)]),
             "category": category,
-            'original_category': original_category,
+            "original_category": original_category,
             "combination_info": combination_info,
             "has_available_uoms": len(product._get_available_uoms()) > 0,
             "keep": keep,
