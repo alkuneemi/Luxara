@@ -33,4 +33,8 @@ class IrHttp(models.AbstractModel):
 
     @classmethod
     def _slug(cls, value: models.BaseModel | tuple[int, str]) -> str:
-        return super()._slug(value.with_context(show_attribute=False, show_parent_categories=False))
+        if isinstance(value, models.BaseModel):
+            return super()._slug(
+                value.with_context(show_attribute=False, show_parent_categories=False)
+            )
+        return super()._slug(value)

@@ -1121,14 +1121,19 @@ class ProductTemplate(models.Model):
         url = urlparse(self.website_url)
         query_params = query_params or {}
         if grouped_attributes_values:
-            available_grouped_pavs = self.attribute_line_ids.value_ids.grouped("attribute_id")
-            pavs = [
-                next(pav for pav in pavs if pav in available_grouped_pavs[pa])
+            product_grouped_pavs = self.attribute_line_ids.value_ids.grouped("attribute_id")
+            available_grouped_pavs = {
+                pa: [pav for pav in pavs if pav in product_grouped_pavs[pa]]
                 for pa, pavs in grouped_attributes_values.items()
-                if pa in available_grouped_pavs
-            ]
+                if pa in product_grouped_pavs
+            }
+            compatible_grouped_pavs = {
+                pa: pavs if pa.display_type == "multi" else pavs[:1]
+                for pa, pavs in available_grouped_pavs.items()
+            }
             slug = self.env["ir.http"]._slug
-            query_params.update({slug(pav.attribute_id): slug(pav) for pav in pavs})
+            for pa, pavs in compatible_grouped_pavs.items():
+                query_params[slug(pa)] = ",".join([slug(pav) for pav in pavs])
         if query_params:
             url = url._replace(query=urlencode(query_params, doseq=True))
 

@@ -8,7 +8,7 @@ from odoo.tests import HttpCase, tagged
 from odoo.addons.website_sale.controllers.product_configurator import (
     WebsiteSaleProductConfiguratorController,
 )
-from odoo.addons.website_sale.tests.common import MockRequest, WebsiteSaleCommon
+from odoo.addons.website_sale.tests.common import WebsiteSaleCommon
 
 
 @tagged("post_install", "-at_install")
@@ -445,36 +445,9 @@ class TestWebsiteSaleProductConfigurator(HttpCase, WebsiteSaleCommon):
         main_product.attribute_line_ids[1].product_template_value_ids[0].ptav_active = False
         with self.mock_request():
             product_values = self.pc_controller._prepare_product_values(
-                main_product, attribute_values=str(attribute_single.value_ids.id)
+                main_product, **{str(attribute_single.id): str(attribute_single.value_ids.id)}
             )
         is_combination_possible = product_values["combination_info"]["is_combination_possible"]
         combination_product_id = product_values["combination_info"]["product_id"]
         self.assertTrue(is_combination_possible)
         self.assertTrue(self.env["product.product"].browse(combination_product_id).active)
-
-    def test_product_page_search_scope_respects_navigation_context(self):
-        """
-        Ensure that search scope depends on how the user accessed the product page.
-
-        - Direct access to a product → search must be global (/shop)
-        - Access via category → search must be category-scoped
-        """
-        product_tmpl = self.product.product_tmpl_id
-        public_category = self.env['product.public.category'].create({
-            'name': 'Test Public Category',
-        })
-        product_tmpl.public_categ_ids = [Command.set([public_category.id])]
-
-        with MockRequest(self.env, website=self.website):
-            values = self.pc_controller._prepare_product_values(
-                product_tmpl,
-                category=None,
-            )
-        self.assertNotIn('/category', values['keep'].path)
-
-        with MockRequest(self.env, website=self.website):
-            values = self.pc_controller._prepare_product_values(
-                product_tmpl,
-                category=public_category,
-            )
-        self.assertIn('/category', values['keep'].path)

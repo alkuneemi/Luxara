@@ -25,7 +25,7 @@ class TestWebsiteSaleShopRedirects(HttpCase, WebsiteSaleCommon):
         self.assertEqual(response.status_code, 301)
         self.assertURLEqual(
             response.headers.get("Location"),
-            f"/shop/category/{slug(test_category)}?some-key=some-value",
+            f"/shop/category/{slug(test_category)}?category={test_category.id}&some-key=some-value",
         )
 
         response = self.url_open(
@@ -35,7 +35,7 @@ class TestWebsiteSaleShopRedirects(HttpCase, WebsiteSaleCommon):
         self.assertEqual(response.status_code, 301)
         self.assertURLEqual(
             response.headers.get("Location"),
-            f"/shop/product/{slug(test_product)}?some-key=some-value",
+            f"/shop/product/{slug(test_product)}?category={test_category.id}&some-key=some-value",
         )
 
         response = self.url_open(

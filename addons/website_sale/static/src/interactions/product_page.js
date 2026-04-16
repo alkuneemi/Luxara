@@ -200,7 +200,8 @@ export class ProductPage extends Interaction {
         let params = new URLSearchParams(window.location.search);
         let attributeValueIds = Array.from(params.entries())
             .filter(([attribute, _]) => !!wSaleUtils.unslug(attribute))
-            .map(([_, attributeValue]) => wSaleUtils.unslug(attributeValue));
+            .flatMap(([_, attributeValues]) => attributeValues.split(","))
+            .map(attributeValue => wSaleUtils.unslug(attributeValue));
         if (!attributeValueIds) {
             // TODO: remove support for `attribute_values` query param in version 20 (or later).
             let attributeValues = params.get('attribute_values');

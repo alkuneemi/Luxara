@@ -56,11 +56,11 @@ export class ShopPage extends Interaction {
         const form = ev.currentTarget.closest('form');
         const filters = form.querySelectorAll('input:checked, select');
         const attributeValueSlugs = Array.from(filters).filter(
-            filter => filter.name === 'attribute_value'
-        ).map(filter => filter.value).filter(Boolean);
-        const tagIds = Array.from(filters).filter(
-            filter => filter.name === 'tags'
-        ).map(filter => filter.value).filter(Boolean);
+            filter => filter.name === 'attribute_value' && filter.value
+        ).map(filter => filter.value);
+        const tagSlugs = Array.from(filters).filter(
+            filter => filter.name === 'tags' && filter.value
+        ).map(filter => filter.value);
         const attributeValueParams = wSaleUtils.getAttributeValueParams(attributeValueSlugs);
         const url = new URL(form.action);
         const searchParams = new URLSearchParams({
@@ -68,8 +68,8 @@ export class ShopPage extends Interaction {
             ...Object.fromEntries(attributeValueParams),
         });
         // Aggregate all tags into a single `tags` search param, with duplicates removed.
-        if (tagIds.length) {
-            searchParams.set('tags', [...new Set(tagIds)].join(','));
+        if (tagSlugs.length) {
+            searchParams.set('tags', [...new Set(tagSlugs)].join(','));
         }
         redirect(`${url.pathname}?${searchParams.toString()}`);
     }

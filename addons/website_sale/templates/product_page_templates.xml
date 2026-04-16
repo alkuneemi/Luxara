@@ -72,7 +72,6 @@
                             </ol>
                             <div class="d-flex d-md-none gap-2 ms-auto">
                                 <t t-call="website_sale.pricelist_list"/>
-                                <t t-if="original_category" t-set="placeholder" t-valuef.translate="Search in {{original_category.name}}"/>
                                 <t t-call="website.website_search_box_input"
                                     search_type.f="products"
                                     placeholder="placeholder"
@@ -267,6 +266,7 @@
                                         t-att-data-value-name="ptav.name"
                                         t-att-data-attribute-name="attribute.name"
                                         t-att-data-is-custom="ptav.is_custom"
+                                        t-att-data-slug="'%s/%s' % (slug(attribute), slug(ptav.product_attribute_value_id))"
                                     />
                                 </label>
                             </li>
@@ -759,7 +759,7 @@
             <a
                 t-foreach="visible_tags"
                 t-as="tag"
-                t-att-href="is_view_active('website_sale.filter_products_tags') and keep(shop_path, tags=tag.id) or None"
+                t-att-href="is_view_active('website_sale.filter_products_tags') and '/shop?tags=%s' % slug(tag) or None"
                 class="text-decoration-none d-inline-block"
             >
                 <span t-if="tag.image"
