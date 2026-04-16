@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="mass_mailing.FontAwesomeOption" t-inherit="html_builder.FontAwesomeOption">
+    <xpath expr="//BuilderRow[@label.translate='Color']/BuilderColorPicker" position="attributes">
+        <attribute name="enabledTabs">["custom", "solid"]</attribute>
+    </xpath>
+    <xpath expr="//BuilderRow[@label.translate='Background Color']/BuilderColorPicker" position="attributes">
+        <attribute name="enabledTabs">["custom", "solid"]</attribute>
+    </xpath>
+</t>
+
+</templates>
