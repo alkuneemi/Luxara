@@ -640,6 +640,7 @@ class IrActionsServer(models.Model):
                                  'act_id', 'gid', string='Allowed Groups', help='Groups that can execute the server action. Leave empty to allow everybody.')
 
     update_field_id = fields.Many2one('ir.model.fields', string='Field to Update', ondelete='cascade', compute='_compute_crud_relations', store=True, readonly=False)
+    update_property = fields.Char(string='Property to Update', compute='_compute_crud_relations', store=True, readonly=False)
     update_path = fields.Char(string='Field to Update Path', help="Path to the field to update, e.g. 'partner_id.name'", default=_default_update_path)
     update_related_model_id = fields.Many2one('ir.model', compute='_compute_crud_relations', readonly=False, store=True)
     update_field_type = fields.Selection(related='update_field_id.ttype', readonly=True)
@@ -860,9 +861,10 @@ class IrActionsServer(models.Model):
                 elif action.state == 'object_write':
                     if action.update_path:
                         # we need to traverse relations to find the target model and field
-                        model, field = action._traverse_path()
+                        model, field, property = action._traverse_path()
                         action.crud_model_id = model
                         action.update_field_id = field
+                        action.update_property = property and property.get("name")
                         need_update_model = action.evaluation_type == 'value' and action.update_field_id and action.update_field_id.relation
                         action.update_related_model_id = action.env["ir.model"]._get_id(field.relation) if need_update_model else False
                     else:
@@ -879,11 +881,11 @@ class IrActionsServer(models.Model):
         :return: a tuple (model, field) where model is the target model and field is the target field
         """
         self.ensure_one()
-        field_chain, _field_chain_str = self._get_relation_chain("update_path")
+        field_chain, _, property = self._get_relation_chain("update_path")
         last_field = field_chain[-1]
         model_id = self.env['ir.model']._get(last_field.model_name)
         field_id = self.env['ir.model.fields']._get(last_field.model_name, last_field.name)
-        return model_id, field_id
+        return model_id, field_id, property
 
     def _get_relation_chain(self, searched_field_name):
         self.ensure_one()
@@ -897,21 +899,38 @@ class IrActionsServer(models.Model):
         path = self[searched_field_name].split('.')
         if not path:
             return [], ""
+
+        def get_field_data(model, field_name, properties):
+            if properties:
+                virtual = model.new()
+                return model._fields[properties], virtual.get_property_definition(properties + "." + field_name)
+            else:
+                return model._fields[field_name], False
+
         model = self.env[self.model_id.model]
+        properties = False
         chain = []
+        strings = []
         for field_name in path:
             is_last_field = field_name == path[-1]
-            field = model._fields[field_name]
-            if not is_last_field:
-                if not field.relational:
-                    # sanity check: this should be the last field in the path
-                    current_field = field.get_description(self.env)["string"]
-                    searched_field = self._fields[searched_field_name].get_description(self.env)["string"]
-                    raise ValidationError(_("The path contained by the field '%(searched_field)s' contains a non-relational field (%(current_field)s) that is not the last field in the path. You can't traverse non-relational fields (even in the quantum realm). Make sure only the last field in the path is non-relational.", searched_field=searched_field, current_field=current_field))
-                model = self.env[field.comodel_name]
-            chain.append(field)
-        stringified_path = ' > '.join([field.get_description(self.env)["string"] for field in chain])
-        return chain, stringified_path
+            field, property_def = get_field_data(model, field_name, properties)
+            if not is_last_field and field.type != "properties" and not field.relational:
+                # sanity check: this should be the last field in the path
+                current_field = field.get_description(self.env)["string"]
+                searched_field = self._fields[searched_field_name].get_description(self.env)["string"]
+                raise ValidationError(_("The path contained by the field '%(searched_field)s' contains a non-relational field (%(current_field)s) that is not the last field in the path. You can't traverse non-relational fields (even in the quantum realm). Make sure only the last field in the path is non-relational.", searched_field=searched_field, current_field=current_field))
+
+            if property_def:
+                strings.append(property_def.get("string"))
+            else:
+                if field.relational:
+                    model = self.env[field.comodel_name]
+
+                properties = field_name if field.type == "properties" else False
+                strings.append(field.get_description(self.env)["string"])
+                chain.append(field)
+
+        return chain, ' > '.join(strings), property_def
 
     @api.depends('state', 'model_id', 'webhook_field_ids', 'name')
     def _compute_webhook_sample_payload(self):
@@ -1002,17 +1021,22 @@ class IrActionsServer(models.Model):
     def _run_action_object_write(self, eval_context=None):
         """Apply specified write changes to active_id."""
         vals = self._eval_value(eval_context=eval_context)
-        res = {action.update_field_id.name: vals[action.id] for action in self}
+        for action in self:
+            res = {action.update_field_id.name: vals[action.id]}
 
-        if self.env.context.get('onchange_self'):
-            record_cached = self.env.context['onchange_self']
-            for field, new_value in res.items():
-                record_cached[field] = new_value
-        elif self.update_path:
-            starting_record = self.env[self.model_id.model].browse(self.env.context.get('active_id'))
-            path = self.update_path.split('.')
-            target_records = reduce(getitem, path[:-1], starting_record)
-            target_records.write(res)
+            if self.env.context.get('onchange_self'):
+                record_cached = self.env.context['onchange_self']
+                for field, new_value in res.items():
+                    record_cached[field] = new_value
+            elif action.update_path:
+                starting_record = self.env[action.model_id.model].browse(self.env.context.get('active_id'))
+                path = action.update_path.split('.')
+                target_records = reduce(getitem, path[:-1], starting_record)
+                if action.update_property and starting_record.get_property_definition(action.update_field_id.name + "." + action.update_property):
+                    res[action.update_field_id.name] = {**target_records, action.update_property: vals[action.id]}
+                    starting_record.write(res)
+                else:
+                    target_records.write(res)
 
     def _run_action_webhook(self, eval_context=None):
         """Send a post request with a read of the selected field on active_id."""
