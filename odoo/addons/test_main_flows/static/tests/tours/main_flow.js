@@ -62,7 +62,7 @@ registry.category("web_tour.tours").add('main_flow_tour', {
     content: _t("Un-set product tracking"),
     tooltipPosition: 'right',
     run: function({ anchor }) {
-        anchor.value = "";
+        anchor.value = "None";
     },
 }, {
     trigger: '.o_notebook .nav-link:contains("Inventory")',
