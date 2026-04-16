@@ -6,14 +6,6 @@ from odoo import _, api, fields, models
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
-    # Defaults
-    default_invoice_policy = fields.Selection(
-        selection=[("order", "Invoice what is ordered"), ("delivery", "Invoice what is delivered")],
-        string="Invoicing Policy",
-        default="order",
-        default_model="product.template",
-    )
-
     # Groups
     group_auto_done_setting = fields.Boolean(
         string="Lock Confirmed Sales", implied_group="sale.group_auto_done_setting"
@@ -51,6 +43,8 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="sale.default_invoice_email_template",
         help="Email sent to the customer once the invoice is available.",
     )
+
+    # Company dependent
     quotation_validity_days = fields.Integer(
         related="company_id.quotation_validity_days", readonly=False
     )
@@ -70,6 +64,12 @@ class ResConfigSettings(models.TransientModel):
     downpayment_account_active = fields.Boolean(
         related="downpayment_account_id.active", string="Down payment Account Active"
     )
+    sale_order_mandatory_product = fields.Boolean(
+        related="company_id.sale_order_mandatory_product",
+        string="Mandatory Product",
+        readonly=False,
+    )
+    sale_invoice_policy = fields.Selection(related="company_id.sale_invoice_policy", readonly=False)
 
     sale_order_mandatory_product = fields.Boolean(
         related='company_id.sale_order_mandatory_product',
@@ -130,7 +130,7 @@ class ResConfigSettings(models.TransientModel):
 
     def set_values(self):
         super().set_values()
-        if self.default_invoice_policy != "order":
+        if self.sale_invoice_policy != "order":
             self.env["ir.config_parameter"].set_bool("sale.automatic_invoice", False)
 
     # === ACTION METHODS === #

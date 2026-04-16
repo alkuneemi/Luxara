@@ -62,8 +62,12 @@ class ProductTemplate(models.Model):
         check_company=True,
     )
     sale_delay = fields.Integer(
-        'Delivery Time', default=0, company_dependent=True,
-        help="Delivery lead time, in days. It's the number of days, promised to the customer, between the confirmation of the sales order and the delivery.")
+        "Delivery Time",
+        default=0,
+        company_dependent=True,
+        help="Delivery lead time, in days. It's the number of days, promised to the customer,"
+        "between the confirmation of the sales order and the delivery.",
+    )
 
     @api.depends("invoice_policy", "sale_ok", "service_tracking")
     def _compute_product_tooltip(self):
@@ -200,9 +204,16 @@ class ProductTemplate(models.Model):
     def _compute_service_type(self):
         self.filtered(lambda t: t.type == "consu" or not t.service_type).service_type = "manual"
 
-    @api.depends("type")
+    @api.depends_context("company")
+    @api.depends("company_id", "type")
     def _compute_invoice_policy(self):
-        self.filtered(lambda t: t.type == "consu" or not t.invoice_policy).invoice_policy = "order"
+        for template in self:
+            if not template.invoice_policy:
+                template.invoice_policy = (
+                    template.company_id.sale_invoice_policy or self.env.company.sale_invoice_policy
+                )
+            elif template.type == "consu":
+                template.invoice_policy = "order"
 
     def _get_backend_root_menu_ids(self):
         return super()._get_backend_root_menu_ids() + [self.env.ref("sale.sale_menu_root").id]

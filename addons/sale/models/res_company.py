@@ -56,9 +56,12 @@ class ResCompany(models.Model):
         tracking=True,
     )
 
-    sale_order_mandatory_product = fields.Boolean(
-        string="Product is mandatory on Sales Orders",
-        default=True,
+    sale_order_mandatory_product = fields.Boolean(string="Mandatory Product")
+    sale_invoice_policy = fields.Selection(
+        selection=[("order", "Invoice what is ordered"), ("delivery", "Invoice what is delivered")],
+        string="Invoicing Policy",
+        default="order",
+        required=True,
     )
 
     @api.constrains("prepayment_percent")

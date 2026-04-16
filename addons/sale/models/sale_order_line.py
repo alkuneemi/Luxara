@@ -18,10 +18,6 @@ class SaleOrderLine(models.Model):
     _order = "order_id, sequence, id"
     _check_company_auto = True
 
-    _accountable_required_fields = models.Constraint(
-        "CHECK(display_type IS NOT NULL OR is_downpayment OR (product_id IS NOT NULL AND product_uom_id IS NOT NULL))",  # noqa: E501
-        "Missing required fields on accountable sale order line.",
-    )
     _non_accountable_null_fields = models.Constraint(
         "CHECK(display_type IS NULL OR (product_id IS NULL AND price_unit = 0 AND product_uom_qty = 0 AND product_uom_id IS NULL AND customer_lead = 0))",  # noqa: E501
         "Forbidden values on non-accountable sale order line",
@@ -162,7 +158,6 @@ class SaleOrderLine(models.Model):
         comodel_name="uom.uom",
         string="Unit",
         compute="_compute_product_uom_id",
-        domain='[("id", "in", allowed_uom_ids)]',
         store=True,
         readonly=False,
         precompute=True,
@@ -293,6 +288,12 @@ class SaleOrderLine(models.Model):
     )
 
     # Analytic & Invoicing fields
+    invoice_policy = fields.Selection(
+        string="Invoicing Policy",
+        selection=[("order", "Ordered quantities"), ("delivery", "Delivered quantities")],
+        compute="_compute_invoice_policy",
+        search="_search_invoice_policy",
+    )
     qty_invoiced = fields.Float(
         string="Invoiced Quantity",
         compute="_compute_qty_invoiced",
@@ -393,6 +394,10 @@ class SaleOrderLine(models.Model):
     collapse_composition = fields.Boolean(
         string="Collapse Composition", copy=True, default=False
     )  # Whether this section's lines will be hidden in reports and in the portal.
+
+    mandatory_product = fields.Boolean(
+        string="Is Product Mandatory", related="company_id.sale_order_mandatory_product"
+    )
 
     # === COMPUTE METHODS ===#
 
@@ -601,7 +606,9 @@ class SaleOrderLine(models.Model):
                 line.product_id.sale_line_warn_msg if has_warning_group else ""
             )
 
-    @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids")
+    @api.depends(
+        "product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids"
+    )
     def _compute_allowed_uom_ids(self):
         lines_without_product = self.filtered(lambda l: not l.product_id)
         all_uoms = self.env['uom.uom'].search([]) if lines_without_product else self.env['uom.uom']
@@ -975,7 +982,7 @@ class SaleOrderLine(models.Model):
                 line.price_total / line.product_uom_qty if line.product_uom_qty else 0.0
             )
 
-    @api.depends('product_id', 'company_id')
+    @api.depends("product_id", "company_id")
     def _compute_customer_lead(self):
         for line in self:
             line.customer_lead = line.product_id.with_company(line.company_id).sale_delay
@@ -1003,7 +1010,11 @@ class SaleOrderLine(models.Model):
             # For other delivery methods, they are expected to add their own quantities to the
             # quantities already provided by the `_prepare_qty_delivered` method, including
             # analytic lines quantities for reinvoiceable products.
-            if line.qty_delivered_method == "manual" and line.product_id and line.product_id.reinvoice_policy != "no":
+            if (
+                line.qty_delivered_method == "manual"
+                and line.product_id
+                and line.product_id.reinvoice_policy != "no"
+            ):
                 line.qty_delivered_method = "analytic"
 
     def _get_consu_qty_delivered_method(self):
@@ -1115,6 +1126,33 @@ class SaleOrderLine(models.Model):
 
         return result
 
+    @api.depends("product_id", "product_id.invoice_policy")
+    def _compute_invoice_policy(self):
+        """
+        Compute the invoicing policy for each SOL.
+
+        - If a product is set, use the product's invoicing policy.
+        - If no product is set (e.g., product-less lines), use the
+        company's default invoicing policy (`company_id.sale_invoice_policy`).
+        """
+        for line in self:
+            if line.product_id:
+                line.invoice_policy = line.product_id.invoice_policy
+            else:
+                line.invoice_policy = line.company_id.sale_invoice_policy
+
+    def _search_invoice_policy(self, operator, value):  # noqa: PLR6301
+        product_sol_domain = Domain("product_id", "!=", False) & Domain(
+            "product_id.invoice_policy", operator, value
+        )
+        non_product_sol_domain = (
+            Domain("display_type", "=", False)
+            & Domain("product_id", "=", False)
+            & Domain("company_id.sale_invoice_policy", operator, value)
+        )
+
+        return product_sol_domain | non_product_sol_domain
+
     @api.depends("invoice_lines.move_id.state", "invoice_lines.quantity")
     def _compute_qty_invoiced(self):
         """Compute the invoiced quantity invoiced.
@@ -1204,7 +1242,7 @@ class SaleOrderLine(models.Model):
             if line.state == "sale" and not line.display_type:
                 if line.product_id.type == "combo":
                     combo_lines.add(line)
-                elif line.product_id.invoice_policy == "order":
+                elif line.invoice_policy == "order":
                     line.qty_to_invoice = line.product_uom_qty - line.qty_invoiced
                 else:
                     line.qty_to_invoice = line.qty_delivered - line.qty_invoiced
@@ -1668,7 +1706,9 @@ class SaleOrderLine(models.Model):
                 if "product_id" in values and values["product_id"] != line.product_id.id:
                     # tracking is meaningless if the product is changed as well.
                     continue
-                msg += Markup("<li> %s: <br/>") % line.product_id.display_name
+                msg += Markup("<li> %s: <br/>") % (
+                    line.product_id.display_name if line.product_id else line.name
+                )
                 msg += _(
                     "Ordered Quantity: %(old_qty)s -> %(new_qty)s",
                     old_qty=line.product_uom_qty,

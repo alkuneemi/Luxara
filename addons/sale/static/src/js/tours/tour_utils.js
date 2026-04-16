@@ -45,7 +45,7 @@ export function addProduct(productName, rowNumber=1) {
         ...showProductColumn("product_template_id"),
         {
             content: `Add product ${productName}`,
-            trigger: 'button:contains("Add a product")',
+            trigger: 'button:contains("Add Line")',
             run: 'click',
         },
         {

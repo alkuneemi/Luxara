@@ -108,8 +108,9 @@
                                 <field name="product_uom_qty"/>
                                 <field
                                     name="product_uom_id"
+                                    domain="[('id', 'in', allowed_uom_ids)] if allowed_uom_ids or mandatory_product else []"
                                     groups="uom.group_uom"
-                                    required="not display_type"/>
+                                />
                                 <widget
                                     name="section_state"
                                     options="{'is_optional': 'fa fa-dot-circle-o'}"

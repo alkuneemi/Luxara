@@ -132,8 +132,13 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
     get sectionAndNoteClasses() {
         return {
             ...super.sectionAndNoteClasses,
-            "text-warning":
-                !this.isSectionOrSubSection && !this.isNote() && !this.productName && !this.isDownpayment,
+            "text-warning": (
+                !this.isSectionOrSubSection
+                && !this.isNote()
+                && !this.productName
+                && !this.isDownpayment
+                && this.props.show_label_warning
+            ),
         };
     }
 

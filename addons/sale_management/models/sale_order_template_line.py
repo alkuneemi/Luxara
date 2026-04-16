@@ -2,6 +2,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Command
 
 
 class SaleOrderTemplateLine(models.Model):
@@ -9,10 +10,6 @@ class SaleOrderTemplateLine(models.Model):
     _description = "Quotation Template Line"
     _order = "sale_order_template_id, sequence, id"
 
-    _accountable_product_id_required = models.Constraint(
-        "CHECK(display_type IS NOT NULL OR (product_id IS NOT NULL AND product_uom_id IS NOT NULL))",  # noqa: E501
-        "Missing required product and UoM on accountable sale quote line.",
-    )
     _non_accountable_fields_null = models.Constraint(
         "CHECK(display_type IS NULL OR (product_id IS NULL AND product_uom_qty = 0 AND product_uom_id IS NULL))",  # noqa: E501
         "Forbidden product, quantity and UoM on non-accountable sale quote line",
@@ -72,9 +69,20 @@ class SaleOrderTemplateLine(models.Model):
     collapse_composition = fields.Boolean()
     collapse_prices = fields.Boolean()
 
+    # Technical fields which stores values for product SO line without product_id
+    discount = fields.Float(string="Discount (%)", digits="Discount")
+    unit_price = fields.Float(
+        string="Unit Price", digits="Product Price", min_display_digits="Product Price"
+    )
+    tax_ids = fields.Many2many(string="Taxes", comodel_name="account.tax")
+
+    mandatory_product = fields.Boolean(
+        string="Is Product Mandatory", related="company_id.sale_order_mandatory_product"
+    )
+
     # === COMPUTE METHODS ===#
 
-    @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids")
+    @api.depends("product_id")
     def _compute_allowed_uom_ids(self):
         for option in self:
             option.allowed_uom_ids = option.product_id._get_available_uoms()
@@ -134,7 +142,10 @@ class SaleOrderTemplateLine(models.Model):
         return [("sale_ok", "=", True), ("type", "!=", "combo")]
 
     def _prepare_order_line_values(self):
-        """Give the values to create the corresponding order line.
+        """Prepare values to create a sale order line from a template line.
+
+        Line without products take price, discount, taxes from itself otherwise compute it based on
+        product and related values.
 
         :return: `sale.order.line` create values
         :rtype: dict
@@ -152,4 +163,12 @@ class SaleOrderTemplateLine(models.Model):
         }
         if self.name:
             vals["name"] = self.name
+
+        if not self.product_id:
+            vals.update({
+                "tax_ids": [Command.set(self.tax_ids.ids)],
+                "discount": self.discount,
+                "price_unit": self.unit_price,
+            })
+
         return vals

@@ -32,7 +32,7 @@ SALE_ORDER_STATE = [
 
 class SaleOrder(models.Model):
     _name = "sale.order"
-    _explanation = "Represents a customer quotation that can be converted into a sales order. Used to manage pricing, product quantities, and status"
+    _explanation = "Represents a customer quotation that can be converted into a sales order. Used to manage pricing, product quantities, and status"  # noqa: E501
     _inherit = [
         "account.document.import.mixin",
         "mail.activity.mixin",
@@ -1565,6 +1565,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if self.state not in {"draft", "sent"}:
             return _("Some orders are not in a state requiring confirmation.")
+
         return False
 
     def _prepare_confirmation_values(self):
@@ -2647,14 +2648,14 @@ class SaleOrder(models.Model):
             res[product.id]["price"] = prices.get(product.id)
         return res
 
-    def _get_product_catalog_product_data(self, product, **kwargs):
+    def _get_product_catalog_product_data(self, product, **_kwargs):
         product_data = super()._get_product_catalog_product_data(product)
         has_warning_group = self.env["res.groups"]._is_feature_enabled("sale.group_warning_sale")
         if product.sale_line_warn_msg and has_warning_group:
             product_data.update(warning=product.sale_line_warn_msg)
         return product_data
 
-    def _get_product_catalog_record_lines(self, product_ids, *, section_id=None, **kwargs):
+    def _get_product_catalog_record_lines(self, product_ids, *, section_id=None, **_kwargs):
         grouped_lines = defaultdict(lambda: self.env["sale.order.line"])
         if section_id is None:
             section_id = (

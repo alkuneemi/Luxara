@@ -58,21 +58,28 @@ class TestSaleSectionTemplates(SaleCommon):
                     "tax_ids": (cls.tax_1 + cls.tax_2).ids,
                     "price_unit": 300,
                 }),
+                Command.create({
+                    "name": "Sec2-r3 (Productless SOL)",
+                    "price_unit": 420,
+                    "discount": 15,
+                    "tax_ids": (cls.tax_1 + cls.tax_2).ids,
+                }),
             ],
         })
+
+    def _get_section_templates(self, company=None):
+        company_id = company.id or self.env.company.id
+        templates = self.env["sale.order.template"].get_section_templates(company_id)
+        return self.env["sale.order.template"].browse([t["id"] for t in templates])
 
     def test_sale_order_section_templates(self):
         order = self.sections_sale_order
         section_line = order.order_line[1]
 
-        def _get_templates():
-            templates = self.env["sale.order.template"].get_section_templates(order.company_id.id)
-            return self.env["sale.order.template"].browse([t["id"] for t in templates])
-
         # First save
         section_line.save_section_template()
 
-        templates = _get_templates()
+        templates = self._get_section_templates(order.company_id)
         self.assertEqual(len(templates), 1, "One new section template should be created")
 
         expected_lines = section_line._get_section_lines() + section_line
@@ -86,7 +93,7 @@ class TestSaleSectionTemplates(SaleCommon):
         order.order_line[4].is_optional = True
         section_line.save_section_template()
 
-        updated_templates = _get_templates()
+        updated_templates = self._get_section_templates(order.company_id)
         self.assertEqual(
             len(updated_templates),
             1,
@@ -96,4 +103,33 @@ class TestSaleSectionTemplates(SaleCommon):
         self.assertTrue(
             updated_templates[0].sale_order_template_line_ids[3].is_optional,
             "Template should reflect updated lines",
+        )
+
+    def test_productless_sol_values_saved_in_section_template(self):
+        order = self.sections_sale_order
+
+        section_line = order.order_line.filtered(
+            lambda line: line.display_type == "line_section" and line.name == "Sec2"
+        )
+
+        section_line.save_section_template()
+
+        template = self._get_section_templates(order.company_id)
+
+        productless_template_line = template.sale_order_template_line_ids.filtered(
+            lambda line: line.name == "Sec2-r3 (Productless SOL)"
+        )
+
+        self.assertEqual(
+            productless_template_line.unit_price,
+            420,
+            "Unit price should be copied from Productless SOL",
+        )
+        self.assertEqual(
+            productless_template_line.discount, 15, "Discount should be copied from Productless SOL"
+        )
+        self.assertEqual(
+            productless_template_line.tax_ids,
+            self.tax_1 + self.tax_2,
+            "Taxes should be copied from Productless SOL",
         )
