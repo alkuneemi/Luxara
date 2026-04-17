@@ -207,11 +207,11 @@
                             </div>
                         </button>
                     </div>
-                    <div class="oe_title">
+                    <div class="oe_title mw-100">
                         <h1 class="o_outlined d-flex align-items-center gap-2">
                             <field name="priority" widget="priority"/>
                             <div invisible="id">New <field name="picking_type_code"/></div>
-                            <field name="name" invisible="not id"/>
+                            <field name="name" invisible="not id" class="overflow-hidden text-nowrap"/>
                         </h1>
                     </div>
                     <group>
