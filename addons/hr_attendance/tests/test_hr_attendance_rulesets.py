@@ -163,7 +163,7 @@ class TestHrAttendanceOvertime(TransactionCase):
         Only the employee admin should be able to see and change the ruleset on the employee
         """
         user = new_test_user(self.env, login='usr', groups='hr.group_hr_user', company_id=self.company.id).with_company(self.company)
-        employee = self.env['hr.employee'].with_company(self.company).create({'name': "Employee Test"})
+        employee = self.env['hr.employee'].with_company(self.company).create({'name': "Employee Test", 'work_email': 'test@employee.com'})
         with Form(employee.with_user(user)) as employee_form:
             self.assertFalse("ruleset_id" in employee_form._view['fields'])
 

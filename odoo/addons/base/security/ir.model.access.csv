@@ -1,6 +1,7 @@
 "id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
 "access_decimal_precision_config","decimal.precision configuration","model_decimal_precision","group_system",1,1,0,0
 "access_ir_attachment_group_user","ir_attachment group_user","model_ir_attachment","group_user",1,1,1,1
+"access_ir_attachment_group_user_lite","ir_attachment group_user_lite","model_ir_attachment","group_user_lite",1,1,1,1
 "access_ir_attachment_group_portal_public","ir_attachment group_portal_public","model_ir_attachment",,0,0,0,0
 "access_ir_cron_group_cron","ir_cron group_cron","model_ir_cron","group_system",1,1,1,1
 "access_ir_cron_progress_group_cron","ir_cron_progress group_cron","model_ir_cron_progress","group_system",1,1,1,1
@@ -61,13 +62,14 @@
 "access_res_partner_group_user","res_partner group_user","model_res_partner","group_user",1,1,0,0
 "access_clearing_label_group_everyone","clearing_label_group_everyone","model_clearing_label","group_everyone",1,0,0,0
 "access_res_partner_bank_group_user","res_partner_bank group_user","model_res_partner_bank","group_user",1,0,0,0
+"access_res_partner_bank_group_user_lite","res_partner_bank group_user_lite","model_res_partner_bank","group_user_lite",1,0,0,0
 "access_res_partner_bank_group_partner_manager","res_partner_bank group_partner_manager","model_res_partner_bank","group_partner_manager",1,1,1,0
 "access_res_partner_category_group_user","res_partner_category group_user","model_res_partner_category","group_user",1,0,0,0
 "access_res_partner_category_group_partner_manager","res_partner_category group_partner_manager","model_res_partner_category","group_partner_manager",1,1,1,1
 "access_res_partner_industry_group_user","res_partner_industry group_user","model_res_partner_industry","group_user",1,0,0,0
 "access_res_partner_industry_group_system","res_partner_industry group_system","model_res_partner_industry","group_system",1,1,1,1
 "access_res_users_everyone","res_users all","model_res_users","base.group_everyone",1,0,0,0
-"access_res_users_employee","res_users all","model_res_users","base.group_user",1,1,0,0
+"access_res_users_employee","res_users all","model_res_users","base.group_user_lite",1,1,0,0
 "access_res_users_group_erp_manager","res_users group_erp_manager","model_res_users","group_erp_manager",1,1,1,1
 "access_res_users_deletion_all","res_users_deletion all","model_res_users_deletion",,0,0,0,0
 "access_res_users_deletion_group_erp_manager","res_users_deletion group_erp_manager","model_res_users_deletion","group_erp_manager",1,1,1,1

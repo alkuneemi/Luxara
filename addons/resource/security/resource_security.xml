@@ -4,7 +4,7 @@
     <record model="ir.rule" id="resource_calendar_leaves_rule_group_user_create">
         <field name="name">resource.calendar.leaves: employee reads own or global</field>
         <field name="model_id" ref="model_resource_calendar_leaves"/>
-        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="groups" eval="[(4, ref('base.group_user_lite'))]"/>
         <field name="domain_force">['|', ('resource_id', '=', False), ('resource_id.user_id', 'in', [False, user.id])]</field>
 		<field name="perm_write" eval="False"/>
 		<field name="perm_create" eval="False"/>
@@ -14,7 +14,7 @@
     <record model="ir.rule" id="resource_calendar_leaves_rule_group_user_modify">
         <field name="name">resource.calendar.leaves: employee modifies own</field>
         <field name="model_id" ref="model_resource_calendar_leaves"/>
-        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="groups" eval="[(4, ref('base.group_user_lite'))]"/>
         <field name="domain_force">[('resource_id', '!=', False), ('resource_id.user_id', 'in', [False, user.id])]</field>
 		<field name="perm_read" eval="False"/>
     </record>
