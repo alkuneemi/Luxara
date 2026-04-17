@@ -251,7 +251,7 @@
             <t t-else="">
                 <input
                     type="text"
-                    class="js_quantity form-control quantity p-0 shadow-none w-auto"
+                    class="js_quantity form-control quantity p-0 shadow-none w-auto border-0"
                     t-att-value="this.state.quantity"
                     t-attf-name="cart-quantity-{{this.props.line.id}}{{ isMobile ? '-mobile' : ''}}"
                     readonly="True"

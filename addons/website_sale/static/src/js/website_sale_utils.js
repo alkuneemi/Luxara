@@ -1,31 +1,4 @@
-import { browser } from '@web/core/browser/browser';
-import { _t } from '@web/core/l10n/translation';
 import { createElementWithContent } from "@web/core/utils/html";
-
-/**
- * Update the quick reorder side panel.
- *
- * @param {Object} data
- * @return {void}
- */
-function updateQuickReorderSidebar(data) {
-    const quickReorderButton  = document.getElementById('quick_reorder_button');
-    if (!quickReorderButton) {
-        return;
-    }
-    document.querySelectorAll('.o_wsale_quick_reorder_line_group').forEach(el => el.remove());
-    if (data['website_sale.quick_reorder_history'].trim()) {
-        document.querySelector('#quick_reorder_sidebar .offcanvas-body').insertAdjacentHTML(
-            'afterbegin', data['website_sale.quick_reorder_history']
-        );
-        quickReorderButton.removeAttribute('disabled');
-        quickReorderButton.parentElement.title = "";
-    } else {
-        quickReorderButton.click();
-        quickReorderButton.setAttribute('disabled', 'true');
-        quickReorderButton.parentElement.title = _t("No previous products available for reorder.");
-    }
-}
 
 /**
  * Displays `message` in an alert box at the top of the page if it's a
@@ -81,35 +54,8 @@ function updateCartSummary(data) {
 }
 
 /**
- * Update the quantity on the cart icon in the navbar.
- *
- * @param {Number} cartQuantity - The number of items currently in the cart.
- *
- * @returns {void}
- */
-function updateCartIcon(cartQuantity) {
-    browser.sessionStorage.setItem("website_sale_cart_quantity", cartQuantity);
-    // Mobile and Desktop elements have to be updated.
-    const cartQuantityElements = document.querySelectorAll(".my_cart_quantity");
-    for (const cartQuantityElement of cartQuantityElements) {
-        if (cartQuantity === 0) {
-            cartQuantityElement.classList.add("d-none");
-        } else {
-            const cartIconElement = document.querySelector("li.o_wsale_my_cart");
-            cartIconElement.classList.remove("d-none");
-            cartQuantityElement.classList.remove("d-none");
-            cartQuantityElement.classList.add("o_mycart_zoom_animation");
-            setTimeout(() => {
-                cartQuantityElement.textContent = cartQuantity;
-                cartQuantityElement.classList.remove("o_mycart_zoom_animation");
-            }, 300);
-        }
-    }
-}
-
-/**
  * Extract text content from edit-mode DOM nodes (mostly labels) to feed OWL cart
- * components (cart lines & totals).
+ * components (cart lines, totals, quick reorder etc).
  *
  * Values come from server-rendered edit-mode templates and are passed as props
  * to preserve partial editability (e.g. customizable labels).
@@ -135,7 +81,5 @@ export default {
     extractEditModeText: extractEditModeText,
     showWarning: showWarning,
     getSelectedAttributeValues: getSelectedAttributeValues,
-    updateQuickReorderSidebar: updateQuickReorderSidebar,
     updateCartSummary: updateCartSummary,
-    updateCartIcon: updateCartIcon,
 };

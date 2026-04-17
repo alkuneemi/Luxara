@@ -73,7 +73,6 @@ class Cart(PaymentPortal):
 
         values.update(request.website._get_checkout_step_values())
         values.update(self._cart_values(**post))
-        values.update(self._prepare_order_history())
         return request.render("website_sale.cart", values)
 
     def _cart_values(self, **_post):
@@ -99,6 +98,7 @@ class Cart(PaymentPortal):
         product_custom_attribute_values=None,
         no_variant_attribute_value_ids=None,
         linked_products=None,
+        source=False,
         **kwargs,
     ):
         """Add a product to the shopping cart.
@@ -116,11 +116,14 @@ class Cart(PaymentPortal):
             of `product.template.attribute.value` ids.
         :param list linked_products: A list of objects representing additional products linked to
             the product added to the cart. Can be combo item or optional products.
+        :param string source: The source of the add to cart call.
         :param dict kwargs: Optional data. This parameter is not used here.
         :return: The values
         :rtype: dict
         """
         order_sudo = request.cart or request.website._create_cart()
+        old_cart_quantity = order_sudo.cart_quantity
+
         # Do not allow float values in ecommerce by default
         quantity = (quantity and int(quantity)) or 1
 
@@ -237,29 +240,11 @@ class Cart(PaymentPortal):
         if warning:
             notifications.append({"type": "warning", "data": {"warning_message": warning}})
 
-        return {
-            "cart_quantity": order_sudo.cart_quantity,
-            "notifications": notifications,
-            "quantity": values.pop("quantity", 0),
-            "tracking_info": self._get_tracking_information(order_sudo, line_ids.values()),
-        }
-
-    @route(
-        route="/shop/cart/quick_add", type="jsonrpc", auth="user", methods=["POST"], website=True
-    )
-    def quick_add(self, product_template_id, product_id, quantity=1.0, **kwargs):
-        order_sudo = request.cart or request.website._create_cart()
-        old_cart_quantity = order_sudo.cart_quantity
-        values = self.add_to_cart(product_template_id, product_id, quantity=quantity, **kwargs)
-
+        # for quick reorder
+        quick_reorder_data = {"old_cart_quantity": old_cart_quantity}
         IrUiView = request.env["ir.ui.view"]
-        values["website_sale.quick_reorder_history"] = IrUiView._render_template(
-            "website_sale.quick_reorder_history",
-            {"website_sale_order": order_sudo, **self._prepare_order_history()},
-        )
-        if not old_cart_quantity:
-            # Only render the cart summary if the cart was empty
-            values["website_sale.shorter_cart_summary"] = IrUiView._render_template(
+        if source == "quick_reorder" and not old_cart_quantity:
+            quick_reorder_data["website_sale.shorter_cart_summary"] = IrUiView._render_template(
                 "website_sale.shorter_cart_summary",
                 {
                     "website_sale_order": order_sudo,
@@ -268,10 +253,14 @@ class Cart(PaymentPortal):
                     **request.website._get_checkout_step_values(),
                 },
             )
-        values["cart_ready"] = order_sudo._is_cart_ready()
-        values["old_cart_quantity"] = old_cart_quantity
 
-        return values
+        return {
+            "cart_quantity": order_sudo.cart_quantity,
+            "notifications": notifications,
+            "quantity": values.pop("quantity", 0),
+            "tracking_info": self._get_tracking_information(order_sudo, line_ids.values()),
+            **quick_reorder_data,
+        }
 
     def _get_express_shop_payment_values(self, order, **_kwargs):
         payment_form_values = CustomerPortal._get_payment_values(
@@ -321,7 +310,6 @@ class Cart(PaymentPortal):
         """
         order_sudo = request.cart
         quantity = int(quantity)  # Do not allow float values in ecommerce by default
-        IrUiView = request.env["ir.ui.view"]
 
         # This method must be only called from the cart page BUT in some advanced logic
         # eg. website_sale_loyalty, a cart line could be a temporary record without id.
@@ -342,17 +330,14 @@ class Cart(PaymentPortal):
                 order_sudo.amount_total, order_sudo.currency_id
             )
         ) or 0.0
-        values["website_sale.quick_reorder_history"] = IrUiView._render_template(
-            "website_sale.quick_reorder_history",
-            {"website_sale_order": order_sudo, **self._prepare_order_history()},
-        )
         return values
 
     def _total_values(self):
         """Pass additional values when rendering the 'website_sale.total' template."""
         return {}
 
-    def _prepare_order_history(self):
+    @route(route="/shop/cart/history", type="jsonrpc", auth="public", website=True, readonly=True)
+    def cart_history(self):
         """Prepare the order history of the current user.
 
         The valid order lines of the last 10 confirmed orders are considered and grouped by date. An
@@ -431,14 +416,42 @@ class Cart(PaymentPortal):
                 line_group_label = self.env._("Yesterday")
             else:
                 line_group_label = self.env._("%s days ago", days_ago)
-            lines_per_order_date.setdefault(line_group_label, SaleOrderLineSudo)
-            lines_per_order_date[line_group_label] |= line_sudo
+            lines_per_order_date.setdefault(line_group_label, [])
+            lines_per_order_date[line_group_label].append(
+                self._prepare_order_history_line(line_sudo)
+            )
 
         # Flatten the line groups to get the final order history.
         return {
+            "is_public_user": request.website.is_public_user(),
             "order_history": [
                 {"label": label, "lines": lines} for label, lines in lines_per_order_date.items()
-            ]
+            ],
+            "currency_id": request.website.currency_id.id,
+        }
+
+    def _prepare_order_history_line(self, line):
+        return {
+            "id": line.id,
+            "is_combo": line.product_type == "combo",
+            "img_uri": (
+                image_data_uri(line.product_id.image_128) if line.product_id.image_128 else False
+            ),
+            "name_short": line.name_short,
+            "product_id": line.product_id.id,
+            "product_tmpl_id": line.product_id.product_tmpl_id.id,
+            "product_name": line.product_id.display_name,
+            "quantity": line.product_uom_qty,
+            "price": line.price_unit,
+            "combo_item_lines": [
+                self._prepare_combo_item_line_data(line)
+                for line in line.linked_line_ids.filtered("combo_item_id")
+            ],
+            "selected_combo_items": line._get_selected_combo_items(),
+            "has_multiple_uoms": line.product_id._has_multiple_uoms(),
+            "product_uom_name": line.product_uom_id.name,
+            "combination_info_variant": line.product_id._get_combination_info_variant(),
+            "product_uom_qty": line.product_uom_qty,
         }
 
     def _get_cart_notification_information(self, order, added_qty_per_line):
@@ -570,11 +583,11 @@ class Cart(PaymentPortal):
         }
 
         for line in order_sudo.website_order_line:
-            values["cart_lines"].append(self._cart_line_data(line))
+            values["cart_lines"].append(self._prepare_cart_line_data(line))
 
         return values
 
-    def _cart_line_data(self, line):
+    def _prepare_cart_line_data(self, line):
         line_data = {
             "id": line.id,
             "product_id": line.product_id.id,
@@ -594,7 +607,6 @@ class Cart(PaymentPortal):
             "website_url": line.product_id.website_url,
             "is_combo": line.product_type == "combo",
             "is_sellable": line._is_sellable(),
-            "product_type": line.product_type,
             "image_uri": (
                 image_data_uri(line.product_id.image_128) if line.product_id.image_128 else False
             ),
@@ -607,25 +619,32 @@ class Cart(PaymentPortal):
         }
 
         if line.product_type == "combo":
-            line_data["combo_item_lines"] = []
-            for combo_item in line.linked_line_ids.filtered("combo_item_id"):
-                combo_item_dict = {
-                    "id": combo_item.id,
-                    "website_url": combo_item.product_id.website_url,
-                    "is_sellable": combo_item._is_sellable(),
-                    "website_published": combo_item.product_id.website_published,
-                    "displayed_quantity": combo_item._get_displayed_quantity(),
-                    "name_short": combo_item.name_short,
-                    "description_lines": list(combo_item.get_description_following_lines()),
-                }
-
-                line_data["combo_item_lines"].append(combo_item_dict)
+            line_data["combo_item_lines"] = [
+                self._prepare_combo_item_line_data(combo_item)
+                for combo_item in line.linked_line_ids.filtered("combo_item_id")
+            ]
 
         return line_data
 
+    def _prepare_combo_item_line_data(self, combo_item_line):
+        return {
+            "id": combo_item_line.id,
+            "website_url": combo_item_line.product_id.website_url,
+            "is_sellable": combo_item_line._is_sellable(),
+            "website_published": combo_item_line.product_id.website_published,
+            "displayed_quantity": combo_item_line._get_displayed_quantity(),
+            "name_short": combo_item_line.name_short,
+            "description_lines": list(combo_item_line.get_description_following_lines()),
+        }
+
     @route(route="/shop/cart/totals", type="jsonrpc", auth="public", website=True, readonly=True)
-    def cart_totals(self):
-        order_sudo = request.cart
+    def cart_totals(self, order_id=None):
+        if order_id:
+            order_sudo = request.env["sale.order"].sudo().browse(order_id)
+            if not order_sudo.exists():
+                raise NotFound
+        else:
+            order_sudo = request.cart
 
         return {
             "currency_id": order_sudo.currency_id.id,
