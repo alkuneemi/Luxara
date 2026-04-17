@@ -3,6 +3,9 @@
 <templates xml:space="preserve">
 
     <t t-name="sale.SaleProductField" t-inherit="account.ProductLabelSectionAndNoteField" t-inherit-mode="primary">
+        <xpath expr="//Many2One" position="attributes">
+            <attribute name="cssClass">'flex-grow-1'</attribute>
+        </xpath>
         <xpath expr="//button[@id='labelVisibilityButtonId']" position="attributes">
             <attribute name="style">--btn-active-border-color: transparent;</attribute>
         </xpath>
