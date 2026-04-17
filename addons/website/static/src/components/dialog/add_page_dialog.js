@@ -357,15 +357,11 @@ class AddPageTemplates extends Component {
                     Component: AddPageTemplatePreviews,
                     title: _t("Loading..."),
                     isPreloading: true,
-                    props: {
-                        id: "basic",
-                        title: _t("Basic"),
-                        // Blank and 5 preloading boxes.
-                        templates: [{ isBlank: true }, {}, {}, {}, {}, {}],
-                    },
+                    id: "loading",
+                    props: { templates: [] },
                 },
             ],
-            activePageId: "basic",
+            activePageId: "loading",
         });
         this.pages = undefined;
 
@@ -378,7 +374,7 @@ class AddPageTemplates extends Component {
                 ) {
                     this.state.activePageId = this.props.defaultTemplateId;
                 } else {
-                    this.state.activePageId = this.state.pages[0]?.props.id;
+                    this.state.activePageId = this.state.pages[0]?.id;
                 }
             });
         });
@@ -406,9 +402,6 @@ class AddPageTemplates extends Component {
         }
 
         const newPageTemplates = await loadTemplates;
-        newPageTemplates[0].templates.unshift({
-            isBlank: true,
-        });
         const pages = [];
         for (const template of newPageTemplates) {
             pages.push({
@@ -425,7 +418,11 @@ class AddPageTemplates extends Component {
     onTabListBtnClick(id) {
         this.state.activePageId = id;
         const tabEl = this.tabsRef.el.querySelector(`[data-id=${id}]`);
-        this.props.onTemplatePageChanged(tabEl.dataset.id === "basic" ? "" : tabEl.textContent);
+        this.props.onTemplatePageChanged(tabEl.textContent);
+    }
+
+    addBlankPage() {
+        this.env.addPage();
     }
 
     onTabListBtnKeydown(ev) {

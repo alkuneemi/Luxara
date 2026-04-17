@@ -1001,9 +1001,9 @@ class Website(models.CachedModel):
             page_view_id.save(value=f'<div class="oe_structure">{"".join(rendered_snippets)}</div>',
                               xpath="(//div[hasclass('oe_structure')])[last()]")
             # Copy the configurator pages to preserve the original untouched
-            # pages in the landing page category when creating a new page.
+            # pages in the page category when creating a new page.
             page_view_id.copy({
-                'key': f"{index}_{page_view_id.key}_configurator_pages_landing",
+                'key': f"{index}_{page_view_id.key}_configurator_pages_{page_code}",
                 'website_id': website.id,
             })
 

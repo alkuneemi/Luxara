@@ -77,9 +77,15 @@
     <div class="overflow-hidden w-100" t-att-class="{o_loading: this.state.loading}">
         <!-- Do not rely on Notebook to avoid pages from needing reload -->
         <div class="d-flex w-100 h-100 vertical flex-row">
-            <aside class="border-end overflow-auto">
+            <aside class="border-end overflow-auto d-flex flex-column">
+                <button type="button"
+                    class="btn btn-secondary p-3"
+                    data-action="add_blank_page"
+                    t-on-click="() => this.addBlankPage()">
+                    <i class="oi oi-plus me-2" role="img" aria-hidden="true"/>Add Blank
+                </button>
                 <div t-custom-ref="tabs"
-                    class="list-group list-group-flush flex-column flex-nowrap overflow-y-auto"
+                    class="list-group list-group-flush flex-column flex-nowrap overflow-y-auto flex-grow-1"
                     role="tablist"
                     aria-orientation="vertical"
                     aria-label="Page categories">
@@ -130,7 +136,7 @@
 
 <t t-name="website.AddPageDialog">
     <WebsiteDialog
-        title.translate="New Page"
+        title.translate="Add a Page"
         contentClass="'o_website_page_templates_dialog h-100'"
         showFooter="false"
         footer="false"
