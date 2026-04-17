@@ -8,9 +8,8 @@ class PaymentProvider(models.Model):
 
     # === BUSINESS METHODS === #
 
-    def _get_pending_msg(self, *, from_website=False, **kwargs):
+    def _get_pending_msg(self, *, order=None, **kwargs):
         """Override to return a specific pending message for website orders."""
-        if from_website and self.custom_mode in self._get_custom_bank_related_modes():
+        if order.website_id and self.custom_mode in self._get_custom_bank_related_modes():
             return self.env._("Your order will be confirmed after payment is received.")
-
-        return super()._get_pending_msg(from_website=from_website, **kwargs)
+        return super()._get_pending_msg(order=order, **kwargs)

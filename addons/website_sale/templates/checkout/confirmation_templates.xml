@@ -129,7 +129,7 @@
             >
                 <div>
                     <t t-if="tx_sudo.state == 'pending'">
-                        <t t-out="tx_sudo.provider_id.sudo()._get_pending_msg(from_website=True)"/>
+                        <t t-out="tx_sudo.provider_id.sudo()._get_pending_msg(order=order)"/>
                     </t>
                     <t t-if="tx_sudo.state == 'done'">
                         <span t-if='tx_sudo.provider_id.sudo().done_msg' t-out="tx_sudo.provider_id.sudo().done_msg"/>

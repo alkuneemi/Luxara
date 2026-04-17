@@ -69,7 +69,11 @@ class PaymentProvider(models.Model):
 
     @api.model
     def _get_custom_bank_related_modes(self):
-        """Return custom modes that rely on bank details."""
+        """Return custom modes that rely on bank details.
+
+        :return: The list of custom modes.
+        :rtype: list
+        """
         return ["wire_transfer"]
 
     # === SETUP METHODS === #
