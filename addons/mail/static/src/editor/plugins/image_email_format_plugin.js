@@ -10,6 +10,15 @@ import { registry } from "@web/core/registry";
 const EMAIL_RESTRICTED_IMAGE_MIMETYPES = ["image/svg+xml", "image/webp"];
 const EMAIL_RESTRICTED_IMAGE_MIMETYPES_SET = new Set(EMAIL_RESTRICTED_IMAGE_MIMETYPES);
 
+/**
+ * TODO EGGMAIL:
+ * Argument to be made that this should still be done during convert_inline, as
+ * we want to keep the original file format in the body_html? But there should
+ * be the system with data-original-src to continue using that, so:
+ * - verify that all conversions happening here are using that feature
+ * - if not (eg for svg which are not attachments), move the logic to convert_inline?
+ * - or we don't care about that and keep things as is
+ */
 export class ImageEmailFormatPlugin extends Plugin {
     static id = "imageEmailFormat";
     static dependencies = ["imagePostProcess", "imageSave"];
