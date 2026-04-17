@@ -61,6 +61,7 @@ class TestWorkEntry(TestWorkEntryBase):
         })
         hk_employee = self.env['hr.employee'].create({
             'name': 'HK Employee',
+            'work_email': 'hk@employee.com',
             'resource_calendar_id': hk_resource_calendar_id.id,
             'date_version': datetime(2023, 8, 1),
             'contract_date_start': datetime(2023, 8, 1),
@@ -86,6 +87,7 @@ class TestWorkEntry(TestWorkEntryBase):
         calendar = self.env['resource.calendar'].create({'name': 'Calendar'})
         employee = self.env['hr.employee'].create({
             'name': 'Test',
+            'work_email': 'test@employee.com',
             'resource_calendar_id': calendar.id,
             'date_version': datetime(2024, 9, 1),
             'contract_date_start': datetime(2024, 9, 1),
@@ -348,6 +350,7 @@ class TestWorkEntry(TestWorkEntryBase):
         # first version with a 40h calendar
         employee = self.env['hr.employee'].create({
             'name': 'Test',
+            'work_email': 'test@employee.com',
             'resource_calendar_id': calendar_40h.id,
             'date_version': datetime(2025, 1, 1),
             'contract_date_start': datetime(2025, 1, 1),
@@ -416,6 +419,7 @@ class TestWorkEntry(TestWorkEntryBase):
         # first version with a 40h calendar
         employee = self.env['hr.employee'].create({
             'name': 'Test',
+            'work_email': 'test@employee.com',
             'resource_calendar_id': calendar_40h.id,
             'date_version': datetime(2025, 1, 1),
             'contract_date_start': datetime(2025, 1, 1),

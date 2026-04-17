@@ -450,14 +450,14 @@ class ResUsers(models.Model):
 
     @api.onchange('role')
     def _onchange_role(self):
-        group_admin = self.env['res.groups'].new(origin=self.env.ref('base.group_system'))
-        group_user = self.env['res.groups'].new(origin=self.env.ref('base.group_user'))
-        group_user_lite = self.env['res.groups'].new(origin=self.env.ref('base.group_user_lite'))
-        group_user_default = self.env['res.groups'].new(origin=self.env.ref('base.default_user_group'))
+        group_admin = self.env.ref('base.group_system')
+        group_user = self.env.ref('base.group_user')
+        group_user_lite = self.env.ref('base.group_user_lite')
+        group_user_default = self.env.ref('base.default_user_group')
         for user in self:
             if user.role == "group_user_lite":
                 groups = user.group_ids - (group_admin + group_user + group_user_default + group_user_default.all_implied_ids)
-                user.group_ids = groups + (group_admin if user.role == 'group_system' else group_user if user.role == 'group_user' else group_user_lite)
+                user.group_ids = groups + group_user_lite
             elif user.role and user.has_group('base.group_user'):
                 groups = user.group_ids - (group_admin + group_user)
                 user.group_ids = groups + (group_admin if user.role == 'group_system' else group_user)

@@ -326,6 +326,7 @@ class TestAllocations(TestHrHolidaysCommon):
         """
         employee = self.env['hr.employee'].create({
             'name': 'My Employee',
+            'work_email': 'test@employee.com',
             'company_id': self.company.id,
             'resource_calendar_id': self.calendar_35h.id,
         })
@@ -526,6 +527,7 @@ class TestAllocations(TestHrHolidaysCommon):
 
         employee = self.env['hr.employee'].create({
             'name': 'test_employee',
+            'work_email': 'test@employee.com',
         })
 
         work_entry_type = self.env['hr.work.entry.type'].with_user(admin_user)
