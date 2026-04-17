@@ -41,6 +41,10 @@ export class ShopPage extends Interaction {
         if (isBrowserFirefox() || hasTouch() || !isFilmstripScrollable) {
             filmstripContainer?.classList.add('o_wsale_filmstrip_fancy_disabled');
         }
+        const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
+        if (applyBtn){
+            this._fetchInitialCount(applyBtn);
+        }
     }
 
     /**
@@ -56,6 +60,8 @@ export class ShopPage extends Interaction {
         const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
         if (isOffcanvas) {
             const offcanvas = document.querySelector('.o_website_offcanvas');
+            const productsGrid = document.querySelector('.o_wsale_products_grid_table');
+            const pager = document.querySelector('.products_pager');
             searchParams.set('is_ajax', 'true');
             const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
             const data = await response.json();
@@ -63,13 +69,17 @@ export class ShopPage extends Interaction {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = data.html;
                 const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas').innerHTML;
+                const newProductGrid = tempDiv.querySelector('.o_wsale_products_grid_table').innerHTML;
+                const newPager = tempDiv.querySelector('.o_wsale_products_grid_table').innerHTML;
                 this.services['public.interactions'].stopInteractions(this.el);
                 offcanvas.innerHTML = newOffcanvas;
+                productsGrid.innerHTML = newProductGrid;
+                pager.innerHTML = newPager
                 this.services['public.interactions'].startInteractions(this.el);
             }
             const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
             if (applyBtn) {
-                applyBtn.textContent = `Apply Filters (${data.count})`;
+                applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
             }
         }
         else {
@@ -130,6 +140,21 @@ export class ShopPage extends Interaction {
             searchParams.set('tags', [...tags].join(','));
         }
         return searchParams;
+    }
+
+    async _fetchInitialCount(applyBtn) {
+        const form = document.querySelector('#o_wsale_offcanvas form.js_attributes');
+        if (!form) return;
+
+        const searchParams = this._getSearchParams(form);
+        const url = new URL(form.action);
+        searchParams.set('is_ajax', 'true');
+
+        const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+        const data = await response.json();
+
+        applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
+
     }
 
     /**
