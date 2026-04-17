@@ -83,15 +83,15 @@
                 <div>
                     <b>Beneficiary: </b>
                     <pre
-                        class="user-select-all d-inline"
                         t-out="bank_details['beneficiary']"
+                        class="user-select-all d-inline"
                     />
                 </div>
                 <div>
                     <b>Bank Account: </b>
                     <pre
-                        class="user-select-all d-inline"
                         t-out="bank_details['bank_account']"
+                        class="user-select-all d-inline"
                     />
                 </div>
             </t>
@@ -103,7 +103,7 @@
             <t t-if="communication">
                 <div>
                     <b>Communication: </b>
-                    <pre class="user-select-all d-inline" t-out="communication"/>
+                    <pre t-out="communication" class="user-select-all d-inline"/>
                 </div>
             </t>
         </div>

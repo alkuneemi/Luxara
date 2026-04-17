@@ -67,8 +67,9 @@ class PaymentProvider(models.Model):
         bank_account = self.bank_account_id
         return {"beneficiary": bank_account.holder_name, "bank_account": bank_account.display_name}
 
+    @api.model
     def _get_custom_bank_related_modes(self):
-        """Return custom modes that rely on bank details for pending payment instructions."""
+        """Return custom modes that rely on bank details."""
         return ["wire_transfer"]
 
     # === SETUP METHODS === #
