@@ -15,14 +15,23 @@ function removeImageSrc(xmlString) {
 }
 
 let websiteSnippetsPromise;
-export const getWebsiteSnippets = () => {
+let websiteSnippetsWithoutImgSrc;
+export const getWebsiteSnippets = (withImgSrc = false) => {
     if (!websiteSnippetsPromise) {
         websiteSnippetsPromise = unmockedOrm(
             "ir.ui.view",
             "render_public_asset",
             ["website.snippets"],
             {}
-        ).then((snippets) => removeImageSrc(snippets.trim()));
+        );
     }
-    return websiteSnippetsPromise;
+    if (withImgSrc) {
+        return websiteSnippetsPromise;
+    }
+    if (!websiteSnippetsWithoutImgSrc) {
+        websiteSnippetsWithoutImgSrc = websiteSnippetsPromise.then((snippets) =>
+            removeImageSrc(snippets.trim())
+        );
+    }
+    return websiteSnippetsWithoutImgSrc;
 };

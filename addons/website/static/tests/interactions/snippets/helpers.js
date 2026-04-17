@@ -1,5 +1,6 @@
 import { advanceTime, animationFrame, scroll } from "@odoo/hoot-dom";
 import { defineStyle } from "@web/../tests/web_test_helpers";
+import { registry } from "@web/core/registry";
 
 export async function endTransition() {
     // Ensure we finish the transition
@@ -61,3 +62,40 @@ export const formSelectXml = `
         </div>
     </form>
 `;
+
+const countdownEndMessage = `
+    <div class="s_countdown_end_message d-none">
+        <div class="oe_structure">
+            <section class="s_picture pt64 pb64" data-snippet="s_picture">
+                <div class="container">
+                    <h2 style="text-align: center;">Happy Odoo Anniversary!</h2>
+                    <p style="text-align: center;">As promised, we will offer 4 free tickets to our next summit.<br/>Visit our Facebook page to know if you are one of the lucky winners.</p>
+                    <div class="row s_nb_column_fixed">
+                        <div class="col-lg-12" style="text-align: center;">
+                            <figure class="figure w-100">
+                                <img src="/web/image/website.library_image_18" class="figure-img img-fluid rounded" alt="Countdown is over - Firework"/>
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+`;
+
+export function addCountdownSnippetPreprocessor({
+    endAction = "nothing",
+    endTime = "98765432100",
+} = {}) {
+    registry
+        .category("html_builder.snippetsPreprocessor")
+        .add("test_snippets", function (namespace, snippets) {
+            const countdownEl = snippets.querySelector("[data-snippet='s_countdown']");
+            countdownEl.dataset.endAction = endAction;
+            countdownEl.dataset.endTime = endTime;
+            countdownEl.classList.toggle("hide-countdown", endAction === "message_no_countdown");
+            if (["message", "message_no_countdown"].includes(endAction)) {
+                countdownEl.insertAdjacentHTML("beforeend", countdownEndMessage);
+            }
+        });
+}

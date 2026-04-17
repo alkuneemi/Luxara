@@ -17,6 +17,8 @@ import { advanceTime } from "@odoo/hoot-mock";
 import { browser } from "@web/core/browser/browser";
 import { cookie } from "@web/core/browser/cookie";
 import { defineStyle } from "@web/../tests/web_test_helpers";
+import { startInteractionsWithSnippet } from "../helpers";
+import { registry } from "@web/core/registry";
 
 setupInteractionWhiteList("website.popup");
 
@@ -33,57 +35,35 @@ function removeTransitions() {
     `);
 }
 
-/**
- * @param {Object} [options]
- * @param {number} [options.showAfter] - delay
- * @param {string} [options.display] - one of "afterDelay", "onClick", "mouseExit"
- * @param {boolean} [options.backdrop]
- * @param {string} [options.extraPrimaryBtnClasses]
- * @param {string} [options.modalId]
- * @param {boolean} [options.focusableElements]
- * @returns {string} - popup template
- */
-function getPopupTemplate(options = {}) {
-    const {
-        showAfter = 0,
-        display = "afterDelay",
-        backdrop = true,
-        extraPrimaryBtnClasses = "",
-        modalId = "",
-        focusableElements = false,
-    } = options;
-    return `
-        <div class="s_popup o_snippet_invisible" data-vcss="001" data-snippet="s_popup"
-             data-name="Popup" id="sPopup" data-invisible="1">
-            <div class="modal fade s_popup_middle modal_shown ${
-                backdrop ? "" : "s_popup_no_backdrop"
-            }"
-                 id="${modalId}"
-                 style="background-color: var(--black-50) !important; display: none;"
-                 data-show-after="${showAfter}"
-                 data-display="${display}"
-                 data-consents-duration="7"
-                 data-bs-focus="false"
-                 data-bs-backdrop="false"
-                 tabindex="-1"
-                 aria-label="Popup"
-                 aria-modal="true"
-                 role="dialog">
-                <div class="modal-dialog d-flex">
-                    <div class="modal-content oe_structure">
-                        <div class="s_popup_close js_close_popup o_we_no_overlay o_not_editable" aria-label="Close">×</div>
-                        <section>
-                            <a href="#" class="btn btn-primary ${extraPrimaryBtnClasses}">Primary button</a>
-                            ${focusableElements ? '<button id="focus">Button 1</button>' : ""}
-                        </section>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
+const modal = ".s_popup .modal";
 
-const modal = "#sPopup .modal";
+const addPopupSnippetPreprocessor = ({
+    showAfter = 0,
+    display = "afterDelay",
+    backdrop = true,
+    extraPrimaryBtnClasses = "",
+    modalId = "",
+    focusableElements = false,
+} = {}) => {
+    registry
+        .category("html_builder.snippetsPreprocessor")
+        .add("test_snippets", function (namespace, snippets) {
+            const popupEl = snippets.querySelector("[data-snippet='s_popup']");
+            popupEl.id = "sPopup";
+            const modalEl = popupEl.querySelector(".modal");
+            modalEl.classList.toggle("s_popup_no_backdrop", !backdrop);
+            modalEl.id = modalId;
+            modalEl.dataset.showAfter = showAfter;
+            modalEl.dataset.display = display;
+            const primaryBtn = modalEl.querySelector(".btn-primary");
+            if (extraPrimaryBtnClasses) {
+                primaryBtn.classList.add(extraPrimaryBtnClasses);
+            }
+            if (focusableElements) {
+                primaryBtn.insertAdjacentHTML("afterend", "<button id='focus'>Button 1</button>");
+            }
+        });
+};
 
 test("popup interaction does not activate without .s_popup", async () => {
     const { core } = await startInteractions(``);
@@ -94,7 +74,8 @@ describe("close popup", () => {
     beforeEach(removeTransitions);
 
     test("close popup with close button and check cookies", async () => {
-        const { core } = await startInteractions(getPopupTemplate());
+        addPopupSnippetPreprocessor();
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         expect(cookie.get("sPopup")).not.toBe("true");
         await tick();
@@ -108,7 +89,8 @@ describe("close popup", () => {
     });
 
     test("close popup by pressing escape", async () => {
-        const { core } = await startInteractions(getPopupTemplate());
+        addPopupSnippetPreprocessor();
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         await tick();
         await animationFrame();
@@ -122,7 +104,8 @@ describe("close popup", () => {
     });
 
     test("click on primary button closes popup", async () => {
-        const { core } = await startInteractions(getPopupTemplate());
+        addPopupSnippetPreprocessor();
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         await tick();
         await animationFrame();
@@ -134,9 +117,8 @@ describe("close popup", () => {
     });
 
     test("click on primary button which is a form submit doesn't close popup", async () => {
-        const { core } = await startInteractions(
-            getPopupTemplate({ extraPrimaryBtnClasses: "o_website_form_send" })
-        );
+        addPopupSnippetPreprocessor({ extraPrimaryBtnClasses: "o_website_form_send" });
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         await tick();
         await animationFrame();
@@ -146,7 +128,8 @@ describe("close popup", () => {
     });
 
     test("close popup by clicking outside the modal", async () => {
-        const { core } = await startInteractions(getPopupTemplate());
+        addPopupSnippetPreprocessor();
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         await tick();
         await animationFrame();
@@ -160,7 +143,8 @@ describe("close popup", () => {
 describe("show popup", () => {
     beforeEach(removeTransitions);
     test("popup shows after 5000ms", async () => {
-        const { core } = await startInteractions(getPopupTemplate({ showAfter: 5000 }));
+        addPopupSnippetPreprocessor({ showAfter: 5000 });
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         expect(modal).not.toBeVisible();
         await advanceTime(4500);
@@ -170,10 +154,9 @@ describe("show popup", () => {
     });
 
     test("show popup after click on link", async () => {
-        const { core } = await startInteractions(`
-            <a href="#modal">Show popup</a>
-            ${getPopupTemplate({ display: "onClick", modalId: "modal" })}
-        `);
+        addPopupSnippetPreprocessor({ display: "onClick", modalId: "modal" });
+        const processHTML = (html) => `<a href="#modal">Show popup</a>` + html;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         expect(core.interactions).toHaveLength(1);
         const modal = "#sPopup #modal[data-display='onClick']";
         expect(modal).not.toBeVisible();
@@ -186,7 +169,8 @@ describe("show popup", () => {
 
     test.tags("desktop");
     test("show popup when mouse leaves document", async () => {
-        const { core } = await startInteractions(getPopupTemplate({ display: "mouseExit" }));
+        addPopupSnippetPreprocessor({ display: "mouseExit" });
+        const { core } = await startInteractionsWithSnippet("s_popup");
         expect(core.interactions).toHaveLength(1);
         const modalEl = queryOne("#sPopup .modal");
         expect(modalEl).not.toBeVisible();
@@ -200,10 +184,9 @@ describe("trap focus", () => {
     beforeEach(removeTransitions);
 
     test("focus is trapped when popup opens", async () => {
-        const { core } = await startInteractions(`
-            <a href="#">Link</a>
-            ${getPopupTemplate({ modalId: "modal", focusableElements: true })}
-        `);
+        addPopupSnippetPreprocessor({ modalId: "modal", focusableElements: true });
+        const processHTML = (html) => `<a href="#">Link</a>` + html;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         expect(core.interactions).toHaveLength(1);
         await pointerDown(document.body);
         await tick();
@@ -221,10 +204,9 @@ describe("trap focus", () => {
     });
 
     test("reset focus on the previous active element when popup is closed", async () => {
-        const { core } = await startInteractions(`
-            <a id="showLink" href="#">Link</a>
-            ${getPopupTemplate({ modalId: "modal" })}
-        `);
+        addPopupSnippetPreprocessor({ modalId: "modal" });
+        const processHTML = (html) => `<a id="showLink" href="#">Link</a>` + html;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         expect(core.interactions).toHaveLength(1);
         await pointerDown(document.body);
         expect(document.body).toBeFocused(); // Just making sure.
@@ -242,10 +224,13 @@ describe("trap focus", () => {
     });
 
     test("trap & reset focus when popup opens on click", async () => {
-        const { core } = await startInteractions(`
-            <a href="#modal">Show popup</a>
-            ${getPopupTemplate({ display: "onClick", modalId: "modal", focusableElements: true })}
-        `);
+        addPopupSnippetPreprocessor({
+            display: "onClick",
+            modalId: "modal",
+            focusableElements: true,
+        });
+        const processHTML = (html) => `<a href="#modal">Show popup</a>` + html;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         const modal = "#sPopup #modal[data-display='onClick']";
         expect(core.interactions).toHaveLength(1);
         await pointerDown(document.body);
@@ -273,10 +258,9 @@ describe("trap focus", () => {
     });
 
     test("intercept & reset focus with no backdrop popup", async () => {
-        const { core } = await startInteractions(`
-            <a id="link1" href="#">Link</a>
-            ${getPopupTemplate({ modalId: "modal", backdrop: false })}
-        `);
+        addPopupSnippetPreprocessor({ modalId: "modal", backdrop: false });
+        const processHTML = (html) => `<a id="link1" href="#">Link</a>` + html;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         expect(core.interactions).toHaveLength(1);
         await pointerDown(document.body);
         expect(document.body).toBeFocused(); // Just making sure.
@@ -293,11 +277,13 @@ describe("trap focus", () => {
     });
 
     test("don't trap focus if no backdrop", async () => {
-        const { core } = await startInteractions(`
+        addPopupSnippetPreprocessor({ modalId: "modal", backdrop: false, focusableElements: true });
+        const processHTML = (html) => `
             <a id="link1" href="#">Link before</a>
-            ${getPopupTemplate({ modalId: "modal", backdrop: false, focusableElements: true })}
+            ${html}
             <a id="link2" href="#">Link after</a>
-        `);
+        `;
+        const { core } = await startInteractionsWithSnippet("s_popup", { processHTML });
         expect(core.interactions).toHaveLength(1);
         await tick();
         await animationFrame();
