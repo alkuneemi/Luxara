@@ -1055,6 +1055,7 @@ patch(PosStore.prototype, {
     getOrderData(order, reprint) {
         return {
             ...super.getOrderData(order, reprint),
+            floor_name: order.table_id?.floor_id?.name || "",
             customer_count: order.getCustomerCount(),
         };
     },
