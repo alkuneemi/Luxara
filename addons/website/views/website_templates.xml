@@ -1763,16 +1763,20 @@
                             <div class="s_social_media text-start o_not_editable" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
                                 <h5 class="s_social_media_title d-none" contenteditable="true">Follow us</h5>
                                 <a href="#" class="s_social_media_facebook" target="_blank" aria-label="Facebook">
-                                    <i class="fa fa-facebook rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-facebook border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_twitter" target="_blank" aria-label="X">
-                                    <i class="fa fa-twitter rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-twitter border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank" aria-label="LinkedIn">
-                                    <i class="fa fa-linkedin rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-linkedin border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                                 <a href="/" class="text-800" aria-label="Extra page">
-                                    <i class="fa fa-home rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-home border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Home</span>
                                 </a>
                             </div>
                         </div>
@@ -1806,16 +1810,20 @@
                             <div class="s_social_media text-start o_not_editable" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
                                 <h5 class="s_social_media_title d-none" contenteditable="true">Follow us</h5>
                                 <a href="#" class="s_social_media_facebook" target="_blank">
-                                    <i class="fa fa-facebook rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-facebook border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
-                                    <i class="fa fa-twitter rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-twitter border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
-                                    <i class="fa fa-instagram rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-instagram border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank">
-                                    <i class="fa fa-linkedin rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-linkedin border rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                             </div>
                         </div>
@@ -1836,13 +1844,16 @@
                             <div class="s_social_media text-center o_not_editable no_icon_color" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
                                 <h5 class="s_social_media_title d-none" contenteditable="true">Follow us</h5>
                                 <a href="#" class="s_social_media_facebook" target="_blank" aria-label="Facebook">
-                                    <i class="fa fa-facebook rounded-empty-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-facebook rounded-empty-circle o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_twitter" target="_blank" aria-label="X">
-                                    <i class="fa fa-twitter rounded-empty-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-twitter rounded-empty-circle o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank" aria-label="LinkedIn">
-                                    <i class="fa fa-linkedin rounded-empty-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-linkedin rounded-empty-circle o_editable_media"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                             </div>
                             <div class="s_hr pt24 pb24" data-snippet="s_hr" data-name="Separator">
@@ -1953,12 +1964,15 @@
                                 <h5 class="s_social_media_title d-none" contenteditable="true">Follow us</h5>
                                 <a href="#" class="s_social_media_facebook" target="_blank">
                                     <i class="fa fa-facebook fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
                                     <i class="fa fa-twitter fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
                                     <i class="fa fa-instagram fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                             </div>
                         </div>
@@ -1992,12 +2006,15 @@
                                 <h6 class="s_social_media_title d-block mb-2" contenteditable="true">Follow us</h6>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
                                     <i class="fa fa-twitter fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank">
                                     <i class="fa fa-linkedin fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
                                     <i class="fa fa-instagram fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                             </div>
                         </div>
@@ -2079,7 +2096,7 @@
                         <div class="col-lg-5 offset-lg-1 pb24">
                             <p>We are a team of passionate people whose goal is to improve everyone's life. Our services are designed for small to medium size companies.</p>
                         </div>
-                        <div class="offset-lg-1 col-lg-2 pb24">
+                        <div class="offset-lg-1 col-lg-2 pb24" style="text-align: end;">
                             <a href="#" class="o_translate_inline btn btn-primary">Get in touch</a>
                         </div>
                         <div class="col-lg-4">
@@ -2088,17 +2105,20 @@
                         <div class="col-lg-4 pb24">
                             <i class="fa fa-phone fa-fw me-2"/><a href="tel:+1 555-555-5556"><span class="o_force_ltr">+1 555-555-5556</span></a>
                         </div>
-                        <div class="col-lg-2 offset-lg-2 pb24">
-                            <div class="s_social_media text-start o_not_editable" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
+                        <div class="col-lg-4 pb24">
+                            <div class="s_social_media text-start no_icon_color text-end o_not_editable" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
                                 <h5 class="s_social_media_title d-none" contenteditable="true">Follow Us</h5>
                                 <a href="#" class="s_social_media_facebook" target="_blank" aria-label="Facebook">
-                                    <i class="fa fa-facebook rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-facebook d-none o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_twitter" target="_blank" aria-label="X">
-                                    <i class="fa fa-twitter rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-twitter d-none o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank" aria-label="Instagram">
-                                    <i class="fa fa-instagram rounded-circle shadow-sm o_editable_media"/>
+                                    <i class="fa fa-instagram d-none o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                             </div>
                         </div>
@@ -2169,18 +2189,23 @@
                                 <p class="s_social_media_title d-none" contenteditable="true">Follow us</p>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
                                     <i class="fa fa-twitter fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank">
                                     <i class="fa fa-linkedin fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
                                     <i class="fa fa-instagram fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                                 <a href="#" class="s_social_media_facebook" target="_blank">
                                     <i class="fa fa-facebook fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_youtube" target="_blank">
                                     <i class="fa fa-youtube-play fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">YouTube</span>
                                 </a>
                             </div>
                         </div>
@@ -2285,18 +2310,23 @@
                                 <p class="s_social_media_title d-none" contenteditable="true">Follow us</p>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
                                     <i class="fa fa-twitter fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank">
                                     <i class="fa fa-linkedin fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
                                     <i class="fa fa-instagram fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                                 <a href="#" class="s_social_media_facebook" target="_blank">
                                     <i class="fa fa-facebook fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_youtube" target="_blank">
                                     <i class="fa fa-youtube-play fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">YouTube</span>
                                 </a>
                             </div>
                         </div>
@@ -2414,18 +2444,23 @@
                                 <p class="s_social_media_title d-none" contenteditable="true">Follow us</p>
                                 <a href="#" class="s_social_media_twitter" target="_blank">
                                     <i class="fa fa-twitter fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
                                 <a href="#" class="s_social_media_linkedin" target="_blank">
                                     <i class="fa fa-linkedin fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
                                 <a href="#" class="s_social_media_instagram" target="_blank">
                                     <i class="fa fa-instagram fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
                                 <a href="#" class="s_social_media_facebook" target="_blank">
                                     <i class="fa fa-facebook fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
                                 <a href="#" class="s_social_media_youtube" target="_blank">
                                     <i class="fa fa-youtube-play fa-stack o_editable_media"/>
+                                    <span class="text-capitalize">YouTube</span>
                                 </a>
                             </div>
                         </div>
@@ -2491,20 +2526,25 @@
                         <div class="o_grid_item g-col-lg-4 col-lg-4 g-height-3 offset-1 offset-lg-0 col-10 o_cc o_cc1" style="z-index: 6; grid-area: 5 / 9 / 8 / 13; --grid-item-padding-y: 24px; --grid-item-padding-x: 24px; border-radius: 24px !important;">
                             <div class="s_social_media text-start o_not_editable" data-snippet="s_social_media" data-name="Social Media" contenteditable="false">
                                 <h5 class="s_social_media_title d-block mb-2" contenteditable="true">Follow us</h5>
-                                <a href="#" class="s_social_media_twitter" target="_blank">
-                                    <i class="fa fa-twitter fa-stack rounded-circle shadow-sm o_editable_media"/>
+                                <a href="#" class="s_social_media_twitter" target="_blank" aria-label="X">
+                                    <i class="fa fa-twitter fa-stack rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Twitter</span>
                                 </a>
-                                <a href="#" class="s_social_media_linkedin" target="_blank">
-                                    <i class="fa fa-linkedin fa-stack rounded-circle shadow-sm o_editable_media"/>
+                                <a href="#" class="s_social_media_linkedin" target="_blank" aria-label="LinkedIn">
+                                    <i class="fa fa-linkedin fa-stack rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">LinkedIn</span>
                                 </a>
-                                <a href="#" class="s_social_media_instagram" target="_blank">
-                                    <i class="fa fa-instagram fa-stack rounded-circle shadow-sm o_editable_media"/>
+                                <a href="#" class="s_social_media_instagram" target="_blank" aria-label="Instagram">
+                                    <i class="fa fa-instagram fa-stack rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Instagram</span>
                                 </a>
-                                <a href="#" class="s_social_media_facebook" target="_blank">
-                                    <i class="fa fa-facebook fa-stack rounded-circle shadow-sm o_editable_media"/>
+                                <a href="#" class="s_social_media_facebook" target="_blank" aria-label="Facebook">
+                                    <i class="fa fa-facebook fa-stack rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">Facebook</span>
                                 </a>
-                                <a href="#" class="s_social_media_youtube" target="_blank">
-                                    <i class="fa fa-youtube-play fa-stack rounded-circle shadow-sm o_editable_media"/>
+                                <a href="#" class="s_social_media_youtube" target="_blank" aria-label="YouTube">
+                                    <i class="fa fa-youtube-play fa-stack rounded-circle o_editable_media bg-o-color-3"/>
+                                    <span class="text-capitalize">YouTube</span>
                                 </a>
                             </div>
                         </div>
@@ -3401,15 +3441,19 @@ Sitemap: <t t-out="url_root"/>sitemap.xml
                     <h5 class="s_social_media_title d-none">Follow us</h5>
                     <a href="#" class="s_social_media_facebook o_nav-link_secondary nav-link m-0 p-0 text-decoration-none" target="_blank" aria-label="Facebook">
                         <i class="fa fa-facebook fa-stack p-1 o_editable_media"/>
+                        <span class="text-capitalize">Facebook</span>
                     </a>
                     <a href="#" class="s_social_media_twitter o_nav-link_secondary nav-link m-0 p-0 text-decoration-none" target="_blank" aria-label="X">
                         <i class="fa fa-twitter fa-stack p-1 o_editable_media"/>
+                        <span class="text-capitalize">Twitter</span>
                     </a>
                     <a href="#" class="s_social_media_linkedin o_nav-link_secondary nav-link m-0 p-0 text-decoration-none" target="_blank" aria-label="LinkedIn">
                         <i class="fa fa-linkedin fa-stack p-1 o_editable_media"/>
+                        <span class="text-capitalize">LinkedIn</span>
                     </a>
                     <a href="#" class="s_social_media_instagram o_nav-link_secondary nav-link m-0 p-0 text-decoration-none" target="_blank" aria-label="Instagram">
                         <i class="fa fa-instagram fa-stack p-1 o_editable_media"/>
+                        <span class="text-capitalize">Instagram</span>
                     </a>
                 </div>
             </div>

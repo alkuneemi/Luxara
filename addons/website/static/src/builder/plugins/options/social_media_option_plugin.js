@@ -122,6 +122,7 @@ export class SocialMediaOptionPlugin extends Plugin {
         "removeIconClasses",
         "reorderSocialMediaLink",
         "prefillSocialMediaLinks",
+        "setLinkLabelText",
     ];
     /** @type {import("plugins").WebsiteResources} */
     resources = {
@@ -239,6 +240,17 @@ export class SocialMediaOptionPlugin extends Plugin {
                 element.before("\n");
             }
         }
+
+        // In vertical direction, "left" (or "right") title position is not meaningful so we reset
+        // it to "top".
+        for (const snippetEl of selectElements(root, ".s_share, .s_social_media")) {
+            if (snippetEl.classList.contains("flex-column")) {
+                const titleEl = snippetEl.querySelector(".s_share_title, .s_social_media_title");
+                if (titleEl && !titleEl.classList.contains("d-block") && !titleEl.classList.contains("d-none")) {
+                    titleEl.classList.add("d-block");
+                }
+            }
+        }
     }
 
     applyMediaDialogParams(params) {
@@ -275,7 +287,23 @@ export class SocialMediaOptionPlugin extends Plugin {
         el.querySelector(ICON_SELECTOR)?.classList.add("fa-pencil");
         el.href = "https://www.example.com";
         el.setAttribute("aria-label", "example");
+        this.setLinkLabelText(el, "example");
         return el;
+    }
+
+    /**
+     * Ensures the link has a `<span>` sibling to its icon and sets its text.
+     * The span is what's shown when the snippet uses the "Text" layout.
+     * @param { HTMLElement } el the link element
+     * @param { String|LazyTranslatedString } text
+     */
+    setLinkLabelText(el, text) {
+        let spanEl = el.querySelector(":scope > span");
+        if (!spanEl) {
+            spanEl = el.ownerDocument.createElement("span");
+            el.appendChild(spanEl);
+        }
+        spanEl.textContent = text;
     }
 
     /**
@@ -396,6 +424,11 @@ export class EditSocialMediaLinkAction extends BuilderAction {
         }
         this.dependencies.socialMediaOptionPlugin.removeIconClasses(editingElement);
         editingElement.querySelector(ICON_SELECTOR)?.classList.add(iconClass);
+
+        this.dependencies.socialMediaOptionPlugin.setLinkLabelText(
+            editingElement,
+            info.media?.label || info.name || ""
+        );
     }
 }
 export class AddSocialMediaLinkAction extends BuilderAction {

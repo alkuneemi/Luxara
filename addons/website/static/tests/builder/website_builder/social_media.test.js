@@ -66,7 +66,7 @@ async function testSocialSnippetOptions(snippetName, containerTitle, iconName) {
     await core.waitSidebarUpdated();
     await unfoldAllOptionsGroups();
     await click(
-        `[data-container-title='${containerTitle}'] [data-label='Color'] input[type='checkbox']`
+        `[data-container-title='${containerTitle}'] [data-label='Brand Color'] input[type='checkbox']`
     );
     await animationFrame();
     expect(":iframe .no_icon_color").toHaveCount(1);
@@ -105,14 +105,14 @@ async function testSocialSnippetOptions(snippetName, containerTitle, iconName) {
     );
     await edit("70");
     await animationFrame();
-    expect(`${snippetSelector} > a > i`).toHaveStyle("--fa-icon-size: 4.375rem");
+    expect(`${snippetSelector} > a > i`).toHaveStyle("--social-icon-size: 4.375rem");
 
     await click(
         `[data-container-title='${containerTitle}'] [data-label='Size'] input[type='number']`
     );
     await edit("100");
     await animationFrame();
-    expect(`${snippetSelector} > a > i`).toHaveStyle("--fa-icon-size: 6.25rem");
+    expect(`${snippetSelector} > a > i`).toHaveStyle("--social-icon-size: 6.25rem");
 }
 
 test("add social medias", async () => {
