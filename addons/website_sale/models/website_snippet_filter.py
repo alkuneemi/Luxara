@@ -175,6 +175,7 @@ class WebsiteSnippetFilter(models.Model):
         else:  # Only top-level categories
             categories = CategorySudo.search(domain & Domain("parent_id", "=", False))
 
+<<<<<<< e0603055bfa3f241923434afea193792a862bcc2
         base_url = CategorySudo.get_base_url()
         default_img_path = request.env["product.template"]._get_product_placeholder_filename()
         default_img_url = f"{base_url}/{default_img_path}"
@@ -191,6 +192,32 @@ class WebsiteSnippetFilter(models.Model):
             }
             for cat in categories
         ]
+||||||| 6da43a511444441724733141708e245cc390ae7b
+        base_url = CategorySudo.get_base_url()
+        default_img_path = request.env['product.template']._get_product_placeholder_filename()
+        default_img_url = f'{base_url}/{default_img_path}'
+        return [{
+            'id': cat.id,
+            'name': cat.name,
+            'unpublished': not cat.has_published_products,
+            'cover_image': (
+                f'{base_url}{request.website.image_url(cat, "cover_image")}'
+                if cat.cover_image else default_img_url
+            ),
+        } for cat in categories]
+=======
+        default_img_path = request.env['product.template']._get_product_placeholder_filename()
+        default_img_url = f'/{default_img_path}'
+        return [{
+            'id': cat.id,
+            'name': cat.name,
+            'unpublished': not cat.has_published_products,
+            'cover_image': (
+                request.website.image_url(cat, "cover_image")
+                if cat.cover_image else default_img_url
+            ),
+        } for cat in categories]
+>>>>>>> 2a848ce53b424d4ef884eb6f226e844eeb063701
 
     @api.model
     def _get_products(self, mode, **kwargs):
