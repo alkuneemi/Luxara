@@ -151,7 +151,7 @@ export const selectionField = {
             required: dynamicInfo.required,
             domain: dynamicInfo.domain,
         };
-        if (viewType === "kanban") {
+        if (viewType === "card") {
             props.readonly = dynamicInfo.readonly;
         }
         return props;
