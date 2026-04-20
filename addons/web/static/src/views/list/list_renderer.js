@@ -333,9 +333,13 @@ export class ListRenderer extends Component {
         });
     }
 
+    _isColumnAlwaysRequired(column) {
+        return column.required === 'True' || column.required === '1';
+    }
+
     getActiveColumns() {
         return this.allColumns.filter((col) => {
-            if (col.optional && !this.optionalActiveFields[col.name]) {
+            if (col.optional && !this._isColumnAlwaysRequired(col) && !this.optionalActiveFields[col.name]) {
                 return false;
             }
             if (this.evalColumnInvisible(col.column_invisible)) {
@@ -628,7 +632,7 @@ export class ListRenderer extends Component {
         const propertyGroups = {};
         const optionalFields = [];
         const optionalColumns = this.allColumns.filter(
-            (col) => col.optional && !this.evalColumnInvisible(col.column_invisible)
+            (col) => col.optional && !this._isColumnAlwaysRequired(col) && !this.evalColumnInvisible(col.column_invisible)
         );
         for (const col of optionalColumns) {
             const optionalField = {
@@ -655,7 +659,7 @@ export class ListRenderer extends Component {
 
     get hasOptionalFields() {
         return this.allColumns.some(
-            (col) => col.optional && !this.evalColumnInvisible(col.column_invisible)
+            (col) => col.optional && !this._isColumnAlwaysRequired(col) && !this.evalColumnInvisible(col.column_invisible)
         );
     }
 
