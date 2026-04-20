@@ -1,4 +1,7 @@
 .o_hr_recruitment_kanban {
+    --Avatar-size: 1.5em;
+    --Favorite-font-size: 1.5em;
+
     .o_kanban_renderer {
         padding: 0px;
         border-top: 0px !important;
@@ -48,21 +51,23 @@
             line-height: 1.3rem !important;
             margin-bottom: 4px !important;
             margin-top: 1px !important;
+            column-gap: 4px;
         }
 
         .o_kanban_card_header {
             margin-bottom: 1px;
 
-            .o_favorite a {
-                display: flex;
-                justify-content: center;
-                margin-right: map-get($spacers, 1);
-                width: var(--Avatar-size);
+            .o_favorite {
+                margin-right: map-get($spacers, 2);
 
-                i {
-                    --Favorite-font-size: #{$h3-font-size};
+                button {
+                    display: flex;
+                    justify-content: center;
+                    width: var(--Avatar-size);
 
-                    margin: 0 !important;
+                    i {
+                        margin-left: map-get($spacers, 1);
+                    }
                 }
             }
 
@@ -116,10 +121,32 @@
 }
 
 .o_hr_recruitment_kanban {
-    --Avatar-size: 1.5em;
 
+
+    .o_kanban_card_header_title{
+        
+
+        .o_field_boolean_favorite {
+            
+        }
+    }
     .o_m2o_avatar {
         margin-right: 0px !important;
+
+        a {
+            margin-right: map-get($spacers, 2);
+
+            .fa {
+                height: var(--Avatar-size);
+                aspect-ratio: 1;
+                text-align: center;
+                vertical-align: middle;
+
+                &::before {
+                    line-height: var(--Avatar-size);
+                }
+            }
+        }
     }
 
     .number {
