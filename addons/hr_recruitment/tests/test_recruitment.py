@@ -119,3 +119,43 @@ class TestRecruitment(TransactionCase):
         self.env['hr.applicant'].create(applicant_data)
         partner_count = self.env['res.partner'].search_count([('email', '=', 'test@thisisatest.com')])
         self.assertEqual(partner_count, 1)
+
+    def test_default_employee_email_after_direct_contract_sign(self):
+        """
+        When an applicant moved to hired stage and when an employee is created,
+        the employee email should be set with the applicant email. If no email is available set it to False by default.
+        """
+        self.env.company.email = 'mycompany@info.com'
+        job = self.env['hr.job'].create({
+            'name': 'Test Job',
+            'no_of_recruitment': 5,
+            'department_id': self.env['hr.department'].create({'name': 'Test Department'}).id,
+        })
+        applicant1, applicant2 = self.env['hr.applicant'].create([{
+            'name': 'Test Applicant1',
+            'partner_name': 'Test Applicant1',
+            'job_id': job.id,
+            'email_from': 'applicant1@example.com',
+        }, {
+            'name': 'Test Applicant2',
+            'partner_name': 'Test Applicant2',
+            'job_id': job.id,
+        }])
+        _, stage_hired = self.env['hr.recruitment.stage'].create([{
+            'name': 'New',
+            'sequence': 0,
+        }, {
+            'name': 'Hired',
+            'sequence': 1,
+            'hired_stage': True,
+        }])
+        applicant1.stage_id = stage_hired
+        applicant2.stage_id = stage_hired
+
+        action1 = applicant1.create_employee_from_applicant()
+        employee1 = self.env['hr.employee'].browse(action1['res_id'])
+        self.assertEqual(employee1.work_email, applicant1.email_from, 'Employee email should be the same as applicant email')
+
+        action2 = applicant2.create_employee_from_applicant()
+        employee2 = self.env['hr.employee'].browse(action2['res_id'])
+        self.assertFalse(employee2.work_email, 'Employee email should be False when applicant email is not set')
