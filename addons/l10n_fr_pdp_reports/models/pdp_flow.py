@@ -67,10 +67,7 @@ class PdpFlow(models.Model):
         required=True,
         default='pending',
     )
-    payload_id = fields.Many2one('ir.attachment', string="XML Payload", copy=False, compute='_compute_payload_attachment')
-    payload = fields.Binary(attachment=True, help="XML payload sent to the PDP API.")
-    payload_filename = fields.Char()
-    # do ir.attachment
+    payload_id = fields.Many2one('ir.attachment', string="XML Payload", compute='_compute_payload_attachment')
     transport_identifier = fields.Char(help="Identifier returned by the PDP transport API.")
     transport_status = fields.Char(help="Raw status returned by the PDP transport API.")
     transport_message = fields.Text(help="Additional message or error returned by the PDP transport API.")
@@ -78,11 +75,6 @@ class PdpFlow(models.Model):
         comodel_name='res.currency',
         required=True,
         help="Currency of the aggregated transactions included in the payload.",
-    )
-    document_type = fields.Selection(
-        selection=[('sale', "Sale"), ('refund', "Refund"), ('mixed', "Mixed")],
-        default='sale',
-        required=True,
     )
     report_type = fields.Selection(
         selection=[('transaction', "Transaction Report"), ('payment', "Payment Report")],
@@ -157,12 +149,10 @@ class PdpFlow(models.Model):
     # Compute Methods
     # -------------------------------------------------------------------------
 
-    @api.depends('payload')
     def _compute_payload_attachment(self):
         """Compute the payload attachment record linked to this flow."""
-        Attachment = self.env['ir.attachment']
         for flow in self:
-            flow.payload_id = Attachment.search([
+            flow.payload_id = self.env['ir.attachment'].search([
                 ('res_model', '=', flow._name),
                 ('res_id', '=', flow.id),
                 ('mimetype', '=', 'application/xml'),
@@ -202,7 +192,6 @@ class PdpFlow(models.Model):
         'period_end',
         'report_type',
         'company_id.l10n_fr_pdp_periodicity',
-        'company_id.l10n_fr_pdp_payment_periodicity',
     )
     def _compute_deadline_preview(self):
         today = fields.Date.context_today(self)
@@ -372,15 +361,20 @@ class PdpFlow(models.Model):
 
             # Store payload on flow
             flow.write({
-                'payload': payload,
-                'payload_filename': filename,
                 'state': new_state,
                 'acknowledgement_status': 'pending',
                 'acknowledgement_details': False,
             })
-
-            # Keep a single visible payload attachment per flow and replace it on rebuild.
-            flow._upsert_payload_attachment(filename, payload)
+            if flow.payload_id:
+                flow.payload_id.unlink()
+            self.env['ir.attachment'].create({
+                'name': filename,
+                'datas': payload,
+                'res_model': flow._name,
+                'res_id': self.id,
+                'type': 'binary',
+                'mimetype': 'application/xml',
+            })
 
             # Log build completion
             if flow.error_move_ids:
@@ -439,14 +433,17 @@ class PdpFlow(models.Model):
                 # Rebuild payload with only valid moves
                 payload = self.env['pdp.flow.10.xml.builder']._build_payload(flow)
                 filename = self._build_filename()
-                flow.write({
-                    'payload': payload,
-                    'payload_filename': filename,
-                    'state': 'ready',
+                if flow.payload_id:
+                    flow.payload_id.unlink()
+                self.env['ir.attachment'].create({
+                    'name': filename,
+                    'datas': payload,
+                    'res_model': flow._name,
+                    'res_id': self.id,
+                    'type': 'binary',
+                    'mimetype': 'application/xml',
                 })
-
-                # Keep a single visible payload attachment per flow and replace it on rebuild.
-                flow._upsert_payload_attachment(filename, payload)
+                flow.state = 'ready'
 
             # Send single payload to proxy.
             response = flow._send_to_proxy()
@@ -574,9 +571,10 @@ class PdpFlow(models.Model):
         #         'message': _("PDP proxy mocked in test mode."),
         #         'acknowledgement': [],
         #     }
-        result = proxy_user._call_pdp_proxy('/api/pdp/1/send_document', {
-            'documents': [payload_doc],
-        })
+        result = proxy_user._call_peppol_proxy(
+            proxy_user._get_peppol_proxy_endpoint('send_document'),
+            {'documents': [payload_doc]},
+        )
         ppf_messages = result.get('ppf_messages') or []
         if not ppf_messages:
             raise UserError(_("The PDP proxy did not return a flow tracking identifier."))
@@ -772,9 +770,10 @@ class PdpFlow(models.Model):
                 proxy_user = flows[:1]._get_pdp_proxy_user()
                 if not proxy_user:
                     continue
-                response = proxy_user._call_pdp_proxy('/api/pdp/1/get_all_documents', {
-                    'domain': {'direction': 'outgoing'},
-                })
+                response = proxy_user._call_peppol_proxy(
+                    proxy_user._get_peppol_proxy_endpoint('get_all_documents'),
+                    {'domain': {'direction': 'outgoing'}},
+                )
                 messages = response.get('messages') or []
                 messages_by_uuid = {msg.get('uuid'): msg for msg in messages if msg.get('uuid')}
                 ack_uuids = []
@@ -806,9 +805,10 @@ class PdpFlow(models.Model):
                     ack_uuids.append(flow.transport_identifier)
 
                 if ack_uuids:
-                    proxy_user._call_pdp_proxy('/api/pdp/1/ack', {
-                        'message_uuids': sorted(set(ack_uuids)),
-                    })
+                    proxy_user._call_peppol_proxy(
+                        proxy_user._get_peppol_proxy_endpoint('ack'),
+                        {'message_uuids': sorted(set(ack_uuids))},
+                    )
             except Exception:
                 _logger.exception('Failed to synchronize PDP transport statuses for company %s', company.id)
         return True
@@ -943,8 +943,8 @@ class PdpFlow(models.Model):
         period_end = fields.Date.to_date(self.period_end or self.reporting_date)
         if not period_end:
             return False
-        periodicity = company.l10n_fr_pdp_payment_periodicity if self.report_type == 'payment' else company.l10n_fr_pdp_periodicity
-        periodicity = periodicity or ('monthly' if self.report_type == 'payment' else 'decade')
+
+        periodicity = self._get_periodicities(company)[self.report_type]
 
         def _one_day(date_val):
             return date_val, date_val
@@ -1143,6 +1143,20 @@ class PdpFlow(models.Model):
     # Business Methods - Utilities
     # -------------------------------------------------------------------------
 
+    @api.model
+    def _get_periodicities(self, company):
+        payment_periodicity = 'bimonthly' if company.l10n_fr_pdp_periodicity == 'simplified_bimonthly' else 'monthly'
+        if company.l10n_fr_pdp_periodicity == 'normal_monthly':
+            transaction_periodicity = 'decade'
+        elif company.l10n_fr_pdp_periodicity in {'normal_quarterly', 'simplified_monthly'}:
+            transaction_periodicity = 'monthly'
+        else:
+            transaction_periodicity = 'bimonthly'
+        return {
+            'payment': payment_periodicity,
+            'transaction': transaction_periodicity
+        }
+
     def _format_amount(self, amount):
         """Round amount to currency precision."""
         currency = self.currency_id or self.env.company.currency_id
@@ -1155,31 +1169,6 @@ class PdpFlow(models.Model):
         if last_body == body:
             return
         self.message_post(body=body, subtype_xmlid=subtype)
-
-    def _upsert_payload_attachment(self, filename, payload_b64):
-        """Create or replace the visible XML attachment for this flow."""
-        self.ensure_one()
-        Attachment = self.env['ir.attachment']
-        existing_xml = Attachment.search([
-            ('res_model', '=', self._name),
-            ('res_id', '=', self.id),
-            ('mimetype', '=', 'application/xml'),
-        ], order='id desc')
-        existing = existing_xml[:1]
-        vals = {
-            'name': filename,
-            'datas': payload_b64,
-            'res_model': 'l10n.fr.pdp.reports.flow',
-            'res_id': self.id,
-            'type': 'binary',
-            'mimetype': 'application/xml',
-        }
-        if existing:
-            existing.write(vals)
-            # Avoid accumulating stale XML payloads on repeated builds.
-            (existing_xml - existing).unlink()
-        else:
-            Attachment.create(vals)
 
     def _upsert_transport_response_attachment(self, response_payload):
         """Create or replace the JSON attachment containing latest transport response."""

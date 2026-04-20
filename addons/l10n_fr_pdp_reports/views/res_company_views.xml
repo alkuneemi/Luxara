@@ -11,8 +11,6 @@
                         <group>
                             <field name="l10n_fr_pdp_send_mode"/>
                             <field name="l10n_fr_pdp_periodicity"/>
-                            <field name="l10n_fr_pdp_payment_periodicity"/>
-                            <field name="l10n_fr_pdp_tax_due_code"/>
                         </group>
                     </group>
                 </page>

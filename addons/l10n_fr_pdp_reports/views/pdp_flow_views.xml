@@ -99,7 +99,6 @@
                     <group groups="base.group_no_one">
                         <group>
                             <field name="transaction_type"/>
-                            <field name="document_type"/>
                             <field name="currency_id"/>
                             <field name="periodicity_code" readonly="1"/>
                             <field name="tracking_id" readonly="1"/>

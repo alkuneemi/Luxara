@@ -236,10 +236,7 @@ class PdpFlowAggregator(models.AbstractModel):
         """Calculate period start/end based on company periodicity settings."""
         company = self.env['res.company'].browse(company_id)
         base_date = fields.Date.to_date(reporting_date)
-        periodicity = (
-            company.l10n_fr_pdp_payment_periodicity if report_type == 'payment'
-            else company.l10n_fr_pdp_periodicity
-        ) or ('monthly' if report_type == 'payment' else 'decade')
+        periodicity = self.env['l10n.fr.pdp.reports.flow']._get_periodicities(company)[report_type]
 
         if periodicity == 'monthly':
             period_start = base_date.replace(day=1)
@@ -387,7 +384,6 @@ class PdpFlowAggregator(models.AbstractModel):
                 'company_id': company_id,
                 'reporting_date': period_start,
                 'currency_id': currency_id,
-                'document_type': 'mixed',
                 'report_type': 'transaction',
                 'operation_type': operation_type,
                 'period_start': period_start,
@@ -430,7 +426,6 @@ class PdpFlowAggregator(models.AbstractModel):
                 'company_id': company_id,
                 'reporting_date': payment_period_start,
                 'currency_id': currency_id,
-                'document_type': 'sale',
                 'report_type': 'payment',
                 'period_start': payment_period_start,
                 'period_end': payment_period_end,

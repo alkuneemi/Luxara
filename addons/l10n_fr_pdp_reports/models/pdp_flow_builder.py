@@ -7,18 +7,18 @@ from lxml import etree
 from odoo import _, api, fields, models
 from odoo.addons.account.tools import dict_to_xml
 from odoo.addons.l10n_fr_pdp_reports.utils import drom_com_territories
-from odoo.tools import float_round, frozendict, ormcache
+from odoo.tools import float_round, ormcache
 
 
 G1_05_RE = re.compile(r'^(?! )(?!.*  )[A-Za-z0-9+\-_/ ]{1,20}(?<! )$')  # can't start with space, can't have 2 consecutive spaces, max 20 chars, allowed chars are alphanumeric, space, -, _, /, can't end with space
 VALID_TAX_CODES = {
-    'S'  # Taux de TVA standard
-    'E'  # Exonéré de TVA
-    'AE'  # Autoliquidation de TVA
-    'K'  #  Exonération pour cause de livraison intracommunautaire
-    'G'  # Exonération de TVA pour Export hors UE
-    'O'  # Hors du périmètre d'application de la TVA
-    'Z'  # Taux de TVA égal à 0 (cf. G1.47)
+    'S',  # Taux de TVA standard
+    'E',  # Exonéré de TVA
+    'AE',  # Autoliquidation de TVA
+    'K',  # Exonération pour cause de livraison intracommunautaire
+    'G',  # Exonération de TVA pour Export hors UE
+    'O',  # Hors du périmètre d'application de la TVA
+    'Z',  # Taux de TVA égal à 0 (cf. G1.47)
 }
 MOVE_ERRORS = {
     'delivery': {
@@ -28,6 +28,8 @@ MOVE_ERRORS = {
         'CountryId': "Missing address country",
     },
 }
+
+
 class PdpFlow10Builder(models.AbstractModel):
     '''Build Flow 10 XML for a flow'''
     _name = 'pdp.flow.10.xml.builder'
@@ -88,9 +90,9 @@ class PdpFlow10Builder(models.AbstractModel):
     @api.model
     def _split_moves_by_transaction_type(self, flow, moves):
         if flow.operation_type == 'purchase':
-            return  self.env['account.move'], moves
+            return self.env['account.move'], moves
         b2c_moves = self.env['account.move']
-        international_moves =  self.env['account.move']
+        international_moves = self.env['account.move']
         for move in moves:
             transaction_type = move._get_l10n_fr_pdp_transaction_type()
             if transaction_type == 'b2c':
@@ -130,7 +132,7 @@ class PdpFlow10Builder(models.AbstractModel):
         if invoices or transactions:
             document['PaymentsReport'] = {
                 'ReportPeriod': {
-                    'StartDate' : {'_text': self._format_date(flow.period_start or flow.reporting_date)},
+                    'StartDate': {'_text': self._format_date(flow.period_start or flow.reporting_date)},
                     'EndDate': {'_text': self._format_date(flow.period_end or flow.reporting_date)},
                     'Invoice': invoices,
                     'Transactions': transactions,
@@ -246,7 +248,7 @@ class PdpFlow10Builder(models.AbstractModel):
         if international_invoices or b2c_agregates:
             document['TransactionsReport'] = {
                 'ReportPeriod': {
-                    'StartDate' : {'_text': self._format_date(flow.period_start or flow.reporting_date)},
+                    'StartDate': {'_text': self._format_date(flow.period_start or flow.reporting_date)},
                     'EndDate': {'_text': self._format_date(flow.period_end or flow.reporting_date)},
                 },
                 'Invoice': international_invoices,
@@ -313,8 +315,10 @@ class PdpFlow10Builder(models.AbstractModel):
     def _invoice_add_business_process(self, invoice, move):
         '''Determine billing framework ID (TT-28) from invoice'''
         move_data = self._get_move_tax_data(move)
+        scope = move_data['scope']
+        down_payment_type = move_data['down_payment_type']
         invoice['BusinessProcess'] = {
-            'Id': {'_texte': f'{move_data['scope']}{move_data['down_payment_type']}'},
+            'Id': {'_texte': f'{scope}{down_payment_type}'},
             'TypeID': {'_texte': 'urn.cpro.gouv.fr:1p0:ereporting'},
         }
 
@@ -395,12 +399,21 @@ class PdpFlow10Builder(models.AbstractModel):
                     errors.append(_(message))
             invoice['Delivery'] = {
                 'Date': {'_text': self._format_date(move.date)},
-                'Location':location,
+                'Location': location,
             }
             return errors
 
     @api.model
-    def _invoice_add_seller_tax_representative(self, invoice, move):
+    def _invoice_add_seller_tax_representative(self, invoice, seller):
+        '''Si la facture contient dans la ventilation de TVA le code "E" (Exonération) en TT-56,
+        alors l'identifiant à la TVA du vendeur (TT-34) ou l'identifiant à la TVA du représentant
+        fiscal du vendeur (TT-122) est obligatoire.
+        Les entreprises en franchise en base ne disposant pas systématiquement d'un numéro de TVA
+        pourront utiliser un code Z en TT-56.
+        TODO Seller always has TT-34, so this not usefull ??
+        '''
+        # if seller.vat:
+        #     return
         # TODO: implement
         # invoice['SellerTaxRepresentative'] = {}
         pass
@@ -435,7 +448,7 @@ class PdpFlow10Builder(models.AbstractModel):
 
     @api.model
     def _get_tax_summary(self, move_lines, buyer=None, seller=None, line_validation_function=False, agregation_function=False):
-        summaries = defaultdict(lambda : {
+        summaries = defaultdict(lambda: {
             'taxable_amount_total': 0,
             'tax_total': 0,
             'subtotals': defaultdict(lambda: {
@@ -497,7 +510,7 @@ class PdpFlow10Builder(models.AbstractModel):
                 'TaxableAmount': {'_text': tax_sub_total['taxable_amount']},
                 'TaxAmount': {'_text': tax_sub_total['tax_amount']},
                 'TaxCategory': {
-                    'Code': {'_text': tax_sub_total['tax_category_code'],},
+                    'Code': {'_text': tax_sub_total['tax_category_code']},
                     'Percent': {'_text': tax.amount if tax else 0},
                     **({
                         'TaxExemptionReason': {'_text': tax_sub_total['exemption_reason']},

@@ -15,11 +15,11 @@ DEMO_ENDPOINTS = {  # pdp reports specific endpoints not already mocked by l10n_
 class AccountEdiProxyClientUser(models.Model):
     _inherit = 'account_edi_proxy_client.user'
 
-    def _call_pdp_proxy(self, endpoint, params=None):
-        if self.env.company._get_pdp_edi_mode() == 'demo' and endpoint in DEMO_ENDPOINTS:
+    def _call_peppol_proxy(self, endpoint, params=None):
+        if self.env.company._get_peppol_edi_mode() == 'demo' and endpoint in DEMO_ENDPOINTS:
             self.ensure_one()
             if self.proxy_type != 'pdp':
                 raise UserError(_('EDI user should be of type PDP'))
             return DEMO_ENDPOINTS[endpoint](params)
         else:
-            return super()._call_pdp_proxy(endpoint, params)
+            return super()._call_peppol_proxy(endpoint, params)

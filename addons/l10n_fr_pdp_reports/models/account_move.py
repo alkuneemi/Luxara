@@ -20,7 +20,6 @@ class AccountMove(models.Model):
         readonly=True,
         copy=False,
     )
-    # TODO: remove this field. Might want to replace by method capable of retunrnig one 'open state' flow that might need invalidation because of changes on move.
 
     l10n_fr_pdp_status = fields.Selection(
         selection=[
@@ -36,33 +35,6 @@ class AccountMove(models.Model):
         store=True,
         copy=False,
         help="Lifecycle of the invoice within the French PDP reporting process.",
-    )
-    # BT-3 ->
-    # FA213746_20260122_095935.pdf P40
-    l10n_fr_pdp_bt3_code = fields.Char(
-        string="PDP BT-3 Invoice Type Code",
-        help="Invoice type code (BT-3) used to map TT-21 in Flux 10.1.",
-    )
-    l10n_fr_pdp_bt8_code = fields.Char(
-        string="PDP BT-8 Tax Due Date Type",
-        help="Tax due date type code (BT-8) used to map TT-24 in Flux 10.1.",
-    )
-
-    l10n_fr_pdp_billing_period_start = fields.Date(
-        string="PDP Billing Period Start (BT-73)",
-        help="Billing period start date used for TT-31 when BT-3=262.",
-    )
-    l10n_fr_pdp_note_blu = fields.Text(
-        string="PDP Note BLU",
-        help="BLU note content for Flux 10.1 (TT-26/TT-27).",
-    )
-    l10n_fr_pdp_note_txd = fields.Text(
-        string="PDP Note TXD",
-        help="TXD note content for Flux 10.1 (TT-26/TT-27).",
-    )
-    l10n_fr_pdp_note_pai = fields.Text(
-        string="PDP Note PAI",
-        help="PAI note content for Flux 10.1 (TT-26/TT-27).",
     )
     l10n_fr_pdp_display_info = fields.Boolean(related='company_id.l10n_fr_f10_enable_reporting')
 
@@ -223,13 +195,6 @@ class AccountMove(models.Model):
             'state',
             'name',
             'is_move_sent',
-            'l10n_fr_pdp_bt3_code',
-            'l10n_fr_pdp_bt8_code',
-            'l10n_fr_pdp_contract_reference',
-            'l10n_fr_pdp_billing_period_start',
-            'l10n_fr_pdp_note_blu',
-            'l10n_fr_pdp_note_txd',
-            'l10n_fr_pdp_note_pai',
         }
         res = super().write(vals)
         if tracked_fields.intersection(vals):

@@ -316,7 +316,6 @@ class PdpPayloadBuilder:
         flow = self.flow
         company = flow.company_id
         flow_currency = flow.currency_id or company.currency_id
-        # tax_due_code = company.l10n_fr_pdp_tax_due_code or '3'
         tax_due_code = '5'  # TODO check why ?
         summaries = []
         grouped = self._b2c_summary_buckets(moves)
