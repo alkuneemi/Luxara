@@ -383,7 +383,10 @@ class StockRule(models.Model):
                 qty=procurement.product_qty,
                 uom=procurement.uom_id,
                 date=max(procurement_date_planned.date(), fields.Date.today()),
-                params={"force_uom": procurement.values.get('force_uom')},
+                params={
+                    "force_uom": procurement.values.get('force_uom'),
+                    "consider_lead": procurement.values.get('consider_lead'),
+                },
             )
 
         return supplier
