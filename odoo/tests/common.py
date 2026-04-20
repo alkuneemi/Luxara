@@ -58,10 +58,11 @@ from werkzeug.exceptions import BadRequest
 import odoo.cli
 import odoo.models
 import odoo.orm.registry
-from odoo import api
+from odoo import api, netsvc
 from odoo.exceptions import AccessError
 from odoo.fields import Command
-from odoo.http.requestlib import Request, _request_stack, request
+from odoo.http import request, request_var
+from odoo.http.requestlib import Request
 from odoo.http.session import (
     DEFAULT_LANG,
     get_default_session,
@@ -132,8 +133,9 @@ def get_db_name():
     # use the one on the thread (which means if it is provided on
     # the command-line, this will break when installing another
     # database from XML-RPC).
-    if not dbnames and hasattr(threading.current_thread(), 'dbname'):
-        return threading.current_thread().dbname
+
+    if not dbnames and (name := netsvc.ExecutionInfo.get().db_name):
+        return name
     if len(dbnames) > 1:
         sys.exit("-d/--database/db_name has multiple database, please provide a single one")
     return dbnames[0]
@@ -757,16 +759,19 @@ class BaseCase(case.TestCase):
             env=self.env,
             session=DotDict(get_default_session(), debug='1', sid=''),
         )
+        reset_req = None
         try:
             self.env.flush_all()
             self.env.invalidate_all()
-            _request_stack.push(request)
+            reset_req = request_var.set(request)
             yield
             self.env.flush_all()
             self.env.invalidate_all()
         finally:
-            popped_request = _request_stack.pop()
-            if popped_request is not request:
+            current_request = request_var.get()
+            if reset_req is not None:
+                request_var.reset(reset_req)
+            if current_request is not request:
                 raise Exception('Wrong request stack cleanup.')
 
     @contextmanager
@@ -1865,7 +1870,9 @@ class ChromeBrowser:
             ws.close()
 
     def _receive(self, dbname):
-        threading.current_thread().dbname = dbname
+        execution_info = netsvc.ExecutionInfo._execution_var.get(None)
+        if execution_info is not None:
+            execution_info.db_name = dbname
         # So CDT uses a streamed JSON-RPC structure, meaning a request is
         # {id, method, params} and eventually a {id, result | error} should
         # arrive the other way, however for events it uses "notifications"
