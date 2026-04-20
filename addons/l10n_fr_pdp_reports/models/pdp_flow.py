@@ -135,6 +135,11 @@ class PdpFlow(models.Model):
         copy=False,
     )
     error_move_message = fields.Text(string="Invalid Invoice Details", copy=False)
+    partial_reconcile_ids = fields.One2many(
+        comodel_name='account.partial.reconcile',
+        inverse_name='l10n_fr_pdp_flow_id',
+    )
+
     next_deadline_start = fields.Date(string="Next Send Window Start", compute='_compute_deadline_preview', store=True)
     next_deadline_end = fields.Date(string="Next Send Window End", compute='_compute_deadline_preview', store=True)
     period_status = fields.Selection(
@@ -234,6 +239,13 @@ class PdpFlow(models.Model):
     # -------------------------------------------------------------------------
     # Business Methods - Validation
     # -------------------------------------------------------------------------
+
+    def _create_rectificative_flow_if_needed(self):
+        """Invoices or payments int the scope of this flow have changed. If flow was sent, create a new rectificative flow for the same period with the changed entries."""
+        for flow in self:
+            if flow.state not in FLOW_SENT_STATES:
+                continue
+            # create rectificative flow
 
     def _filter_valid_moves(self):
         """Separate valid moves from invalid ones, updating error tracking."""
@@ -350,14 +362,15 @@ class PdpFlow(models.Model):
             valid_moves = flow.move_ids - flow.error_move_ids
             if not valid_moves:
                 flow.write({
-                    **flow._payload_reset(),
+                    # **flow._payload_reset(),
                     'state': new_state,
                 })
                 flow._message_post_once(_("Payload build failed: no valid invoices."))
                 continue
 
-            payload = self.env['pdp.flow.10.xml.builder']._build_payload(flow)
-            filename = self._build_filename()
+            payload, partials = self.env['pdp.flow.10.xml.builder']._build_payload(flow)
+            filename = flow._build_filename()
+            flow.partial_reconcile_ids = partials
 
             # Store payload on flow
             flow.write({
@@ -371,7 +384,7 @@ class PdpFlow(models.Model):
                 'name': filename,
                 'datas': payload,
                 'res_model': flow._name,
-                'res_id': self.id,
+                'res_id': flow.id,
                 'type': 'binary',
                 'mimetype': 'application/xml',
             })
@@ -389,9 +402,9 @@ class PdpFlow(models.Model):
                     count=len(valid_moves),
                 ))
 
-    def _payload_reset(self):
-        """Return dict to clear payload-related fields."""
-        return {'payload': False, 'payload_filename': False}
+    # def _payload_reset(self):
+    #     """Return dict to clear payload-related fields."""
+    #     return {'payload': False, 'payload_filename': False}
 
     # -------------------------------------------------------------------------
     # Business Methods - Sending
@@ -431,19 +444,20 @@ class PdpFlow(models.Model):
                     continue
 
                 # Rebuild payload with only valid moves
-                payload = self.env['pdp.flow.10.xml.builder']._build_payload(flow)
-                filename = self._build_filename()
+                payload, partials = self.env['pdp.flow.10.xml.builder']._build_payload(flow)
+                filename = flow._build_filename()
                 if flow.payload_id:
                     flow.payload_id.unlink()
                 self.env['ir.attachment'].create({
                     'name': filename,
                     'datas': payload,
                     'res_model': flow._name,
-                    'res_id': self.id,
+                    'res_id': flow.id,
                     'type': 'binary',
                     'mimetype': 'application/xml',
                 })
                 flow.state = 'ready'
+                flow.partial_reconcile_ids = partials
 
             # Send single payload to proxy.
             response = flow._send_to_proxy()
@@ -498,7 +512,6 @@ class PdpFlow(models.Model):
             # Post audit messages on sent moves
             if flow_state in FLOW_SENT_STATES:
                 flow._post_sent_message_on_moves()
-                flow._mark_payment_events_as_reported()
 
             # Log send result
             flow._message_post_once(_(
@@ -519,27 +532,6 @@ class PdpFlow(models.Model):
         body = _("E-reports %s sent", flow_link)
         for move in sent_moves:
             move.message_post(body=body, subtype_xmlid='mail.mt_note')
-
-    def _mark_payment_events_as_reported(self):
-        """Mark pending unreconcile payment events as reported after successful send."""
-        self.ensure_one()
-        if self.report_type != 'payment' or not self.move_ids:
-            return
-        domain = [
-            ('state', '=', 'pending'),
-            ('move_id', 'in', self.move_ids.ids),
-        ]
-        # Keep date upper-bound to avoid marking future events that were not part
-        # of the sent flow, but do not enforce period_start: late regularizations
-        # can be sent in corrective windows.
-        if self.period_end:
-            domain.append(('event_date', '<=', self.period_end))
-        events = self.env['l10n.fr.pdp.reports.payment.event'].sudo().search(domain)
-        if events:
-            events.write({
-                'state': 'reported',
-                'reported_flow_id': self.id,
-            })
 
     def _get_pdp_proxy_user(self):
         self.ensure_one()
@@ -904,7 +896,7 @@ class PdpFlow(models.Model):
         new_flow = self.copy({
             'name': self._default_name(),
             'state': 'pending',
-            **self._payload_reset(),
+            # **self._payload_reset(),
             'acknowledgement_status': 'pending',
             'acknowledgement_details': False,
             'last_send_datetime': False,
@@ -1012,7 +1004,7 @@ class PdpFlow(models.Model):
             return False
         values = {
             'move_ids': [Command.set(moves.ids)],
-            **self._payload_reset(),
+            # **self._payload_reset(),
         }
         if self.state == 'error':
             values['state'] = 'pending'
@@ -1224,7 +1216,7 @@ class PdpFlow(models.Model):
         for flow in self:
             flow.write({
                 'state': 'pending',
-                **flow._payload_reset(),
+                # **flow._payload_reset(),
                 'acknowledgement_status': 'pending',
                 'acknowledgement_details': False,
             })
@@ -1351,7 +1343,7 @@ class PdpFlow(models.Model):
         new_flow = self.copy({
             'name': self._default_name(),
             'state': 'pending',
-            **self._payload_reset(),
+            # **self._payload_reset(),
             'acknowledgement_status': 'pending',
             'acknowledgement_details': False,
             'last_send_datetime': False,

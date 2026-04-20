@@ -43,21 +43,29 @@ class PdpFlow10Builder(models.AbstractModel):
             return False
 
         document = {'_tag': 'Report'}
+        partials = []
 
         self._add_report_header(document, flow)  # TB-1
 
         if flow.report_type == 'transaction':
             self._add_transacitons(document, flow, valid_moves)  # TB-2
         else:
-            self._add_payments(document, flow, valid_moves)  # TB-3
+            summaries = {}
+            for move in valid_moves:
+                summary, partials = self._get_payments_summary_and_partials(move)
+                summaries[move] = summary
+                partials += partials
+
+            self._add_payments(document, flow, valid_moves, summaries)  # TB-3
 
         xml = dict_to_xml(
             node=document,
             nsmap={'xsi': 'http://www.w3.org/2001/XMLSchema-instance'},
         )
-        return base64.b64encode(
+        payload = base64.b64encode(
             etree.tostring(xml, pretty_print=True, xml_declaration=True, encoding='UTF-8')
         )
+        return payload, partials
 
     @api.model
     def _add_report_header(self, document, flow):
@@ -102,11 +110,10 @@ class PdpFlow10Builder(models.AbstractModel):
         return b2c_moves, international_moves
 
     @api.model
-    def _add_payments(self, document, flow, moves):
+    def _add_payments(self, document, flow, moves, summaries):
         b2c_moves, international_moves = self._split_moves_by_transaction_type(flow, moves)
 
-        def get_payment_node(move, is_b2bi):
-            summary = self._get_payments_summary(move)
+        def get_payment_node_and_partials(move, summary, is_b2bi):
             for payment_aml, subtotals in summary:
                 node = {
                     **({
@@ -126,8 +133,12 @@ class PdpFlow10Builder(models.AbstractModel):
                     })
             return node
 
-        invoices = [get_payment_node(move, is_b2bi=True) for move in international_moves]
-        transactions = [get_payment_node(move, is_b2bi=False) for move in b2c_moves]
+        invoices = [
+            get_payment_node_and_partials(move, summaries[move], is_b2bi=True) for move in international_moves
+        ]
+        transactions = [
+            get_payment_node_and_partials(move, summaries[move], is_b2bi=False) for move in b2c_moves
+        ]
 
         if invoices or transactions:
             document['PaymentsReport'] = {
@@ -140,43 +151,36 @@ class PdpFlow10Builder(models.AbstractModel):
             }
 
     @api.model
-    def _get_payments_summary(self, move):
-        tax_summary = self._get_tax_summary(move_lines=move.line_ids)
-        move_amount_total = tax_summary['taxable_amount_total'] + tax_summary['tax_total']
-        tax_ratios = defaultdict(float)
-        if len(tax_summary['subtotals']) == 1:
-            tax_ratios[list(tax_summary['subtotals'])[0]] = 1.0
-        else:
-            for tax, subtotal in tax_summary['subtotals'].items():
-                subtotal_amount = subtotal['taxable_amount'] + subtotal['tax_amount']
-                tax_ratios[tax] = subtotal_amount / move_amount_total if move_amount_total else 0
-
+    def _get_payments_summary_and_partials(self, move):
+        tax_summary = self._get_tax_summary(
+            move.line_ids,
+            line_validation_function=(
+                None if move._is_downpayment()
+                else lambda line: any(tax.tax_exigibility == 'on_payment' for tax in line.tax_ids)
+            ),
+        )
+        move_amount_total = move.amount_total_signed
         payments = []
-
+        partial_ids = []
         for partial in move._get_all_reconciled_invoice_partials():
             subtotals = []
             aml = partial.get('aml')
             if not self._is_payment_partial_aml(partial.get('aml')):
                 continue
+            partial_ids.append(partial['partial_id'])
             partial_amount = aml.move_id.amount_total_signed
 
-            for tax, ratio in tax_ratios.items():
-                if not tax:
-                    continue
-                if not tax.amount:
-                    subtotals.append({
-                        'tax': tax,
-                        'tax_amount': 0,
-                    })
-                    continue
-                base = partial_amount * ratio / (1 + tax.amount / 100.0)
+            partial_to_move_ratio = partial_amount / move_amount_total if move_amount_total else 0
+
+            for tax, subtotal in tax_summary['subtotals'].items():
                 subtotals.append({
                     'tax': tax,
-                    'tax_amount': base * tax.amount / 100.0,
+                    'tax_amount': (subtotal['tax_amount'] + subtotal['taxable_amount']) * partial_to_move_ratio,
                 })
+
             payments.append((aml, subtotals))
 
-        return payments
+        return payments, partial_ids
 
     @api.model
     def _is_payment_partial_aml(self, aml):
@@ -448,6 +452,12 @@ class PdpFlow10Builder(models.AbstractModel):
 
     @api.model
     def _get_tax_summary(self, move_lines, buyer=None, seller=None, line_validation_function=False, agregation_function=False):
+        '''Returns tax summary for given move lines.
+        If line_validation_function is given, only lines for which the function returns True
+        are included in the summary.
+        If agregation_function is given, summary is returned grouped by the value returned
+        by the agregation function.
+        '''
         summaries = defaultdict(lambda: {
             'taxable_amount_total': 0,
             'tax_total': 0,
@@ -504,7 +514,7 @@ class PdpFlow10Builder(models.AbstractModel):
     @api.model
     def _invoice_add_tax_sub_total(self, invoice, move, seller, buyer):
         invoice['TaxSubTotal'] = []
-        tax_summary = self._get_tax_summary(move, buyer, seller)
+        tax_summary = self._get_tax_summary(move.line_ids, buyer, seller)
         for tax, tax_sub_total in tax_summary['subtotals'].items():
             invoice['TaxSubTotal'].append({
                 'TaxableAmount': {'_text': tax_sub_total['taxable_amount']},

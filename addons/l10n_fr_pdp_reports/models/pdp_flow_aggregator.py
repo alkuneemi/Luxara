@@ -474,9 +474,9 @@ class PdpFlowAggregator(models.AbstractModel):
 
     def _is_advance_payment_move(self, move):
         """Return True when payment reporting must include all lines (advance invoices)."""
-        bt3_code = (move.l10n_fr_pdp_bt3_code or '').strip()
-        if bt3_code in {'386', '500'}:
-            return True
+        # bt3_code = (move.l10n_fr_pdp_bt3_code or '').strip()
+        # if bt3_code in {'386', '500'}:
+        #     return True
         lines = move.invoice_line_ids.filtered(lambda l: l.display_type == 'product')
         return any('is_downpayment' in line._fields and line.is_downpayment for line in lines)
 
