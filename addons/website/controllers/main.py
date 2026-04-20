@@ -1005,22 +1005,32 @@ class Website(Home):
     @http.route(['/website/get_alt_images'], type='jsonrpc', auth="user", website=True)
     def get_alt_images(self, models):
         result = []
+        current_lang = self.env.context.get('lang')
         for model in models:
             record = request.env[model['model']].browse(model['id'])
             model['field'] = 'arch_db' if model['field'] == 'arch' else model['field']
             tree = html.fromstring(str(record[model['field']]))
+            base_lang = record._get_base_lang()
+            source_record = record.with_context(lang=base_lang) if current_lang != base_lang else record
+            source_imgs = html.fromstring(str(source_record[model['field']])).xpath('//img[@src]')
             # Only process static img elements (with src) - skip dynamic
             # template images (t-att*)
             for index, el in enumerate(tree.xpath('//img[@src]')):
                 role = el.get('role')
                 decorative = role == "presentation"
                 alt = el.get('alt')
+                source_alt = (
+                    source_imgs[index].get('alt')
+                    if index < len(source_imgs)
+                    else alt
+                )
                 if not decorative or alt is None:
                     result.append({
                         "src": el.get("src"),
                         "alt": alt or "",
                         "decorative": False,
                         "updated": False,
+                        "source_sha": sha256((source_alt or "").encode()).hexdigest(),
                         "res_model": model['model'],
                         "res_id": model['id'],
                         "id": f"{model['model']}-{model['id']}-{index}",
@@ -1032,12 +1042,27 @@ class Website(Home):
     def update_alt_images(self, imgs):
         if not request.env.user.has_group('website.group_website_restricted_editor'):
             raise werkzeug.exceptions.Forbidden()
+        current_lang = self.env.context.get('lang')
         for img in imgs:
             record = request.env[img['res_model']].browse(img['res_id'])
+            base_lang = record._get_base_lang()
             if not record.has_access('write'):
                 continue
-            img['field'] = 'arch_db' if img['field'] == 'arch' else img['field']
-            tree = html.fromstring(str(record[img['field']]))
+            field_name = 'arch_db' if img['field'] == 'arch' else img['field']
+            if current_lang != base_lang:
+                field = record._fields[field_name]
+                translated_alt = img['alt']
+                if callable(field.translate):
+                    translated_alt = field.translate.term_converter(translated_alt)
+                translations = {current_lang: {img['source_sha']: translated_alt}}
+                record._update_field_translations(
+                    field_name,
+                    translations,
+                    digest=lambda old_term: sha256(old_term.encode()).hexdigest(),
+                    source_lang=base_lang
+                )
+                continue
+            tree = html.fromstring(str(record[field_name]))
             modified = False
             for index, element in enumerate(tree.xpath('//img')):
                 imgId = f"{img['res_model']}-{img['res_id']}-{index!s}"
@@ -1051,7 +1076,7 @@ class Website(Home):
                     modified = True
             if modified:
                 new_html_content = html.tostring(tree, encoding='unicode', method='html')
-                record.write({img['field']: new_html_content})
+                record.write({field_name: new_html_content})
 
     @http.route(['/website/update_broken_links'], type='jsonrpc', auth="user", website=True)
     def update_broken_links(self, links):
