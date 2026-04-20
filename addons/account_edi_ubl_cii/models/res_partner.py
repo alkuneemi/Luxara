@@ -289,6 +289,9 @@ class ResPartner(models.Model):
             return _("The Peppol endpoint is not valid. "
                      "It should contain exactly 10 digits (Company Registry number)."
                      "The expected format is: 1234567890")
+        if eas == '0225':
+            # TODO: rename module to PA?
+            return _("The Peppol endpoint scheme is reserved. Please install the 'France - PDP' module (l10n_fr_pdp) first")
 
     @api.model
     def _get_edi_builder(self, invoice_edi_format):
