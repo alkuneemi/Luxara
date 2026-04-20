@@ -1960,6 +1960,24 @@ actual arch.
                 )
                 self._raise_view_error(msg, node)
 
+            if node.get('required') in ('True', 'true', '1') and node.get('optional') == 'hide':
+                err_context = {
+                    'view': self,
+                    'name': getattr(self, 'name', None),
+                    'xmlid': self.xml_id,
+                    'view.model': self.model,
+                    'view.parent': self.inherit_id,
+                    'file': self.env.context.get('install_filename'),
+                    'line': node.sourceline if node is not None else 1,
+                }
+                msg = _(
+                    'Field "%(name)s" cannot be required and optional at the same time: %(err_context)s',
+                    name=name,
+                    err_context=str(err_context)
+                )
+
+                _logger.warning(msg)
+
             if field.type == 'properties' and node_info['view_type'] != 'search':
                 name_manager.must_have_fields(node, {field._description_definition_record}, node_info, use=f"definition record of {field.name}")
 
