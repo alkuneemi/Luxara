@@ -53,6 +53,10 @@ class HrEmployee(models.Model):
         'hr.attendance.overtime.line', 'employee_id', groups="hr_attendance.group_hr_attendance_own,hr_attendance.group_hr_attendance_officer,hr.group_hr_user")
     total_overtime = fields.Float(compute='_compute_total_overtime', compute_sudo=True)
     display_extra_hours = fields.Boolean(related='company_id.hr_attendance_display_overtime')
+    attendance_break_management = fields.Boolean(
+        related='company_id.attendance_break_management',
+        groups="hr_attendance.group_hr_attendance_own,hr_attendance.group_hr_attendance_officer,hr.group_hr_user",
+    )
 
     ruleset_id = fields.Many2one(readonly=False, related="version_id.ruleset_id", inherited=True, groups="hr.group_hr_manager")
 
@@ -179,8 +183,23 @@ class HrEmployee(models.Model):
                 worked_hours = 0
                 attendance_worked_hours = 0
                 for attendance in attendances:
-                    delta = (attendance.check_out or now) - max(attendance.check_in, start_naive)
-                    attendance_worked_hours = delta.total_seconds() / 3600.0
+                    if attendance.check_out:
+                        interval_start = max(attendance.check_in, start_naive)
+                        interval_end = min(attendance.check_out, now)
+                        if interval_end <= interval_start:
+                            attendance_worked_hours = 0.0
+                        else:
+                            attendance_worked_hours = attendance._get_worked_hours_in_range(interval_start, interval_end)
+                            total_duration = (attendance.check_out - attendance.check_in).total_seconds() / 3600.0
+                            if attendance.break_duration and total_duration > 0:
+                                overlap_duration = (interval_end - interval_start).total_seconds() / 3600.0
+                                attendance_worked_hours = max(
+                                    attendance_worked_hours - attendance.break_duration * overlap_duration / total_duration,
+                                    0.0,
+                                )
+                    else:
+                        delta = (attendance.check_out or now) - max(attendance.check_in, start_naive)
+                        attendance_worked_hours = delta.total_seconds() / 3600.0
                     worked_hours += attendance_worked_hours
                     hours_previously_today += attendance_worked_hours
                 employee.last_attendance_worked_hours = attendance_worked_hours
@@ -212,7 +231,7 @@ class HrEmployee(models.Model):
         }
         self._bus_send("hr.employee/presence", payload)
 
-    def _attendance_action_change(self, geo_information=None):
+    def _attendance_action_change(self, geo_information=None, break_duration=None):
         """ Check In/Check Out action
             Check In: create a new attendance record
             Check Out: modify check_out field of appropriate attendance record
@@ -241,15 +260,12 @@ class HrEmployee(models.Model):
                 if self.env.context.get('is_from_systray_check_in_out', False):  # throw user error if user tries to checkout from systray.
                     raise exceptions.UserError(self.env._("You've already checked in."))
                 return attendance  # no need to checkout the user if single checkin enabled.
+            vals = {'check_out': action_date}
             if geo_information:
-                attendance.write({
-                    'check_out': action_date,
-                    **{'out_%s' % key: geo_information[key] for key in geo_information}
-                })
-            else:
-                attendance.write({
-                    'check_out': action_date
-                })
+                vals.update({'out_%s' % key: geo_information[key] for key in geo_information})
+            if break_duration is not None:
+                vals['break_duration'] = break_duration
+            attendance.write(vals)
             self._notify_employee_presence_status()
         else:
             raise exceptions.UserError(_(
@@ -257,6 +273,14 @@ class HrEmployee(models.Model):
                 'Your attendances have probably been modified manually by human resources.',
                 empl_name=self.sudo().name))
         return attendance
+
+    def attendance_manual_with_break(self, break_duration=None):
+        self.ensure_one()
+        try:
+            self._attendance_action_change(break_duration=break_duration)
+        except exceptions.UserError as exc:
+            return {'warning': exc.args[0]}
+        return {'action': {'type': 'ir.actions.client', 'tag': 'reload'}}
 
     def action_open_last_month_attendances(self):
         self.ensure_one()
