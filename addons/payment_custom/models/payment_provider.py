@@ -61,11 +61,24 @@ class PaymentProvider(models.Model):
         :return: A dictionary containing the beneficiary name and bank account number.
         :rtype: dict
         """
-        if self.custom_mode != "wire_transfer" or "bank_account_id" not in self._fields:
-            return {}
+        if bank_account := self._get_custom_bank_account():
+            return {
+                "beneficiary": bank_account.holder_name,
+                "bank_account": bank_account.display_name,
+            }
+        return {}
 
-        bank_account = self.bank_account_id
-        return {"beneficiary": bank_account.holder_name, "bank_account": bank_account.display_name}
+    def _get_custom_bank_account(self):
+        """Return the bank account configured on the custom provider.
+
+        :return: The bank account of the provider.
+        :rtype: record of `res.partner.bank` or None
+        """
+        if (
+            self.custom_mode in self._get_custom_bank_related_modes()
+            and "bank_account_id" in self._fields
+        ):
+            return self.bank_account_id
 
     @api.model
     def _get_custom_bank_related_modes(self):
