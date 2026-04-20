@@ -79,6 +79,7 @@ import { StylePlugin } from "./core/style_plugin";
 import { ContentEditablePlugin } from "./core/content_editable_plugin";
 import { SelectionPlaceholderPlugin } from "./main/selection_placeholder_plugin";
 import { ResizePlugin } from "./main/resize_plugin";
+import { DatePlugin } from "./others/embedded_components/plugins/date_plugin/date_plugin";
 
 export const CORE_PLUGINS = [
     BaseContainerPlugin,
@@ -164,6 +165,7 @@ export const EMBEDDED_COMPONENT_PLUGINS = [
     EmbeddedComponentPlugin,
     TableOfContentPlugin,
     ToggleBlockPlugin,
+    DatePlugin,
     EmbeddedVideoPlugin,
     EmbeddedYoutubePlugin,
     CaptionPlugin,
