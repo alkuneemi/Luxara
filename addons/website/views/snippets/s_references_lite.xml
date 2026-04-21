@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_references_lite" name="References Lite">
+    <section class="s_references_lite o_cc o_cc1 pt32 pb32">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_demo_image_1" class="img img-fluid mx-auto" alt=""/>
+                </div>
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_demo_image_2" class="img img-fluid mx-auto" alt=""/>
+                </div>
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_demo_image_3" class="img img-fluid mx-auto" alt=""/>
+                </div>
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_demo_image_4" class="img img-fluid mx-auto" alt=""/>
+                </div>
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_demo_image_5" class="img img-fluid mx-auto" alt=""/>
+                </div>
+                <div class="col-6 col-lg-2 pt16 pb16">
+                    <img src="/web/image/website.s_reference_default_image_6" class="img img-fluid mx-auto" alt=""/>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>
