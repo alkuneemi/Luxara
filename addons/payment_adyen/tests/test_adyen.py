@@ -221,6 +221,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
 
     @mute_logger("odoo.addons.payment_adyen.models.payment_transaction")
     def test_tx_state_after_send_full_capture_request(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture
+        ).active = False
         self.provider.capture_manually = True
         tx = self._create_transaction("direct", state="authorized")
 
@@ -238,6 +241,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
 
     @mute_logger("odoo.addons.payment_adyen.models.payment_transaction")
     def test_tx_state_after_partial_capture_request(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture
+        ).active = False
         self.provider.capture_manually = True
         tx = self._create_transaction("direct", state="authorized")
 
@@ -261,6 +267,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
 
     @mute_logger("odoo.addons.payment_adyen.models.payment_transaction")
     def test_tx_state_after_send_void_request(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture
+        ).active = False
         self.provider.capture_manually = True
         tx = self._create_transaction("direct", state="authorized")
 
@@ -355,6 +364,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
         self.assertEqual(tx.state, "done")
 
     def test_webhook_notification_authorizes_transaction(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture
+        ).active = False
         self.provider.capture_manually = True
         tx = self._create_transaction("direct")
         self._webhook_notification_flow(self.webhook_notification_batch_data)
@@ -366,6 +378,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
         )
 
     def test_webhook_notification_captures_transaction(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture
+        ).active = False
         self.provider.capture_manually = True
         tx = self._create_transaction(
             "direct", state="authorized", provider_reference=self.original_reference, amount=9.99
