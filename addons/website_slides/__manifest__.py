@@ -73,6 +73,7 @@ Featuring
     'assets': {
         'web.assets_backend': [
             'website_slides/static/src/activity/**/*',
+            'website_slides/static/src/core/**/*',
             'website_slides/static/src/slide_category_one2many_field.js',
             'website_slides/static/src/slide_category_list_renderer.js',
             'website_slides/static/src/scss/slide_views.scss',
@@ -185,12 +186,25 @@ Featuring
             ('remove', 'website_slides/static/tests/legacy/**/*'),
             ('remove', 'website_slides/static/tests/tours/**/*'),
         ],
+<<<<<<< e3ce044cb43c5e8438649601601b58868828443e
         'web.assets_unit_tests_setup': [
             'website_slides/static/src/interactions/**/*',
             'website_slides/static/src/js/public/**/*',
         ],
+||||||| 2154cf3a69af3f2016b291c880ab0972c916eb75
+=======
+        "im_livechat.assets_embed_core": [
+            "website_slides/static/src/core/common/**/*",
+        ],
+        "mail.assets_public": [
+            "website_slides/static/src/core/common/**/*",
+        ],
+>>>>>>> 1014d7df58934b5ff174bc3229219bd892627ff0
         'portal.assets_chatter': [
             'website_slides/static/src/chatter/frontend/**/*',
+        ],
+        "portal.assets_chatter_helpers": [
+            "website_slides/static/src/core/common/**/*",
         ],
     },
     'license': 'LGPL-3',
