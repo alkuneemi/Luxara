@@ -42,7 +42,7 @@
                     <notebook>
                         <page string="Providers" name="providers">
                             <field name="provider_ids" readonly="1">
-                                <list decoration-muted="module_state == 'uninstalled'" editable="bottom">
+                                <list decoration-muted="module_state != 'installed'" editable="bottom">
                                     <field name="name"/>
                                     <field name="is_test"/>
                                 </list>
@@ -123,7 +123,7 @@
                 <field name="name" string="Name"/>
                 <filter name="available_pms"
                         string="Available methods"
-                        domain="[('provider_ids.module_state', '!=', 'uninstalled')]"
+                        domain="[('provider_ids.module_state', '=', 'installed')]"
                 />
             </search>
         </field>

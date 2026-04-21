@@ -230,7 +230,10 @@ class PaymentMethod(models.Model):
                 primary_pm = pm if pm.is_primary else pm.primary_payment_method_id
                 if (
                     not primary_pm.active  # Don't bother for already enabled payment methods.
-                    and all(p.module_state == "uninstalled" for p in primary_pm.provider_ids)
+                    and all(
+                        p.module_state in ["uninstalled", "uninstallable"]
+                        for p in primary_pm.provider_ids
+                    )
                 ):
                     raise UserError(
                         _(

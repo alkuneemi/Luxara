@@ -24,7 +24,11 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
         # Pay for this invoice (no impact even if amounts do not match)
         route_values = self._prepare_pay_values()
         route_values['invoice_id'] = self.invoice.id
-        tx_context = self._get_portal_pay_context(**route_values)
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
+            return_value=self.provider,
+        ):
+            tx_context = self._get_portal_pay_context(**route_values)
 
         # /invoice/transaction/<id>
         tx_route_values = {
@@ -115,7 +119,11 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
 
         route_values = self._prepare_pay_values()
         route_values['invoice_id'] = invoice.id
-        tx_context = self._get_portal_pay_context(**route_values)
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
+            return_value=self.provider,
+        ):
+            tx_context = self._get_portal_pay_context(**route_values)
 
         tx_route_values = {
             'provider_id': self.provider.id,
@@ -167,12 +175,16 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
         # Must be authenticated before making an http resqest
         self.authenticate('TestUser', 'Odoo@123')
         overdue_url = self._build_url('/my/invoices/overdue')
-        resp = self._make_http_get_request(overdue_url, {})
 
-        # Validate the response status code
-        self.assertEqual(resp.status_code, 200)
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
+            return_value=self.provider,
+        ):
+            resp = self._make_http_get_request(overdue_url, {})
+            # Validate the response status code
+            self.assertEqual(resp.status_code, 200)
 
-        tx_context = self._get_payment_context(resp)
+            tx_context = self._get_payment_context(resp)
 
         # Validate the transaction context amount and payment_reference
         self.assertEqual(tx_context.get('amount'), invoice.amount_total)

@@ -352,12 +352,25 @@ class PaymentProvider(models.Model):
 
     # === CRUD METHODS === #
 
+    def copy(self, default=None):
+        self = self.with_context(skip_required_if_provider_check=True)
+        return super().copy(default)
+
+    def copy_data(self, default=None):
+        default = dict(default or {})
+        vals_list = super().copy_data(default=default)
+        for provider, vals in zip(self, vals_list):
+            if "name" not in default or "company_id" not in default:
+                vals["name"] = _("%s (copy)", provider.name)
+        return vals_list
+
     def write(self, vals):
         if "is_test" in vals:
             self._archive_linked_tokens()
 
         result = super().write(vals)
-        self._check_required_if_provider()
+        if not self.env.context.get("skip_required_if_provider_check", False):
+            self._check_required_if_provider()
 
         return result
 
@@ -594,7 +607,7 @@ class PaymentProvider(models.Model):
         # Search compatible providers with the base domain.
         providers = self.env["payment.provider"].search([
             *self.env["payment.provider"]._check_company_domain(company_id),
-            ("module_state", "in", ["installed", "uninstallable"]),
+            ("module_state", "=", "installed"),
         ])
         payment_utils.add_to_report(report, providers)
 

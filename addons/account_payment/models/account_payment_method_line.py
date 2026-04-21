@@ -59,17 +59,14 @@ class AccountPaymentMethodLine(models.Model):
                     line.payment_provider_id = next(iter(candidates_provider_ids))
 
     @api.ondelete(at_uninstall=False)
-    def _unlink_except_active_provider(self):
+    def _unlink_except_provider(self):
         """ Ensure we don't remove an account.payment.method.line that is linked to a provider.
         """
-        installed_provider = self.payment_provider_id.filtered(
-            lambda provider: provider.module_state in ['installed', 'uninstallable']
-        )
-        if installed_provider:
+        if self.payment_provider_id:
             raise UserError(_(
                 "You can't delete a payment method that is linked to an installed provider."
                 "\n Linked providers(s): %s",
-                ', '.join(a.display_name for a in installed_provider),
+                ', '.join(a.display_name for a in self.payment_provider_id),
             ))
 
     def action_open_provider_form(self):
