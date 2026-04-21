@@ -1,3 +1,4 @@
+import { isMacOS } from "@web/core/browser/feature_detection";
 import { Plugin } from "../plugin";
 
 /**
@@ -67,6 +68,7 @@ export class ShortCutPlugin extends Plugin {
             area: () => this.editable,
             bypassEditableProtection: true,
             allowRepeat: true,
+            rawModifiers: isMacOS(),
         });
     }
 }
