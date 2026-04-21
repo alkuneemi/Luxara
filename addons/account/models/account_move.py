@@ -1533,6 +1533,17 @@ class AccountMove(models.Model):
             name=product_line.name,
         )
 
+    def _prepare_global_discount_lines_for_taxes_computation(self, discount_line):
+        self.ensure_one()
+        return self.env['account.tax']._prepare_base_line_for_taxes_computation(
+            discount_line,
+            price_unit=discount_line.price_unit,
+            quantity=1.0,
+            sign=self.direction_sign,
+            special_type='global_discount',
+            rate=self.invoice_currency_rate,
+        )
+
     def _prepare_epd_base_line_for_taxes_computation(self, epd_line):
         """ Convert an account.move.line having display_type='epd' into a base line for the taxes computation.
 
@@ -1635,12 +1646,14 @@ class AccountMove(models.Model):
         AccountTax = self.env['account.tax']
         is_invoice = self.is_invoice(include_receipts=True)
 
-        if self.id or not is_invoice:
-            base_amls = self.line_ids.filtered(lambda line: line.display_type == 'product')
-        else:
-            base_amls = self.invoice_line_ids.filtered(lambda line: line.display_type == 'product')
-        base_lines = [self._prepare_product_base_line_for_taxes_computation(line) for line in base_amls]
+        amls = self.line_ids if self.id or not is_invoice else self.invoice_line_ids
+        global_discount_amls = amls._get_discount_lines().filtered(lambda line: line.display_type == 'product')  # discount products
+        base_amls = amls.filtered(lambda line: line.display_type == 'product') - global_discount_amls
 
+        base_lines = [
+            *[self._prepare_product_base_line_for_taxes_computation(line) for line in base_amls],
+            *[self._prepare_global_discount_lines_for_taxes_computation(line) for line in global_discount_amls],
+        ]
         tax_lines = []
         if self.id:
             # The move is stored so we can add the early payment discount lines directly to reduce the
