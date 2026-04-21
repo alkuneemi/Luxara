@@ -151,6 +151,17 @@ export class PartnerList extends Component {
 
         return availablePartners;
     }
+    _getSearchFields(query) {
+        const trimmed = query.trim();
+        const stripped = trimmed.replace(/[+\s()\-./]/g, "");
+        if (/^\d+$/.test(stripped) && stripped.length >= 3) {
+            return ["phone_mobile_search", "barcode", "vat", "zip"];
+        }
+        if (trimmed.includes("@")) {
+            return ["email"];
+        }
+        return ["complete_name", "ref", "company_registry", "vat", "street", "zip"];
+    }
     get isBalanceDisplayed() {
         return false;
     }
@@ -169,22 +180,10 @@ export class PartnerList extends Component {
             return [];
         }
         if (this.state.query) {
-            const search_fields = [
-                "name",
-                "parent_name",
-                "phone_mobile_search",
-                "email",
-                "barcode",
-                "street",
-                "zip",
-                "city",
-                "state_id",
-                "country_id",
-                "vat",
-            ];
+            const search_fields = this._getSearchFields(this.state.query);
             domain = [
                 ...Array(search_fields.length - 1).fill("|"),
-                ...search_fields.map((field) => [field, "ilike", this.state.query + "%"]),
+                ...search_fields.map((field) => [field, "ilike", this.state.query]),
             ];
         }
 
