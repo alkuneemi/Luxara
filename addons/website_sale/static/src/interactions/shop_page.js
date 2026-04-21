@@ -103,6 +103,14 @@ export class ShopPage extends Interaction {
             if (applyBtn) {
                 applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
             }
+        }else {
+            const filters = document.querySelector('.o_wsale_products_grid_before_rail');
+            const newFilters = tempDiv.querySelector('.o_wsale_products_grid_before_rail');
+            if(filters && newFilters){
+                this.services['public.interactions'].stopInteractions(this.el);
+                filters.innerHTML = newFilters.innerHTML;
+                this.services['public.interactions'].startInteractions(this.el);
+            }
         }
         searchParams.delete('is_ajax');
         window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);

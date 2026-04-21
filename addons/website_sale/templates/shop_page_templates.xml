@@ -856,8 +856,7 @@
                         t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}_header"
                     >
                         <button
-                            t-attf-class="o_wsale_offcanvas_title accordion-button bg-transparent shadow-none {{'' if _expand_attributes else 'collapsed'}}"
-                            style="padding-left: 20px;"
+                            t-attf-class="o_wsale_offcanvas_title accordion-button px-4 bg-transparent shadow-none {{'' if _expand_attributes else 'collapsed'}}"
                             type="button"
                             t-att-data-status="_status"
                             data-bs-toggle="collapse"
