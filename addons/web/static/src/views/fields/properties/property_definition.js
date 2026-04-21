@@ -15,6 +15,7 @@ import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog
 import { PropertyDefinitionSelection } from "./property_definition_selection";
 import { PropertyTags } from "./property_tags";
 import { PropertyValue } from "./property_value";
+import { useHotkey } from "@web/core/hotkeys/hotkey_hook";
 
 export const PROPERTIES_INFO = {
     char: {
@@ -109,6 +110,8 @@ export class PropertyDefinition extends Component {
         // events
         onChange: { type: Function, optional: true },
         onDelete: { type: Function, optional: true },
+        onDiscard: { type: Function, optional: true },
+        onSave: { type: Function, optional: true },
         // prop needed by the popover service
         close: { type: Function, optional: true },
         record: { type: Object, optional: true },
@@ -130,6 +133,10 @@ export class PropertyDefinition extends Component {
             ...defaultDefinition,
             ...this.props.propertyDefinition,
         };
+
+        // snapshot of property definition for discarding new changes
+        const snapshot = JSON.parse(JSON.stringify(propertyDefinition));
+        this._originalDefinition = this.props.isNewlyCreated ? null : snapshot;
 
         this.state = useState({
             propertyDefinition: propertyDefinition,
@@ -162,6 +169,9 @@ export class PropertyDefinition extends Component {
                 }
             }
         });
+
+        useHotkey("control+enter", () => this.onPropertyDefinitionSave());
+        useHotkey("escape", () => this.onPropertyDefinitionDiscard());
     }
 
     /* --------------------------------------------------------
@@ -440,6 +450,21 @@ export class PropertyDefinition extends Component {
         };
         this.props.onChange(propertyDefinition);
         this.state.propertyDefinition = propertyDefinition;
+    }
+
+    onPropertyDefinitionSave() {
+        const snapshot = JSON.parse(JSON.stringify(this.state.propertyDefinition));
+        if (this.props.onSave) {
+            this.props.onSave(snapshot); // pass saved definition to parent
+        }
+        this.props.close();
+    }
+
+    onPropertyDefinitionDiscard() {
+        if (this.props.onDiscard) {
+            this.props.onDiscard(this._originalDefinition);
+        }
+        this.props.close();
     }
 
     /* --------------------------------------------------------

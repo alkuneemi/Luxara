@@ -48,6 +48,7 @@ export class PropertiesField extends Component {
             fixedPosition: true,
             arrow: false,
             setActiveElement: false, // make tag navigation work when adding a tag property
+            closeOnEscape: false,
         });
         this.propertiesRef = useRef("properties");
 
@@ -409,7 +410,7 @@ export class PropertiesField extends Component {
             return false;
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -604,6 +605,7 @@ export class PropertiesField extends Component {
 
         this._regeneratePropertyName(propertyDefinition, propertiesValues[propertyIndex]);
 
+        this._pendingNewPropertyName = propertyDefinition.name;
         propertiesValues[propertyIndex] = propertyDefinition;
         await this.props.record.update({ [this.props.name]: propertiesValues });
 
@@ -642,7 +644,10 @@ export class PropertiesField extends Component {
             const displayData = this._getDisplayData();
             message += _t(
                 'It will be removed for everyone using the "%(parentName)s" %(parentFieldLabel)s.',
-                { parentName: displayData.parentName, parentFieldLabel: displayData.parentFieldLabel }
+                {
+                    parentName: displayData.parentName,
+                    parentFieldLabel: displayData.parentFieldLabel,
+                }
             );
         } else {
             message += _t("It will be removed for everyone!");
@@ -701,6 +706,7 @@ export class PropertiesField extends Component {
         propertiesDefinitions.push(this._getNewPropertyDefinition(newName, count));
 
         this.initialValues[newName] = { name: newName, type: "char" };
+        this._pendingNewPropertyName = newName; // track for discard
         this.openPropertyDefinition = newName;
         await this.props.record.update({ [this.props.name]: propertiesDefinitions });
         await this._unfoldPropertyGroup(count - 1, propertiesDefinitions);
@@ -751,6 +757,55 @@ export class PropertiesField extends Component {
         }
         propertyDefinition.definition_changed = true;
         this.onPropertyDefinitionChange(propertyDefinition);
+    }
+
+    /**
+     * Discard changes to a single property definition.
+     * - Delete if newly created definition.
+     * - Restores the recent added definition.
+     *
+     * @param {object} originalDefinition - the snapshot of recently added definition
+     * @param {Boolean} isNewlyCreated
+     */
+    onPropertyDefinitionDiscard(originalDefinition, isNewlyCreated) {
+        const propertiesValues = this.propertiesList;
+        if (isNewlyCreated) {
+            this._onDeleteConfirm(propertiesValues, this._pendingNewPropertyName);
+            this.props.record.update({ [this.props.name]: propertiesValues });
+            return;
+        }
+        const originalName = originalDefinition.name;
+        let currentName = originalName;
+        for (const [newName, initialValue] of Object.entries(this.initialValues)) {
+            if (initialValue?.name === originalName && newName !== originalName) {
+                // This newName is a regenerated name pointing back to the original
+                // Verify it actually exists in the current properties
+                if (propertiesValues.some((p) => p.name === newName)) {
+                    currentName = newName;
+                    break;
+                }
+            }
+        }
+        const propertyIndex = this._getPropertyIndex(currentName);
+        if (propertyIndex < 0) {
+            return;
+        }
+        // Clean up all regenerated UUID entries that point to originalName
+        for (const newName of Object.keys(this.initialValues)) {
+            if (this.initialValues[newName]?.name === originalName && newName !== originalName) {
+                delete this.initialValues[newName];
+            }
+        }
+        // Restore original initialValues entry to its clean state
+        this.initialValues[originalName] = {
+            name: originalName,
+            type: originalDefinition.type,
+            comodel: originalDefinition.comodel,
+        };
+        // Restore original definition at current index.
+        // NOT going through onPropertyDefinitionChange — that would run _regeneratePropertyName again
+        propertiesValues[propertyIndex] = { ...originalDefinition };
+        this.props.record.update({ [this.props.name]: propertiesValues });
     }
 
     /* --------------------------------------------------------
@@ -896,12 +951,13 @@ export class PropertiesField extends Component {
             }
             return propertyName;
         };
-
+        let wasDiscarded = false;
         this.onCloseCurrentPopover = () => {
             this.state.isPopoverOpen = false;
             this.onCloseCurrentPopover = null;
+            this._pendingNewPropertyName = null;
             target.classList.remove("disabled");
-            if (isNewlyCreated) {
+            if (isNewlyCreated && !wasDiscarded) {
                 this._setDefaultPropertyValue(currentName(propertyName));
             }
         };
@@ -917,6 +973,22 @@ export class PropertiesField extends Component {
             context: this.props.context,
             onChange: this.onPropertyDefinitionChange.bind(this),
             onDelete: () => this.onPropertyDelete(currentName(propertyName)),
+            onDiscard: (originalDefinition) => {
+                wasDiscarded = true;
+                this.onPropertyDefinitionDiscard(originalDefinition, isNewlyCreated);
+            },
+            onSave: (savedDefinition) => {
+                if (savedDefinition) {
+                    //update current name to fix default values of some property defs
+                    propertyName = savedDefinition.name;
+                    // Reset initialValues, so future discard lookups work correctly.
+                    this.initialValues[savedDefinition.name] = {
+                        name: savedDefinition.name,
+                        type: savedDefinition.type,
+                        comodel: savedDefinition.comodel,
+                    };
+                }
+            },
             isNewlyCreated: isNewlyCreated,
             propertiesSize: propertiesList.length,
             record: this.props.record,
@@ -932,7 +1004,7 @@ export class PropertiesField extends Component {
     _setDefaultPropertyValue(propertyName) {
         const propertiesValues = this.propertiesList;
         const newProperty = propertiesValues.find((property) => property.name === propertyName);
-        if (newProperty.default) {
+        if (newProperty?.default) {
             newProperty.value = newProperty.default;
         }
         // it won't update the props, it's a trick because the onClose event of the popover
@@ -968,15 +1040,15 @@ export class PropertiesField extends Component {
                 parentFieldLabel: displayData.parentFieldLabel,
             });
         }
-        return _t(
-            'Oops! You cannot edit the %(parentFieldLabel)s "%(parentName)s".',
-            { parentFieldLabel: displayData.parentFieldLabel, parentName: displayData.parentName }
-        );
+        return _t('Oops! You cannot edit the %(parentFieldLabel)s "%(parentName)s".', {
+            parentFieldLabel: displayData.parentFieldLabel,
+            parentName: displayData.parentName,
+        });
     }
 
     /**
-    * Following functions are utility function overwritten in the component PropertiesDefinitionField
-    */
+     * Following functions are utility function overwritten in the component PropertiesDefinitionField
+     */
     _toggleSeparatorValue(property, forceState) {
         property.value = forceState ?? !(property.value ?? property.fold_by_default);
     }
@@ -995,14 +1067,14 @@ export class PropertiesField extends Component {
             string: _t("Property %s", count + 1),
             type: "char",
             definition_changed: true,
-        }
+        };
     }
 
     _getDisplayData() {
         return {
-            'parentName': this.props.record.data[this.definitionRecordField].display_name,
-            'parentFieldLabel': this.props.record.fields[this.definitionRecordField].string,
-        }
+            parentName: this.props.record.data[this.definitionRecordField].display_name,
+            parentFieldLabel: this.props.record.fields[this.definitionRecordField].string,
+        };
     }
 
     _onDeleteConfirm(propertiesDefinitions, propertyName) {
