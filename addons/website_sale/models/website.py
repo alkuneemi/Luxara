@@ -139,6 +139,12 @@ class Website(models.Model):
         selection="_get_product_sort_mapping", required=True, default="website_sequence asc"
     )
 
+    shop_extra_field_ids = fields.One2many(
+        string="E-Commerce Extra Fields",
+        comodel_name="website.sale.extra.field",
+        inverse_name="website_id",
+    )
+
     product_page_container = fields.Selection(
         selection=[("unset", "Unset"), ("regular", "Regular"), ("fluid", "Full-width")],
         default="unset",
@@ -1212,7 +1218,7 @@ class Website(models.Model):
 
         :return: dict {product.attribute.category}
         """
-        extra_fields = self.env["website.sale.extra.field"].search([("website_id", "=", self.id)])
+        extra_fields = self.shop_extra_field_ids
         result = {}
         for extra_field in extra_fields:
             key = extra_field.category_id or False

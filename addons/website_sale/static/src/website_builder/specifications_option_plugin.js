@@ -20,10 +20,10 @@ class SpecificationsPlugin extends Plugin {
     resources = {
         builder_actions: {
             AddSpecFieldAction,
-            RemoveSpecFieldAction,
             CreateCategoryAction,
         },
         is_unremovable_selectors: "tr[data-extra-field-id]",
+        selectable_selector: "tr[data-extra-field-id]",
         has_overlay_options: {
             editableOnly: false,
             hasOption: (el) =>
@@ -135,12 +135,10 @@ class SpecificationsPlugin extends Plugin {
                 ),
             ]);
 
-            const fields = rawFields;
-
             this._categories.splice(0, this._categories.length, ...categories);
             this._extraFields.splice(0, this._extraFields.length, ...extraFields);
 
-            this._loadedSpecs = { fields };
+            this._loadedSpecs = { fields: rawFields };
         }
         return this._loadedSpecs;
     }
@@ -185,21 +183,6 @@ class AddSpecFieldAction extends BuilderAction {
 
         this.dependencies.specificationsOption.clearLoadedSpecs();
         this.dependencies.builderOptions.setNextTarget(editingElement);
-    }
-}
-
-class RemoveSpecFieldAction extends BuilderAction {
-    static id = "removeSpecField";
-    static dependencies = ["specificationsOption"];
-    setup() {
-        this.canTimeout = false;
-        this.reload = true;
-    }
-    async apply({ editingElement, value }) {
-        const recordId = parseInt(value);
-        if (!recordId) return;
-        await this.services.orm.unlink("website.sale.extra.field", [recordId]);
-        this.dependencies.specificationsOption.clearLoadedSpecs();
     }
 }
 
