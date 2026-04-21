@@ -638,3 +638,32 @@ class TestL10nPlEdi(AccountTestInvoicingCommon, CronMixinCase):
         self.assertEqual(len(capt.records), cron_runs_before + 1)
         self.assertGreaterEqual(capt.records[-1].call_at, start + timedelta(seconds=120))
         self.assertLessEqual(capt.records[-1].call_at, start + timedelta(seconds=240))
+
+    def test_ksef_bill_import_dynamic_taxes_and_fiscal_position(self):
+        """ Test that importing a KSeF bill maps taxes dynamically using amounts and fiscal positions. """
+
+        path = 'l10n_pl_edi/tests/export_xmls/fa3_bill_intra_comunity.xml'
+        with tools.file_open(path, mode='rb') as file:
+            xml_content = file.read()
+
+        parsed_vals = self.env['account.move'].with_company(self.company).l10n_pl_edi_get_ksef_bill_vals_from_xml(xml_content)
+
+        expected_tax_amounts = [23.0, 23.0, 23.0]
+
+        for index, expected_amount in enumerate(expected_tax_amounts):
+
+            line_vals = parsed_vals['invoice_line_ids'][index][2]
+            applied_tax_ids = line_vals['tax_ids'][0][2]
+            applied_taxes = self.env['account.tax'].browse(applied_tax_ids)
+            self.assertEqual(
+                len(applied_taxes),
+                1,
+                f"Expected exactly 1 tax on line {index + 1}, got {len(applied_taxes)}."
+            )
+
+            # 2. Assert that the applied tax amount is correct
+            self.assertEqual(
+                applied_taxes[0].amount,
+                expected_amount,
+                f"The applied tax amount for line {index + 1} ('{line_vals['name']}') is incorrect. Expected {expected_amount}%, got {applied_taxes[0].amount}%."
+            )
