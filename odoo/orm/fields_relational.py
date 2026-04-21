@@ -128,6 +128,9 @@ class _Relational(Field[BaseModel]):
         else:
             return validated(self.domain)
 
+    # property used by setup_related() to copy values from related field
+    _related_comodel_name = property(attrgetter('comodel_name'))
+
     _related_context = property(attrgetter('context'))
 
     _description_relation = property(attrgetter('comodel_name'))
