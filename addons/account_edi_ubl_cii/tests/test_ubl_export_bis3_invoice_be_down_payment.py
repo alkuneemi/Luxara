@@ -14,7 +14,9 @@ class TestUblExportBis3InvoiceBEDownPayment(TestUblExportBis3BE):
     @classmethod
     def get_default_groups(cls):
         groups = super().get_default_groups()
-        return groups | cls.quick_ref('sales_team.group_sale_manager')
+        if cls.env['account.edi.common'].module_installed('sales_team'):
+            groups |= cls.quick_ref('sales_team.group_sale_manager')
+        return groups
 
     def test_sale_order_down_payment(self):
         tax_21 = self.percent_tax(21.0)

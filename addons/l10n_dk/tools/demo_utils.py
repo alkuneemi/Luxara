@@ -57,7 +57,7 @@ def _mock_call_nemhandel_proxy(func, self, *args, **kwargs):
 
 def _mock_button_verify_partner_endpoint(func, self, *args, **kwargs):
     self.ensure_one()
-    if self.nemhandel_identifier_type and self.nemhandel_identifier_value:
+    if self._get_nemhandel_edi_identification():
         self.nemhandel_verification_state = 'valid'
 
 
@@ -126,7 +126,7 @@ def _mock_check_user_on_alternative_service(func, self, *args, **kwargs):
 
 def _mock_get_nemhandel_verification_state(func, self, *args, **kwargs):
     xml_format = args
-    if not (self.nemhandel_identifier_type and self.nemhandel_identifier_value):
+    if not self._get_nemhandel_edi_identification():
         return 'not_verified'
     if not xml_format:
         return 'not_valid'

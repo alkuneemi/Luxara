@@ -593,6 +593,7 @@ class ResPartner(models.Model):
         ],
         company_dependent=True,
     )
+    display_electronic_invoicing = fields.Boolean(compute='_compute_display_electronic_invoicing')
     invoice_edi_format = fields.Selection(
         string="eInvoice format",
         selection=[],  # to extend
@@ -601,7 +602,6 @@ class ResPartner(models.Model):
         compute_sudo=True,
     )
     invoice_edi_format_store = fields.Char(company_dependent=True)
-    display_invoice_edi_format = fields.Boolean(default=lambda self: len(self._fields['invoice_edi_format'].selection), store=False)
     invoice_template_pdf_report_id = fields.Many2one(
         string="Invoice report",
         comodel_name='ir.actions.report',
@@ -649,7 +649,7 @@ class ResPartner(models.Model):
             for key, value in (partner.additional_identifiers or {}).items():
                 result = validate_identifier(key, value)
                 if not result['valid']:
-                    raise ValidationError(validation_error_message(self.env, key, result['example']))
+                    raise ValidationError(validation_error_message(self.env, key, value, example=result['example']))
 
     def _compute_bank_count(self):
         bank_data = self.env['res.partner.bank']._read_group([('partner_id', 'in', self.ids)], ['partner_id'], ['__count'])
@@ -685,6 +685,11 @@ class ResPartner(models.Model):
     def _inverse_vat(self):
         self._check_vat()
         self._deduce_additional_identifiers_from_vat()
+
+    @api.depends('country_code')
+    def _compute_display_electronic_invoicing(self):
+        # To be overriden in localizations
+        self.display_electronic_invoicing = False
 
     @api.depends('additional_identifiers')
     def _compute_global_location_number(self):
@@ -925,7 +930,8 @@ class ResPartner(models.Model):
     def _get_additional_identifier(self, identifier_type):
         """Convenience getter for an entry of the JSON."""
         self.ensure_one()
-        return (self.additional_identifiers or {}).get(identifier_type)
+        identifier = (self.additional_identifiers or {}).get(identifier_type)
+        return identifier if not is_identifier_void(identifier) else None
 
     def _set_additional_identifier(self, identifier_type, value):
         """ Write helper for adding identifier in the JSON.
@@ -941,7 +947,7 @@ class ResPartner(models.Model):
             return
         validation = validate_identifier(identifier_type, value)
         if not validation['valid']:
-            raise ValidationError(validation_error_message(self.env, identifier_type, validation['example']))
+            raise ValidationError(validation_error_message(self.env, identifier_type, value, example=validation['example']))
         normalized_value = validation['value']
         identifiers[identifier_type] = normalized_value  # set the normalized value
         deduced_identifiers = get_deduced_identifiers(identifier_type, normalized_value)
@@ -1007,7 +1013,7 @@ class ResPartner(models.Model):
                 continue
             result = validate_identifier(key, value)
             if not result['valid']:
-                raise ValidationError(validation_error_message(self.env, key, result['example']))
+                raise ValidationError(validation_error_message(self.env, key, value, example=result['example']))
             cleaned[key] = result['value']
         # Compute deduced identifiers (e.g. FR_SIRET => FR_SIREN)
         for key, value in list(cleaned.items()):
