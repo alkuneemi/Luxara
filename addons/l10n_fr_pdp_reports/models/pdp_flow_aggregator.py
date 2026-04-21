@@ -33,6 +33,7 @@ class PdpFlowAggregator(models.AbstractModel):
                 _logger.exception('Failed to generate PDP flows for company %s', company.id)
 
     def _cron_process_company(self, company):
+        # update move & payments 
         """Process unprocessed moves for a single company."""
         today = fields.Date.context_today(self)
         moves = self._get_unprocessed_moves(company)
@@ -337,7 +338,7 @@ class PdpFlowAggregator(models.AbstractModel):
         else:
             flow = Flow.create({
                 **create_values,
-                'transaction_type': transaction_type,
+                # 'transaction_type': transaction_type,
                 'transmission_type': target_transmission,
                 'move_ids': [Command.set(moves.ids)],
             })
@@ -345,8 +346,8 @@ class PdpFlowAggregator(models.AbstractModel):
             flow._ensure_tracking_id()
             changed = True
 
-        if flow.transaction_type != transaction_type:
-            flow.transaction_type = transaction_type
+        # if flow.transaction_type != transaction_type:
+        #     flow.transaction_type = transaction_type
 
         rebuild_flows = Flow.browse()
         today = fields.Date.context_today(self)
@@ -529,16 +530,16 @@ class PdpFlowAggregator(models.AbstractModel):
                     result |= move
                     break
         # Include invoices that have pending unreconcile events in the period.
-        event_moves = self.env['l10n.fr.pdp.reports.payment.event'].sudo().search([
-            ('company_id', '=', company_id),
-            ('state', '=', 'pending'),
-            ('event_date', '>=', period_start),
-            ('event_date', '<=', period_end),
-        ]).mapped('move_id')
-        result |= event_moves.filtered(
-            lambda m: m.state == 'posted' and m.move_type in sale_types
-        )
-        return result
+        # event_moves = self.env['l10n.fr.pdp.reports.payment.event'].sudo().search([
+        #     ('company_id', '=', company_id),
+        #     ('state', '=', 'pending'),
+        #     ('event_date', '>=', period_start),
+        #     ('event_date', '<=', period_end),
+        # ]).mapped('move_id')
+        # result |= event_moves.filtered(
+        #     lambda m: m.state == 'posted' and m.move_type in sale_types
+        # )
+        # return result
 
     def _split_batches(self, moves):
         """Split moves into batches if exceeding max per flow."""
