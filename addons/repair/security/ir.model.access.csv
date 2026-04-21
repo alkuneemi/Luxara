@@ -1,4 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_repair_user,Repair user,model_repair_order,stock.group_stock_user,1,1,1,1
 access_repair_tag_user,Repair Tags user,model_repair_tags,stock.group_stock_user,1,1,1,1
-
+access_repair_service_line,Repair Service Line,model_repair_service_line,stock.group_stock_user,1,1,1,1
+access_repair_consumption_warning,Repair Consumption Warning,model_repair_consumption_warning,stock.group_stock_user,1,1,1,1
+access_repair_consumption_warning_line,Repair Consumption Warning Line,model_repair_consumption_warning_line,stock.group_stock_user,1,1,1,0

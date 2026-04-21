@@ -50,6 +50,8 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
+    repair_service_line_id = fields.Many2one('repair.service.line', check_company=True, copy=False)
+
     def _prepare_qty_delivered(self):
         repair_delivered_qties = defaultdict(float)
         remaining_so_lines = self

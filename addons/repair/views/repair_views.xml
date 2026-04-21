@@ -94,8 +94,8 @@
                             type="object"
                             icon="fa-pencil-square-o"
                             class="oe_stat_button"
-                            invisible="not invoice_count">
-                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                            invisible="not invoice_id">
+                            <span class="o_stat_text">Invoice</span>
                         </button>
                     </div>
                     <div class="oe_title">
@@ -172,7 +172,7 @@
                                 <field name="product_uom_qty" string="Demand" readonly="state in ('done', 'cancel')"/>
                                 <field name="forecast_expected_date" column_invisible="True"/>
                                 <field name="product_qty" readonly="1" column_invisible="True"/>
-                                <field name="quantity" string="Reserved" readonly="not product_id" optional="hide"/>
+                                <field name="quantity" string="Quantity" readonly="not product_id" optional="show"/>
                                 <field name="uom_id" readonly="state != 'draft' and not additional" options="{'no_open': True, 'no_create': True}" widget="many2one_uom"/>
                                 <field name="lot_ids" widget="many2many_tags"
                                     groups="stock.group_production_lot"
@@ -188,6 +188,31 @@
                             </list>
                         </field>
                         <div class="clearfix"/>
+                    </page>
+                     <page string="Services" name="services">
+                        <field name="repair_service_line_ids" readonly="state not in ('draft', 'confirmed')">
+                            <list string="text" editable="bottom">
+                                <control>
+                                    <create string="Add a line"/>
+                                    <button
+                                        name="action_add_service_from_repair_catalog"
+                                        class="px-4 btn-link"
+                                        string="Catalog"
+                                        type="object"
+                                        context="{'catalog_for_services': True, 'order_id': parent.id}"/>
+                                </control>
+                                <field name="sequence" widget="handle"/>
+                                <field name="product_id" required="1"/>
+                                <field name="description" optional="hide"/>
+                                <field name="quantity"/>
+                                <field
+                                    name="uom_id"
+                                    groups="uom.group_uom"
+                                    readonly="0"
+                                    options="{'no_open': True, 'no_create': True}"
+                                    widget="many2one_uom"/>
+                            </list>
+                        </field>
                     </page>
                     <page string="Repair Notes" name="repair_notes">
                         <field name="internal_notes" placeholder="Add internal notes."/>
