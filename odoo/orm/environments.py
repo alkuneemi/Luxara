@@ -588,7 +588,7 @@ class Transaction:
         '_Transaction__file_open_tmp_paths',
         '_cache', '_recent_envs',
         '_registry_caches__', '_registry_invalidated', '_registry_sequence',
-        '_state_stack__', '_weak_envs',
+        '_state_stack__', '_weak_envs', '_wrote',
         'access_read', 'default_env',
         'field_data', 'field_data_patches', 'field_dirty',
         'ormcaches__', 'protected', 'registry', 'tocompute',
@@ -606,6 +606,7 @@ class Transaction:
         self._registry_invalidated: int = 0
         self._registry_sequence = registry.registry_sequence
         self._registry_caches__: dict[str, tuple[int, MutableMapping]] = {}
+        self._wrote: bool = False
         self.ormcaches__: dict[str, CacheLayer] = {}
         # transaction state manipulated by savepoints
         self._state_stack__: list[TransactionState] = []
@@ -846,6 +847,7 @@ class Transaction:
                 context_dict.pop(model_name, None)
             else:
                 context_dict.clear()
+        self._wrote = True  # assume we wrote something
 
     def invalidate_field_data(self) -> None:
         """ Invalidate the cache of all the fields.
@@ -858,6 +860,7 @@ class Transaction:
         # reset Field._get_cache()
         for env in self.envs:
             env.__dict__.pop('_field_cache_memo', None)
+        self._wrote = True  # assume we wrote something
 
     def clear(self):
         """ Clear the transaction data (for testing or internal).
@@ -974,6 +977,7 @@ class Transaction:
                 # that the next transaction is ready.
                 self._registry_caches__.clear()
                 self._check_signaling(cr)
+        self._wrote = False
 
     @contextmanager
     def rollbacking(self):
@@ -981,6 +985,7 @@ class Transaction:
         assert not self._state_stack__, "Pending savepoints not released, cannot rollback!"
         yield
         self.restore_state()
+        self._wrote = False
 
     def _free_resources(self) -> None:
         """ Free resources used by the transaction."""
@@ -1029,6 +1034,12 @@ class Transaction:
                 for name, (_seq, data) in self._registry_caches__.items()
             }
             registry_invalidated = 0
+
+        if not self._wrote:
+            # if we rollback on a transaction that did not write anything, we
+            # can still push the cached values to the parent layer
+            for layer in self.ormcaches__.values():
+                layer.update_parent()
 
         env = self.default_env or next(iter(self.envs), None)
         cr = env.cr if env is not None else None
