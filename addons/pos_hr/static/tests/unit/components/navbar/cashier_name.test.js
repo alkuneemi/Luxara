@@ -15,7 +15,7 @@ test("avatarAndCssClass", async () => {
 test("selectCashier", async () => {
     const store = await setupPosEnv();
     const comp = await mountWithCleanup(CashierName, {});
-    const result = await comp.selectCashier();
+    const result = await comp.selectCashier("1111");
     expect(result.name).toBe("Employee1");
     expect(result.id).toBe(3);
     store.setCashier(result);

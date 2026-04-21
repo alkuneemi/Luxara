@@ -24,6 +24,12 @@ export class HrEmployee extends models.ServerModel {
             user_id: 3,
             work_contact_id: 3,
         },
+        {
+            id: 4,
+            name: "Minimal User",
+            user_id: 4,
+            work_contact_id: 3,
+        },
     ];
 
     _load_pos_data_read(records) {
@@ -31,8 +37,12 @@ export class HrEmployee extends models.ServerModel {
             if (emp.id === 2) {
                 emp._role = "manager";
                 emp._pin = Sha1.hash("1234");
-            } else {
+            } else if (emp.id === 3) {
                 emp._role = "cashier";
+                emp._pin = Sha1.hash("1111");
+            } else if (emp.id === 4) {
+                emp._role = "minimal";
+                emp._pin = Sha1.hash("2222");
             }
         });
         return records;

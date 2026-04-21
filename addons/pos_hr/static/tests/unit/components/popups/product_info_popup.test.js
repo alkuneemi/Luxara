@@ -25,3 +25,32 @@ test("allowProductEdition", async () => {
     store.setCashier(emp);
     expect(comp.allowProductEdition).toBe(false);
 });
+
+test("margin and cost visibility follows cashier role", async () => {
+    const store = await setupPosEnv();
+    store.addNewOrder();
+    store.config.is_margins_costs_accessible_to_every_user = true;
+    const product = store.models["product.template"].get(5);
+    const info = await store.getProductInfo(product, 1);
+    const comp = await mountWithCleanup(ProductInfoPopup, {
+        props: {
+            productTemplate: product,
+            info,
+            close: () => {},
+        },
+    });
+
+    store.setCashier(store.models["hr.employee"].get(2));
+    expect(comp._hasMarginsCostsAccessRights()).toBe(true);
+
+    store.setCashier(store.models["hr.employee"].get(3));
+    expect(comp._hasMarginsCostsAccessRights()).toBe(true);
+
+    const minimalUser = store.models["hr.employee"].get(4);
+    store.setCashier(minimalUser);
+    expect(comp._hasMarginsCostsAccessRights()).toBe(false);
+
+    store.config.is_margins_costs_accessible_to_every_user = false;
+    store.setCashier(store.models["hr.employee"].get(2));
+    expect(comp._hasMarginsCostsAccessRights()).toBe(false);
+});
