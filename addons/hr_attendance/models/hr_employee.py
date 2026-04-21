@@ -131,7 +131,7 @@ class HrEmployee(models.Model):
             now_tz = now_utc.astimezone(tz)
             start_tz = now_tz.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             start_naive = start_tz.astimezone(datetime.UTC).replace(tzinfo=None)
-            end_tz = now_tz
+            end_tz = now_tz.replace(hour=23, minute=59, second=59)
             end_naive = end_tz.astimezone(datetime.UTC).replace(tzinfo=None)
 
             for employee in employees:
