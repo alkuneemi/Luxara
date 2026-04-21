@@ -260,7 +260,7 @@ class ResUsers(models.Model):
         return self.env['res.groups']._get_view_group_hierarchy()
 
     view_group_hierarchy = fields.Json(string='Technical field for user group setting', store=False, copy=False, default=_default_view_group_hierarchy)
-    role = fields.Selection([('group_user', 'User'), ('group_system', 'Administrator')], compute='_compute_role', readonly=False, string="Role")
+    role = fields.Selection([('group_user_lite', 'Lite'), ('group_user', 'Regular'), ('group_system', 'Administrator')], compute='_compute_role', readonly=False, string="Role")
 
     _login_key = models.Constraint("UNIQUE (login)",
         'You can not have two users with the same login!')
@@ -427,19 +427,39 @@ class ResUsers(models.Model):
 
     @api.depends('group_ids')
     def _compute_role(self):
+        group_user = self.env.ref('base.group_user')
+        group_no_one = self.env.ref('base.group_no_one')
+        maximal_lite_user_groups = self.env.ref('base.group_user_lite').all_implied_ids
         for user in self:
+            # if old role = user lite, if increase groups -> becomes user.
+            # if old role = user lite, if decrease groups -> stay user lite.
+            can_be_user = True
+            can_be_lite_user = True
+            # remove regular user and technical to be able to compare user groups
+            user_groups = user.all_group_ids._origin - group_user - group_no_one
+            if user_groups - maximal_lite_user_groups:
+                can_be_lite_user = False
+            elif user_groups == maximal_lite_user_groups:
+                can_be_user = False
+            # if old role = user, if groups = strictly the ones implied by lite, becomes lite user.
             user.role = (
                 'group_system' if user.has_group('base.group_system') else
-                'group_user' if user.has_group('base.group_user') else
+                'group_user' if user.has_group('base.group_user') and can_be_user or not can_be_lite_user else
+                'group_user_lite' if user.has_group('base.group_user_lite') and can_be_lite_user else
                 False
             )
 
     @api.onchange('role')
     def _onchange_role(self):
-        group_admin = self.env['res.groups'].new(origin=self.env.ref('base.group_system'))
-        group_user = self.env['res.groups'].new(origin=self.env.ref('base.group_user'))
+        group_admin = self.env.ref('base.group_system')
+        group_user = self.env.ref('base.group_user')
+        group_user_lite = self.env.ref('base.group_user_lite')
+        group_user_default = self.env.ref('base.default_user_group')
         for user in self:
-            if user.role and user.has_group('base.group_user'):
+            if user.role == "group_user_lite":
+                groups = user.group_ids - (group_admin + group_user + group_user_default + group_user_default.all_implied_ids)
+                user.group_ids = groups + group_user_lite
+            elif user.role and user.has_group('base.group_user'):
                 groups = user.group_ids - (group_admin + group_user)
                 user.group_ids = groups + (group_admin if user.role == 'group_system' else group_user)
 
@@ -458,7 +478,7 @@ class ResUsers(models.Model):
 
     @api.depends('all_group_ids')
     def _compute_share(self):
-        user_group_id = self.env['ir.model.data']._xmlid_to_res_id('base.group_user')
+        user_group_id = self.env['ir.model.data']._xmlid_to_res_id('base.group_user_lite')
         internal_users = self.filtered_domain([('all_group_ids', 'in', [user_group_id])])
         internal_users.share = False
         (self - internal_users).share = True
@@ -1070,7 +1090,7 @@ class ResUsers(models.Model):
         the current request is in debug mode.
         """
         self.ensure_one()
-        if not (self.env.su or self == self.env.user or self.env.user._has_group('base.group_user')):
+        if not (self.env.su or self == self.env.user or self.env.user._has_group('base.group_user_lite')):
             # this prevents RPC calls from non-internal users to retrieve
             # information about other users
             raise AccessError(_("You can ony call user.has_group() with your current user."))
@@ -1162,7 +1182,7 @@ class ResUsers(models.Model):
 
     def _is_internal(self):
         self.ensure_one()
-        return self.sudo().has_group('base.group_user')
+        return self.sudo().has_group('base.group_user_lite')
 
     def _is_portal(self):
         self.ensure_one()

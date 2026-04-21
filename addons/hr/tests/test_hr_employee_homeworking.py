@@ -30,6 +30,7 @@ class TestHrEmployeeHomeworking(common.TransactionCase):
 
         cls.employee_1 = cls.env['hr.employee'].create([{
             'name': 'Employee Test',
+            'work_contact_id': main_partner_id.id,
             'monday_location_id': cls.work_home.id,
             'tuesday_location_id': cls.work_office_1.id,
             'wednesday_location_id': cls.work_home.id,

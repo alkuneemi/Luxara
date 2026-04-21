@@ -183,6 +183,7 @@ class TestUi(TestPosHrHttpCommon):
     def test_minimal_employee_refund(self):
         minimal_emp = self.env['hr.employee'].create({
             'name': 'Minimal Employee',
+            'work_email': 'minimal@employee.com',
             "company_id": self.env.company.id,
         })
         self.main_pos_config.update({
