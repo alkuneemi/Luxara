@@ -92,6 +92,10 @@ class PosSession(models.Model):
             vals['employee_id'] = extras['employee_id']
         return vals
 
+    def get_session_employee_ids(self):
+        self.ensure_one()
+        return self.env['pos.order'].search([('session_id', '=', self.id)]).employee_id.ids
+
     def get_cash_in_out_list(self):
         cash_in_out_list = super().get_cash_in_out_list()
         if self.config_id.module_pos_hr:
