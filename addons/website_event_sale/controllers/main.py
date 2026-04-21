@@ -74,7 +74,12 @@ class WebsiteEventSaleController(WebsiteEventController):
         # we have at least one registration linked to a ticket -> sale mode activate
         if any(info['event_ticket_id'] for info in registrations):
             if order_sudo.amount_total:
-                if order_sudo._is_anonymous_cart():
+                signup_required = (
+                    request.env.user._is_public()
+                    and request.website.account_on_checkout == 'mandatory'
+                )
+                # Skip pre-creating a partner when signup will create one itself.
+                if order_sudo._is_anonymous_cart() and not signup_required:
                     booked_by_partner, feedback_dict = CustomerPortal()._create_or_update_address(
                         request.env['res.partner'].sudo(),
                         order_sudo=order_sudo,
