@@ -7,9 +7,24 @@
                     <div>Simplified invoice</div>
                     <div class="simplified-invoice-number" t-out="extra_data['invoice_name']" />
                 </div>
+
+                <t t-set="street" t-value="company.get('street')"/>
+                <t t-set="zip" t-value="company.get('zip')"/>
+                <t t-set="city" t-value="company.get('city')"/>
+                <t t-set="state_name" t-value="company.get('state_name')"/>
+                <div t-if="street or city or state_name or zip" class="company_address d-flex flex-column align-items-center my-2">
+                    <span t-if="street" t-esc="street"/>
+                    <span t-if="city or state_name or zip">
+                        <span t-if="city" t-esc="city"/>
+                        <span t-if="city and state_name"> · </span>
+                        <span t-if="state_name" t-esc="state_name"/>
+                        <span t-if="(city or state_name) and zip"> · </span>
+                        <span t-if="zip" t-esc="zip"/>
+                    </span>
+                </div>
             </div>
             <div name="partner_info" position="attributes">
-                <attribute name="t-if">not config.get('simplified_partner_id')</attribute>
+                <attribute name="t-if" separator="and" add="(not config.get('is_spanish') or not config.get('simplified_partner_id'))"/>
             </div>
         </template>
     </data>
