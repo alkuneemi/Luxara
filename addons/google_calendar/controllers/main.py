@@ -2,7 +2,7 @@
 
 from odoo import http
 from odoo.http import request
-from odoo.addons.google_calendar.utils.google_calendar import GoogleCalendarService
+from odoo.addons.google_calendar.utils.google_calendar_service import GoogleCalendarService
 from odoo.addons.calendar.controllers.main import CalendarController
 
 
