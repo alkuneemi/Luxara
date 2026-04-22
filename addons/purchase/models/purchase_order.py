@@ -517,13 +517,6 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.disable_tax_mode_selection = order.state != 'draft'
 
-    @api.onchange('document_tax_mode')
-    def _onchange_document_tax_mode(self):
-        for order in self:
-            for line in order.order_line:
-                if line.tax_ids.ids != line.product_id.supplier_taxes_id.ids:
-                    line.tax_ids = line.product_id.supplier_taxes_id
-
     # ------------------------------------------------------------
     # MAIL.THREAD
     # ------------------------------------------------------------
