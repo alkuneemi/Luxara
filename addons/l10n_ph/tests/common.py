@@ -25,15 +25,12 @@ class TestPhCommon(AccountTestInvoicingCommon):
             'vat': '123-456-789-123',
         })
         cls.partner_a.write({
-            'name': 'Test Partner',
-            'first_name': 'John',
-            'middle_name': 'Doe',
-            'last_name': 'Smith',
+            'name': 'John Doe Smith',
             'street': '9 Super Street',
             'city': 'Super City',
             'zip': '8888',
             'country_id': cls.env.ref('base.ph').id,
-            'vat': '789-456-123-789',
+            'vat': '789-456-123',
         })
         cls.partner_b.write({
             'name': 'Test Partner Company',
