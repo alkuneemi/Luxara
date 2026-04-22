@@ -2,6 +2,7 @@ import {
     changeOption,
     clickOnSave,
     insertSnippet,
+    openPowerbox,
     registerWebsitePreviewTour,
 } from "@website/js/tours/tour_utils";
 
@@ -23,20 +24,7 @@ registerWebsitePreviewTour(
             trigger: ".o_select_media_dialog .modal-footer .btn-primary",
             run: "click",
         },
-        {
-            content: "Show the powerbox",
-            trigger: ":iframe .s_picture p",
-            async run(actions) {
-                await actions.editor(`/`);
-                const wrapwrap = this.anchor.closest("#wrapwrap");
-                wrapwrap.dispatchEvent(
-                    new InputEvent("input", {
-                        inputType: "insertText",
-                        data: "/",
-                    })
-                );
-            },
-        },
+        openPowerbox(":iframe .s_picture p"),
         {
             content: "Click on the media item from powerbox",
             trigger: "div.o-we-command-name:contains('Media')",
