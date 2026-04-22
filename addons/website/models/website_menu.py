@@ -178,7 +178,7 @@ class WebsiteMenu(models.Model):
             raise UserError(_("You cannot delete this website menu as this serves as the default parent menu for new websites (e.g., /shop, /event, ...)."))
 
     def _compute_visible(self):
-        for menu in self:
+        for menu in self.sorted('parent_path'):
             visible = True
             if menu.page_id and not menu.env.user._is_internal():
                 page_sudo = menu.page_id.sudo()
@@ -193,7 +193,8 @@ class WebsiteMenu(models.Model):
                     or (not controller_page_sudo.view_id._handle_visibility(do_raise=False)
                         and controller_page_sudo.view_id._get_cached_visibility() != "password")):
                     visible = False
-
+            if menu.parent_id and not menu.parent_id.is_visible:
+                visible = False
             menu.is_visible = visible
 
     def _clean_url(self):
