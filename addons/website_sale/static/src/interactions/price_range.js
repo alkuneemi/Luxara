@@ -26,26 +26,27 @@ export class PriceRange extends Interaction {
         const productGridWrapper = document.querySelector('.o_wsale_products_grid_table_wrapper');
         if (productGridWrapper) productGridWrapper.classList.add('opacity-50');
 
-        searchParams.set('is_ajax', 'true');
-
-        const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
-        const data = await response.json();
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = data.html;
-
-        const newProductsGrid = tempDiv.querySelector('.o_wsale_products_grid_table');
-        const currentProductsGrid = document.querySelector('.o_wsale_products_grid_table');
-        if (currentProductsGrid && newProductsGrid) {
-            currentProductsGrid.innerHTML = newProductsGrid.innerHTML;
-        }
-
-        const newPager = tempDiv.querySelector('.products_pager');
-        const currentPager = document.querySelector('.products_pager');
-        if (currentPager && newPager) {
-            currentPager.innerHTML = newPager.innerHTML;
-        }
-
         if (isOffcanvas) {
+            searchParams.set('is_ajax', 'true');
+            const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+            searchParams.delete('is_ajax');
+            const data = await response.json();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.html;
+
+            const newProductsGrid = tempDiv.querySelector('.o_wsale_products_grid_table');
+            const currentProductsGrid = document.querySelector('.o_wsale_products_grid_table');
+            if (currentProductsGrid && newProductsGrid) {
+                currentProductsGrid.innerHTML = newProductsGrid.innerHTML;
+            }else{
+                redirect(`${url.pathname}?${searchParams.toString()}`);
+            }
+
+            const newPager = tempDiv.querySelector('.products_pager');
+            const currentPager = document.querySelector('.products_pager');
+            if (currentPager && newPager) {
+                currentPager.innerHTML = newPager.innerHTML;
+            }
             const offcanvas = document.querySelector('.o_website_offcanvas');
             const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas');
             if (offcanvas && newOffcanvas) {
@@ -58,19 +59,11 @@ export class PriceRange extends Interaction {
             if (applyBtn) {
                 applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
             }
+            window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);
+            if (productGridWrapper) productGridWrapper.classList.remove('opacity-50');
         }else {
-            const filters = document.querySelector('.o_wsale_products_grid_before_rail');
-            const newFilters = tempDiv.querySelector('.o_wsale_products_grid_before_rail');
-            if(filters && newFilters){
-                const shopPageEl = document.querySelector('.o_wsale_products_page');
-                this.services['public.interactions'].stopInteractions(shopPageEl);
-                filters.innerHTML = newFilters.innerHTML;
-                this.services['public.interactions'].startInteractions(shopPageEl);
-            }
+            redirect(`${url.pathname}?${searchParams.toString()}`);
         }
-        searchParams.delete('is_ajax');
-        window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);
-        if (productGridWrapper) productGridWrapper.classList.remove('opacity-50');
     }
 }
 

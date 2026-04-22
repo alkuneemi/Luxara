@@ -56,42 +56,31 @@ export class ShopPage extends Interaction {
         const searchParams = this._getSearchParams(form);
         const url = new URL(form.action);
         const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
-        const range = isOffcanvas ? document.querySelector('#o_wsale_offcanvas input[type="range"]') : document.querySelector('#o_wsale_price_range_option input[type="range"]');
-        if (range) {
-            if (range.valueLow !== undefined) {
-                searchParams.set("min_price", range.valueLow);
-            }
-            if (range.valueHigh !== undefined) {
-                searchParams.set("max_price", range.valueHigh);
-            }
-        }
 
         const productGridWrapper = document.querySelector('.o_wsale_products_grid_table_wrapper');
         if (productGridWrapper) productGridWrapper.classList.add('opacity-50');
 
-        searchParams.set('is_ajax', 'true');
-
-        const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
-        const data = await response.json();
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = data.html;
-
-        const newProductsGrid = tempDiv.querySelector('.o_wsale_products_grid_table');
-        const currentProductsGrid = document.querySelector('.o_wsale_products_grid_table');
-        if (currentProductsGrid && newProductsGrid) {
-            currentProductsGrid.innerHTML = newProductsGrid.innerHTML;
-        }else{
-            searchParams.delete('is_ajax');
-            redirect(`${url.pathname}?${searchParams.toString()}`);
-        }
-
-        const newPager = tempDiv.querySelector('.products_pager');
-        const currentPager = document.querySelector('.products_pager');
-        if (currentPager && newPager) {
-            currentPager.innerHTML = newPager.innerHTML;
-        }
-
         if (isOffcanvas) {
+            searchParams.set('is_ajax', 'true');
+            const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+            searchParams.delete('is_ajax');
+            const data = await response.json();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.html;
+
+            const newProductsGrid = tempDiv.querySelector('.o_wsale_products_grid_table');
+            const currentProductsGrid = document.querySelector('.o_wsale_products_grid_table');
+            if (currentProductsGrid && newProductsGrid) {
+                currentProductsGrid.innerHTML = newProductsGrid.innerHTML;
+            }else{
+                redirect(`${url.pathname}?${searchParams.toString()}`);
+            }
+
+            const newPager = tempDiv.querySelector('.products_pager');
+            const currentPager = document.querySelector('.products_pager');
+            if (currentPager && newPager) {
+                currentPager.innerHTML = newPager.innerHTML;
+            }
             const offcanvas = document.querySelector('.o_website_offcanvas');
             const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas');
             if (offcanvas && newOffcanvas) {
@@ -103,18 +92,11 @@ export class ShopPage extends Interaction {
             if (applyBtn) {
                 applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
             }
+            window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);
+            if (productGridWrapper) productGridWrapper.classList.remove('opacity-50');
         }else {
-            const filters = document.querySelector('.o_wsale_products_grid_before_rail');
-            const newFilters = tempDiv.querySelector('.o_wsale_products_grid_before_rail');
-            if(filters && newFilters){
-                this.services['public.interactions'].stopInteractions(this.el);
-                filters.innerHTML = newFilters.innerHTML;
-                this.services['public.interactions'].startInteractions(this.el);
-            }
+            redirect(`${url.pathname}?${searchParams.toString()}`);
         }
-        searchParams.delete('is_ajax');
-        window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);
-        if (productGridWrapper) productGridWrapper.classList.remove('opacity-50');
     }
 
     _getSearchParams(form) {
@@ -149,18 +131,15 @@ export class ShopPage extends Interaction {
     }
 
     async _fetchInitialCount(applyBtn) {
-        const form = document.querySelector('#o_wsale_offcanvas form.js_attributes');
-        if (!form) return;
-
-        const searchParams = this._getSearchParams(form);
-        const url = new URL(form.action);
-        searchParams.set('is_ajax', 'true');
-
-        const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
+        let response;
+        if (window.location.search){
+            response = await fetch(`${window.location.href}&is_ajax=true`);
+        }else{
+            response = await fetch(`${window.location.href}?is_ajax=true`);
+        }
         const data = await response.json();
 
         applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
-
     }
 
     /**
