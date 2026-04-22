@@ -1,3 +1,4 @@
+// import { delay } from "@web/core/utils/concurrency";
 import {
     clickOnSnippet,
     insertSnippet,
@@ -8,7 +9,7 @@ import {
 function removeSelectedBlock() {
     return {
         content: "Remove selected block",
-        trigger: ".o-overlay-container .o_overlay_options .oe_snippet_remove",
+        trigger: ".overlay .oe_snippet_remove",
         run: "click",
     };
 }
@@ -66,9 +67,21 @@ registerWebsitePreviewTour(
             trigger: ":iframe #wrap .s_cover .o_we_shape",
         },
         {
+            content: "Check s_cover settings are loaded, wait for panel to be visible",
+            trigger: ".o_customize_tab",
+        },
+        {
             content: "Click on the column",
             trigger: ":iframe #wrap .s_cover .row > :first-child",
             run: "click",
+            // run: async (actions) => {
+            //     // `shouldShowToolbar()` hides/shows the overlay buttons after
+            //     // 500ms `setTimeout`. We add the same delay here to avoid a
+            //     // race condition where the click fires before the overlay
+            //     // buttons are visible.
+            //     await delay(500);
+            //     actions.click();
+            // },
         },
         removeSelectedBlock(),
         {
