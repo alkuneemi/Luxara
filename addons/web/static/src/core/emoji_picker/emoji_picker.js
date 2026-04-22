@@ -59,6 +59,7 @@ export class EmojiPicker extends Component {
         this.navbarRef = useRef("navbar");
         this.ui = useService("ui");
         this.isMobileOS = isMobileOS();
+        this.searchInputRef = useAutofocus();
         this.state = useState({
             activeEmojiIndex: 0,
             categoryId: null,
@@ -68,7 +69,6 @@ export class EmojiPicker extends Component {
         });
         this.frequentEmojiService = useService("frequent_emoji");
         const loadEmoji = useLoadEmoji();
-        useAutofocus();
         onWillStart(async () => {
             await loadEmoji();
             this.recentCategory = {
@@ -92,7 +92,6 @@ export class EmojiPicker extends Component {
             if (this.props.storeScroll) {
                 this.gridRef.el.scrollTop = this.props.storeScroll.get();
             }
-            this.state.hoveredEmoji = this.activeEmoji;
         });
         onPatched(() => {
             if (!emojiLoader.loaded) {
@@ -127,7 +126,6 @@ export class EmojiPicker extends Component {
                     activeEl.scrollIntoView({ block: "center", behavior: "instant" });
                     this.keyboardNavigated = false;
                 }
-                this.state.hoveredEmoji = this.activeEmoji;
             },
             () => [this.state.activeEmojiIndex, this.gridRef.el]
         );
@@ -221,19 +219,33 @@ export class EmojiPicker extends Component {
     }
 
     get recentEmojis() {
+        if (this.searchTerm && this._searchRecentCache?.term === this.searchTerm) {
+            return this._searchRecentCache.emojis;
+        }
+
         const recent = Object.entries(this.frequentEmojiService.all)
             .sort(([, usage_1], [, usage_2]) => usage_2 - usage_1)
             .map(([codepoints]) => emojiLoader.map.get(codepoints));
-        if (this.searchTerm && recent.length > 0) {
-            return fuzzyLookup(this.searchTerm, recent, (emoji) =>
-                [emoji.name].concat(emoji.keywords, emoji.emoticons, emoji.shortcodes)
-            );
+
+        if (!this.searchTerm) {
+            this._searchRecentCache = undefined;
+            return recent.slice(0, 42);
         }
-        return recent.slice(0, 42);
+
+        const emojis = fuzzyLookup(this.searchTerm, recent, (emoji) =>
+            [emoji.name].concat(emoji.keywords, emoji.emoticons, emoji.shortcodes)
+        );
+        this._searchRecentCache = { term: this.searchTerm, emojis };
+        return emojis;
     }
 
     get placeholder() {
-        return this.state.hoveredEmoji?.shortcodes.join(" ") ?? _t("Search emoji");
+        return this.state.hoveredEmoji?.shortcodes.join(" ") ?? _t("Find the perfect emoji");
+    }
+
+    clearSearch() {
+        this.searchTerm = "";
+        this.searchInputRef.el?.focus();
     }
 
     /**
@@ -249,7 +261,7 @@ export class EmojiPicker extends Component {
      * @param {Emoji} emoji
      */
     onMouseleaveEmoji(ev, emoji) {
-        this.state.hoveredEmoji = this.activeEmoji;
+        this.state.hoveredEmoji = undefined;
     }
 
     /**
@@ -350,6 +362,7 @@ export class EmojiPicker extends Component {
             }
         }
         this.state.activeEmojiIndex = newIdx ?? this.state.activeEmojiIndex;
+        this.state.hoveredEmoji = this.activeEmoji;
     }
 
     get activeEmoji() {
