@@ -461,7 +461,6 @@ export class CalendarModel extends Model {
             this.loadRecords(data),
             this.meta.canScheduleEvents ? this.fetchEventsToSchedule({ data }) : null,
         ]);
-        console.log("dara records:", data.records);
         const dynamicSections = await this.loadDynamicFilters(data, dynamicFiltersInfo);
 
         // Apply newly computed filter sections
@@ -604,21 +603,13 @@ export class CalendarModel extends Model {
         // Compute the domain
         const domain = [];
         for (const field in authorizedValues) {
-            if (field === 'partner_ids') {
-                domain.push('|');
-                domain.push([field, "in", authorizedValues[field]]);
-                domain.push(['partner_id', "in", authorizedValues[field]]);
-            }
-            else {
-                domain.push([field, "in", authorizedValues[field]]);
-            }
+            domain.push([field, "in", authorizedValues[field]]);
         }
         for (const field in avoidValues) {
             if (avoidValues[field].length > 0) {
                 domain.push([field, "not in", avoidValues[field]]);
             }
         }
-        console.log(domain);
         return domain;
     }
     /**
@@ -722,7 +713,6 @@ export class CalendarModel extends Model {
      */
     async loadRecords(data) {
         const rawRecords = await this.fetchRecords(data);
-        console.log(rawRecords);
         const records = {};
         for (const rawRecord of rawRecords) {
             records[rawRecord.id] = this.normalizeRecord(rawRecord);
@@ -881,8 +871,8 @@ export class CalendarModel extends Model {
      * @protected
      */
     async loadFilterSection(fieldName, filterInfo, previousSection) {
-        const { filterFieldName, writeFieldName, writeResModel } = filterInfo;
-        const fields = [writeFieldName, filterFieldName].filter(Boolean);
+        const { filterFieldName, writeFieldName, writeResModel, colorFieldName } = filterInfo;
+        const fields = [writeFieldName, filterFieldName, colorFieldName].filter(Boolean);
         const rawFilters = await this.fetchFilters(writeResModel, fields);
         const previousFilters = previousSection ? previousSection.filters : [];
 

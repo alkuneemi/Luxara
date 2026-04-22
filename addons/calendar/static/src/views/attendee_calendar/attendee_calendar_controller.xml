@@ -7,7 +7,7 @@
             </t>
         </xpath>
         <!-- Remove the ms-auto from the today button so that the synchronization buttons can be right-aligned -->
-        <xpath expr="//button[contains(@class, 'o_calendar_button_today')]" position="attributes">
+        <xpath expr="//button[hasclass('o_calendar_button_today')]" position="attributes">
             <attribute name="class" remove="ms-auto" separator=" "/>
         </xpath>
         <!-- Add header div to be filled with synchronization buttons in synchronization modules. -->

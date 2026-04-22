@@ -1,7 +1,9 @@
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { user } from "@web/core/user";
+import { useService } from "@web/core/utils/hooks";
 import { CalendarModel } from "@web/views/calendar/calendar_model";
+import { Domain } from "@web/core/domain";
 import { askRecurrenceUpdatePolicy } from "@calendar/views/ask_recurrence_update_policy_hook";
 import {
     deleteConfirmationMessage,
@@ -13,6 +15,7 @@ export class AttendeeCalendarModel extends CalendarModel {
 
     setup(params, services) {
         super.setup(...arguments);
+        this.action = useService("action");
         this.dialog = services.dialog;
         this.rpc = rpc;
     }
@@ -78,16 +81,66 @@ export class AttendeeCalendarModel extends CalendarModel {
      * @override
      */
     async loadFilterSection(fieldName, filterInfo, previousSection) {
+        // Load calendar ids to which will be used during domain computation
+        if (!this._loaded) {
+            const userData = await this.orm.read("res.users", [user.userId], ["calendar_ids"])
+            this.calendarIds = userData[0]?.calendar_ids
+        }
         const result = await super.loadFilterSection(fieldName, filterInfo, previousSection);
-        if (result?.filters) {
-            user.updateContext({
-                calendar_filters: {
-                    all: result?.filters?.find((f) => f.type == "all")?.active ?? false,
-                    user: result?.filters?.find((f) => f.type == "user")?.active ?? false,
-                },
-            });
+        if (result?.fieldName === "calendar_id") {
+            result?.filters?.map(f => {
+                if (f.isPrimary) {
+                    // reuse existing canRemove field on parent component
+                    f['canRemove'] = false
+                }
+            })
+        }
+        if (result?.fieldName === "partner_ids") {
+            if (result?.filters) {
+                user.updateContext({
+                    calendar_filters: {
+                        all: result?.filters?.find((f) => f?.type === "all")?.active ?? false,
+                        user: result?.filters?.find((f) => f?.type === "user")?.active ?? false,
+                    },
+                });
+            }
+            result.filters = result?.filters?.filter(f => f?.type !== "user");
         }
         return result;
+    }
+
+    /**
+     * @ override
+     */
+    computeFiltersDomain(data) {
+        const partner_filters = data.filterSections['partner_ids']?.filters || [];
+        const activePartnerIds = partner_filters.filter(f => f.active).map(f => f.value) ?? [];
+        const calendar_filters = data.filterSections['calendar_id']?.filters || [];
+        const activeCalendarIds = calendar_filters.filter(f => f.active).map(f => f.value) ?? [];
+        const primaryCalendarFilter = calendar_filters.find(f => f.isPrimary);
+        const includesPrimaryCalendar = primaryCalendarFilter?.active ?? false;
+        const filterDomains = [[["calendar_id", "in", activeCalendarIds]]];
+
+        // Extend the partner filters to also check for organizers, not just attendees.
+        if (activePartnerIds.length) {
+            filterDomains.push([
+                "|",
+                    ["partner_ids", "in", activePartnerIds],
+                    ["partner_id", "in", activePartnerIds],
+            ]);
+        }
+        // If the primary calendar is checked, include events the user
+        // is attending which are not in any of their calendars.
+        if (includesPrimaryCalendar) {
+            filterDomains.push([
+            "&",
+                "|",
+                    ["partner_ids", "in", [user.partnerId]],
+                    ["partner_id", "=", user.partnerId],
+                ["calendar_id", "not in", this.calendarIds],
+            ]);
+        }
+        return Domain.or(filterDomains).toList();
     }
 
     /**
@@ -131,7 +184,9 @@ export class AttendeeCalendarModel extends CalendarModel {
             let duplicatedRecordIdx = -1;
             for (const event of Object.values(data.records)) {
                 const eventData = event.rawRecord;
-                const attendees = [...new Set([...eventData.partner_ids, ...eventData.partner_id])]
+                const attendees = eventData.partner_id
+                    ? [...new Set([...eventData.partner_ids, eventData.partner_id[0]])]
+                    : eventData.partner_ids;
                 let duplicatedRecords = 0;
                 for (const attendee of attendees) {
                     if (!activeAttendeeIds.has(attendee)) {
@@ -143,9 +198,11 @@ export class AttendeeCalendarModel extends CalendarModel {
                         (a) => a.id === attendee && a.event_id === event.id
                     );
                     record.attendeeId = attendee;
-                    // Colors are linked to the partner_id but in this case we want it linked
-                    // to attendeeId
-                    record.colorIndex = attendee;
+
+                    if (attendee !== user.partnerId) {
+                        // Colors are linked to the user's calendars, but in this case we want it linked to attendeeId
+                        record.colorIndex = attendee;
+                    }
                     if (attendeeInfo) {
                         record.attendeeStatus = attendeeInfo.status;
                         record.isAlone = attendeeInfo.is_alone;
@@ -157,6 +214,10 @@ export class AttendeeCalendarModel extends CalendarModel {
                     record._recordId = recordId;
                     newRecords[recordId] = record;
                     duplicatedRecords++;
+                }
+                // Events added with calendar filters need to be included in the data as well.
+                if (duplicatedRecords === 0) {
+                    newRecords[event.id] = event;
                 }
             }
             data.records = newRecords;
@@ -218,6 +279,38 @@ export class AttendeeCalendarModel extends CalendarModel {
         if (rawRecord.effective_privacy === "private") {
             normalizedRecord.titleIcon = "fa fa-lock";
         }
+        if (rawRecord['calendar_color']) {
+            normalizedRecord.colorIndex = rawRecord['calendar_color'];
+        }
         return normalizedRecord;
+    }
+
+    /**
+     * @override
+     */
+    makeFilterRecord(filterInfo, previousFilter, rawRecord) {
+        let filterRecord = super.makeFilterRecord(...arguments);
+        // update the filter color
+        const { colorFieldName } = filterInfo;
+        const colorValue = rawRecord[colorFieldName]
+        if (colorValue) {
+            filterRecord.colorIndex = colorValue;
+        } else if (rawRecord.partner_id) {
+            filterRecord.colorIndex = rawRecord.partner_id[0];
+        }
+        // Add is_primary to calendar filters
+        if (rawRecord['is_primary']) {
+            filterRecord['isPrimary'] = rawRecord['is_primary'];
+        }
+        return filterRecord;
+    }
+
+    /**
+     * @override - fetch the is_primary field for calendar filters
+     */
+    fetchFilters(resModel, fieldNames) {
+        return super.fetchFilters(resModel, resModel === 'calendar.calendar.filter' ?
+            [...fieldNames, 'is_primary'] : fieldNames);
+
     }
 }
