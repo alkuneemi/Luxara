@@ -3,7 +3,6 @@ import { registry } from "@web/core/registry";
 import { DEFAULT_PALETTE } from "@html_editor/utils/color";
 import { getShapeURL } from "@html_builder/plugins/image/image_helpers";
 import {
-    activateCropper,
     createDataURL,
     cropperDataFields,
     loadImage,
@@ -199,7 +198,6 @@ export class ImageShapeOptionPlugin extends Plugin {
 
         const svgAspectRatio =
             parseInt(svg.getAttribute("width")) / parseInt(svg.getAttribute("height"));
-        const imgAspectRatio = svg.dataset.imgAspectRatio;
 
         if (isNewShape && !("aspectRatio" in newDataset)) {
             const data = getImageTransformationData({ ...img.dataset, ...newDataset });
@@ -212,27 +210,10 @@ export class ImageShapeOptionPlugin extends Plugin {
             }
         }
 
-        /**
-         * @param {HTMLCanvasElement} canvas
-         * @param {Object} data dataset containing the cropperDataFields
-         */
-        const postProcessCroppedCanvas = async (canvas) => {
-            const img = await loadImage(canvas.toDataURL());
-            document.createElement("div").appendChild(img);
-            const cropper = await activateCropper(img, 1, { y: 0 });
-            const croppedCanvas = cropper.getCroppedCanvas();
-            cropper.destroy();
-            return croppedCanvas;
-        };
-
         return {
             getHeight: svg.dataset.imgPerspective && ((canvas) => canvas.width / svgAspectRatio),
             perspective: svg.dataset.imgPerspective || null,
             newDataset,
-            // If imgAspectRatio is defined, the image is cropped a second time
-            // after the first crop to ensure that the ratio of the shape and the
-            // image are the same.
-            postProcessCroppedCanvas: imgAspectRatio && postProcessCroppedCanvas,
 
             svg,
             svgAspectRatio,
