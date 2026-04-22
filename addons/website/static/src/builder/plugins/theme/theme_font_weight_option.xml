@@ -4,7 +4,7 @@
 <t t-name="website.FontWeightPicker">
     <BuilderSelect action="'customizeWebsiteFontWeight'" actionParam="{ mainParam: this.props.variable }" disabled="this.props.disabled">
         <BuilderSelectItem actionValue="null">
-            Default
+            Auto
         </BuilderSelectItem>
         <t t-foreach="this.props.weights" t-as="weight" t-key="weight.value">
             <BuilderSelectItem actionValue="`${weight.value}`">
@@ -18,7 +18,9 @@
 </t>
 
 <t t-name="website.ThemeFontWeightOption">
-    <BuilderRow label.translate="Font Weight">
+    <BuilderRow
+        label.translate="Font Weight"
+        tooltip.translate="Auto means it will the parent value">
         <FontWeightPicker variable="this.props.regularVariable" weights="this.state.availableWeights"/>
         <t t-set-slot="collapse">
             <BuilderRow
