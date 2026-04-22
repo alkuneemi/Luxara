@@ -117,7 +117,8 @@
                                    placeholder="All Pricelist"
                                    widget="many2many_tags"
                                    invisible="program_type in ('gift_card', 'ewallet')"
-                                   groups="product.group_product_pricelist"/>
+                                   groups="product.group_product_pricelist"
+                            />
                             <field
                                 name="date_from"
                                 string="Availability Dates"
@@ -127,17 +128,57 @@
                             <field name="date_to" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="currency_symbol" invisible="1"/>
-                            </group>
-                            <group>
-                                <field name="portal_point_name" invisible="program_type in ('loyalty', 'gift_card', 'ewallet')" string="Points Unit" groups="base.group_no_one"/>
-                                <field name="portal_point_name" invisible="program_type in ('gift_card', 'ewallet') or program_type != 'loyalty'" string="Points Unit"/>
-                                <field name="portal_visible" invisible="1"/>
-                                <field name="portal_visible" groups="base.group_no_one" string="Show Points Unit" invisible="program_type in ('gift_card', 'ewallet')"/>
-                                <field name="trigger" invisible="1"/>
-                                <field name="trigger" string="Program trigger" groups="base.group_no_one" widget="selection" readonly="1" force_save="1"/>
-                                <field name="applies_on" invisible="1"/>
-                                <field name="applies_on" string="Use points on" groups="base.group_no_one" widget="radio" force_save="1" readonly="program_type != 'loyalty'"/>
-                            </group>
+                        </group>
+                        <group>
+                            <field
+                                name="portal_point_name"
+                                invisible="program_type in ('loyalty', 'gift_card', 'ewallet')"
+                                string="Points Unit"
+                                groups="base.group_no_one"
+                            />
+                            <field
+                                name="portal_point_name"
+                                invisible="
+                                    program_type in ('gift_card', 'ewallet')
+                                    or program_type != 'loyalty'
+                                "
+                                string="Points Unit"
+                            />
+                            <field
+                                name="portal_visible"
+                                invisible="1"
+                            />
+                            <field
+                                name="portal_visible"
+                                groups="base.group_no_one"
+                                string="Show Points Unit"
+                                invisible="program_type in ('gift_card', 'ewallet')"
+                            />
+                            <field
+                                name="trigger"
+                                invisible="1"
+                            />
+                            <field
+                                name="trigger"
+                                string="Program trigger"
+                                groups="base.group_no_one"
+                                widget="selection"
+                                readonly="1"
+                                force_save="1"
+                            />
+                            <field
+                                name="applies_on"
+                                invisible="1"
+                            />
+                            <field
+                                name="applies_on"
+                                string="Use points on"
+                                groups="base.group_no_one"
+                                widget="radio"
+                                force_save="1"
+                                readonly="program_type != 'loyalty'"
+                            />
+                        </group>
                     </group>
                     <notebook>
                         <page string="Rules &amp; Rewards" name="rules_rewards" invisible="program_type in ('gift_card', 'ewallet')">
