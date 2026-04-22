@@ -345,7 +345,7 @@ export class CalendarModel extends Model {
                 await this.orm.write(info.writeResModel, filterIds, data, { context });
             }
         }
-        await this.debouncedLoad();
+        await this.debouncedLoad({ loadReason: "filters_update" });
     }
     async updateRecord(record, options = {}) {
         const rawRecord = this.buildRawRecord(record, options);

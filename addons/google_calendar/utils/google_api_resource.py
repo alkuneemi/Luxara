@@ -1,8 +1,8 @@
 import json
 from collections import abc
-from typing import Iterator, Mapping
 
 from odoo.tools.misc import frozendict
+from odoo import _
 
 
 class GoogleApiResource(abc.Set):
@@ -16,19 +16,19 @@ class GoogleApiResource(abc.Set):
     """
 
     def __init__(self, iterable=()):
-        _items = {}
+        items = {}
         for item in iterable:
             if isinstance(item, self.__class__):
-                _items[item.id] = item._items[item.id]
-            elif isinstance(item, Mapping):
-                _items[item.get('id')] = item
+                items[item.id] = item._items[item.id]
+            elif isinstance(item, abc.Mapping):
+                items[item.get('id')] = item
             else:
-                raise ValueError(
-                    "Only %s or iterable of dict are supported" % self.__class__.__name__
+                raise TypeError(
+                    _("Only %s or iterable of dict are supported", self.__class__.__name__)
                 )
-        self._items = frozendict(_items)
+        self._items = frozendict(items)
 
-    def __iter__(self) -> Iterator['GoogleApiResource']:
+    def __iter__(self) -> abc.Iterator['GoogleApiResource']:
         return iter(self.__class__([vals]) for vals in self._items.values())
 
     def __add__(self, other):

@@ -45,7 +45,7 @@ class CalendarEvent(models.Model):
 
     @api.model
     def _get_google_synced_fields(self):
-        return {'name', 'description', 'allday', 'start', 'date_end', 'stop',
+        return {'name', 'description', 'allday', 'start', 'date_end', 'stop', 'calendar_id',
                 'attendee_ids', 'alarm_ids', 'location', 'privacy', 'active', 'show_as', 'videocall_location'}
 
     @api.model
@@ -138,21 +138,25 @@ class CalendarEvent(models.Model):
         ])
 
     @api.model
-    def _odoo_values(self, google_event, default_reminders=()):
+    def _odoo_values(self, google_event, calendar, default_reminders=()):
         if google_event.is_cancelled():
             return {'active': False}
 
         # default_reminders is never () it is set to google's default reminder (30 min before)
         # we need to check 'useDefault' for the event to determine if we have to use google's
         # default reminder or not
-        reminder_command = google_event.reminders.get('overrides')
+        # google_event.reminders can be None in non-primary calendars such as country specific holidays
+        reminders = google_event.reminders or {}
+        reminder_command = reminders.get('overrides')
         if not reminder_command:
-            reminder_command = google_event.reminders.get('useDefault') and default_reminders or ()
+            reminder_command = reminders.get('useDefault') and default_reminders or ()
         alarm_commands = self._odoo_reminders_commands(reminder_command)
         attendee_commands, partner_commands = self._odoo_attendee_commands(google_event)
         related_event = self.search([('google_id', '=', google_event.id)], limit=1)
         name = google_event.summary or related_event and related_event.name or _("(No title)")
         values = {
+            'calendar_id': calendar.id,
+            'last_google_calendar_sync_id': 'primary' if calendar.is_primary else calendar.google_id,
             'name': name,
             'description': google_event.description and tools.html_sanitize(google_event.description),
             'location': google_event.location,
@@ -287,7 +291,7 @@ class CalendarEvent(models.Model):
         google_service = GoogleCalendarService(self.env['google.service'])
         archive_future_events = recurrence_update_setting == 'future_events' and self == self.recurrence_id.base_event_id
         if recurrence_update_setting == 'all_events' or archive_future_events:
-            self.recurrence_id.with_context(is_recurrence=True)._google_delete(google_service, self.recurrence_id.google_id)
+            self.recurrence_id.with_context(is_recurrence=True)._google_delete(google_service, self.calendar_id, self.recurrence_id.google_id)
             # Increase performance handling 'future_events' edge case as it was an 'all_events' update.
             if archive_future_events:
                 recurrence_update_setting = 'all_events'

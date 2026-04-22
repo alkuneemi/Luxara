@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="calendar_calendar_view_form_dialog_inherit" model="ir.ui.view">
+        <field name="name">calendar.calendar.view.form.dialog.inherit</field>
+        <field name="model">calendar.calendar</field>
+        <field name="inherit_id" ref="calendar.calendar_calendar_view_form_dialog"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/group" position="before">
+                <div class="alert alert-info" role="alert" invisible="not linked_email or not user_google_email or user_google_email == linked_email">
+                    This calendar is linked with <strong><field name="linked_email"/></strong><br/>
+                    It will not be synchronized with <strong><field name="user_google_email"/></strong>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

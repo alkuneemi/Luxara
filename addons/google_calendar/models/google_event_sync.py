@@ -10,7 +10,7 @@ from odoo.addons.google_calendar.models.google_sync import after_commit, google_
 from odoo.addons.google_calendar.utils.google_event import GoogleEvent
 from odoo.addons.google_calendar.utils.google_calendar_service import GoogleCalendarService
 
-from odoo import _, api, models
+from odoo import _, api, fields, models
 from odoo.fields import Domain
 from odoo.tools import email_normalize
 
@@ -21,6 +21,9 @@ _logger = logging.getLogger(__name__)
 class GoogleEventSync(models.AbstractModel):
     _name = 'google.event.sync'
     _inherit = ['google.sync']
+    _description = 'Google Event Sync'
+
+    last_google_calendar_sync_id = fields.Char(index='btree_not_null', copy=False)
 
     def write(self, vals):
         google_service = GoogleCalendarService(self.env['google.service'])
@@ -31,15 +34,17 @@ class GoogleEventSync(models.AbstractModel):
         if 'calendar_id' in vals:
             for record in self:
                 # Do not update the last synced calendar if already set - It should only be cleared once we move it in google
-                if record.calendar_id.google_id and not record.last_google_calendar_sync_id:
+                if not record.last_google_calendar_sync_id:
+                    if record.calendar_id.is_primary:
+                        record.last_google_calendar_sync_id = 'primary'
                     record.last_google_calendar_sync_id = record.calendar_id.google_id
 
         result = super().write(vals)
         if self.env.user._get_google_sync_status() != "sync_paused":
             for record in self:
-                if record.need_sync and record.google_id:
+                if record.need_sync and record.google_id and not record.calendar_id.is_readonly:
                     record.with_user(record._get_event_user())._google_patch(google_service, record.calendar_id, record.google_id, record._google_values(), timeout=3)
-                    if 'calendar_id' in vals:
+                    if 'calendar_id' in vals and record.last_google_calendar_sync_id:
                         record.with_user(record._get_event_user())._google_move(google_service, record, record.last_google_calendar_sync_id, record.calendar_id)
 
         return result
@@ -166,7 +171,7 @@ class GoogleEventSync(models.AbstractModel):
             # Migration from 13.4 does not fill write_date. Therefore, we force the update from Google.
             if not odoo_record_write_date or updated >= odoo_record_write_date.replace(tzinfo=datetime.UTC):
                 vals = dict(self._odoo_values(gevent, calendar, default_reminders), need_sync=False)
-                odoo_record.with_context(dont_notify=True)._write_from_google(gevent, vals)
+                odoo_record.with_context(dont_notify=True)._write_from_google(gevent, vals, calendar)
                 synced_records |= odoo_record
 
         return synced_records
@@ -203,7 +208,7 @@ class GoogleEventSync(models.AbstractModel):
                 name = event.name
                 # prevent to sync other events
                 self.calendar_event_ids.need_sync = False
-                error_log = "Error while syncing recurrence [{id} - {name} - {rrule}]: ".format(id=self.id, name=self.name, rrule=self.rrule)
+                error_log = f"Error while syncing recurrence [{self.id} - {self.name} - {self.rrule}]: "
 
             # We don't have right access on the event or the request paramaters were bad.
             # https://developers.google.com/calendar/v3/errors#403_forbidden_for_non-organizer
@@ -212,9 +217,9 @@ class GoogleEventSync(models.AbstractModel):
             else:
                 reason = _("Google gave the following explanation: %s", response['error'].get('message'))
 
-            error_log += "The event (%(id)s - %(name)s at %(start)s) could not be synced. It will not be synced while " \
+            error_log += ("The event (%(id)s - %(name)s at %(start)s) could not be synced. It will not be synced while "
                          "it is not updated. Reason: %(reason)s" % {'id': event_ids, 'start': start, 'name': name,
-                                                                    'reason': reason}
+                                                                    'reason': reason})
             _logger.warning(error_log)
 
             body = _("The following event could not be synced with Google Calendar.") + Markup("<br/>") + \
@@ -259,8 +264,15 @@ class GoogleEventSync(models.AbstractModel):
             if not token:
                 return
             try:
-                google_service.move(event.google_id, source_calendar_id, destination_calendar, self._is_event_over(), token=token, timeout=timeout)
+                status, _, _ = google_service.move(event.google_id, source_calendar_id, destination_calendar, self._is_event_over(), token=token, timeout=timeout)
                 event.last_google_calendar_sync_id = destination_calendar.google_id
+                if status == 404:
+                    _logger.info(
+                        "Google Calendar: Could not move event %s to calendar %s. "
+                        "Target calendar does not exist on google. The event will be deleted from google.",
+                        event.id, destination_calendar.name)
+                    self._google_delete(google_service, source_calendar_id, event.google_id,
+                                        timeout=timeout)
             except HTTPError as e:
                 if e.response.status_code in (400, 403):
                     self._google_error_handling(e)
@@ -313,7 +325,7 @@ class GoogleEventSync(models.AbstractModel):
         domain &= (Domain('google_id', '=', False) & is_active_clause) | Domain('need_sync', '=', True)
         return self.search_count(domain, limit=1) > 0
 
-    def _write_from_google(self, gevent, vals):
+    def _write_from_google(self, gevent, vals, calendar):
         self.write(vals)
 
     @api.model

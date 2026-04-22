@@ -56,19 +56,19 @@ class TestSyncGoogle(HttpCase):
         self._gsync_patch_values = defaultdict(list)
 
         # as these are normally post-commit hooks, we don't change any state here
-        def _mock_delete(model, service, google_id, **kwargs):
+        def _mock_delete(model, service, calendar, google_id, **kwargs):
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_deleted_ids.append(google_id)
 
-        def _mock_insert(model, service, values, **kwargs):
+        def _mock_insert(model, service, calendar, values, **kwargs):
             if not values:
                 return
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_insert_values.append((values, kwargs))
 
-        def _mock_patch(model, service, google_id, values, **kwargs):
+        def _mock_patch(model, service, calendar, google_id, values, **kwargs):
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_patch_values[google_id].append((values, kwargs))
