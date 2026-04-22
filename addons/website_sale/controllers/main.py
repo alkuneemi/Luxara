@@ -583,7 +583,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             )
         values.update(self._get_additional_shop_values(values, **post))
 
-        if post.get("is_ajax") == "true":
+        if request.httprequest.headers.get("X-Requested-With") == "XMLHttpRequest":
             html_content = request.env["ir.ui.view"]._render_template(
                 "website_sale.products", values
             )

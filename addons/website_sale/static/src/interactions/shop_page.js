@@ -3,6 +3,7 @@ import { registry } from '@web/core/registry';
 import { hasTouch, isBrowserFirefox } from '@web/core/browser/feature_detection';
 import { redirect } from '@web/core/utils/urls';
 import { setElementContent } from "@web/core/utils/html";
+import { updateShopContent } from "./shop_ajax";
 import { _t } from "@web/core/l10n/translation";
 
 export class ShopPage extends Interaction {
@@ -61,39 +62,11 @@ export class ShopPage extends Interaction {
         if (productGridWrapper) productGridWrapper.classList.add('opacity-50');
 
         if (isOffcanvas) {
-            searchParams.set('is_ajax', 'true');
-            const response = await fetch(`${url.pathname}?${searchParams.toString()}`);
-            searchParams.delete('is_ajax');
-            const data = await response.json();
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data.html;
-
-            const newProductsGrid = tempDiv.querySelector('.o_wsale_products_grid_table');
-            const currentProductsGrid = document.querySelector('.o_wsale_products_grid_table');
-            if (currentProductsGrid && newProductsGrid) {
-                currentProductsGrid.innerHTML = newProductsGrid.innerHTML;
-            }else{
-                redirect(`${url.pathname}?${searchParams.toString()}`);
-            }
-
-            const newPager = tempDiv.querySelector('.products_pager');
-            const currentPager = document.querySelector('.products_pager');
-            if (currentPager && newPager) {
-                currentPager.innerHTML = newPager.innerHTML;
-            }
-            const offcanvas = document.querySelector('.o_website_offcanvas');
-            const newOffcanvas = tempDiv.querySelector('.o_website_offcanvas');
-            if (offcanvas && newOffcanvas) {
-                this.services['public.interactions'].stopInteractions(offcanvas);
-                offcanvas.innerHTML = newOffcanvas.innerHTML;
-                this.services['public.interactions'].startInteractions(offcanvas);
-            }
-            const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
-            if (applyBtn) {
-                applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
-            }
-            window.history.pushState({}, '', `${url.pathname}?${searchParams.toString()}`);
-            if (productGridWrapper) productGridWrapper.classList.remove('opacity-50');
+            await updateShopContent({
+                url,
+                searchParams,
+                services: this.services,
+            });
         }else {
             redirect(`${url.pathname}?${searchParams.toString()}`);
         }
@@ -131,12 +104,11 @@ export class ShopPage extends Interaction {
     }
 
     async _fetchInitialCount(applyBtn) {
-        let response;
-        if (window.location.search){
-            response = await fetch(`${window.location.href}&is_ajax=true`);
-        }else{
-            response = await fetch(`${window.location.href}?is_ajax=true`);
-        }
+        const response = await fetch(`${window.location.href}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
         const data = await response.json();
 
         applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
