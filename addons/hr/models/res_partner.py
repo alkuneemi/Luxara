@@ -42,6 +42,9 @@ class ResPartner(models.Model):
 
     def _get_all_addr(self):
         self.ensure_one()
+        if not self.has_field_access(self._fields['employee_ids'], 'read') or not self.env['hr.employee'].has_access('read'):
+            return super()._get_all_addr()
+
         employee_id = self.env['hr.employee'].search(
             [('id', 'in', self.employee_ids.ids)],
             limit=1,
