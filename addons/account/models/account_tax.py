@@ -1410,7 +1410,6 @@ class AccountTax(models.Model):
             product=product,
             product_uom=product_uom,
             special_mode='total_excluded',
-            document_tax_mode=document_tax_mode,
         )
         delta = sum(x['tax_amount'] for x in taxes_computation['taxes_data'] if x['tax']._is_price_included(document_tax_mode))
         return price_unit + delta

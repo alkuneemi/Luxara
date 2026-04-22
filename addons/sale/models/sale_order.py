@@ -1345,13 +1345,6 @@ class SaleOrder(models.Model):
                     "discount": line.discount,
                 })
 
-    @api.onchange('document_tax_mode')
-    def _onchange_document_tax_mode(self):
-        for move in self:
-            for line in move.order_line:
-                if line.tax_ids.ids != line.product_id.taxes_id.ids:
-                    line.tax_ids = line.product_id.taxes_id
-
     # === CRUD METHODS ===#
 
     @api.model_create_multi
@@ -1754,7 +1747,7 @@ class SaleOrder(models.Model):
     def _recompute_prices(self):
         lines_to_recompute = self._get_update_prices_lines()
         lines_to_recompute.invalidate_recordset(["pricelist_item_id"])
-        lines_to_recompute.with_context(force_price_recomputation=True)._compute_price_unit()
+        lines_to_recompute._compute_price_unit()
         # Special case: we want to overwrite the existing discount on _recompute_prices call
         # i.e. to make sure the discount is correctly reset
         # if pricelist rule is different than when the price was first computed.

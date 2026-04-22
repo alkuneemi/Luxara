@@ -414,6 +414,7 @@ class AccountMoveLine(models.Model):
         compute='_compute_price_unit',
         store=True,
         precompute=True,
+        readonly=False,
     )
     price_subtotal = fields.Monetary(
         string='Subtotal',
@@ -1123,7 +1124,6 @@ class AccountMoveLine(models.Model):
     def _compute_price_unit(self):
         for line in self:
             if line.display_type in ('line_section', 'line_subsection', 'line_note') or line.is_imported:
-                line.price_unit_json = False
                 continue
 
             if line.move_id.is_sale_document(include_receipts=True):
@@ -1133,23 +1133,16 @@ class AccountMoveLine(models.Model):
             else:
                 document_type = 'other'
 
-            new_values = {
-                'product': line.product_id,
-                'uom': line.product_uom_id,
-                'price': line.price_unit,
-                'taxes': line.tax_ids,
+            product = line.product_id or self.env['product.product']
+            line.price_unit = product._get_line_price_unit(line, document_type)
+            line.price_unit_json = {
+                'price_unit': line.price_unit,
+                'uom_id': line.product_uom_id.id,
+                'product_id': line.product_id.id,
                 'document_tax_mode': line.document_tax_mode,
-                'document_type': document_type,
-
-                'currency': line.move_id.currency_id,
-                'conversion_date': line.move_id.date,
-                'fiscal_position': line.move_id.fiscal_position_id,
             }
 
-            line.price_unit_json = line.product_id._adapt_price_unit_json_to_new_values(new_values, line.price_unit_json)
-            line.price_unit = line.price_unit_json['price_unit']
-
-    @api.depends('product_id', 'product_uom_id')
+    @api.depends('product_id', 'product_uom_id', 'document_tax_mode')
     def _compute_tax_ids(self):
         for line in self:
             if line.display_type in ('line_section', 'line_subsection', 'line_note', 'payment_term') or line.is_imported:

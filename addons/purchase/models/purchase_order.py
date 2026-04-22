@@ -502,9 +502,9 @@ class PurchaseOrder(models.Model):
     @api.onchange('fiscal_position_id', 'company_id')
     def _compute_tax_id(self):
         """
-        Trigger the recompute of the taxes if the fiscal position is changed on the PO.
+        Trigger the recompute of taxes if the fiscal position is changed on the PO.
         """
-        self.order_line._compute_tax_id()
+        self.order_line.with_context(recompute_unit_price_on_tax_change=True)._compute_tax_id()
 
     @api.depends('company_id')
     def _compute_document_tax_mode(self):
@@ -516,13 +516,6 @@ class PurchaseOrder(models.Model):
     def _compute_disable_tax_mode_selection(self):
         for order in self:
             order.disable_tax_mode_selection = order.state != 'draft'
-
-    @api.onchange('document_tax_mode')
-    def _onchange_document_tax_mode(self):
-        for order in self:
-            for line in order.order_line:
-                if line.tax_ids.ids != line.product_id.supplier_taxes_id.ids:
-                    line.tax_ids = line.product_id.supplier_taxes_id
 
     # ------------------------------------------------------------
     # MAIL.THREAD

@@ -50,7 +50,7 @@ class TestOnchangeProductId(TransactionCase):
                                                     type_tax_use='purchase'))
 
         product_tmpl_id = self.product_tmpl_model.create(dict(name="Voiture",
-                                                              list_price=121,
+                                                              standard_price=121,
                                                               supplier_taxes_id=[(6, 0, [tax_include_id.id])]))
         supplierinfo_vals = {
             'product_id': product_tmpl_id.product_variant_id.id,
@@ -82,7 +82,7 @@ class TestOnchangeProductId(TransactionCase):
 
         supplierinfo.write({'min_qty': 24})
         po_line.write({'product_qty': 20})
-        self.assertEqual(0, po_line.price_unit, "Unit price should be reset to 0 since the supplier supplies minimum of 24 quantities")
+        self.assertEqual(121, po_line.price_unit, "Unit price should be reset to 121 since the supplier supplies minimum of 24 quantities")
 
         po_line.write({'product_qty': 3, 'uom_id': self.ref("uom.product_uom_dozen")})
         self.assertEqual(1200, po_line.price_unit, "Unit price should be 1200 for one Dozen")

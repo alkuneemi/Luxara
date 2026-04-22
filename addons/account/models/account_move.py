@@ -2839,9 +2839,6 @@ class AccountMove(models.Model):
                 line.document_tax_mode = move.document_tax_mode
                 if not line.product_id:
                     continue
-                product_taxes = line.product_id.taxes_id if not move.fiscal_position_id else move.fiscal_position_id.map_tax(line.product_id.taxes_id) 
-                if line.tax_ids.ids != product_taxes.ids:
-                    line.tax_ids = line.product_id.taxes_id
 
     # -------------------------------------------------------------------------
     # CONSTRAINT METHODS
@@ -6133,12 +6130,14 @@ class AccountMove(models.Model):
                 lines_to_recompute |= line
                 continue
             new_taxes = line._get_computed_taxes()
-            if line.tax_ids.filtered('price_include') != new_taxes.filtered('price_include'):
-                line.price_unit = line.product_id._get_tax_included_unit_price_from_price(
+            if [tax for tax in line.tax_ids if tax._is_price_included(line.document_tax_mode)] != [tax for tax in new_taxes if tax._is_price_included(line.document_tax_mode)]:
+                line.price_unit_json['fiscal_position'] = line.move_id.fiscal_position_id.id
+                line.price_unit = line.price_unit_json['price_unit'] = line.product_id._get_tax_included_unit_price_from_price(
                     line.price_unit,
                     line.tax_ids,
                     fiscal_position=line.move_id.fiscal_position_id,
                     product_taxes_after_fp=new_taxes,
+                    document_tax_mode=line.document_tax_mode,
                 )
         lines_to_recompute._compute_price_unit()
         self.invoice_line_ids._compute_tax_ids()

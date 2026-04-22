@@ -585,7 +585,7 @@
                             options="{'hide_composition': True, 'hide_prices': True, 'subsections': True}"
                         >
                             <form>
-                                <field name="price_unit_last_computed_vals" invisible="1"/>
+                                <field name="price_unit_json" invisible="1"/>
                                 <!--
                                     We need the sequence field to be here for new lines to be added at the correct position.
                                     TODO: at some point we want to fix this in the framework so that an invisible field is not required.
@@ -709,7 +709,7 @@
                                     </list>
                                 </field>
                                 <field name="product_no_variant_attribute_value_ids" column_invisible="1"/>
-                                <field name="price_unit_last_computed_vals" column_invisible="1"/>
+                                <field name="price_unit_json" column_invisible="1"/>
                                 <field name="linked_line_id" column_invisible="1"/>
                                 <field name="combo_item_id" column_invisible="1"/>
                                 <field name="selected_combo_items" column_invisible="1"/>
