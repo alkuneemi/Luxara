@@ -173,6 +173,7 @@
         'views/snippets/s_features_bento.xml',
         'views/snippets/s_projects_grid.xml',
         'views/snippets/s_banner_contained.xml',
+        'views/snippets/s_duo_images.xml',
         'views/snippets/s_dynamic_snippet.xml',
         'views/snippets/s_dynamic_snippet_carousel.xml',
         'views/snippets/s_banner_product.xml',

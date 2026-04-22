@@ -1278,5 +1278,16 @@
     <field name="type">url</field>
     <field name="url">/website/static/src/img/snippets_demo/s_splash_intro.webp</field>
 </record>
-
+<record id="website.s_duo_images_default_image" model="ir.attachment">
+    <field name="public" eval="True"/>
+    <field name="name">s_duo_images_default_image.webp</field>
+    <field name="type">url</field>
+    <field name="url">/website/static/src/img/snippets_demo/s_duo_images_default_image.webp</field>
+</record>
+<record id="website.s_duo_images_default_image_1" model="ir.attachment">
+    <field name="public" eval="True"/>
+    <field name="name">s_duo_images_default_image_1.webp</field>
+    <field name="type">url</field>
+    <field name="url">/website/static/src/img/snippets_demo/s_duo_images_default_image_1.webp</field>
+</record>
 </odoo>
