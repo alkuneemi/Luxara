@@ -2,6 +2,7 @@
 
 import json
 import logging
+from urllib.parse import urlparse
 
 import psycopg2
 
@@ -12,6 +13,7 @@ from odoo.http.router import db_list
 from odoo.http.session import authenticate, check, touch, update_session_token
 from odoo.tools import LazyTranslate, _, config, hmac
 from odoo.tools.cloc import Cloc
+from odoo.tools.urls import urljoin
 
 from .utils import (
     _get_login_redirect_url,
@@ -104,6 +106,16 @@ class Home(Controller):
     def _login_redirect(self, uid, redirect=None):
         return _get_login_redirect_url(uid, redirect)
 
+    @staticmethod
+    def _og_title_from_path(path):
+        if not path:
+            return "Odoo"
+        segments = [s for s in urlparse(path).path.split('/') if s and not s.isdigit()]
+        if not segments:
+            return "Odoo"
+        last = segments[-1].split('.')[-1].split('_')[-1]
+        return last.title() or "Odoo"
+
     @route('/web/login', type='http', auth='none', readonly=False, list_as_website_content=_lt("Login"))
     def web_login(self, redirect=None, **kw):
         ensure_db()
@@ -150,6 +162,18 @@ class Home(Controller):
 
         if not odoo.tools.config['list_db']:
             values['disable_database_manager'] = True
+
+        safe_redirect = redirect if (redirect and redirect.startswith('/') and not redirect.startswith('//')) else None
+        values['disable_opengraph'] = bool(safe_redirect and safe_redirect.startswith('/odoo'))
+        if values['disable_opengraph']:
+            url_root = request.httprequest.url_root
+            try:
+                values['og_url'] = urljoin(url_root, safe_redirect)
+            except ValueError:
+                values['og_url'] = request.httprequest.url
+            values['og_title'] = self._og_title_from_path(safe_redirect)
+            values['og_image_url'] = urljoin(url_root, '/web/static/img/og_image.png')
+            values['og_domain'] = urlparse(url_root).netloc
 
         response = request.render('web.login', values)
         response.headers['Cache-Control'] = 'no-cache'
