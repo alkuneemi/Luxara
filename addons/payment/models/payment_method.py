@@ -17,10 +17,6 @@ class PaymentMethod(models.Model):
     code = fields.Char(
         string="Code", help="The technical code of this payment method in Odoo.", required=True
     )
-    provider_code = fields.Char(  # TODO: default value?
-        string="Provider Code",
-        help="The technical code of this payment method on the provider's side, if different from.",
-    )
     sequence = fields.Integer(string="Sequence", default=1)
     primary_payment_method_id = fields.Many2one(
         string="Primary Payment Method",
@@ -241,14 +237,8 @@ class PaymentMethod(models.Model):
 
     @api.ondelete(at_uninstall=False)
     def _unlink_if_not_default_payment_method(self):
-        payment_method_unknown = self.env.ref("payment.payment_method_unknown")
-        if payment_method_unknown in self:
+        if any(pm.code == "unknown" for pm in self):
             raise UserError(_("You cannot delete the default payment method."))
-
-    @api.ondelete(at_uninstall=False)
-    def _unlink_if_not_linked_to_providers(self):  # TODO can we now?
-        if any(record.provider_id for record in self):
-            raise UserError(_("You cannot delete a payment method linked to a provider."))
 
     # === BUSINESS METHODS === #
 
@@ -350,9 +340,13 @@ class PaymentMethod(models.Model):
                 reason=REPORT_REASONS_MAPPING["express_checkout_not_supported"],
             )
 
-        # Remove duplicates. TODO should we extract it in a separate method?
-        pms_sorted = payment_methods.sorted(key=lambda pm: (pm.provider_id.sequence, pm.sequence))
+        return payment_methods
+
+    def _remove_duplicates(self):
+        # Sort by provider sequence first, then by individual payment method sequence.
+        pms_sorted = self.sorted(key=lambda pm: (pm.provider_id.sequence, pm.sequence))
         seen = set()
+        # Filter to keep only the first payment method for each code.
         return pms_sorted.filtered(lambda pm: not (pm.code in seen or seen.add(pm.code)))
 
     def _get_from_code(self, code, mapping=None):

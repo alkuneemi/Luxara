@@ -27,6 +27,7 @@
             - landing_route: The route the user is redirected to after payment.
             - access_token: The access token used to authenticate the partner.
         -->
+        <t t-set="payment_methods_sudo" t-value="payment_methods_sudo._remove_duplicates()"/>
         <t t-set="mode" t-value="mode or 'payment'"/>
         <t t-set="allow_token_selection"
            t-value="True if allow_token_selection is None else allow_token_selection"
