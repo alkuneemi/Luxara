@@ -12,6 +12,8 @@ class StockMove(models.Model):
     def _get_cost_ratio(self, quantity):
         self.ensure_one()
         if self.bom_line_id.bom_id.type == "phantom":
+            if not (self.bom_line_id.bom_id.bom_line_ids.filtered(lambda line: line.cost_share > 0) or self.cost_share):
+                return super()._get_cost_ratio(quantity)
             uom_quantity = self.product_uom._compute_quantity(self.quantity, self.product_id.uom_id)
             if not self.product_uom.is_zero(uom_quantity):
                 unit_kit_purchase = 1

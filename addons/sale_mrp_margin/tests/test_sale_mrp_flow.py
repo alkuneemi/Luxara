@@ -184,3 +184,38 @@ class TestSaleMrpFlow(test_sale_mrp_flow.TestSaleMrpFlowCommon):
             {'debit': 0.0, 'credit': 1.0},
             {'debit': 1.0, 'credit': 0.0}
         ])
+
+    def test_dropshipped_kit_margin(self):
+        """Test cost price for dropshipped kits after receipt validation."""
+        try:
+            dropship_route = self.env.ref('stock_dropshipping.route_drop_shipping')
+        except ValueError:
+            self.skipTest('This test requires the following module: stock_dropshipping')
+
+        (self.kit_1 | self.component_a | self.component_b | self.component_c).write({
+            'seller_ids': [Command.create({'partner_id': self.partner_b.id, 'price': 30})],
+            'standard_price': 10,
+            'categ_id': self.env.ref('product.product_category_goods').id,
+            'route_ids': [Command.link(dropship_route.id)]
+        })
+        self.kit_1.categ_id.property_cost_method = 'fifo'
+        self.kit_1.button_bom_cost()
+
+        so = self.env['sale.order'].create({
+            'partner_id': self.partner_a.id,
+            'order_line': [Command.create({'product_id': self.kit_1.id, 'product_uom_qty': 1.0})]
+        })
+        so.action_confirm()
+
+        po = so.order_line.purchase_line_ids.order_id
+        po.button_confirm()
+        self.assertEqual(self.kit_1.standard_price, 60)
+        self.assertEqual(so.order_line.purchase_price, 60)
+        so.picking_ids.button_validate()
+
+        self.assertRecordValues(po.order_line, [
+            {'product_id': self.component_a.id, 'product_uom_qty': 2, 'price_unit': 30},
+            {'product_id': self.component_b.id, 'product_uom_qty': 1, 'price_unit': 30},
+            {'product_id': self.component_c.id, 'product_uom_qty': 3, 'price_unit': 30},
+        ])
+        self.assertEqual(so.order_line.purchase_price, 180)
