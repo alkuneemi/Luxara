@@ -1,13 +1,14 @@
 import { CommandResult } from "../../o_spreadsheet/cancelled_reason";
-import { helpers } from "@odoo/o-spreadsheet";
+import { helpers, CompiledFormula } from "@odoo/o-spreadsheet";
 import { OdooCorePlugin } from "@spreadsheet/plugins";
 
-const { getMaxObjectId, deepEquals, deepCopy } = helpers;
+const { getMaxObjectId, deepEquals, deepCopy, getCanonicalSymbolName } = helpers;
 
 /**
  * @typedef {Object} ListColumn
  * @property {string} name The technical field path of the column
  * @property {string} string The custom display name of the column
+ * @property {{formula: string, sheetId:string}} computedBy The formula to compute the column
  * @property {boolean} [hidden] Whether the column is hidden or not
  */
 
@@ -22,6 +23,12 @@ const { getMaxObjectId, deepEquals, deepCopy } = helpers;
  * @property {string} actionXmlId
  */
 
+/**
+ * @typedef {Object} ComputeState
+ * @property {CompiledFormula} formula
+ * @property {Range[]} dependencies
+ */
+
 export class ListCorePlugin extends OdooCorePlugin {
     static getters = /** @type {const} */ ([
         "getListDisplayName",
@@ -30,6 +37,8 @@ export class ListCorePlugin extends OdooCorePlugin {
         "getListName",
         "getNextListId",
         "isExistingList",
+        "getListCompiledColumnFormula",
+        "getListCompiledColumnDependencies",
     ]);
     constructor(config) {
         super(config);
@@ -37,6 +46,8 @@ export class ListCorePlugin extends OdooCorePlugin {
         this.nextId = 1;
         /** @type {Object.<string, ListDefinition>} */
         this.lists = {};
+        /** @type {Object.<string, Object.<string, ComputeState>>} */
+        this.compiledColumnFormulas = {};
     }
 
     /**
@@ -130,6 +141,7 @@ export class ListCorePlugin extends OdooCorePlugin {
             }
             case "UPDATE_ODOO_LIST": {
                 this.history.update("lists", cmd.listId, cmd.list);
+                this._compileCalculatedColumns(cmd.listId, cmd.list);
                 break;
             }
         }
@@ -192,13 +204,76 @@ export class ListCorePlugin extends OdooCorePlugin {
         return id in this.lists;
     }
 
+    getListCompiledColumnFormula(listId, columnName) {
+        return this.compiledColumnFormulas[listId]?.[columnName]?.formula;
+    }
+
+    getListCompiledColumnDependencies(listId, columnName) {
+        return this.compiledColumnFormulas[listId]?.[columnName]?.dependencies;
+    }
+
     // ---------------------------------------------------------------------
     // Private
     // ---------------------------------------------------------------------
 
     _addList(id, definition) {
         this.history.update("lists", id, definition);
+        this._compileCalculatedColumns(id, definition);
         this.history.update("nextId", parseInt(id, 10) + 1);
+    }
+
+    _compileCalculatedColumns(listId, definition) {
+        const computedColumns = definition.columns.filter((col) => col.computedBy);
+        for (const column of computedColumns) {
+            const compiledFormula = CompiledFormula.Compile(
+                column.computedBy.formula,
+                column.computedBy.sheetId,
+                this.getters
+            );
+            this.history.update(
+                "compiledColumnFormulas",
+                listId,
+                column.name,
+                "formula",
+                compiledFormula
+            );
+        }
+        for (const column of computedColumns) {
+            const dependencies = this._computeColumnFullDependencies(listId, definition, column);
+            this.history.update(
+                "compiledColumnFormulas",
+                listId,
+                column.name,
+                "dependencies",
+                dependencies
+            );
+        }
+    }
+
+    _computeColumnFullDependencies(listId, definition, column, exploredCols = new Set()) {
+        const rangeDependencies = [];
+        const formula = this.compiledColumnFormulas[listId]?.[column.name]?.formula;
+        exploredCols.add(column.name);
+        for (const usedSymbols of formula.symbols) {
+            const otherCol = definition.columns.find(
+                (columnCandidate) =>
+                    getCanonicalSymbolName(columnCandidate.name) === usedSymbols &&
+                    column.name !== columnCandidate.name
+            );
+
+            if (!otherCol || !otherCol.computedBy || exploredCols.has(otherCol.name)) {
+                continue;
+            }
+
+            rangeDependencies.push(
+                ...this._computeColumnFullDependencies(listId, definition, otherCol, exploredCols)
+            );
+        }
+        rangeDependencies.push(...formula.rangeDependencies.filter((range) => !range.invalidXc));
+        rangeDependencies.push(
+            ...formula.getNamedRangesInFormula(this.getters).map((namedRange) => namedRange.range)
+        );
+        return rangeDependencies;
     }
 
     /**
