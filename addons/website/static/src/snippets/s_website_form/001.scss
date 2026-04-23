@@ -14,6 +14,9 @@
     .s_website_form_field select {
         pointer-events: none;
     }
+    .s_website_form_m2m_pills_container {
+        pointer-events: none;
+    }
 }
 
 .s_website_form[data-vcss="001"] {
@@ -45,6 +48,12 @@
     .s_website_form_no_submit_label {
         .s_website_form_label {
             display: none;
+        }
+    }
+
+    .s_website_form_m2m_selection {
+        .s_website_form_m2m_pills_container {
+            min-height: calc(#{$input-height} - 2 * #{$input-border-width});
         }
     }
 
