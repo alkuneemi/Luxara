@@ -127,3 +127,148 @@ test("createSplittedOrder", async () => {
     expect(currentOrder.getOrderlines()[0].getQuantity()).toBe(2);
     expect(order.getOrderlines()[0].getQuantity()).toBe(1);
 });
+
+test("paySplittedOrder splits partial selection then calls pay", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const screen = await mountWithCleanup(SplitBillScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+    const firstLine = order.getOrderlines()[0];
+    screen.qtyTracker[firstLine.uuid] = 1;
+
+    let payCalled = false;
+    store.pay = () => {
+        payCalled = true;
+    };
+
+    await screen.paySplittedOrder();
+
+    expect(payCalled).toBe(true);
+    expect(store.getOpenOrders().length).toBe(2);
+});
+
+test("transferSplittedOrder splits partial selection then starts transfer", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const screen = await mountWithCleanup(SplitBillScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+    const firstLine = order.getOrderlines()[0];
+    screen.qtyTracker[firstLine.uuid] = 1;
+
+    let transferCalled = false;
+    store.startTransferOrder = () => {
+        transferCalled = true;
+    };
+
+    await screen.transferSplittedOrder({ stopPropagation: () => {} });
+
+    expect(screen.isTransferred).toBe(true);
+    expect(transferCalled).toBe(true);
+    expect(store.getOpenOrders().length).toBe(2);
+});
+
+test("paying full selection does not create another split order", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const screen = await mountWithCleanup(SplitBillScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+
+    for (const line of order.getOrderlines()) {
+        screen.qtyTracker[line.uuid] = line.getQuantity();
+    }
+
+    const openOrdersBefore = store.getOpenOrders().length;
+    let payCalled = false;
+    store.pay = () => {
+        payCalled = true;
+    };
+
+    await screen.paySplittedOrder();
+
+    expect(payCalled).toBe(true);
+    expect(store.getOpenOrders().length).toBe(openOrdersBefore);
+});
+
+test("transferred split keeps discount only on source", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const screen = await mountWithCleanup(SplitBillScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+
+    const originalOrder = {
+        globalDiscountPc: { value: 10, type: "percent" },
+    };
+    const newOrder = {};
+    const calls = [];
+    store.applyDiscount = async (value, type, targetOrder) => {
+        calls.push({ value, type, targetOrder });
+    };
+
+    screen.isTransferred = true;
+    await screen.handleDiscountLines(originalOrder, newOrder);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].value).toBe(10);
+    expect(calls[0].type).toBe("percent");
+    expect(calls[0].targetOrder).toBe(originalOrder);
+});
+
+test("createSplittedOrder keeps combo parent-child links", async () => {
+    const store = await setupPosEnv();
+    const order = store.addNewOrder();
+    const comboTemplate = store.models["product.template"].get(7);
+    const comboItem1 = store.models["product.combo.item"].get(1);
+    const comboItem2 = store.models["product.combo.item"].get(3);
+
+    const parentLine = await store.addLineToOrder(
+        {
+            product_tmpl_id: comboTemplate,
+            payload: [
+                [
+                    {
+                        combo_item_id: comboItem1,
+                        qty: 1,
+                    },
+                    {
+                        combo_item_id: comboItem2,
+                        qty: 1,
+                    },
+                ],
+                [],
+            ],
+            configure: true,
+        },
+        order
+    );
+    parentLine.setQuantity(2);
+
+    const screen = await mountWithCleanup(SplitBillScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+    screen.onClickLine(parentLine);
+
+    await screen.createSplittedOrder();
+
+    const newOrder = store.getOrder();
+    const newParent = newOrder.lines.find((line) => line.combo_line_ids.length > 0);
+    const originalParent = order.lines.find((line) => line.combo_line_ids.length > 0);
+
+    expect(newParent.combo_line_ids.length).toBe(2);
+    expect(newParent.combo_line_ids[0].combo_parent_id).toBe(newParent);
+    expect(newParent.combo_line_ids[1].combo_parent_id).toBe(newParent);
+    expect(originalParent.getQuantity()).toBe(1);
+});
