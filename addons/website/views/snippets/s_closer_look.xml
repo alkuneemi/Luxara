@@ -4,7 +4,21 @@
 <template id="s_closer_look" name="Closer Look">
     <section class="s_closer_look pt96">
         <div class="container">
-            <h1 class="display-3" style="text-align: center;">Take a closer look</h1>
+            <div class="s_avatars o_not_editable d-flex flex-row flex-wrap o_avatars_center" data-snippet="s_avatars" data-name="Avatars">
+                <div class="s_avatars_wrapper d-flex">
+                    <img src="/web/image/website.s_company_team_image_1" class="s_avatars_avatar o_editable_media o_avatar img border rounded-circle" style="border-color: var(--body-bg) !important; --box-border-left-width: 3px; --box-border-bottom-width: 3px; --box-border-right-width: 3px; --box-border-top-width: 3px;" alt=""/>
+                    <img src="/web/image/website.s_company_team_image_2" class="s_avatars_avatar o_editable_media o_avatar img border rounded-circle" style="border-color: var(--body-bg) !important; --box-border-left-width: 3px; --box-border-bottom-width: 3px; --box-border-right-width: 3px; --box-border-top-width: 3px;" alt=""/>
+                    <img src="/web/image/website.s_company_team_image_3" class="s_avatars_avatar o_editable_media o_avatar img border rounded-circle" style="border-color: var(--body-bg) !important; --box-border-left-width: 3px; --box-border-bottom-width: 3px; --box-border-right-width: 3px; --box-border-top-width: 3px;" alt=""/>
+                    <div class="s_avatars_more s_avatars_avatar d-flex d-none justify-content-center align-items-center text-bg-light border rounded-circle o-contenteditable-true" style="border-color: var(--body-bg) !important; --box-border-left-width: 3px; --box-border-bottom-width: 3px; --box-border-right-width: 3px; --box-border-top-width: 3px;">
+                        <p class="m-0">10+</p>
+                    </div>
+                </div>
+                <p class="s_avatars_label o_small-fs m-0 o-contenteditable-true">
+                    <strong>100K+</strong><br/>
+                    Active users
+                </p>
+            </div>
+            <h1 style="text-align: center;"><span class="display-2-fs">Take a closer look</span></h1>
             <p class="lead" style="text-align: center;">Write one or two paragraphs describing your product, services or a specific feature.<br/> To be successful your content needs to be useful to your readers.</p>
             <p style="text-align: center;">
                 <a t-att-href="cta_btn_href" class="btn btn-primary mb-2 o_translate_inline">Start Now</a>
