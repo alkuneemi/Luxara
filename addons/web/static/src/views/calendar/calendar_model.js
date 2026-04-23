@@ -729,24 +729,27 @@ export class CalendarModel extends Model {
         this.notify();
     }
     /**
+     * @private
+     */
+    _getScheduleData(date) {
+        const [start, end] = this.hasTimePrecision
+            ? [date, date.plus({ hours: 1 })]
+            : this.getAllDayDates(date);
+        const { date_start, date_stop } = this.meta.fieldMapping;
+        return {
+            [date_stop]: serializeDateTime(end),
+            [date_start]: serializeDateTime(start),
+        };
+    }
+    /**
      * @protected
      * @param {Number} eventId
      * @param {DateTime} rawRecord
      */
     async scheduleEvent(eventId, date) {
-        const [start, end] = this.hasTimePrecision
-            ? [date, date.plus({ hours: 1 })]
-            : this.getAllDayDates(date);
-        const { date_start, date_stop } = this.meta.fieldMapping;
-        await this.orm.write(
-            this.meta.resModel,
-            [eventId],
-            {
-                [date_stop]: serializeDateTime(end),
-                [date_start]: serializeDateTime(start),
-            },
-            { context: this.meta.context }
-        );
+        await this.orm.write(this.meta.resModel, [eventId], this._getScheduleData(date), {
+            context: this.meta.context,
+        });
         await this.load();
     }
     /**
