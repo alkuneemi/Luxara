@@ -74,9 +74,7 @@ class PaymentProvider(models.Model):
             # Show on-site payment providers only if in-store delivery methods exist and the order
             # contains physical products.
             reason = self.env._("no in-store delivery methods available")
-        elif not currency.is_zero(amount) and (
-            currency.compare_amounts(amount, order.remaining_balance) < 0
-        ):
+        elif currency.compare_amounts(amount, order.amount_remaining) < 0:
             reason = self.env._("in-store not allowed to pay less than the order remaining balance")
 
         if reason:

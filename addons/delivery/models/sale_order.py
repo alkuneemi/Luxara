@@ -55,21 +55,27 @@ class SaleOrder(models.Model):
         "transaction_ids.state",
     )
     def _compute_amount_on_delivery(self):
-        orders_paid_on_delivery = self.filtered(
-            lambda order: order.transaction_ids._filtered_pending_delivery()
+        """Compute the amount to collect on the next delivery.
+
+        For orders with a pending pay-on-delivery transaction, this is computed as the remaining
+        balance minus the value of products that are not delivered yet. If nothing is delivered,
+        the amount to collect is 0.
+        """
+        orders_pending_delivery_payment = self.filtered(
+            lambda order: order.transaction_ids._filtered_pending_delivery_payment()
         )
-        (self - orders_paid_on_delivery).amount_on_delivery = 0
+        (self - orders_pending_delivery_payment).amount_on_delivery = 0
 
         # Use `_prepare_qty_delivered` because `qty_delivered` is stored and cannot depend on the
         # context, whereas we need to compute the delivered amount for pickings about to be
         # validated. See also `stock_delivery`.
-        deliverable_lines = orders_paid_on_delivery._get_deliverable_lines()
+        deliverable_lines = orders_pending_delivery_payment._get_deliverable_lines()
         qty_delivered_by_line = deliverable_lines._prepare_qty_delivered()
 
         def get_qty_delivered(line_):
             return qty_delivered_by_line.get(line_) or line_.qty_delivered
 
-        for order in orders_paid_on_delivery:
+        for order in orders_pending_delivery_payment:
             if not any(map(get_qty_delivered, order.order_line & deliverable_lines)):
                 # If nothing was delivered yet, no payment should be collected.
                 order.amount_on_delivery = 0
@@ -80,7 +86,7 @@ class SaleOrder(models.Model):
                 for line in order.order_line & deliverable_lines
             )
 
-            order.amount_on_delivery = order.remaining_balance - undelivered_amount
+            order.amount_on_delivery = order.amount_remaining - undelivered_amount
 
     @api.onchange("order_line", "partner_id", "partner_shipping_id")
     def onchange_order_line(self):

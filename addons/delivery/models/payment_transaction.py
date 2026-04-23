@@ -20,9 +20,11 @@ class PaymentTransaction(models.Model):
         super()._post_process()
 
     def _filtered_paid_on_delivery(self):
+        """Filter transactions using a "Pay on Delivery" payment method."""
         return self.filtered_domain(self._get_paid_on_delivery_domain())
 
-    def _filtered_pending_delivery(self):
+    def _filtered_pending_delivery_payment(self):
+        """Filter transactions waiting for a payment to be confirmed on delivery."""
         return self.filtered_domain(
             self._get_paid_on_delivery_domain() & Domain("state", "=", "pending")
         )
@@ -49,22 +51,22 @@ class PaymentTransaction(models.Model):
 
         delivered_txs, followup_txs = self.browse(), self.browse()
         for order, pending_delivery_txs in (
-            self._filtered_pending_delivery().grouped("sale_order_ids").items()
+            self._filtered_pending_delivery_payment().grouped("sale_order_ids").items()
         ):
             order.ensure_one()
             last_tx = pending_delivery_txs._get_last()
 
             # Ensure the last transaction is not outdated.
             assert order.currency_id == last_tx.currency_id
-            if order.currency_id.compare_amounts(order.remaining_balance, last_tx.amount) > 0:
+            if order.currency_id.compare_amounts(order.amount_remaining, last_tx.amount) > 0:
                 raise UserError(
                     self.env._(
                         "The remaining balance of the order cannot exceed the amount authorized by"
                         " the customer. Please consider generating a new payment link."
-                        "\n\n- Remaining Balance (%(order)s): %(remaining_balance)s"
+                        "\n\n- Remaining Balance (%(order)s): %(amount_remaining)s"
                         "\n- Authorized Amount (%(tx)s): %(tx_amount)s",
                         order=order.display_name,
-                        remaining_balance=order.currency_id.format(order.remaining_balance),
+                        amount_remaining=order.currency_id.format(order.amount_remaining),
                         tx=last_tx.display_name,
                         tx_amount=order.currency_id.format(last_tx.amount),
                     )
@@ -99,12 +101,11 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         order = self.sale_order_ids.ensure_one()
         assert order.currency_id == self.currency_id
-        Tx = self.env["payment.transaction"]
 
-        cmp = self.currency_id.compare_amounts(order.amount_on_delivery, self.amount)
-        if not cmp:  # order.amount_on_delivery == self.amount
-            return self, Tx
-        if cmp > 0:  # order.amount_on_delivery > self.amount (shouldn't be possible)
+        compare = self.currency_id.compare_amounts(order.amount_on_delivery, self.amount)
+        if not compare:  # order.amount_on_delivery == self.amount
+            return self, self.env["payment.transaction"]
+        if compare > 0:  # order.amount_on_delivery > self.amount (shouldn't be possible)
             raise UserError(
                 self.env._(
                     "The collected amount cannot exceed the authorized amount."
@@ -112,7 +113,7 @@ class PaymentTransaction(models.Model):
                 )
             )
 
-        if not self.currency_id.compare_amounts(order.remaining_balance, order.amount_on_delivery):
+        if not self.currency_id.compare_amounts(order.amount_remaining, order.amount_on_delivery):
             # If both amounts are equal, no followup transaction is needed. We still create a new
             # transaction because `order.amount_on_delivery` is lower than `self.amount`.
             skip_followup = True
@@ -122,7 +123,7 @@ class PaymentTransaction(models.Model):
         # `skip_followup` is set, another one for the remaining payment.
         split_vals = self._prepare_delivery_transaction_split_vals(skip_followup=skip_followup)
 
-        txs = Tx.create(split_vals)
+        txs = self.create(split_vals)
         self._set_canceled_in_favor_of(txs)
 
         return txs[:1], txs[1:]

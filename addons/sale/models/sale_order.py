@@ -339,7 +339,7 @@ class SaleOrder(models.Model):
     amount_total = fields.Monetary(
         string="Total", store=True, compute="_compute_amounts", tracking=4
     )
-    remaining_balance = fields.Monetary(compute="_compute_remaining_balance")
+    amount_remaining = fields.Monetary(compute="_compute_amount_remaining")
     amount_to_invoice = fields.Monetary(
         string="Un-invoiced Balance", compute="_compute_amount_to_invoice"
     )
@@ -711,7 +711,7 @@ class SaleOrder(models.Model):
             order.amount_total = tax_totals["total_amount_currency"]
 
     @api.depends("amount_total", "amount_invoiced", "amount_paid")
-    def _compute_remaining_balance(self):
+    def _compute_amount_remaining(self):
         for order in self:
             downpayment_lines = order.order_line.filtered("is_downpayment")
             downpayment_txs = (
@@ -726,7 +726,7 @@ class SaleOrder(models.Model):
             # just the downpayments. Clip at zero.
             unreconciled_downpayment_amount = max(downpayment_amount - reconciled_amount, 0)
 
-            order.remaining_balance = max(
+            order.amount_remaining = max(
                 order.amount_total - order.amount_paid - unreconciled_downpayment_amount, 0
             )
 

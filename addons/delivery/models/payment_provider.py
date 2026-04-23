@@ -55,9 +55,7 @@ class PaymentProvider(models.Model):
             reason = self.env._("cash on delivery is only allowed if a sales order exists")
         elif not sale_order.carrier_id.allow_cash_on_delivery:
             reason = self.env._("cash on delivery not allowed by selected delivery method")
-        elif not currency.is_zero(amount) and (
-            currency.compare_amounts(amount, sale_order.remaining_balance) < 0
-        ):
+        elif currency.compare_amounts(amount, sale_order.amount_remaining) < 0:
             reason = self.env._(
                 "cash on delivery not allowed to pay less than the order remaining balance"
             )
