@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="l10n_es_ecommerce.simplified_invoice_limit" model="ir.config_parameter">
+            <field name="key">l10n_es_ecommerce.simplified_invoice_limit</field>
+            <field name="value">400</field>
+        </record>
+    </data>
+
+    <data noupdate="1">
+        <record id="l10n_es_ecommerce.simplified_journal" model="account.journal" forcecreate="1">
+            <field name="name">Simplified Journal</field>
+            <field name="code">SINV</field>
+            <field name="type">sale</field>
+            <field name="sequence">100</field>
+            <field name="alias_name">purchase_expense</field>
+        </record>
+    </data>
+</odoo>
