@@ -40,7 +40,7 @@ class HrEmployee(models.Model):
     _name = 'hr.employee'
     _description = "Employee"
     _order = 'name'
-    _inherit = ['mail.thread.main.attachment', 'mail.activity.mixin', 'resource.mixin', 'avatar.mixin']
+    _inherit = ['mail.thread.main.attachment', 'mail.thread.phone', 'mail.activity.mixin', 'resource.mixin', 'avatar.mixin']
     _mail_post_access = 'read'
     _mailing_enabled = True
     _primary_email = 'work_email'
@@ -136,6 +136,17 @@ class HrEmployee(models.Model):
     company_country_code = fields.Char(related='company_country_id.code', depends=['company_country_id'], readonly=True, groups="base.group_system,hr.group_hr_user", string='Company Country Code')
     work_phone = fields.Char('Work Phone', store=True, readonly=False, tracking=True, compute="_compute_work_contact_details", inverse='_inverse_work_contact_details')
     mobile_phone = fields.Char('Work Mobile')
+    work_phone_sanitized = fields.Char(compute='_compute_phone_companion_fields', store=False, export_string_translation=False)
+    work_phone_formatted = fields.Char(compute='_compute_phone_companion_fields', store=False, export_string_translation=False)
+    mobile_phone_sanitized = fields.Char(compute='_compute_phone_companion_fields', store=False, export_string_translation=False)
+    mobile_phone_formatted = fields.Char(compute='_compute_phone_companion_fields', store=False, export_string_translation=False)
+    # Restrict the `mail.thread.phone` mixin's non-stored helpers to HR users.
+    # On hr.employee, anything readable by a regular internal user must also
+    # be on hr.employee.public; tightening the access here keeps that
+    # invariant intact without special-casing these fields elsewhere.
+    phone_blacklisted = fields.Boolean(groups='hr.group_hr_user')
+    phone_sanitized_blacklisted = fields.Boolean(groups='hr.group_hr_user')
+    phone_mobile_search = fields.Char(groups='hr.group_hr_user')
     work_email = fields.Char('Work Email', compute="_compute_work_contact_details", store=True, inverse='_inverse_work_contact_details')
     work_contact_id = fields.Many2one('res.partner', 'Work Contact', copy=False, index='btree_not_null')
     # private info
@@ -502,13 +513,6 @@ class HrEmployee(models.Model):
     def _onchange_private_state_id(self):
         if self.private_state_id:
             self.private_country_id = self.private_state_id.country_id
-
-    @api.onchange('work_phone', 'mobile_phone', 'company_country_id', 'company_id')
-    def _onchange_phone_validation_employee(self):
-        if self.work_phone:
-            self.work_phone = self._phone_format(number=self.work_phone, force_format='INTERNATIONAL') or self.work_phone
-        if self.mobile_phone:
-            self.mobile_phone = self._phone_format(number=self.mobile_phone, force_format='INTERNATIONAL') or self.mobile_phone
 
     @api.model
     def _get_new_hire_field(self):
@@ -990,6 +994,17 @@ class HrEmployee(models.Model):
                     })
         if employees_without_work_contact:
             employees_without_work_contact.sudo()._create_work_contacts()
+
+    @api.depends(lambda self: self._phone_get_sanitize_triggers())
+    def _compute_phone_companion_fields(self):
+        for record in self:
+            for fname in ('work_phone', 'mobile_phone'):
+                sanitized = record._phone_format(fname=fname) or False
+                record[f'{fname}_sanitized'] = sanitized
+                record[f'{fname}_formatted'] = (
+                    record._phone_format(number=sanitized, force_format='INTERNATIONAL')
+                    or sanitized
+                ) if sanitized else False
 
     @api.model
     def _get_employee_working_now(self):
@@ -2087,6 +2102,9 @@ class HrEmployee(models.Model):
 
     def _phone_get_number_fields(self):
         return ['mobile_phone']
+
+    def _phone_get_country_field(self):
+        return 'company_country_id'
 
     def _mail_get_partner_fields(self, introspect_fields=False):
         return ['work_contact_id', 'user_partner_id']
