@@ -1,4 +1,12 @@
-import { animationFrame, describe, expect, queryFirst, queryOne, test } from "@odoo/hoot";
+import {
+    advanceTime,
+    animationFrame,
+    describe,
+    expect,
+    queryFirst,
+    queryOne,
+    test,
+} from "@odoo/hoot";
 import {
     defineWebsiteModels,
     setupWebsiteBuilder,
@@ -122,7 +130,8 @@ test("should have a button linking to theme tab", async () => {
     );
 
     await contains(":iframe p > a.test-target").click();
-    await contains("a.o-hb-button-style-btn-edit").click();
+    await contains("a.o-hb-theme-tab-link").click();
+    await advanceTime(200);
     await animationFrame();
     expect("button[data-name='theme']").toHaveClass("active");
 });

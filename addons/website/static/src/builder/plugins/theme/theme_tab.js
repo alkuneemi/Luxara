@@ -9,7 +9,8 @@ export class ThemeTab extends Component {
     static props = {
         // optionsContainers: { type: Array, optional: true },
         colorPresetToShow: { type: [Number, { value: null }], optional: true },
-        shadowSizeToShow: { type: [String, { value: null }], optional: true },
+        targetRowId: { type: [String, { value: null }], optional: true },
+        targetContainerId: { type: [String, { value: null }], optional: true },
     };
     static defaultProps = {
         // optionsContainers: [],
@@ -19,7 +20,8 @@ export class ThemeTab extends Component {
         useOptionsSubEnv(() => [this.env.editor.document.body]);
         useSubEnv({
             colorPresetToShow: this.props.colorPresetToShow,
-            shadowSizeToShow: this.props.shadowSizeToShow,
+            targetRowId: this.props.targetRowId,
+            targetContainerId: this.props.targetContainerId,
         });
         this.state = useState({
             fontsData: {},

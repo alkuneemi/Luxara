@@ -1,6 +1,6 @@
 import { useExternalListener, useRef } from "@web/owl2/utils";
 import { getSnippetName, useOptionsSubEnv } from "@html_builder/utils/utils";
-import { onWillStart, onWillUpdateProps } from "@odoo/owl";
+import { onMounted, onWillStart, onWillUpdateProps } from "@odoo/owl";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { useOperation } from "../core/operation_plugin";
@@ -8,6 +8,8 @@ import { BaseOptionComponent } from "../core/base_option_component";
 import { useApplyVisibility, useGetItemValue, useVisibilityObserver } from "../core/utils";
 import { uniqueId } from "@web/core/utils/functions";
 import { browser } from "@web/core/browser/browser";
+
+const HIGHLIGHT_DURATION = 2000;
 
 export class OptionsContainer extends BaseOptionComponent {
     static template = "html_builder.OptionsContainer";
@@ -26,6 +28,7 @@ export class OptionsContainer extends BaseOptionComponent {
         containerTopButtons: { type: Array },
         containerTitle: { type: Object, optional: true },
         headerMiddleButtons: { type: Array, optional: true },
+        highlight: { type: Boolean, optional: true },
     };
     static defaultProps = {
         toggleOverlayPreview: () => {},
@@ -59,6 +62,17 @@ export class OptionsContainer extends BaseOptionComponent {
         });
         onWillUpdateProps(async (nextProps) => {
             this.options = await this.filterAccessGroup(nextProps.options);
+        });
+        onMounted(() => {
+            const rootEl = this.rootRef.el;
+            if (this.props.highlight && rootEl) {
+                rootEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                rootEl.classList.add("o-options-container-highlight");
+                setTimeout(
+                    () => rootEl.classList.remove("o-options-container-highlight"),
+                    HIGHLIGHT_DURATION
+                );
+            }
         });
     }
 

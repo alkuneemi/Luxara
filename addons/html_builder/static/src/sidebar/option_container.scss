@@ -53,6 +53,38 @@
     }
 }
 
+$-option-container-grey-filter: rgba(0, 0, 0, 0.5);
+
+.o_theme_tab {
+    --o-option-container-highlight-duration: 2s;
+}
+
+.o_theme_tab:has(.o-options-container-highlight) {
+    .options-container:not(.o-options-container-highlight) {
+        position: relative;
+        &::before {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            animation: options-container-highlight-grey var(--o-option-container-highlight-duration) ease;
+        }
+    }
+}
+
+@keyframes options-container-highlight-grey {
+    25% {
+        background-color: $-option-container-grey-filter;
+    }
+    75% {
+        background-color: $-option-container-grey-filter;
+    }
+}
+
 .o_we_img_animate {
     padding-top: 10px;
     &:hover img {
