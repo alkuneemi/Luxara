@@ -95,23 +95,24 @@ class RecurrenceRule(models.Model):
         google_attendees = gevent.attendees or []
         emails = [a.get('email') for a in google_attendees]
         partners = self._get_sync_partner(emails)
+        partners_by_email = {p.email_normalized: p for p in partners}
         existing_attendees = self.calendar_event_ids.attendee_ids
-        for attendee in zip(emails, partners, google_attendees):
-            email = attendee[0]
+        for ga in google_attendees:
+            email = ga.get('email')
             if email in existing_attendees.mapped('email'):
                 # Update existing attendees
-                existing_attendees.filtered(lambda att: att.email == email).write({'state': attendee[2].get('responseStatus')})
+                existing_attendees.filtered(lambda att: att.email == email).write({'state': ga.get('responseStatus')})
             else:
                 # Create new attendees
-                if attendee[2].get('self'):
+                if ga.get('self'):
                     partner = self.env.user.partner_id
-                elif attendee[1]:
-                    partner = attendee[1]
+                elif partners_by_email.get(email_normalize(email)):
+                    partner = partners_by_email[email_normalize(email)]
                 else:
                     continue
-                self.calendar_event_ids.write({'attendee_ids': [(0, 0, {'state': attendee[2].get('responseStatus'), 'partner_id': partner.id})]})
-                if attendee[2].get('displayName') and not partner.name:
-                    partner.name = attendee[2].get('displayName')
+                self.calendar_event_ids.write({'attendee_ids': [(0, 0, {'state': ga.get('responseStatus'), 'partner_id': partner.id})]})
+                if ga.get('displayName') and not partner.name:
+                    partner.name = ga.get('displayName')
 
         organizers_partner_ids = [event.user_id.partner_id for event in self.calendar_event_ids if event.user_id]
         for odoo_attendee_email in set(existing_attendees.mapped('email')):
