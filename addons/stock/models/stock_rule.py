@@ -516,8 +516,7 @@ class StockRule(models.Model):
             valid_route_ids |= set(packaging_routes.ids)
         valid_route_ids |= set((product_id.route_ids | product_id.categ_id.total_route_ids).ids)
         if warehouse_ids:
-            filter_function = partial(self._filter_warehouse_routes, product_id, warehouse_ids)
-            valid_route_ids |= set(warehouse_ids.route_ids.filtered(filter_function).ids)
+            valid_route_ids.update(warehouse_ids.route_ids.ids)
         if valid_route_ids:
             domain &= Domain('route_id', 'in', list(valid_route_ids))
         res = self.env["stock.rule"]._read_group(
@@ -530,6 +529,9 @@ class StockRule(models.Model):
         for group in res:
             rule_dict[group[0].id, group[2].id][group[1].id] = group[3].sorted(lambda rule: (rule.route_sequence, rule.sequence))[0]
         return rule_dict
+
+    def _notify_responsible_no_bom(self, procurement):
+        pass
 
     def _filter_warehouse_routes(self, product, warehouses, route):
         return route
