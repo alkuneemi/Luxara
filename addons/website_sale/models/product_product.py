@@ -25,9 +25,9 @@ class ProductProduct(models.Model):
         compute="_compute_product_website_url",
     )
 
-    stock_notification_partner_ids = fields.Many2many(
-        "res.partner",
-        relation="stock_notification_product_partner_rel",
+    stock_notification_ids = fields.One2many(
+        "product.stock.notification",
+        "product_id",
         string="Back in stock Notifications",
     )
 
@@ -295,7 +295,7 @@ class ProductProduct(models.Model):
             extra_tracking_values['product_id'] = res_id
         return extra_tracking_values
 
-    def _is_sold_out(self):
+    def _is_sold_out(self, website=None):
         """Return whether the product is sold out (no available quantity).
 
         If a product inventory is not tracked, or if it's allowed to be sold regardless
@@ -307,12 +307,40 @@ class ProductProduct(models.Model):
         self.ensure_one()
         if not self.is_storable or self.allow_out_of_stock_order:
             return False
-        free_qty = self.env["website"].get_current_website()._get_product_available_qty(self.sudo())
+        website = website or self.env["website"].get_current_website()
+        free_qty = website._get_product_available_qty(self.sudo())
         return free_qty <= 0
 
-    def _has_stock_notification(self, partner):
+    def _has_stock_notification(self, partner, website=None):
         self.ensure_one()
-        return partner in self.stock_notification_partner_ids
+        website = website or self.env["website"].get_current_website()
+        return bool(
+            self
+            .env["product.stock.notification"]
+            .sudo()
+            .search_count([
+                ("product_id", "=", self.id),
+                ("partner_id", "=", partner.id),
+                ("website_id", "=", website.id),
+            ])
+        )
+
+    def _add_stock_notification(self, partner, website):
+        self.ensure_one()
+        self.env["product.stock.notification"].sudo().create({
+            "product_id": self.id,
+            "partner_id": partner.id,
+            "website_id": website.id,
+        })
+
+    def _get_qty_on_hand_for_website_company(self, website):
+        self.ensure_one()
+        company = website.company_id
+        return (
+            self.with_company(company)
+            .with_context(allowed_company_ids=[company.id])
+            .qty_available
+        )
 
     def _get_max_quantity(self, website, sale_order, **kwargs):
         """Return The max quantity of a product.
@@ -333,48 +361,56 @@ class ProductProduct(models.Model):
         return None
 
     def _send_availability_email(self):
-        products = self.search([("stock_notification_partner_ids", "!=", False)]).filtered(
-            lambda p: not p._is_sold_out()
-        )
-        self.env["ir.cron"]._commit_progress(remaining=len(products.stock_notification_partner_ids))
+        notifications = self.env["product.stock.notification"].sudo().search([])
+        self.env["ir.cron"]._commit_progress(remaining=len(notifications))
 
-        website = self.env["website"].get_current_website()
-        for product_id in products.ids:
-            product = self.env["product.product"].browse(product_id)
-            for partner_id in product.with_context(
-                # Only fetch the ids, all the other fields will be invalidated either way
-                prefetch_fields=False
-            ).stock_notification_partner_ids.ids:
-                partner = self.env["res.partner"].browse(partner_id)
-                self_ctxt = self.with_context(lang=partner.lang).with_user(website.salesperson_id)
-                product_ctxt = product.with_context(lang=partner.lang)
-                body_html = self_ctxt.env["mail.render.mixin"]._render_template(
-                    "website_sale.availability_email_body",
-                    "res.partner",
-                    partner.ids,
-                    engine="qweb_view",
-                    add_context={"product": product_ctxt},
-                    options={"post_process": True},
-                )[partner.id]
-                full_mail = product_ctxt.env["mail.render.mixin"]._render_encapsulate(
-                    "mail.mail_notification_light",
-                    body_html,
-                    add_context={"model_description": self_ctxt.env._("Product")},
-                    context_record=product_ctxt,
-                )
-                mail_values = {
-                    "subject": self_ctxt.env._(
-                        "%(product_name)s is back in stock", product_name=product_ctxt.name
-                    ),
-                    "email_from": (
-                        website.company_id.partner_id.email_formatted
-                        or website.salesperson_id.email_formatted
-                    ),
-                    "email_to": partner.email_formatted,
-                    "body_html": full_mail,
-                }
-                mail = self_ctxt.env["mail.mail"].sudo().create(mail_values)
-                mail.send(raise_exception=False)
-
-                product.stock_notification_partner_ids -= partner
+        for notification in notifications:
+            product = notification.product_id
+            website = notification.website_id
+            qty_on_hand = product._get_qty_on_hand_for_website_company(website)
+            if qty_on_hand <= 0:
                 self.env["ir.cron"]._commit_progress(1)
+                continue
+
+            partner = notification.partner_id
+            if not partner.email_formatted:
+                self.env["ir.cron"]._commit_progress(1)
+                continue
+            lang = partner.lang or self.env.lang
+            self_ctxt = self.with_context(lang=lang, website_id=website.id).with_user(
+                website.salesperson_id
+            )
+            product_ctxt = product.with_context(lang=lang, website_id=website.id)
+            body_html = self_ctxt.env["mail.render.mixin"]._render_template(
+                "website_sale.availability_email_body",
+                "res.partner",
+                partner.ids,
+                engine="qweb_view",
+                add_context={"product": product_ctxt, "website": website},
+                options={"post_process": True},
+            )[partner.id]
+            full_mail = product_ctxt.env["mail.render.mixin"]._render_encapsulate(
+                "mail.mail_notification_light",
+                body_html,
+                add_context={
+                    "company": website.company_id,
+                    "model_description": self_ctxt.env._("Product"),
+                },
+                context_record=product_ctxt,
+            )
+            mail_values = {
+                "subject": self_ctxt.env._(
+                    "%(product_name)s is back in stock", product_name=product_ctxt.name
+                ),
+                "email_from": (
+                    website.company_id.partner_id.email_formatted
+                    or self_ctxt.env.user.email_formatted
+                ),
+                "email_to": partner.email_formatted,
+                "body_html": full_mail,
+            }
+            mail = self_ctxt.env["mail.mail"].sudo().create(mail_values)
+            mail.send(raise_exception=False)
+
+            notification.unlink()
+            self.env["ir.cron"]._commit_progress(1)

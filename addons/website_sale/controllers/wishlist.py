@@ -71,10 +71,11 @@ class ProductWishlist(Controller):
             raise BadRequest(_("Invalid Email"))
 
         product = request.env["product.product"].browse(int(product_id))
+        website = request.website
         partner = request.env["mail.thread"].sudo()._partner_find_from_emails_single([email])
 
-        if not product._has_stock_notification(partner):
-            product.sudo().stock_notification_partner_ids += partner
+        if not product._has_stock_notification(partner, website):
+            product.sudo()._add_stock_notification(partner, website)
 
         if request.website.is_public_user():
             request.session["product_with_stock_notification_enabled"] = list(
