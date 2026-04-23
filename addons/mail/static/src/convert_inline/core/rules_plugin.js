@@ -151,7 +151,7 @@ export class RulesPlugin extends Plugin {
                 );
             },
             onMiss: (propertyName) => {
-                // TODO EGGMAIL NOW: special values like unset, inherit, ... must
+                // TODO EGGMAIL: special values like unset, inherit, ... must
                 // be handled (either computed style or search parents), need to
                 // check units and other values too
                 // TODO EGGMAIL: search parents before applying computed style?

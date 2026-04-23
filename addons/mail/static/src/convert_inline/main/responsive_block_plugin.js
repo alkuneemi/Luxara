@@ -101,7 +101,7 @@ export class ResponsiveBlockPlugin extends Plugin {
     }
 
     /**
-     * TODO EGGMAIL NOW: consider cases where content overflows from its container block
+     * TODO EGGMAIL: consider cases where content overflows from its container block
      * is the computation here broken? What is the boundingclientrect of an
      * overflowing content?
      */
