@@ -5270,3 +5270,10 @@ class MailThread(models.AbstractModel):
         ).has_access(mode):
             return thread
         return self.browse()
+
+    def _get_share_message_types(self):
+        """
+        Return a list of message types visible in a shared context.
+        Override this method to customize visibility for specific models.
+        """
+        return ["auto_comment", "comment", "email", "email_outgoing", "out_of_office"]

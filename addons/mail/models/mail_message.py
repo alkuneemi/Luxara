@@ -514,10 +514,18 @@ class MailMessage(models.Model):
 
         return domain
 
+    def _get_share_domain(self):
+        """Raw domain for shared content."""
+        return (
+            Domain("message_type", "!=", "tracking")
+            & Domain("is_internal", "=", False)
+            & Domain("subtype_id.internal", "=", False)
+        )
+
     def _get_search_domain_share(self):
         if self.env.user._is_internal():
             return Domain.TRUE
-        return Domain('message_type', '!=', 'tracking') & Domain('is_internal', '=', False) & Domain('subtype_id.internal', '=', False)
+        return self._get_share_domain()
 
     def _filter_accessible_from_query(self, query: models.Query, operation: str) -> Self:
         """ Return the subset of ``self`` that satisfies the specific conditions
