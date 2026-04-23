@@ -1,3 +1,4 @@
+import { UniqueArray } from "../data_structures";
 import { StyleInfo } from "./style_models";
 
 export class NodeInfo {
@@ -42,16 +43,14 @@ export class Analysis {
 }
 
 export class NodeAnalysis {
-    nodeInfos = new Set(); // readonly, use functions to interact with nodeInfos
+    nodeInfos = new UniqueArray();
     analysis = new Analysis();
-    children = new Set(); // readonly, use functions to interact with children
-    lastAppendedChild;
-    lastAppendedNodeInfo;
+    children = new UniqueArray();
 
     constructor({ identity, nodeInfo, parent, analysis = {} } = {}) {
         this.identity = identity;
         this.setParent(parent);
-        this.appendNodeInfo(nodeInfo);
+        this.pushNodeInfo(nodeInfo);
         this.analysis.merge(analysis);
     }
 
@@ -68,39 +67,32 @@ export class NodeAnalysis {
         }
     }
 
-    appendNodeInfo(nodeInfo) {
-        this.nodeInfos.delete(nodeInfo);
-        this.lastAppendedNodeInfo = nodeInfo;
-        return this.nodeInfos.add(nodeInfo);
+    pushNodeInfo(nodeInfo) {
+        return this.nodeInfos.push(nodeInfo);
     }
 
     get firstNodeInfo() {
-        return this.nodeInfos.values().next().value;
+        return this.nodeInfos.at(0);
     }
 
     get lastNodeInfo() {
-        return this.lastAppendedNodeInfo;
+        return this.nodeInfos.at(-1);
     }
 
     appendChild(nodeAnalysis) {
-        this.children.delete(nodeAnalysis);
-        this.lastAppendedChild = nodeAnalysis;
-        return this.children.add(nodeAnalysis);
+        return this.children.push(nodeAnalysis);
     }
 
     deleteChild(nodeAnalysis) {
-        if (this.lastAppendedChild === nodeAnalysis) {
-            this.lastAppendedChild = [...this.children].at(-2);
-        }
         return this.children.delete(nodeAnalysis);
     }
 
     get firstChild() {
-        return this.children.values().next().value;
+        return this.children.at(0);
     }
 
     get lastChild() {
-        return this.lastAppendedChild;
+        return this.children.at(-1);
     }
 }
 

@@ -1,4 +1,4 @@
-import { ArrayMap } from "../maps";
+import { ArrayMap } from "../data_structures";
 
 export class MatcherCache {
     matcherInfos = new Map();

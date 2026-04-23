@@ -50,6 +50,11 @@ export class HybridFluidStrategyPlugin extends Plugin {
         // the current nodeAnalysis should be replaced with the list of rows
         // need feature to insert multiple nodes as children of another
         // nodeAnalysis
+
+        // features needed here:
+        // - replace an item in nodeAnalysis.children
+        // // currently setParent appends -> this is not enough
+        // // -> honestly, need to replace the set by a special set+list structure
     }
 
     analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {

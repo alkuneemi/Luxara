@@ -120,7 +120,7 @@ export class AnalysisPlugin extends Plugin {
             }
             nodeAnalysis = parentNodeAnalysis;
             if (parentNodeAnalysis && parentParsingConstraints.canMerge) {
-                parentNodeAnalysis.appendNodeInfo(nodeInfo);
+                parentNodeAnalysis.pushNodeInfo(nodeInfo);
                 // defaults to keeping the lowest identity as the main identity,
                 // written on top of the parent values.
                 // merge can be overridden to change that behavior.

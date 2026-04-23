@@ -1,6 +1,6 @@
 import { xml } from "@odoo/owl";
 import { renderToFragment } from "@web/core/utils/render";
-import { ObjectMap, SetMap } from "../maps";
+import { ObjectMap, SetMap } from "../data_structures";
 import { StyleInfo, StyleInfoMap } from "./style_models";
 import { renderAttributes } from "./utils";
 
