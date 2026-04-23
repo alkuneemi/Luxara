@@ -18,7 +18,7 @@ class TestCustomSnippet(TransactionCase):
             'url_code': 'pa_GB',
         })
         ResLang._activate_lang(parseltongue.code)
-        website = self.env.ref('website.default_website')
+        website = self.env.ref('base.default_website')
         website.language_ids = [Command.link(parseltongue.id)]
         data_name_attr = "Custom Text Block Test Translations"
         data_name_attr2 = "Custom Title Test Translations"

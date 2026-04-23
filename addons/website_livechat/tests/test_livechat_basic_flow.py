@@ -282,7 +282,7 @@ class TestLivechatBasicFlowHttpCase(HttpCaseWithUserDemo, TestLivechatCommon):
                     },
                 ),
                 "website": [
-                    {"id": self.env.ref("website.default_website").id, "name": "My Website"}
+                    {"id": self.env.ref("base.default_website").id, "name": "My Website"}
                 ],
                 "website.page": [
                     {"id": self.page_1.id, "name": "Test Page 1"},
@@ -319,7 +319,7 @@ class TestLivechatBasicFlowHttpCase(HttpCaseWithUserDemo, TestLivechatCommon):
                         "lang_id": self.env.ref("base.lang_en").id,
                         "last_track_ids": self.track_ids.ids[::-1],
                         "partner_id": False,
-                        "website_id": self.env.ref("website.default_website").id,
+                        "website_id": self.env.ref("base.default_website").id,
                     }
                 ],
             },

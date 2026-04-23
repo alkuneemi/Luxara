@@ -587,12 +587,5 @@
             <field name="parent_id" ref="website.main_menu"/>
             <field name="sequence" type="int">10</field>
         </record>
-
-        <!-- Default Website -->
-        <record id="default_website" model="website">
-            <field name="name">My Website</field>
-            <field name="company_id" ref="base.main_company"/>
-            <field name="user_id" ref="base.public_user"/>
-        </record>
     </data>
 </odoo>

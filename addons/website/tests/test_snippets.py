@@ -27,7 +27,7 @@ class TestSnippets(HttpCase):
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'default_shape_gets_palette_colors', login='admin')
 
     def test_03_snippets_all_drag_and_drop(self):
-        with MockRequest(self.env, website=self.env.ref('website.default_website')):
+        with MockRequest(self.env, website=self.env.ref('base.default_website')):
             snippets_template = self.env['ir.ui.view'].render_public_asset('website.snippets')
         html_template = html.fromstring(snippets_template)
         data_snippet_els = html_template.xpath("//*[snippets and not(hasclass('d-none'))]//*[@data-oe-snippet-key]")
@@ -63,7 +63,7 @@ class TestSnippets(HttpCase):
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_countdown', login='admin')
 
     def test_05_social_media(self):
-        self.env.ref('website.default_website').write({
+        self.env.ref('base.default_website').write({
             'social_facebook': "https://www.facebook.com/Odoo",
             'social_twitter': 'https://twitter.com/Odoo',
             'social_linkedin': 'https://www.linkedin.com/company/odoo',
@@ -76,7 +76,7 @@ class TestSnippets(HttpCase):
         create_image_attachment(self.env, '/web/image/website.s_banner_default_image', 's_banner_default_image.jpg')
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_social_media', login="admin")
         self.assertEqual(
-            self.env.ref('website.default_website').social_instagram,
+            self.env.ref('base.default_website').social_instagram,
             'https://instagram.com/odoo.official/',
             'Social media should have been updated'
         )
@@ -115,7 +115,7 @@ class TestSnippets(HttpCase):
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_images_wall', login='admin')
 
     def test_snippet_popup_with_scrollbar_and_animations(self):
-        website = self.env.ref('website.default_website')
+        website = self.env.ref('base.default_website')
         website.cookies_bar = True
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_popup_and_scrollbar', login='admin')
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_popup_and_animations', login='admin', timeout=90)
@@ -158,7 +158,7 @@ class TestSnippets(HttpCase):
         self.start_tour(self.env['website'].get_client_action_url('/', True), 'snippet_popup_esc', login='admin')
 
     def test_cookie_bar_updates_gtag_consent(self):
-        website = self.env.ref('website.default_website')
+        website = self.env.ref('base.default_website')
         website.google_analytics_key = 'G-XXXXXXXXXXX'
         website.cookies_bar = True
         self.start_tour(website.get_client_action_url('/'), 'cookie_bar_updates_gtag_consent')

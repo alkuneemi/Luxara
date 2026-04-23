@@ -8,7 +8,7 @@ from odoo.addons.product.tests.common import ProductVariantsCommon
 @tagged("-at_install", "post_install")
 class TestFuzzy(ProductVariantsCommon):
     def test_variant_default_code(self):
-        website = self.env.ref("website.default_website")
+        website = self.env.ref("base.default_website")
 
         line = self.product_template_sofa.attribute_line_ids
         value_red = line.product_template_value_ids[0]

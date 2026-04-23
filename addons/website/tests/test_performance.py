@@ -151,7 +151,7 @@ class TestStandardPerformance(UtilPerf):
 
     @mute_logger('odoo.http')
     def test_20_perf_sql_img_controller_bis(self):
-        website_id = self.ref('website.default_website')
+        website_id = self.ref('base.default_website')
         url = f'/web/image/website/{website_id}/favicon'
         select_tables_perf = {
             'orm_signaling_registry': 1,
@@ -178,7 +178,7 @@ class TestWebsitePerformanceCommon(UtilPerf):
 
     def _create_page_with_menu(self, url):
         name = url[1:]
-        website = self.env.ref('website.default_website')
+        website = self.env.ref('base.default_website')
         page = self.env['website.page'].create({
             'url': url,
             'name': name,
