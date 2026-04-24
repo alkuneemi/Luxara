@@ -156,16 +156,18 @@ class TestWebsiteAssets(odoo.tests.HttpCase):
             {"o-cc1-bg": "'400'"},
         )
 
+        self.authenticate(None, None, session_extra={'force_website_id': website_id})
+
         # Verify that CSS contains link to binary asset
-        css = self.url_open(f'/web/assets/{website_id}/_______/web.assets_frontend.min.css').text
+        css = self.url_open(f'/web/assets/_______/web.assets_frontend.min.css').text
         self.assertNotIn('''/web/static/src/libs/fontawesome/fonts/fontawesome-webfont.woff''', css, "Fonts should have been replaced")
-        fontface = re.findall(rf'''@font-face{{font-family: 'FontAwesome'; src: url\("/web/assets/{website_id}/\w{{7}}/web.fontawesome.min.woff2"\) format\('woff2'\), url\("/web/assets/{website_id}/\w{{7}}/web.fontawesome.min.woff"\) format\('woff'\);''', css)
+        fontface = re.findall(rf'''@font-face{{font-family: 'FontAwesome'; src: url\("/web/assets/\w{{7}}/web.fontawesome.min.woff2"\) format\('woff2'\), url\("/web/assets/\w{{7}}/web.fontawesome.min.woff"\) format\('woff'\);''', css)
         self.assertTrue(fontface, "Font should have been replaced")
         # Verify that links actually return expected binary
-        font = self.url_open(f'/web/assets/{website_id}/_______/web.fontawesome.min.woff2')
+        font = self.url_open(f'/web/assets/_______/web.fontawesome.min.woff2')
         self.assertEqual('font/woff2', font.headers.get('Content-Type'), "Should be woff2")
         self.assertEqual(b'wOF2', font.content[:4])
-        font = self.url_open(f'/web/assets/{website_id}/_______/web.fontawesome.min.woff')
+        font = self.url_open(f'/web/assets/_______/web.fontawesome.min.woff')
         self.assertEqual('font/woff', font.headers.get('Content-Type'), "Should be woff")
         self.assertEqual(b'wOFF', font.content[:4])
 
@@ -175,24 +177,26 @@ class TestWebAssets(odoo.tests.HttpCase):
     def test_assets_url_validation(self):
         website_id = self.env['website'].search([], limit=1, order='id desc').id
 
+        self.authenticate(None, None, session_extra={'force_website_id': website_id})
+
         with odoo.tools.mute_logger('odoo.addons.web.controllers.binary'):
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/debug/hello/web.assets_frontend.css', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/debug/hello/web.assets_frontend.css', allow_redirects=False).status_code,
                 404,
                 "unexpected direction extra",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/debug/web.assets_f_ontend.js', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/debug/web.assets_f_ontend.js', allow_redirects=False).status_code,
                 404,
                 "bundle name contains `_` and should be escaped wildcard",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.rtl.js', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/debug/web.assets_frontend.rtl.js', allow_redirects=False).status_code,
                 404,
                 "js cannot have `rtl` has extra",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.rtl.js', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/debug/web.assets_frontend.rtl.js', allow_redirects=False).status_code,
                 404,
                 "js cannot have `rtl` has extra",
             )
@@ -202,17 +206,17 @@ class TestWebAssets(odoo.tests.HttpCase):
                 "website_id does not exist",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.aa.css', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/debug/web.assets_frontend.aa.css', allow_redirects=False).status_code,
                 404,
                 "invalid direction",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/any/web.assets_frontend.min.rtl.css', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/any/web.assets_frontend.min.rtl.css', allow_redirects=False).status_code,
                 404,
                 "min and direction inverted",
             )
             self.assertEqual(
-                self.url_open(f'/web/assets/{website_id}/any/web.assets_frontend.js', allow_redirects=False).status_code,
+                self.url_open(f'/web/assets/any/web.assets_frontend.js', allow_redirects=False).status_code,
                 404,
                 "missing min in non debug mode",
             )
@@ -230,35 +234,35 @@ class TestWebAssets(odoo.tests.HttpCase):
             200,
         )
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.css', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/debug/web.assets_frontend.css', allow_redirects=False).status_code,
             200,
         )
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.rtl.css', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/debug/web.assets_frontend.rtl.css', allow_redirects=False).status_code,
             200,
         )
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/debug/web.assets_frontend.js', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/debug/web.assets_frontend.js', allow_redirects=False).status_code,
             200,
         )
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/any/web.assets_frontend.rtl.min.css', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/any/web.assets_frontend.rtl.min.css', allow_redirects=False).status_code,
             200,
         )
 
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/any/web.assets_frontend.min.css', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/any/web.assets_frontend.min.css', allow_redirects=False).status_code,
             200,
         )
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/any/web.assets_frontend.min.js', allow_redirects=False).status_code,
+            self.url_open(f'/web/assets/any/web.assets_frontend.min.js', allow_redirects=False).status_code,
             200,
         )
 
         # redirect urls
         invalid_version = '1234567'
         self.assertEqual(
-            self.url_open(f'/web/assets/{website_id}/{invalid_version}/web.assets_frontend.min.css', allow_redirects=False).headers['location'].split('/assets/')[1],
+            self.url_open(f'/web/assets/{invalid_version}/web.assets_frontend.min.css', allow_redirects=False).headers['location'].split('/assets/')[1],
             self.env['ir.qweb']._get_asset_bundle('web.assets_frontend', assets_params={'website_id': website_id}).get_link('css').split('/assets/')[1],
         )
 
@@ -287,7 +291,7 @@ class TestWebAssets(odoo.tests.HttpCase):
         with self.assertLogs() as logs:
             self.assertEqual(self.url_open(base_url, allow_redirects=False).status_code, 200)
         self.assertEqual(
-            f'Found a similar attachment for /web/assets/{unique}/web.assets_frontend.min.js, copying from /web/assets/{website_id}/{unique}/web.assets_frontend.min.js',
+            f'Found a similar attachment for /web/assets/{unique}/web.assets_frontend.min.js, copying from /web/assets/{unique}/web.assets_frontend.min.js',
             logs.records[0].message,
             'The attachment was expected to be linked to an existing one')
         self.assertEqual(

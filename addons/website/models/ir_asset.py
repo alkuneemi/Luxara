@@ -19,8 +19,6 @@ class IrAsset(models.Model):
         route_prefix = '/web/assets'
         if ignore_params: # we dont care about website id, match both
             route_prefix = '/web/assets%'
-        elif website_id := assets_params.get('website_id', None):
-            route_prefix = f'/web/assets/{website_id}'
         return f'{route_prefix}/{unique}/{filename}'
 
     def _get_related_assets(self, domain, *, website_id=None, **params):
