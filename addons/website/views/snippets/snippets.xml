@@ -114,6 +114,7 @@
             <t t-snippet="website.s_hero_minimalist" string="Hero Minimalist" group="intro">
                 <keywords>hero, minimalist, headline, header, introduction, home, picture, photo, split layout, two column, large image, tagline, landing page</keywords>
             </t>
+            <t id="mass_mailing_intro_waiting_list_hook"/>
 
             <!-- Columns group -->
             <t t-snippet="website.s_three_columns" string="Columns" group="columns">
@@ -588,6 +589,8 @@
 
 <template id="external_snippets" inherit_id="website.snippets" priority="8">
     <xpath expr="//snippets[@id='snippet_structure']" position="inside">
+        <t t-install="mass_mailing" string="Intro Waiting List" group="intro"
+            t-image-preview="/website/static/src/img/snippets_previews/s_intro_waiting_list_preview.webp"/>
         <t t-install="mass_mailing" string="Newsletter Block" group="contact_and_forms"
             t-image-preview="/website/static/src/img/snippets_previews/s_newsletter_block_preview.png"/>
         <t t-install="mass_mailing" string="Newsletter Aside" group="contact_and_forms"
