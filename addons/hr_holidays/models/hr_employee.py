@@ -804,3 +804,41 @@ class HrEmployee(models.Model):
         hour_to = max((att['hour_to'] for att in filtered_attendances), default=default_end)
 
         return (hour_from, hour_to)
+
+    @api.model
+    def get_avatar_leave_summary(self, employee_id):
+        leave_data = self.env['hr.leave']._read_group(
+            domain=[
+                ('employee_id', '=', employee_id),
+                ('state', 'in', ['confirm', 'validate1', 'validate']),
+            ],
+            groupby=['work_entry_type_id'],
+            aggregates=['number_of_days:sum', 'number_of_hours:sum']
+        )
+
+        allocation_summary = self.env['hr.leave.allocation']._read_group(
+            domain=[('employee_id', '=', employee_id)],
+            groupby=['work_entry_type_id'],
+            aggregates=['number_of_days:sum', 'number_of_hours_display:sum']
+        )
+
+        allocations_map = {
+            work_entry_type.id: (hours_sum if work_entry_type.unit_of_measure == 'hour' else days_sum)
+            for work_entry_type, days_sum, hours_sum in allocation_summary
+        }
+
+        leaves_summary = []
+        for work_entry_type, days_sum, hours_sum in leave_data:
+            taken_leaves = hours_sum if work_entry_type.unit_of_measure == 'hour' else days_sum
+            max_allowed = allocations_map.get(work_entry_type.id, 0)
+
+            leaves_summary.append({
+                "display_name": work_entry_type.name,
+                "leaves_taken": taken_leaves,
+                "virtual_remaining_leaves": max_allowed - taken_leaves,
+                "requires_allocation": work_entry_type.requires_allocation,
+                "max_leaves": taken_leaves,
+                "unit_of_measure": work_entry_type.unit_of_measure,
+            })
+
+        return sorted(leaves_summary, key=lambda x: x['leaves_taken'], reverse=True)
