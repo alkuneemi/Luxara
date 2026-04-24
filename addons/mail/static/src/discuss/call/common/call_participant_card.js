@@ -4,11 +4,12 @@ import { CallParticipantVideo } from "@mail/discuss/call/common/call_participant
 import { CallDropdown } from "@mail/discuss/call/common/call_dropdown";
 import { CONNECTION_TYPES } from "@mail/discuss/call/common/rtc_service";
 import { useHover } from "@mail/utils/common/hooks";
+import { extractAccentColor } from "@mail/utils/common/misc";
 import { isEventHandled } from "@web/core/utils/misc";
 import { browser } from "@web/core/browser/browser";
 import { isMobileOS } from "@web/core/browser/feature_detection";
 
-import { Component, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
 
@@ -32,6 +33,7 @@ export class CallParticipantCard extends Component {
     setup() {
         super.setup();
         this.contextMenuAnchorRef = useRef("contextMenuAnchor");
+        this.cardBgColor = useState({ value: "#1f2937" });
         this.root = useRef("root");
         this.rtc = useService("discuss.rtc");
         this.store = useService("mail.store");
@@ -41,7 +43,12 @@ export class CallParticipantCard extends Component {
         this.dragPos = undefined;
         this.isDrag = false;
         this.parentBoundingRect = undefined;
-        onMounted(() => {
+        onMounted(async () => {
+            const avatarUrl = this.channelMember?.avatarUrl;
+            if (avatarUrl) {
+                const [r, g, b] = await extractAccentColor(avatarUrl, 0.53);
+                this.cardBgColor.value = `rgb(${r}, ${g}, ${b})`;
+            }
             if (!this.rtcSession) {
                 return;
             }
@@ -58,6 +65,10 @@ export class CallParticipantCard extends Component {
             });
         });
         useExternalListener(browser, "fullscreenchange", this.onFullScreenChange);
+    }
+
+    get cardBgStyle() {
+        return `--discuss-CallParticipantCard-bgColor: ${this.cardBgColor.value}`;
     }
 
     get isContextMenuAvailable() {

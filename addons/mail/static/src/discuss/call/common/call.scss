@@ -3,6 +3,8 @@
 // ------------------------------------------------------------------
 
 .o-discuss-Call {
+    --o-discuss-Call-bgColor: #111;
+
     height: 50%; // ensures that the view returns to the right height when resized
     min-height: 50%;
     background-color: inherit;
@@ -11,10 +13,6 @@
 
     &.o-selfInCall {
         background-color: var(--o-discuss-Call-bgColor, #{$dark});
-
-        .o-discuss-Call-main {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
     }
 
     &:has(.o-discuss-Call-sidebar) {
@@ -33,9 +31,11 @@
     &.o-minimized {
         height: 20%; // ensures that the view returns to the right height when resized
         min-height: #{"max(20%, 130px)"};
+        &.o-mobile-ptt {
+            min-height: #{"max(25%, 180px)"};
+        }
         &.o-compact {
             height: 10%;
-            min-height: #{"max(10%, 100px)"};
             &.o-hasVideo.o-selfInCall {
                 height: calc(100vw * 9 / 16);
             }
