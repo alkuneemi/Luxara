@@ -1,5 +1,6 @@
 import { Component } from "@odoo/owl";
-import { formatCurrency } from '@web/core/currency';
+import { formatCurrency } from "@web/core/currency";
+import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { SectionDropdown } from "../section_dropdown/section_dropdown";
 
 export class SectionRow extends Component {
@@ -23,7 +24,11 @@ export class SectionRow extends Component {
         return formatCurrency(section.subtotal, section.currency_id);
     }
 
-    toggle(section) {
-        section.isOpen = !section.isOpen;
+    onSectionLabelKeydown(ev) {
+        const hotkey = getActiveHotkey(ev);
+        if (hotkey === "Enter" || hotkey === " ") {
+            ev.preventDefault();
+            this.env.setSelectedSection(this.props.section.id, this.selectedSection.filtered);
+        }
     }
 }

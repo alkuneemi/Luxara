@@ -1,0 +1,22 @@
+.o_search_panel_sections {
+    .o_selected_section {
+        background-color: var(--list-group-active-bg);
+    }
+
+    .o_section_row {
+        padding-block: 0;
+
+        > * {
+            padding-block: var(--list-group-item-padding-y);
+        }
+    }
+
+    .o_search_panel_label:focus-visible {
+        outline: none;
+        box-shadow: $focus-ring-box-shadow;
+    }
+
+    .o_section_dropdown_button {
+        line-height: normal;
+    }
+}
