@@ -54,5 +54,13 @@
             t-if="this.props.strikethrough_price"
             t-out="this.formattedStrikethroughPrice"
         />
+        <div
+            t-if="this.props.base_unit_price"
+            class="o_product_price_unit small w-100 text-muted d-block pb-2"
+        >
+            (<span t-out="this.getFormattedPrice(this.props.base_unit_price)"/>
+            /
+            <span t-out="this.props.base_unit_name"/>)
+        </div>
     </t>
 </templates>
