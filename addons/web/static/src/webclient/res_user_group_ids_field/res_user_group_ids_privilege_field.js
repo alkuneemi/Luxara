@@ -20,7 +20,7 @@ class ResUserGroupIdsPrivilegeField extends Component {
 
     setup() {
         this.isDebug = odoo.debug;
-        this.popover = usePopover(ResUserGroupIdsPopover);
+        this.popover = usePopover(ResUserGroupIdsPopover, { popoverClass: "overflow-auto" });
         this.groups = this.env.resUserGroupsInfo.groups;
     }
 
