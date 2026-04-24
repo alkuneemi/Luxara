@@ -42,6 +42,43 @@ test("addProductToOrder", async () => {
     expect(order.courses).toHaveLength(2);
 });
 
+test("multi-category uses first course and resets per order", async () => {
+    const store = await setupPosEnv();
+    const order1 = store.addNewOrder();
+    order1.config.use_course_allocation = true;
+    order1.config.iface_available_categ_ids = [1, 2, 4];
+    const productCategory1 = store.models["product.template"].get(5);
+    const productCategory2 = store.models["product.template"].get(6);
+    const multiCategoryProduct = store.models["product.template"].get(19);
+
+    const screen1 = await mountWithCleanup(ProductScreen, {
+        props: {
+            orderUuid: order1.uuid,
+        },
+    });
+
+    await screen1.addProductToOrder(productCategory1);
+    await screen1.addProductToOrder(productCategory2);
+    await screen1.addProductToOrder(multiCategoryProduct);
+
+    const multiCategoryLine = order1.getOrderlines().at(-1);
+    expect(multiCategoryLine.course_id.name).toBe("Default Course 1");
+
+    const order2 = store.addNewOrder();
+    order2.config.use_course_allocation = true;
+    order2.config.iface_available_categ_ids = [1, 2, 4];
+    const screen2 = await mountWithCleanup(ProductScreen, {
+        props: {
+            orderUuid: order2.uuid,
+        },
+    });
+
+    await screen2.addProductToOrder(productCategory1);
+
+    expect(order2.courses).toHaveLength(2);
+    expect(order2.courses[0].name).toBe("Default Course 1");
+});
+
 describe("Mobile Pay Button", () => {
     test.tags("mobile");
     test("Restaurant - Pay button with no preparation resource", async () => {

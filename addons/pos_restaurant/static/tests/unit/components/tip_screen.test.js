@@ -57,3 +57,54 @@ test("overallAmountStr", async () => {
     const overall = screen.env.utils.formatCurrency(total + 2);
     expect(result).toBe(`${original} + ${tip} tip = ${overall}`);
 });
+
+test("validateTip with zero marks order tipped and navigates", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const cardPaymentMethod = store.models["pos.payment.method"].get(2);
+    order.addPaymentline(cardPaymentMethod);
+    await store.syncAllOrders();
+    TipScreen.prototype.printTipReceipt = async () => {};
+
+    let writePayload = null;
+    const originalWrite = store.data.write.bind(store.data);
+    store.data.write = async (model, ids, values) => {
+        if (model === "pos.order") {
+            writePayload = { ids, values };
+        }
+        return await originalWrite(model, ids, values);
+    };
+
+    const screen = await mountWithCleanup(TipScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+    screen.state.inputTipAmount = "0";
+    await screen.validateTip();
+
+    expect(writePayload.values).toEqual({ is_tipped: true, tip_amount: 0 });
+});
+
+test("goPreviousScreen goes back to floor screen in restaurant", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const cardPaymentMethod = store.models["pos.payment.method"].get(2);
+    order.addPaymentline(cardPaymentMethod);
+    await store.syncAllOrders();
+    TipScreen.prototype.printTipReceipt = async () => {};
+
+    let destination = null;
+    store.navigate = (page) => {
+        destination = page;
+    };
+
+    const screen = await mountWithCleanup(TipScreen, {
+        props: {
+            orderUuid: order.uuid,
+        },
+    });
+    screen.goPreviousScreen();
+
+    expect(destination).toBe("FloorScreen");
+});
