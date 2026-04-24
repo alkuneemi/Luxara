@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_projects_two_columns" name="Projects Two Columns">
+    <section class="s_projects_two_columns pt80 pb80">
+        <div class="container">
+            <h2>Proven excellence<br/><br/></h2>
+            <div class="row">
+                <div class="o_colored_level col-lg-6">
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Primary Achievement Title</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x3</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Secondary Recognition Name</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x2</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Industry-Specific Award</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x1</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Notable Press Mention</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x8</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Organization Certification</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x4</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Strategic Partnership Milestone</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x5</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Media Feature or Publication</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x2</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Community Impact Award</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x8</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Proprietary Patent Granted</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x6</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-6">
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                    <div class="o_text_columns o-contenteditable-false">
+                        <div class="row">
+                            <div class="col-6 o-contenteditable-true o_colored_level">
+                                <h5 class="h6-fs">Annual Industry Ranking</h5>
+                            </div>
+                            <div class="col-6 o-contenteditable-true o_colored_level offset-lg-3 col-lg-3">
+                                <h6 style="text-align: end;">x3</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="s_hr pb8 pt0">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>
