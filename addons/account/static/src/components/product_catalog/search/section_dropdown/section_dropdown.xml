@@ -2,11 +2,20 @@
 
 <templates>
     <t t-name="account.SectionDropdown">
-        <Dropdown class="ms-auto">
-            <button style="min-width: 30px" class="btn p-0 border-0 bg-transparent">
+        <Dropdown>
+            <button t-attf-class="o_section_dropdown_button btn border-0 bg-transparent rounded-start-0 px-2 {{this.props.section.id ? '' : 'opacity-0 pe-none'}}" t-att-tabindex="this.props.section.id ? '0' : '-1'">
                 <i class="fa fa-ellipsis-v text-muted"/>
             </button>
             <t t-set-slot="content">
+                <DropdownItem
+                    t-if="this.props.section.display_type === 'line_section'"
+                    onSelected="() => this.env.enableSectionInput(this.props.section.id)"
+                >
+                    <i class="me-1 fa fa-fw fa-level-down"/><span>Add a subsection</span>
+                </DropdownItem>
+                <DropdownItem onSelected="() => this.env.enableRenameSectionInput(this.props.section.id)">
+                    <i class="me-1 fa fa-fw fa-pencil"/><span>Rename</span>
+                </DropdownItem>
                 <DropdownItem
                     t-if="'collapse_prices' in this.props.section"
                     onSelected="() => this.toggleFieldOfSection('collapse_prices')"

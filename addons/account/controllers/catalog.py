@@ -21,7 +21,11 @@ class ProductCatalogAccountController(ProductCatalogController):
                     'id': int,
                     'name': string,
                     'sequence': int,
-                    'line_count': int,
+                    'parent_id': int or False,
+                    'display_type': string,
+                    'subtotal': float,
+                    'currency_id': int,
+                    + any additional values given by inherited models
                 },
             ]
         """
@@ -30,7 +34,7 @@ class ProductCatalogAccountController(ProductCatalogController):
 
     @route('/product/catalog/create_section', auth='user', type='jsonrpc')
     def product_catalog_create_section(
-        self, res_model, order_id, child_field, name, position, parent_id=None, **kwargs,
+        self, res_model, order_id, child_field, name, **kwargs,
     ):
         """Create a new section on the given order.
 
@@ -38,61 +42,93 @@ class ProductCatalogAccountController(ProductCatalogController):
         :param int order_id: The order id.
         :param string child_field: The field name of the lines in the order model.
         :param string name: The name of the section to create.
-        :param str position: The position of the section where it should be created, either 'top'
-                             or 'bottom'.
-        :return: A dictionary with newly created section's 'id' and 'sequence'.
+        :return: A dictionary with values of the created section.
         :rtype: dict
         """
         order = request.env[res_model].browse(order_id)
-        return order.with_company(order.company_id)._create_section(
-            child_field, name, position, parent_id, **kwargs,
-        )
+        return order.with_company(order.company_id)._create_section(child_field, name, **kwargs)
 
     @route('/product/catalog/resequence_sections', auth='user', type='jsonrpc')
     def product_catalog_resequence_sections(
-        self, res_model, order_id, child_field, id, parent_id, before_id=None, **kwargs,
+        self, res_model, order_id, child_field, moved_section_id, new_parent_section_id, **kwargs,
     ):
         """Reorder the sections of a given order.
 
-        param string res_model: The order model.
+        :param string res_model: The order model.
         :param int order_id: The order id.
-        :param list sections:  A list of section dictionaries with their sequence.
         :param string child_field: The field name of the lines in the order model.
-        :return: A dictionary with new sequences of the sections.
-        :rtype: dict
+        :param int moved_section_id: The id of the section to move.
+        :param int new_parent_section_id: The id of the new parent section.
         """
         order = request.env[res_model].browse(order_id)
-        return order.with_company(order.company_id)._resequence_sections(
-            child_field, id, parent_id, before_id, **kwargs,
+        order.with_company(order.company_id)._resequence_sections(
+            child_field, moved_section_id, new_parent_section_id, **kwargs,
         )
 
     @route('/product/catalog/delete_section', auth='user', type='jsonrpc')
-    def product_catalog_delete_section(self, res_model, order_id, child_field, section_id, **kwargs):
+    def product_catalog_delete_section(
+        self, res_model, order_id, child_field, section_id, **kwargs
+    ):
         """Delete the given section.
 
+        :param string res_model: The order model.
+        :param int order_id: The order id.
+        :param string child_field: The field name of the lines in the order model.
         :param int section_id: The section id.
         """
         order = request.env[res_model].browse(order_id)
-        return order.with_company(order.company_id)._delete_section(child_field, section_id, **kwargs)
+        order.with_company(order.company_id)._delete_section(
+            child_field, section_id, **kwargs
+        )
 
     @route('/product/catalog/duplicate_section', auth='user', type='jsonrpc')
-    def product_catalog_duplicate_section(self, res_model, order_id, child_field, section_id, parent_id=None, **kwargs):
+    def product_catalog_duplicate_section(
+        self, res_model, order_id, child_field, section_id, **kwargs
+    ):
         """Duplicate the given section.
 
+        :param string res_model: The order model.
+        :param int order_id: The order id.
+        :param string child_field: The field name of the lines in the order model.
         :param int section_id: The section id.
-        :return: A dictionary with duplicated section's 'id' and 'sequence'.
-        :rtype: dict
+        :return: Duplicated section's id.
+        :rtype: int
         """
         order = request.env[res_model].browse(order_id)
-        return order.with_company(order.company_id)._duplicate_section(child_field, section_id, parent_id, **kwargs)
+        return order.with_company(order.company_id)._duplicate_section(
+            child_field, section_id, **kwargs
+        )
+
+    @route('/product/catalog/rename_section', auth='user', type='jsonrpc')
+    def product_catalog_rename_section(
+        self, res_model, order_id, child_field, section_id, new_name, **kwargs
+    ):
+        """Rename the given section.
+
+        :param string res_model: The order model.
+        :param int order_id: The order id.
+        :param string child_field: The field name of the lines in the order model.
+        :param int section_id: The section id.
+        :param string new_name: The new name for the section.
+        """
+        order = request.env[res_model].browse(order_id)
+        order.with_company(order.company_id)._rename_section(
+            child_field, section_id, new_name, **kwargs
+        )
 
     @route('/product/catalog/toggle_field_of_section', auth='user', type='jsonrpc')
-    def product_catalog_toggle_field_of_section(self, res_model, order_id, child_field, section_id, field, **kwargs):
-        """Toggle the collapse state of the given section.
+    def product_catalog_toggle_field_of_section(
+        self, res_model, order_id, child_field, section_id, field, **kwargs
+    ):
+        """Toggle the given field of the given section.
 
+        :param string res_model: The order model.
+        :param int order_id: The order id.
+        :param string child_field: The field name of the lines in the order model.
         :param int section_id: The section id.
-        :return: A dictionary with the updated section's 'id' and 'collapse_prices' status.
-        :rtype: dict
+        :param string field: The field name to toggle.
         """
         order = request.env[res_model].browse(order_id)
-        return order.with_company(order.company_id)._toggle_field_of_section(child_field, section_id, field, **kwargs)
+        order.with_company(order.company_id)._toggle_field_of_section(
+            child_field, section_id, field, **kwargs
+        )
