@@ -1,5 +1,6 @@
 import { selfClosingHtmlTags } from "@html_editor/utils/dom_info";
 import { manuallyDispatchProgrammaticEvent, animationFrame } from "@odoo/hoot-dom";
+import { closestElement, getCommonAncestor } from "@html_editor/utils/dom_traversal";
 
 /**
  * @param {Node} node
@@ -127,9 +128,23 @@ export function setSelection({
     anchorOffset,
     focusNode = anchorNode,
     focusOffset = anchorOffset,
+    isMouseEventSimulated = false,
 }) {
-    const selection = anchorNode.ownerDocument.getSelection();
-    selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    if (isMouseEventSimulated) {
+        // simulate the mouse events that usually come with a user selection
+        manuallyDispatchProgrammaticEvent(closestElement(anchorNode), "mousedown", { detail: 1 });
+        const selection = anchorNode.ownerDocument.getSelection();
+        selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+        manuallyDispatchProgrammaticEvent(closestElement(focusNode), "mouseup", { detail: 1 });
+
+        const commonAncestor = getCommonAncestor([anchorNode, focusNode]);
+        manuallyDispatchProgrammaticEvent(closestElement(commonAncestor), "click", {
+            detail: 1,
+        });
+    } else {
+        const selection = anchorNode.ownerDocument.getSelection();
+        selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    }
 }
 
 export function moveSelectionOutsideEditor() {
