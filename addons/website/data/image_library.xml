@@ -1296,4 +1296,16 @@
     <field name="type">url</field>
     <field name="url">/website/static/src/img/snippets_demo/s_duo_images_default_image_1.webp</field>
 </record>
+<record id="website.set_ui_landscape_xl_1" model="ir.attachment">
+    <field name="public" eval="True"/>
+    <field name="name">set_ui_landscape_xl_1.webp</field>
+    <field name="type">url</field>
+    <field name="url">/website/static/src/img/snippets_demo/set_ui_landscape_xl_1.webp</field>
+</record>
+<record id="website.s_intro_countdown_default_image" model="ir.attachment">
+    <field name="public" eval="True"/>
+    <field name="name">s_intro_countdown_default_image.webp</field>
+    <field name="type">url</field>
+    <field name="url">/website/static/src/img/snippets_demo/s_intro_countdown_default_image.webp</field>
+</record>
 </odoo>
