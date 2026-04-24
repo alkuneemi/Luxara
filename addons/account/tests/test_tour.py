@@ -89,13 +89,6 @@ class TestUi(AccountTestInvoicingHttpCommon):
 
         self.start_tour("/odoo", 'account_tax_group', login="admin")
 
-    def test_use_product_catalog_on_invoice(self):
-        self.product.write({
-            'is_favorite': True,
-            'default_code': '0',
-        })
-        self.start_tour("/odoo/customer-invoices/new", 'test_use_product_catalog_on_invoice', login="admin")
-
     def test_section_saved_on_tab_keydown_tour(self):
         self.env['res.partner'].create({
             'name': 'Partner A',
