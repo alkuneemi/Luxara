@@ -2599,12 +2599,20 @@ class SaleOrder(models.Model):
         )
         if invalid_targets:
             raise UserError(
+<<<<<<< f118c4e3448f9969aa5065e8dd96e1f2fd068835
                 _(
                     "The following sale orders %(invalid_orders)s can't be delivered. Cancelled all"
                     " deliveries."
                 ),
                 invalid_orders=", ".join(invalid_targets.mapped("name")),
             )
+||||||| fe0b2ceb9db8b3f0c8e7662149e389525a5f0288
+                _("The following sale orders %(invalid_orders) can't be delivered. Cancelled all deliveries."),
+                invalid_orders=invalid_targets)
+=======
+                _("The following sale orders %(invalid_orders)s can't be delivered. Cancelled all deliveries.",
+                invalid_orders=invalid_targets))
+>>>>>>> 6574d87d9a567ff355cf2ccf898d5e100321418e
         for order in self:
             for line in order.order_line:
                 line.qty_delivered = line.product_uom_qty
