@@ -19,7 +19,7 @@
 </t>
 
 <t t-name="website.AddPageTemplatePreviewWrapper">
-    <div t-custom-ref="holder" class="o_page_template position-relative placeholder-glow mx-auto transition-base" t-att-class="{ 'mt-4': !this.props.firstRow }" t-att-data-configurator-page="this.props.template and this.props.template.is_from_configurator">
+    <div t-custom-ref="holder" class="o_page_template position-relative placeholder-glow transition-base" t-att-class="{ 'mt-4': !this.props.firstRow }" t-att-data-configurator-page="this.props.template and this.props.template.is_from_configurator">
         <div t-custom-ref="preview" class="o_page_template_preview border border-white bg-white rounded" t-out="0" inert="inert"/>
         <span class="placeholder position-absolute top-0 w-100 h-100 rounded" t-attf-style="animation-duration: #{this.props.animationDelay + 500}ms"/>
         <button class="btn o_button_area position-absolute top-0 w-100 h-100 start-0 cursor-pointer rounded" t-on-click="this.select" t-on-keydown="this.props.onPageKeydown">
@@ -55,7 +55,7 @@
                 Then enable the "Is a Template" option.
             </div>
             <t t-foreach="[...this.columns.entries()]" t-as="column" t-key="column[0]">
-                <div class="col-lg-4 col-12">
+                <div class="col-lg-3 col-12">
                     <t t-foreach="[...column[1].entries()]" t-as="template" t-key="template[0]">
                         <AddPageTemplateBlank t-if="template[1].isBlank" firstRow="template_first" onPageKeydown="this.onPageKeydown"/>
                         <AddPageTemplatePreview t-else="" template="template[1]" firstRow="template_first"
@@ -134,7 +134,7 @@
         contentClass="'o_website_page_templates_dialog h-100'"
         showFooter="false"
         footer="false"
-        size="'xl'"
+        size="'fs'"
         close="this.props.close">
         <AddPageTemplates
             onTemplatePageChanged="name => this.onTemplatePageChanged(name)"
