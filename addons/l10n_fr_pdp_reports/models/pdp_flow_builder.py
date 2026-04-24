@@ -100,18 +100,18 @@ class PdpFlow10Builder(models.AbstractModel):
         if flow.operation_type == 'purchase':
             return self.env['account.move'], moves
         b2c_moves = self.env['account.move']
-        international_moves = self.env['account.move']
+        b2bi_moves = self.env['account.move']
         for move in moves:
             transaction_type = move._get_l10n_fr_pdp_transaction_type()
             if transaction_type == 'b2c':
                 b2c_moves += move
-            elif transaction_type == 'international':
-                international_moves += move
-        return b2c_moves, international_moves
+            elif transaction_type == 'b2bi':
+                b2bi_moves += move
+        return b2c_moves, b2bi_moves
 
     @api.model
     def _add_payments(self, document, flow, moves, summaries):
-        b2c_moves, international_moves = self._split_moves_by_transaction_type(flow, moves)
+        b2c_moves, b2bi_moves = self._split_moves_by_transaction_type(flow, moves)
 
         def get_payment_node_and_partials(move, summary, is_b2bi):
             for payment_aml, subtotals in summary:
@@ -134,7 +134,7 @@ class PdpFlow10Builder(models.AbstractModel):
             return node
 
         invoices = [
-            get_payment_node_and_partials(move, summaries[move], is_b2bi=True) for move in international_moves
+            get_payment_node_and_partials(move, summaries[move], is_b2bi=True) for move in b2bi_moves
         ]
         transactions = [
             get_payment_node_and_partials(move, summaries[move], is_b2bi=False) for move in b2c_moves
@@ -189,11 +189,11 @@ class PdpFlow10Builder(models.AbstractModel):
 
     @api.model
     def _add_transacitons(self, document, flow, moves):
-        b2c_moves, international_moves = self._split_moves_by_transaction_type(flow, moves)
-        international_invoices = []
+        b2c_moves, b2bi_moves = self._split_moves_by_transaction_type(flow, moves)
+        b2bi_invoices = []
         error_move_ids = []
         # B2BI
-        for move in international_moves:
+        for move in b2bi_moves:
             is_purchase = move.is_purchase_document(include_receipts=False)
             seller = move.commercial_partner_id if is_purchase else move.company_id.partner_id
             buyer = move.company_id.partner_id if is_purchase else move.commercial_partner_id
@@ -221,7 +221,7 @@ class PdpFlow10Builder(models.AbstractModel):
             )):
                 error_move_ids.append(move.id)
                 continue
-            international_invoices.append(invoice)
+            b2bi_invoices.append(invoice)
 
         # B2C
         b2c_agregates = []
@@ -249,13 +249,13 @@ class PdpFlow10Builder(models.AbstractModel):
                 } for tax, subtotal in taxes['subtotals'].items()],
             })
 
-        if international_invoices or b2c_agregates:
+        if b2bi_invoices or b2c_agregates:
             document['TransactionsReport'] = {
                 'ReportPeriod': {
                     'StartDate': {'_text': self._format_date(flow.period_start or flow.reporting_date)},
                     'EndDate': {'_text': self._format_date(flow.period_end or flow.reporting_date)},
                 },
-                'Invoice': international_invoices,
+                'Invoice': b2bi_invoices,
                 'Transactions': b2c_agregates,
             }
 

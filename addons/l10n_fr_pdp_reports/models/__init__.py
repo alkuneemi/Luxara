@@ -7,7 +7,6 @@ from . import pdp_flow_builder
 from . import pdp_flow
 from . import pdp_flow_aggregator
 from . import pdp_payload
-from . import pdp_payment_event
 from . import pdp_send_wizard
 from . import res_company
 from . import res_partner

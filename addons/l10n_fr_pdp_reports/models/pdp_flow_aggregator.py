@@ -33,7 +33,7 @@ class PdpFlowAggregator(models.AbstractModel):
                 _logger.exception('Failed to generate PDP flows for company %s', company.id)
 
     def _cron_process_company(self, company):
-        # update move & payments 
+        # update move & payments
         """Process unprocessed moves for a single company."""
         today = fields.Date.context_today(self)
         moves = self._get_unprocessed_moves(company)
@@ -97,7 +97,7 @@ class PdpFlowAggregator(models.AbstractModel):
                     skipped.append(move.display_name)
             else:
                 # Acquisitions: only B2B international are in scope.
-                if self._is_international_partner(move):
+                if self._is_b2bi_partner(move):
                     eligible |= move
                 else:
                     skipped.append(move.display_name)
@@ -132,7 +132,7 @@ class PdpFlowAggregator(models.AbstractModel):
                 company_id, period_start, period_end, currency_id, operation_type,
             )
             period_moves |= group_moves
-            transaction_type = 'international' if operation_type == 'purchase' else self._describe_transaction_scope(period_moves)
+            transaction_type = 'b2bi' if operation_type == 'purchase' else self._describe_transaction_scope(period_moves)
             if not transaction_type:
                 continue
 
@@ -141,7 +141,7 @@ class PdpFlowAggregator(models.AbstractModel):
                 period_start,
                 period_end,
                 periodicity_code,
-                currency_id,
+                # currency_id,
                 transaction_type,
                 period_moves,
                 operation_type,
@@ -192,11 +192,11 @@ class PdpFlowAggregator(models.AbstractModel):
         candidates = Move.search(domain, order='invoice_date, id')
         if operation_type == 'sale':
             return candidates.filtered(lambda m: bool(m._get_l10n_fr_pdp_transaction_type()))
-        return candidates.filtered(self._is_international_partner)
+        return candidates.filtered(self._is_b2bi_partner)
 
-    def _is_international_partner(self, move):
-        """Return True when a purchase move is in international e-reporting scope."""
-        return move._is_international_partner_for_purchase()
+    def _is_b2bi_partner(self, move):
+        """Return True when a purchase move is in b2b international e-reporting scope."""
+        return move._is_b2bi_partner_for_purchase()
 
     def _group_moves(self, moves):
         """Group moves by (company, period, currency)."""
@@ -212,19 +212,19 @@ class PdpFlowAggregator(models.AbstractModel):
         return grouped
 
     def _describe_transaction_scope(self, moves):
-        """Determine transaction scope from moves (b2c, international, or mixed)."""
+        """Determine transaction scope from moves (b2c, b2bi, or mixed)."""
         has_b2c = False
-        has_international = False
+        has_b2bi = False
         for move in moves:
             transaction_type = move._get_l10n_fr_pdp_transaction_type()
             if transaction_type == 'b2c':
                 has_b2c = True
-            elif transaction_type == 'international':
-                has_international = True
-        if has_b2c and has_international:
+            elif transaction_type == 'b2bi':
+                has_b2bi = True
+        if has_b2c and has_b2bi:
             return 'mixed'
-        if has_international:
-            return 'international'
+        if has_b2bi:
+            return 'b2bi'
         if has_b2c:
             return 'b2c'
         return False
@@ -293,7 +293,7 @@ class PdpFlowAggregator(models.AbstractModel):
             domain: Domain identifying a unique flow scope (period/currency/kind).
             create_values: Base values for creating a flow (without transmission/move_ids).
             moves: Moves to include in the flow.
-            transaction_type: Computed scope for the flow (b2c/international/mixed).
+            transaction_type: Computed scope for the flow (b2c/b2bi/mixed).
             period_end: Period end used to decide when to rebuild pending flows.
             unlink_if_empty: If True, remove any open flow when no moves are found.
             skip_if_last_sent_same_moves: If True, avoid creating a new rectificative flow when the last sent one matches.
@@ -361,7 +361,7 @@ class PdpFlowAggregator(models.AbstractModel):
         period_start,
         period_end,
         periodicity_code,
-        currency_id,
+        # currency_id,
         transaction_type,
         period_moves,
         operation_type,
@@ -369,7 +369,7 @@ class PdpFlowAggregator(models.AbstractModel):
         """Create or update the transaction flow for a period (full dataset)."""
         base_domain = [
             ('company_id', '=', company_id),
-            ('currency_id', '=', currency_id),
+            # ('currency_id', '=', currency_id),
         ]
 
         domain = base_domain + [
@@ -462,7 +462,7 @@ class PdpFlowAggregator(models.AbstractModel):
                 result |= move
                 continue
 
-            if transaction_type == 'international':
+            if transaction_type == 'b2bi':
                 # Payments are reported only for services with French VAT (bloc 10.2).
                 # Exception: advance invoices (BT-3 386/500) are always reported.
                 if not has_reportable_lines:

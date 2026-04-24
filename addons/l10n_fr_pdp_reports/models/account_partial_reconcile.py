@@ -10,6 +10,6 @@ class AccountPartialReconcile(models.Model):
         string="PDP Flow",
     )
 
-    @api.ondelete(at_uninstall=False)
-    def _l10n_fr_pdp_ondelete_account_partial_reconcile(self):
-        self.l10n_fr_pdp_flow_id._create_rectificative_flow_if_needed()
+    # @api.ondelete(at_uninstall=False)
+    # def _l10n_fr_pdp_ondelete_account_partial_reconcile(self):
+    #     self.l10n_fr_pdp_flow_id._create_rectificative_flow_if_needed()

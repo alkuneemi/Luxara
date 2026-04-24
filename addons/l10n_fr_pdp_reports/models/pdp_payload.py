@@ -64,19 +64,19 @@ class PdpPayloadBuilder:
         )
         if invalid_collector is not None:
             invalid_collector.update(invalids)
-        b2c_moves, international_moves = self._partition_moves(valid_moves)
+        b2c_moves, b2bi_moves = self._partition_moves(valid_moves)
         expected_types = {m._get_l10n_fr_pdp_transaction_type() for m in valid_moves}
         if self.flow.operation_type == 'purchase':
-            expected_types = {'international'}
+            expected_types = {'b2bi'}
         return {
             'document': self._document_vals(),
             'period': self._period_vals(),
-            'invoices': [self._invoice_vals(m) for m in international_moves],
+            'invoices': [self._invoice_vals(m) for m in b2bi_moves],
             'transaction_summaries': self._transaction_summaries(b2c_moves, 'b2c'),
             'transaction_payments': [],
             'invoice_payments': [],
             'expected_b2c_transactions': 'b2c' in expected_types,
-            'expected_international_invoices': 'international' in expected_types,
+            'expected_b2bi_invoices': 'b2bi' in expected_types,
         }
 
     def _build_payment_report_vals(self, moves, invalid_collector=None):
@@ -84,8 +84,8 @@ class PdpPayloadBuilder:
         valid_moves, invalids = self.flow._filter_valid_moves(moves, invalid_collector=invalid_collector)
         if invalid_collector is not None:
             invalid_collector.update(invalids)
-        b2c_moves, international_moves = self._partition_moves(valid_moves)
-        invoice_payments = self._invoice_payments(international_moves)
+        b2c_moves, b2bi_moves = self._partition_moves(valid_moves)
+        invoice_payments = self._invoice_payments(b2bi_moves)
         transaction_payments = self._transaction_payments(b2c_moves)
         return {
             'document': self._document_vals(),
@@ -102,18 +102,18 @@ class PdpPayloadBuilder:
     # -------------------------------------------------------------------------
 
     def _partition_moves(self, moves):
-        """Split moves into B2C and international buckets."""
+        """Split moves into B2C and B2B international buckets."""
         if self.flow.operation_type == 'purchase':
             return self.env['account.move'].browse(), moves
         b2c = self.env['account.move'].browse()
-        international = self.env['account.move'].browse()
+        b2bi = self.env['account.move'].browse()
         for move in moves:
             transaction_type = move._get_l10n_fr_pdp_transaction_type()
             if transaction_type == 'b2c':
                 b2c |= move
-            elif transaction_type == 'international':
-                international |= move
-        return b2c, international
+            elif transaction_type == 'b2bi':
+                b2bi |= move
+        return b2c, b2bi
 
     def _b2c_line_category(self, line):
         """Return TT-81 category code for a B2C invoice line."""
@@ -988,9 +988,9 @@ class PdpPayloadBuilder:
         allowed_type_codes = self._valid_invoice_type_codes()
         seen_invoice_identities = set()
         if (flow.report_type == 'transaction' and
-                report_vals.get('expected_international_invoices') and
+                report_vals.get('expected_b2bi_invoices') and
                 not invoices and not flow.error_move_ids):
-            errors.append(_("Flow %(name)s must contain at least one international invoice.", name=flow.name))
+            errors.append(_("Flow %(name)s must contain at least one B2B international invoice.", name=flow.name))
 
         for invoice in invoices:
             invoice_id = invoice.get('id') or _("Invoice without identifier")

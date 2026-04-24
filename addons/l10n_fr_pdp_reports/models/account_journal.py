@@ -21,16 +21,14 @@ class AccountJournal(models.Model):
                     ('company_id', '=', company.id),
                     ('report_type', '=', report_type),
                     ('state', 'in', ('pending', 'building', 'ready', 'error')),
-                    ('next_deadline_end', '!=', False),
                 ],
                 limit=1,
-                order='next_deadline_end asc',
+                order='due_date asc',
             )
             if not flow:
                 return False, False, False
-            due = flow.next_deadline_end
             has_errors = flow.state == 'error' or bool(flow.error_move_ids)
-            return due, format_date(self.env, due), has_errors
+            return flow.due_date, format_date(self.env, flow.due_date), has_errors
 
         # Compute PDP data per company
         for company, journals in pdp_enabled_journals.grouped('company_id').items():
@@ -80,10 +78,9 @@ class AccountJournal(models.Model):
                 ('company_id', '=', self.company_id.id),
                 ('report_type', '=', report_type),
                 ('state', 'in', ('pending', 'building', 'ready', 'error')),
-                ('next_deadline_end', '!=', False),
             ],
             limit=1,
-            order='next_deadline_end asc',
+            order='due_date asc',
         )
         if flow:
             return flow._get_records_action()

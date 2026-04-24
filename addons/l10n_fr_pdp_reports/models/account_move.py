@@ -45,9 +45,8 @@ class AccountMove(models.Model):
     @api.depends(
         'state',
         'move_type',
-        'partner_id',
-        'partner_id.vat',
-        'partner_id.country_id',
+        'commercial_partner_id.vat',
+        'commercial_partner_id.country_id',
         'commercial_partner_id',
         'company_id',
         'company_id.account_fiscal_country_id',
@@ -71,7 +70,7 @@ class AccountMove(models.Model):
             in_scope = (
                 bool(move._get_l10n_fr_pdp_transaction_type())
                 if is_sale
-                else move._is_international_partner_for_purchase()
+                else move._is_b2bi_partner_for_purchase()
             )
             if not in_scope:
                 move.l10n_fr_pdp_status = 'out_of_scope'
@@ -102,7 +101,6 @@ class AccountMove(models.Model):
 
             # Recompute directly to avoid stale cached value when "today" changes
             # (especially in cron/time-window transitions and tests patching today).
-            period_status = relevant_flow._get_period_status()
             state = relevant_flow.state
 
             # Priority 1: Flow already sent/completed
@@ -114,7 +112,7 @@ class AccountMove(models.Model):
             elif state == 'cancelled':
                 move.l10n_fr_pdp_status = 'cancelled'
             # Open period: users have time to fix errors, stay pending.
-            elif period_status == 'open':
+            elif relevant_flow.period_status == 'open':
                 move.l10n_fr_pdp_status = 'pending'
             # Grace/closed: validation errors are surfaced.
             elif has_errors:
@@ -145,7 +143,7 @@ class AccountMove(models.Model):
         ]
 
     def _get_l10n_fr_pdp_transaction_type(self):
-        """Classify invoice for PDP reporting: b2c, international, or False (domestic B2B)."""
+        """Classify invoice for PDP reporting: b2c, b2bi, or False (domestic B2B)."""
         self.ensure_one()
         # Use the centralized DROM-COM logic
         return drom_com_territories.get_transaction_flow_type(
@@ -154,8 +152,8 @@ class AccountMove(models.Model):
             partner_vat=self.commercial_partner_id.vat,
         )
 
-    def _is_international_partner_for_purchase(self):
-        """Return True when a vendor bill partner is treated as international for Flux 10."""
+    def _is_b2bi_partner_for_purchase(self):
+        """Return True when a vendor bill partner is treated as b2bi for Flux 10."""
         self.ensure_one()
         company_country_code = self.company_id.account_fiscal_country_id.code
         partner_country_code = self.commercial_partner_id.country_id.code
@@ -206,7 +204,7 @@ class AccountMove(models.Model):
                     if not move._get_l10n_fr_pdp_transaction_type():
                         continue
                 elif move.is_purchase_document(include_receipts=False):
-                    if not move._is_international_partner_for_purchase():
+                    if not move._is_b2bi_partner_for_purchase():
                         continue
                 else:
                     continue

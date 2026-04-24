@@ -52,7 +52,7 @@ class PdpFlow(models.Model):
     def _default_name(self):
         return _("Flow %(date)s", date=fields.Date.context_today(self))
 
-    name = fields.Char(string="Reference", required=True, copy=False, default=_default_name)
+    name = fields.Char(string="Reference", required=True, default=_default_name)
     reporting_date = fields.Date(  # TODO needed ? redundant with period_start/period_end ?
         required=True,
         help="Date associated with the aggregated reporting period.",
@@ -71,13 +71,8 @@ class PdpFlow(models.Model):
     transport_identifier = fields.Char(help="Identifier returned by the PDP transport API.")
     transport_status = fields.Char(help="Raw status returned by the PDP transport API.")
     transport_message = fields.Text(help="Additional message or error returned by the PDP transport API.")
-    currency_id = fields.Many2one(
-        comodel_name='res.currency',
-        required=True,
-        help="Currency of the aggregated transactions included in the payload.",
-    )
     report_type = fields.Selection(
-        selection=[('transaction', "Transaction Report"), ('payment', "Payment Report")],
+        selection=[('transaction', "Transaction"), ('payment', "Payment")],
         required=True,
         default='transaction',
     )
@@ -87,30 +82,27 @@ class PdpFlow(models.Model):
         default='sale',
         help="Defines whether the flow reports sales or acquisition transactions.",
     )
-    transaction_type = fields.Selection(
-        selection=[('b2c', "B2C Domestic"), ('international', "International B2B"), ('mixed', "Mixed Scope")],
-        default='b2c',
-        required=True,
-    )
     transmission_type = fields.Selection(
         selection=[('initial', "Initial"), ('rectificative', "Rectificative")],
-        required=True,
         default='initial',
         help="Type of transmission per Flux 10 v1.2: IN (Initial) or RE (Rectificative).",
+        compute='_compute_transmission_type',
+        store=True,
     )
-    tracking_id = fields.Char(help="External tracking identifier sent to the Flow Service.", copy=False)
-    period_start = fields.Date(copy=False)
-    period_end = fields.Date(copy=False)
-    periodicity_code = fields.Char(copy=False)
+    initial_flow_id = fields.Many2one(comodel_name='l10n.fr.pdp.reports.flow')
+    tracking_id = fields.Char(help="External tracking identifier sent to the Flow Service.")
+    period_start = fields.Date(required=True)
+    period_end = fields.Date(required=True)
+    due_date = fields.Date(required=True)
+    periodicity_code = fields.Char()
     last_send_datetime = fields.Datetime(string="Last Send On")
-    send_datetime = fields.Datetime(string="Sent On", copy=False)
+    send_datetime = fields.Datetime(string="Sent On")
     acknowledgement_status = fields.Selection(
         selection=[('pending', "Pending"), ('ok', "Accepted"), ('error', "Error")],
         string="Last Known Status",
         default='pending',
-        copy=False,
     )
-    acknowledgement_details = fields.Json(copy=False)
+    acknowledgement_details = fields.Json()
     company_id = fields.Many2one(
         comodel_name='res.company',
         string="Company",
@@ -132,21 +124,16 @@ class PdpFlow(models.Model):
         column1='flow_id',
         column2='move_id',
         string="Invalid Invoices",
-        copy=False,
     )
-    error_move_message = fields.Text(string="Invalid Invoice Details", copy=False)
+    error_move_message = fields.Text(string="Invalid Invoice Details")
     partial_reconcile_ids = fields.One2many(
         comodel_name='account.partial.reconcile',
         inverse_name='l10n_fr_pdp_flow_id',
     )
-
-    next_deadline_start = fields.Date(string="Next Send Window Start", compute='_compute_deadline_preview', store=True)
-    next_deadline_end = fields.Date(string="Next Send Window End", compute='_compute_deadline_preview', store=True)
     period_status = fields.Selection(
         selection=[('open', "Open"), ('grace', "Grace"), ('closed', "Closed")],
         string="Period Status",
         compute='_compute_period_status',
-        store=False,
         help="Current status of the reporting period: Open (before grace), Grace (can send), Closed (after deadline).",
     )
 
@@ -163,47 +150,21 @@ class PdpFlow(models.Model):
                 ('mimetype', '=', 'application/xml'),
             ], order='id desc', limit=1)
 
-    @api.depends('period_end', 'reporting_date', 'next_deadline_start', 'next_deadline_end')
+    @api.depends('period_end', 'reporting_date', 'due_date')
     def _compute_period_status(self):
         """Compute the current status of the reporting period."""
         today = fields.Date.context_today(self)
         for flow in self:
-            flow.period_status = flow._get_period_status(today)
+            if today <= flow.period_end:
+                flow.period_status = 'open'
+            elif today < flow.due_date:
+                flow.period_status = 'grace'
+            else:
+                flow.period_status = 'closed'
 
-    def _get_period_status(self, today=None):
-        """Return period status (open/grace/closed) for a given date."""
-        self.ensure_one()
-        today = fields.Date.to_date(today or fields.Date.context_today(self))
-        period_end = fields.Date.to_date(self.period_end or self.reporting_date)
-        due_date = fields.Date.to_date(self.next_deadline_end) if self.next_deadline_end else False
-        if not due_date:
-            # `next_deadline_end` is a stored compute and may be unavailable on just-created flows.
-            # Recompute from period data to avoid incorrectly freezing status to `open`.
-            deadline_window = self._compute_deadline_window(today)
-            due_date = deadline_window[1] if deadline_window else False
-
-        # Period lifecycle definition:
-        # - open: inside the reporting period (period_start..period_end inclusive)
-        # - grace: after period_end and before the due date (exclusive)
-        # - closed: due date day and after
-        if not period_end or not due_date or today <= period_end:
-            return 'open'
-        if today < due_date:
-            return 'grace'
-        return 'closed'
-
-    @api.depends(
-        'period_start',
-        'period_end',
-        'report_type',
-        'company_id.l10n_fr_pdp_periodicity',
-    )
-    def _compute_deadline_preview(self):
-        today = fields.Date.context_today(self)
+    def _compute_transmission_type(self):
         for flow in self:
-            window = flow._compute_deadline_window(today)
-            flow.next_deadline_start = window[0] if window else False
-            flow.next_deadline_end = window[1] if window else False
+            flow.transmission_type = 'rectificative' if flow.initial_flow_id else 'initial'
 
     def _compute_payment_move_count(self):
         for flow in self:
@@ -240,12 +201,30 @@ class PdpFlow(models.Model):
     # Business Methods - Validation
     # -------------------------------------------------------------------------
 
-    def _create_rectificative_flow_if_needed(self):
-        """Invoices or payments int the scope of this flow have changed. If flow was sent, create a new rectificative flow for the same period with the changed entries."""
-        for flow in self:
-            if flow.state not in FLOW_SENT_STATES:
-                continue
-            # create rectificative flow
+    # @api.model
+    def _create_flow_if_needed(self, move):
+        period_data = self._get_period_flow_properties(move.company_id, move.date, move._get_l10n_fr_pdp_transaction_type())
+        existing_flows = self.search(
+            domain=[
+                ('company_id', '=', move.company_id.id),
+                ('period_start', '=', period_data['period_start']),
+                ('period_end', '=', period_data['period_end']),
+                ('operation_type', '=', 'sale' if move.is_sale_document(include_receipts=True) else 'purchase'),
+            ],
+            order='id',
+        )
+        # If all existing flows for this period are closed, create a new rectificative one.
+        rectificative = existing_flows and all(flow.state not in FLOW_OPEN_STATES for flow in existing_flows)
+
+        if not existing_flows or rectificative:
+            self.create([{
+                'company_id': move.company_id.id,
+                'period_start': period_data['period_start'],
+                'period_end': period_data['period_end'],
+                'due_date': period_data['due_date'],
+                'operation_type': 'sale' if move.is_sale_document(include_receipts=True) else 'purchase',
+                'initial_flow_id': existing_flows[0].id if rectificative else None,
+            }])
 
     def _filter_valid_moves(self):
         """Separate valid moves from invalid ones, updating error tracking."""
@@ -286,7 +265,7 @@ class PdpFlow(models.Model):
             # and move.partner_id.commercial_partner_id.vat  # TBC, B2C: may not have enough info to send invoice
         ):
             errors.append(_("Invoice/credit note has not been sent to the customer."))
-        if move._get_l10n_fr_pdp_transaction_type() == 'international':
+        if move._get_l10n_fr_pdp_transaction_type() == 'b2bi':
             partner = move.commercial_partner_id
             vat = partner.vat
             country_code = partner.country_id.code
@@ -306,7 +285,7 @@ class PdpFlow(models.Model):
                     errors.append(_("Missing seller VAT."))
             # elif not is_valid_vat(company_vat, company_country):
             #     errors.append(_("Invalid seller VAT (%(vat)s).", vat=company_vat))
-        if move.is_purchase_document() and move._is_international_partner_for_purchase():
+        if move.is_purchase_document() and move._is_b2bi_partner_for_purchase():
             supplier = move.commercial_partner_id
             supplier_vat = supplier.vat
             supplier_country = supplier.country_id.code
@@ -323,7 +302,7 @@ class PdpFlow(models.Model):
     def _requires_fiscal_representative_vat(self, move):
         """Return True when TT-122 fallback can apply for the seller on this move."""
         self.ensure_one()
-        if move._get_l10n_fr_pdp_transaction_type() != 'international':
+        if move._get_l10n_fr_pdp_transaction_type() != 'b2bi':
             return False
         taxes = move.invoice_line_ids.filtered(lambda line: line.display_type == 'product').mapped('tax_ids')
         return any((tax.l10n_fr_pdp_vatex_code or '').strip() for tax in taxes)
@@ -827,16 +806,10 @@ class PdpFlow(models.Model):
                 # - errors: send only on the last day (excluding invalid invoices)
                 # RE sends immediately when ready.
                 if flow.transmission_type == 'initial':
-                    window = flow._compute_deadline_window(today)
-                    if not window:
-                        continue
-                    window_start, window_end = window
-                    if today < window_start:
-                        continue
-                    if today > window_end:
+                    if today < flow.period_end:
                         continue
                     if flow.error_move_ids:
-                        if today != window_end:
+                        if today < flow.due_date:
                             continue
                         if not (flow.move_ids - flow.error_move_ids):
                             flow.write({
@@ -928,70 +901,64 @@ class PdpFlow(models.Model):
     # Business Methods - Deadline Window
     # -------------------------------------------------------------------------
 
-    def _compute_deadline_window(self, today):
-        """Compute send window dates for the flow."""
-        self.ensure_one()
-        company = self.company_id
-        period_end = fields.Date.to_date(self.period_end or self.reporting_date)
-        if not period_end:
-            return False
+    @api.model
+    def _get_period_flow_properties(self, company_id, date, report_type):
+        """Return period start/end and due date for a given move date and report type."""
+        periodicity = self._get_periodicities(company_id)[report_type]
+        last_month_day = calendar.monthrange(date.year, date.month)[1]
+        if periodicity == 'decade':
+            day = date.day
+            if day <= 10:
+                period_start = date.replace(day=1)
+                period_end = date.replace(day=10)
+                due_date = date.replace(day=20)
+            elif day <= 20:
+                period_start = date.replace(day=11)
+                period_end = date.replace(day=20)
+                due_date = date.replace(day=last_month_day)
+            else:
+                period_start = date.replace(day=21)
+                period_end = date.replace(day=last_month_day)
+                due_date = date.replace(day=10, month=(date.month + 1) % 12, year=date.year + (date.month // 12))
+        elif periodicity == 'monthly':
+            period_start = date.replace(day=1)
+            period_end = date.replace(day=last_month_day)
+            month_after = (date.month + 1) % 12
+            month_after_year = date.year + (date.month // 12)
+            if company_id.l10n_fr_pdp_periodicity == 'normal_quarterly':
+                due_date = date.replace(day=10, month=month_after, year=month_after_year)
+            else:
+                due_date = date.replace(
+                    day=calendar.monthrange(month_after_year, month_after)[1],
+                    month=month_after,
+                    year=month_after_year,
+                )
+        else:  #bimonthly
+            period_start = date.replace(month=date.month - (date.month - 1) % 2, day=1)
+            period_end = date.replace(
+                month=period_start.month+1,
+                day=calendar.monthrange(date.year, period_start.month+1)[1]
+            )
+            month_after = (period_end.month + 1) % 12
+            month_after_year = period_end.year + (period_end.month // 12)
+            due_date = date.replace(
+                day=calendar.monthrange(month_after_year, month_after)[1],
+                month=month_after,
+                year=month_after_year,
+            )
+        return {'period_start': period_start, 'period_end': period_end, 'due_date': due_date}
 
-        periodicity = self._get_periodicities(company)[self.report_type]
-
-        def _one_day(date_val):
-            return date_val, date_val
-
-        if periodicity == 'bimonthly':
-            # Official rule: bimonthly send window is 25-30 of following month (AFNOR/PPF guideline)
-            anchor = period_end + relativedelta(months=1)
-            last_day = calendar.monthrange(anchor.year, anchor.month)[1]
-            start_day = min(25, last_day)
-            end_day = min(30, last_day)
-            return anchor.replace(day=start_day), anchor.replace(day=end_day)
-
-        if periodicity == 'quarterly':
-            # Quarterly: due on the 24th of the month following the quarter end
-            anchor = period_end + relativedelta(months=1)
-            last_day = calendar.monthrange(anchor.year, anchor.month)[1]
-            send_day = min(24, last_day)
-            return _one_day(anchor.replace(day=send_day))
-
-        if periodicity == 'monthly':
-            # Monthly: due on the 10th of the following month (or last day if shorter month)
-            anchor = (period_end + relativedelta(months=1)).replace(day=1)
-            last_day = calendar.monthrange(anchor.year, anchor.month)[1]
-            send_day = min(10, last_day)
-            return _one_day(anchor.replace(day=send_day))
-
-        # Decade (default)
-        day = period_end.day
-        last_day = calendar.monthrange(period_end.year, period_end.month)[1]
-        if day <= 10:
-            # Decade 1-10 -> due on the 20th
-            send_date = period_end.replace(day=min(20, last_day))
-            return _one_day(send_date)
-        if day <= 20:
-            # Decade 11-20 -> due on month end
-            send_date = period_end.replace(day=last_day)
-            return _one_day(send_date)
-        # Decade 21+ -> due on the 10th of next month
-        send_date = (period_end + relativedelta(months=1)).replace(day=10)
-        return _one_day(send_date)
-
-    def _is_within_send_window(self, today=None):
+    def _is_within_send_window(self):
         """Check if today is within the flow's send window."""
         self.ensure_one()
-        today = today or fields.Date.context_today(self)
-        window = self._compute_deadline_window(today)
-        if not window:
-            return False
-        return window[0] <= today <= window[1]
+        today = fields.Date.context_today(self)
+        return self.period_start <= today <= self.due_date
 
-    def _is_last_send_day(self, today=None):
+    def _is_last_send_day(self):
         """Check if today is the last day of the send window."""
-        today = today or fields.Date.context_today(self)
-        window = self._compute_deadline_window(today)
-        return window and today >= window[1]
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        return (self.due_date - relativedelta(days=1)) < today <= self.due_date
 
     # -------------------------------------------------------------------------
     # Business Methods - Slice Management
@@ -1149,11 +1116,6 @@ class PdpFlow(models.Model):
             'transaction': transaction_periodicity
         }
 
-    def _format_amount(self, amount):
-        """Round amount to currency precision."""
-        currency = self.currency_id or self.env.company.currency_id
-        return currency.round(amount) if currency else amount
-
     def _message_post_once(self, body, subtype='mail.mt_note'):
         """Post message if it differs from the last one to avoid chatter spam."""
         self.ensure_one()
@@ -1204,7 +1166,7 @@ class PdpFlow(models.Model):
 
     def _get_transaction_category_code(self, transaction_type):
         """Return category code for transaction type."""
-        return 'TPS1' if transaction_type == 'international' else 'TLB1'  # Flux 10 category codes: TPS1=international, TLB1=B2C
+        return 'TPS1' if transaction_type == 'b2bi' else 'TLB1'  # Flux 10 category codes: TPS1=B2BI, TLB1=B2C
 
     def _log_cron_event(self, message):
         """Post message to flow chatter."""
@@ -1249,17 +1211,6 @@ class PdpFlow(models.Model):
         """Send flow ignoring error invoices."""
         return self.with_context(ignore_error_invoices=True).action_send_from_ui()
 
-    def action_download_payload(self):
-        """Download flow payload as XML file."""
-        self.ensure_one()
-        if not self.payload_id:
-            raise UserError(_("This flow has no payload yet. Build it before downloading."))
-        filename = self.payload_id.name or self._build_filename()
-        return {
-            'type': 'ir.actions.act_url',
-            'url': f'/web/content/{self._name}/{self.id}/payload?download=true&filename={filename}',
-            'target': 'self',
-        }
 
     def _action_open_moves(self, moves, name, context=None):
         """Helper to open list view of account moves.

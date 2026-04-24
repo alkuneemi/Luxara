@@ -107,13 +107,6 @@ def is_france_territory(country_code):
     return country_code.upper() in ALL_FRANCE_TERRITORIES
 
 
-def is_drom_com(country_code):
-    """Check if a country code represents a DROM-COM territory."""
-    if not country_code:
-        return False
-    return country_code.upper() in ALL_DROM_COM
-
-
 def get_territory_type(country_code):
     """Get the territory type for a given country code."""
     if not country_code:
@@ -169,14 +162,14 @@ def get_transaction_flow_type(company_country, partner_country, partner_vat):
 
     # One party outside French territories = International
     if not get_territory_type(company_country) or not get_territory_type(partner_country):
-        return 'international'
+        return 'b2bi'
 
     # Both parties in e-invoicing zones = Domestic B2B (excluded from Flux 10)
     if should_use_einvoicing(company_country, partner_country):
         return None
 
     # All other cases: International
-    return 'international'
+    return 'b2bi'
 
 
 def get_drom_com_info():
