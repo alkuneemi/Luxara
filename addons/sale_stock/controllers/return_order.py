@@ -45,7 +45,7 @@ class CustomerPortal(sale_portal.CustomerPortal):
                 continue
             common_line_vals = {
                 "name": line.product_id.with_context(display_default_code=False).display_name,
-                "currency": line.currency_id.id,
+                "currency_id": line.currency_id.id,
                 "description_sale": line.name,
                 "price": line.price_unit,
                 "product_id": line.product_id.id,
@@ -68,9 +68,9 @@ class CustomerPortal(sale_portal.CustomerPortal):
 
         return return_data
 
-    @route("/my/orders/return_order/download_label", type="http", auth="user")
+    @route("/my/orders/<int:order_id>/download_return_label", type="http", auth="user")
     def return_order_dowload_label(
-        self, order_id, access_token=False, selected_lines="", return_reason=""
+        self, order_id, access_token=False, picking_details="", return_reason=""
     ):
         """Return return pdf of picking for selected products with return reason.
 
@@ -88,12 +88,12 @@ class CustomerPortal(sale_portal.CustomerPortal):
         except (AccessError, MissingError):
             return request.redirect('/my')
 
-        selected_lines_list = json.loads(selected_lines)
+        picking_details = json.loads(picking_details)
         qty_by_delivery = defaultdict(dict)
-        for line in selected_lines_list:
-            delivery_id = line["delivery_id"]
-            product_id = line["product_id"]
-            qty_by_delivery[delivery_id][product_id] = line["quantity"]
+        for delivery_id, products in picking_details.items():
+            delivery_id = int(delivery_id)
+            for product_id, qty in products:
+                qty_by_delivery[delivery_id][product_id] = qty
 
         return_data = {
             "wh_address_id": sale_order.warehouse_id.partner_id,
@@ -101,7 +101,7 @@ class CustomerPortal(sale_portal.CustomerPortal):
             "return_reason": self.env["return.reason"].browse(int(return_reason)),
         }
         pdf = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
-            'sale_stock.action_report_return_label',
+            "sale_stock.action_report_return_label",
             list(qty_by_delivery.keys()), data=return_data,
         )[0]
 

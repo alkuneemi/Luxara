@@ -8,7 +8,6 @@ import { renderToMarkup } from "@web/core/utils/render";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { QuantityButtons } from "@sale/js/quantity_buttons/quantity_buttons";
-import { download } from "@web/core/network/download";
 
 export class ReturnOrderDialog extends Component {
     static components = { Dialog, WarningDialog, QuantityButtons };
@@ -23,7 +22,7 @@ export class ReturnOrderDialog extends Component {
         this.dialog = useService("dialog");
         this.orm = useService("orm");
         this.state =  useState({ returnableLines: [], returnReason: null });
-        this.title = _t("Request a return");
+        this.url = `${ this.props.saleOrderId }/download_return_label`;
 
         onWillStart(async () => {
             this.content = await this._loadData();
@@ -103,19 +102,21 @@ export class ReturnOrderDialog extends Component {
     //--------------------------------------------------------------------------
 
     async _downloadReturnLabel(selectedLines) {
+        const pickingDetails = {};
+        selectedLines.forEach(line => {
+            if (!pickingDetails[line.delivery_id]) {
+                pickingDetails[line.delivery_id] = [];
+            }
+            pickingDetails[line.delivery_id].push([line.product_id, line.quantity]);
+        });
         const params = {
             order_id: this.props.saleOrderId,
             access_token: this.props.accessToken,
-            selected_lines: JSON.stringify(selectedLines),
+            picking_details: JSON.stringify(pickingDetails),
             return_reason: this.state.returnReason,
         }
-        if (selectedLines.length <= 10) {
-            const query = new URLSearchParams(params).toString();
-            const url = `return_order/download_label?${query}`;
-            window.open(url, "_blank");
-        } else {
-            await download({url: "return_order/download_label", data: params});
-        }
+        const query = new URLSearchParams(params).toString();
+        window.open(`${ this.url }?${ query }`, "_blank");
         this.props.close();
     }
 

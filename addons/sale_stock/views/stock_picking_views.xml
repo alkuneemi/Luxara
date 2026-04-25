@@ -22,6 +22,16 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"></field>
         <field name="arch" type="xml">
+            <field name="origin" position="after">
+                <field
+                    name="return_reason_id"
+                    invisible="not (
+                        allow_spontaneous_returns
+                        and return_id
+                        and picking_type_code == 'incoming'
+                    )"
+                />
+            </field>
             <xpath expr="//field[@name='move_type']" position="before">
                 <field name="sale_id"/>
             </xpath>
@@ -59,7 +69,9 @@
     <record id="action_stock_picking_return_report" model="ir.actions.act_window">
         <field name="name">Returns</field>
         <field name="res_model">stock.picking</field>
-        <field name="domain">[('picking_type_id.code', '=', 'incoming')]</field>
+        <field name="domain">
+            [('picking_type_id.code', '=', 'incoming'), ('return_id', '!=', False)]
+        </field>
         <field name="context">{'search_default_group_by_return_reason': 1}</field>
         <field name="view_mode">graph,pivot,list,form</field>
     </record>

@@ -5,8 +5,7 @@
             t-if="this.state.returnableLines.length"
             bodyClass="'d-flex flex-column d-sm-block'"
             contentClass="'o_return_order_dialog'"
-            size="size"
-            title="title"
+            title.translate="Request a return"
         >
             <table class="table table-sm table-borderless position-relative mb-0">
                 <tbody class="sale_tbody">
@@ -34,14 +33,14 @@
                             </td>
                             <td class="d-flex d-sm-table-cell align-items-center justify-content-between w-sm-25 pb-3 p-0 text-sm-end">
                                 <span
-                                    t-out="formatCurrency(line.price, line.currency)"
+                                    t-out="formatCurrency(line.price, line.currency_id)"
                                     class="o_return_order_dialog_price h6 d-block mb-0 mb-sm-2 text-nowrap fw-bold text-end"
                                 />
                                 <QuantityButtons
                                     quantity="line.quantity or 0"
                                     setQuantity="quantity => this.setQuantity(line, quantity)"
                                     isMinusButtonDisabled="line.quantity === 0"
-                                    isPlusButtonDisabled="line.quantity == line.delivered_qty"
+                                    isPlusButtonDisabled="line.quantity === line.delivered_qty"
                                 />
                             </td>
                         </tr>

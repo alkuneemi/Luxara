@@ -183,7 +183,9 @@ class StockRule(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    allow_spontaneous_returns = fields.Boolean(related="company_id.allow_spontaneous_returns")
     sale_id = fields.Many2one('sale.order', compute="_compute_sale_id", inverse="_set_sale_id", string="Sales Order", store=True, index='btree_not_null')
+    return_reason_id = fields.Many2one("return.reason")
 
     @api.depends('reference_ids.sale_ids', 'move_ids.sale_line_id.order_id')
     def _compute_sale_id(self):
@@ -279,6 +281,14 @@ class StockPicking(models.Model):
         if sale_order_lines_vals:
             self.env['sale.order.line'].with_context(skip_procurement=True).create(sale_order_lines_vals)
         return res
+
+    def _create_return(self):
+        return_picking = super()._create_return()
+        return_reason_id = self.env.context.get("return_reason_id")
+        if return_reason_id:
+            return_picking.return_reason_id = int(return_reason_id)
+
+        return return_picking
 
     def _log_less_quantities_than_expected(self, moves):
         """ Log an activity on sale order that are linked to moves. The
