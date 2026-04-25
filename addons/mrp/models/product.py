@@ -248,11 +248,34 @@ class ProductProduct(models.Model):
         return action
 
     def _compute_mrp_product_qty(self):
+<<<<<<< 7d52e1913844e6ec765a36b1b03b8f59a381cbe2
         date_from = fields.Datetime.to_string(fields.Datetime.now() - timedelta(days=365))
         #TODO: state = done?
         domain = [('state', '=', 'done'), ('product_id', 'in', self.ids), ('date_start', '>', date_from)]
         read_group_res = self.env['mrp.production']._read_group(domain, ['product_id'], ['product_uom_qty:sum'])
         mapped_data = {product.id: qty for product, qty in read_group_res}
+||||||| 2fde70e450a36a258bdb67dcb0bd6646b60a26ff
+        date_from = fields.Datetime.to_string(fields.datetime.now() - timedelta(days=365))
+        #TODO: state = done?
+        domain = [('state', '=', 'done'), ('product_id', 'in', self.ids), ('date_start', '>', date_from)]
+        read_group_res = self.env['mrp.production']._read_group(domain, ['product_id'], ['product_uom_qty:sum'])
+        mapped_data = {product.id: qty for product, qty in read_group_res}
+=======
+        date_from = fields.Datetime.to_string(fields.datetime.now() - timedelta(days=365))
+        domain = [
+            ('production_id.state', '=', 'done'),
+            ('product_id', 'in', self.ids),
+            ('production_id.date_start', '>', date_from),
+            ('state', '!=', 'cancel'),
+            ('picked', '=', True),
+        ]
+        read_group_res = self.env['stock.move']._read_group(domain, ['product_id', 'product_uom'], ['quantity:sum'])
+        mapped_data = collections.defaultdict(float)
+        for product, uom, qty in read_group_res:
+            if uom != product.uom_id:
+                qty = uom._compute_quantity(qty, product.uom_id)
+            mapped_data[product.id] += qty
+>>>>>>> 6f7d1a38ff7ead95456ee7a8862d9c969b9129f0
         for product in self:
             if not product.id:
                 product.mrp_product_qty = 0.0
