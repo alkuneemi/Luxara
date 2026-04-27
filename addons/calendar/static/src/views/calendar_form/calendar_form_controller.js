@@ -53,4 +53,24 @@ export class CalendarFormController extends FormController {
                 });
         }
     }
+
+    shouldAskInvitationsSending(record) {
+        return record.newPartners.length > 0 && record.data.start >= luxon.DateTime.now();
+    }
+
+    async onRecordSaved(record, changes) {
+        await super.onRecordSaved(...arguments);
+        record.newPartners = (changes.partner_ids ?? []).reduce((acc, partner) => {
+            if (partner[0] === 4) {
+                acc.push(partner[1]);
+            }
+            return acc;
+        }, []);
+        if (this.shouldAskInvitationsSending(record)) {
+            const actionOpenInviteWizard = await this.orm.call("calendar.event", "action_open_invite_wizard", [record.resId, record.newPartners]);
+            if (actionOpenInviteWizard && actionOpenInviteWizard.context) {
+                this.actionService.doAction(actionOpenInviteWizard);
+            }
+        }
+    }
 }

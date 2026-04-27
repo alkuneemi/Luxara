@@ -829,8 +829,6 @@ class CalendarEvent(models.Model):
                 detached_events = event.with_context(skip_contact_description=True)._apply_recurrence_values(recurrence_values)
                 detached_events.active = False
 
-        events.attendee_ids._send_invitation_emails()
-
         # update activities based on calendar event data, unless already prepared
         # above manually. Heuristic: a new command (0, 0, vals) is considered as
         # complete
@@ -965,16 +963,11 @@ class CalendarEvent(models.Model):
             # the base event of a recurrence is accepted by the organizer but not the following events
             attendee_update_events.attendee_ids.filtered(lambda att: self.user_id.partner_id == att.partner_id).write({'state': 'needsAction'})
 
-        current_attendees = self.filtered('active').attendee_ids
-        skip_attendee_notification = self.env.context.get('skip_attendee_notification')
-        if not skip_attendee_notification and 'partner_ids' in values:
-            # we send to all partners and not only the new ones
-            self._get_new_invited_attendees(current_attendees, previous_attendees, vals)._send_invitation_emails()
-        if not skip_attendee_notification and not self.env.context.get('is_calendar_event_new') and 'start' in values:
+        if not self.env.context.get('skip_attendee_notification') and not self.env.context.get('is_calendar_event_new') and 'start' in values:
             start_date = fields.Datetime.to_datetime(values.get('start'))
             # Only notify on future events
             if start_date and start_date >= fields.Datetime.now():
-                (current_attendees & previous_attendees).with_context(
+                (self.filtered('active').attendee_ids & previous_attendees).with_context(
                     calendar_template_ignore_recurrence=not update_recurrence
                 )._notify_attendees(
                     self.env.ref('calendar.calendar_template_meeting_changedate', raise_if_not_found=False),
@@ -1082,6 +1075,26 @@ class CalendarEvent(models.Model):
         for old_event, new_event in zip(self, new_events):
             new_event.write({'partner_ids': [(Command.set(old_event.partner_ids.ids))]})
         return new_events
+
+    def action_open_invite_wizard(self, partner_ids):
+        self.ensure_one()
+        template = self.env.ref('calendar.calendar_template_meeting_invitation', raise_if_not_found=False)
+        if not self.partner_ids or self.partner_ids == self.user_id.partner_id or self.user_id._has_any_active_synchronization() or not template:
+            if not template:
+                _logger.warning('Template "calendar.calendar_template_meeting_invitation" was not found. Cannot send invitations.')
+            return {}
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'calendar.attendee.invite.wizard',
+            'views': [(False, 'form')],
+            'target': 'new',
+            'name': _('Invite Attendees'),
+            'context': {
+                'default_calendar_attendee_ids': self.attendee_ids.filtered_domain([('partner_id', 'in', partner_ids)]).ids,
+                'default_template_id': template.id,
+                'dialog_size': 'small',
+            },
+        }
 
     def action_unlink(self, attendee_id=None, next_action=None, recurrence_choice=None):
         """
@@ -1806,11 +1819,6 @@ class CalendarEvent(models.Model):
                 contact_description.append("")  # To add a blank line between the organizer and partner details
             contact_description.extend(self._prepare_partner_contact_details_html(_("Contact Details"), first_partner))
         return Markup("<br/>").join(contact_description)
-
-    def _get_new_invited_attendees(self, current_attendees, previous_attendees, vals):
-        """Get the attendees who must receive an invitation for a modified calendar event. This method is meant
-        to be overridden."""
-        return current_attendees - previous_attendees
 
     @api.model
     def _prepare_partner_contact_details_html(self, section_title, partner):
