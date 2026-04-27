@@ -56,6 +56,7 @@ export class BillGuide extends Component {
             views: [[false, "form"]],
             context: {
                 default_move_type: "in_invoice",
+                default_journal_id: this.props.record.resId,
             },
         });
     }
