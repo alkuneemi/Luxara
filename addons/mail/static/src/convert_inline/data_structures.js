@@ -61,6 +61,13 @@ export class UniqueArray {
         return this.array.length;
     }
 
+    indexOf(item) {
+        if (this.has(item)) {
+            return this.array.indexOf(item);
+        }
+        return -1;
+    }
+
     shift() {
         const length = this.array.length;
         const deleted = this.array.shift();

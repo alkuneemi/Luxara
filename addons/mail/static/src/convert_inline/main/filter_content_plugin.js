@@ -62,6 +62,7 @@ export class FilterContentPlugin extends Plugin {
             !parentNodeAnalysis ||
             parentNodeAnalysis.nodeInfos.size === 0 ||
             !this.isBlock(node) ||
+            // TODO EGGMAIL: arbitrary choice to take the lastNodeInfo to motivate
             !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo.referenceNode)) ||
             parentNode.referenceNode.nodeName !== "DIV"
         ) {

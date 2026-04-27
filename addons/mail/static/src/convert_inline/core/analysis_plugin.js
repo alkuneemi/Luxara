@@ -167,6 +167,10 @@ export class AnalysisPlugin extends Plugin {
      * phase
      */
     addSyntheticNodeAnalysis() {
+        // TODO EGGMAIL: what if a nodeAnalysis processed later
+        // was removed from the tree by a prior nodeAnalysis? =>
+        // should not happen as the only removed node should be the one requesting
+        // the analysis, all other nodes should still exist in the tree
         for (const nodeAnalysis of [...this.needSyntheticNodeAnalysis]) {
             this.needSyntheticNodeAnalysis.delete(nodeAnalysis);
             this.processThrough("synthetic_node_analysis_processors", nodeAnalysis);

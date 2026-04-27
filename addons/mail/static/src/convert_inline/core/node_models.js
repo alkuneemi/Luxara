@@ -49,8 +49,12 @@ export class NodeAnalysis {
 
     constructor({ identity, nodeInfo, parent, analysis = {} } = {}) {
         this.identity = identity;
-        parent.appendChild(this);
-        this.pushNodeInfo(nodeInfo);
+        if (parent) {
+            parent.appendChild(this);
+        }
+        if (nodeInfo) {
+            this.pushNodeInfo(nodeInfo);
+        }
         this.analysis.merge(analysis);
     }
 
