@@ -1112,6 +1112,14 @@ class Website(models.CachedModel):
             fallback_create_missing_industry_image('s_carousel_cards_default_image_2', 's_carousel_default_image_2')
             fallback_create_missing_industry_image('s_carousel_cards_default_image_3', 's_carousel_default_image_3')
             fallback_create_missing_industry_image('s_banner_connected_default_image', 's_cover_default_image')
+            fallback_create_missing_industry_image('shop_category_1_16x9', 's_carousel_default_image_1')
+            fallback_create_missing_industry_image('s_ecomm_categories_showcase_1', 'library_image_14')
+            fallback_create_missing_industry_image('s_ecomm_categories_showcase_2', 'library_image_10')
+            fallback_create_missing_industry_image('s_ecomm_categories_showcase_3', 'library_image_13')
+            fallback_create_missing_industry_image('s_ecomm_categories_showcase_4', 'library_image_05')
+            fallback_create_missing_industry_image('s_masonry_block_default_image_1', 's_image_text_default_image')
+            fallback_create_missing_industry_image('s_masonry_block_default_image_2', 's_text_image_default_image')
+            fallback_create_missing_industry_image('s_opening_hours_default_image', 's_carousel_default_image_2')
 
         except Exception:
             pass

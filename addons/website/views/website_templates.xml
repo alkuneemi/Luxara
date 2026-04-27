@@ -2525,6 +2525,13 @@
     </xpath>
 </template>
 
+<!-- Footer Content Width -->
+<template id="footer_content_width_fluid" inherit_id="website.layout" name="Footer Width Fluid" active="False">
+    <xpath expr="//footer//div[hasclass('container')]" position="attributes">
+        <attribute name="class" remove="container" add="container-fluid" separator=" "/>
+    </xpath>
+</template>
+
 <!-- Hide Copyright -->
 <template id="footer_no_copyright" inherit_id="website.layout" name="Footer No Copyright" active="False">
     <xpath expr="//div[hasclass('o_footer_copyright')]" position="before">
