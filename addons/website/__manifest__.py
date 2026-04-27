@@ -184,6 +184,8 @@
         'views/snippets/s_features_cards.xml',
         'views/snippets/s_projects_two_columns.xml',
         'views/snippets/s_paragraph_bold.xml',
+        'views/snippets/s_features_image.xml',
+        'views/snippets/s_image_features.xml',
         'views/snippets/s_dynamic_snippet.xml',
         'views/snippets/s_dynamic_snippet_carousel.xml',
         'views/snippets/s_banner_product.xml',
