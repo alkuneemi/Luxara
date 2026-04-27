@@ -1038,3 +1038,34 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
         self.assertEqual(due_date.text, '20251231')
         self.assertEqual(days.text, '15')
         self.assertEqual(percent.text, '3.0')
+
+    def test_selfbilling_sequences_ignored_when_accounting_firm_enabled(self):
+        """Test that imported selfbilling invoices won't affect the sequence of normal invoices."""
+
+        sale_journal = self.company_data["default_journal_sale"].copy()
+        self.env.company.quick_edit_mode = "out_and_in_invoices"
+
+        # Import the self-billing invoice in the sales journal
+        self_billing_path = f"{self.test_module}/tests/test_files/bis3_self_billing_example.xml"
+        with file_open(self_billing_path, 'rb') as file:
+            xml_attachment = self.env['ir.attachment'].create({
+                'mimetype': 'application/xml',
+                'name': 'test_invoice.xml',
+                'raw': file.read(),
+            })
+        imported_invoice = self.import_attachment(xml_attachment, sale_journal)
+        self.assertTrue(imported_invoice.is_self_billing)
+
+        # Create and post a new normal invoice in the same journal
+        new_invoice = self.env['account.move'].create({
+            'partner_id': self.partner_a.id,
+            'move_type': 'out_invoice',
+            'journal_id': sale_journal.id,
+            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})],
+        })
+        new_invoice.action_post()
+
+        self.assertFalse(new_invoice.is_self_billing)
+
+        imported_invoice_prefix = imported_invoice.name.split('/')[0] or '/'
+        self.assertFalse(new_invoice.name.startswith(imported_invoice_prefix))

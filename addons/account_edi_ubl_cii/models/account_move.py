@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from lxml import etree
 
 from collections import defaultdict
 
@@ -21,6 +22,7 @@ class AccountMove(models.Model):
         string="UBL/CII File",
         copy=False,
     )
+    is_self_billing = fields.Boolean(default=False)
 
     # -------------------------------------------------------------------------
     # ACTIONS
@@ -243,3 +245,32 @@ class AccountMove(models.Model):
         return not self.ubl_cii_xml_id \
             and (self.is_sale_document() or self._is_exportable_as_self_invoice()) \
             and bool(self.partner_id.commercial_partner_id.ubl_cii_format)
+
+    def _get_last_sequence_domain(self, relaxed=False):
+        # EXTENDS 'account'
+        where_string, param = super()._get_last_sequence_domain(relaxed)
+        where_string += " AND is_self_billing = false "
+
+        return where_string, param
+
+    def _extend_with_attachments(self, attachments, new=False):
+        # EXTENDS 'account'
+        attachments_by_invoice = super()._extend_with_attachments(attachments, new)
+        for move in self:
+            move.is_self_billing = move._is_self_billing_invoice()
+        return attachments_by_invoice
+
+    def _is_self_billing_invoice(self):
+        """Returns True if the invoice is a self-billing invoice based on the XML attachment content."""
+        self.ensure_one()
+        try:
+            tree = etree.fromstring(self.ubl_cii_xml_id.raw)
+            ubl_type_code = tree.find('.//{*}InvoiceTypeCode')
+            if ubl_type_code is not None and ubl_type_code.text == '389':
+                return True
+            cii_type_code = tree.find('.//{*}TypeCode')
+            if cii_type_code is not None and cii_type_code.text == '389':
+                return True
+        except Exception:  # noqa: BLE001
+            pass
+        return False
