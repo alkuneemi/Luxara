@@ -4097,6 +4097,9 @@ class MailThread(models.AbstractModel):
         """
         msg_vals = msg_vals or {}
         author_id = msg_vals['author_id'] if 'author_id' in msg_vals else message.author_id.id
+        author = self.env["res.partner"].browse(author_id) or self.env["mail.guest"].browse(
+            msg_vals.get("author_guest_id", message.author_guest_id.id),
+        )
         model = msg_vals['model'] if 'model' in msg_vals else message.model
         title = force_record_name or message.record_name
         res_id = msg_vals['res_id'] if 'res_id' in msg_vals else message.res_id
@@ -4104,10 +4107,8 @@ class MailThread(models.AbstractModel):
         if message.message_type == 'tracking':
             body = "\n%s\n%s%s" % (message.subtype_id.description, body, message.body)
 
-        if author_id:
-            author_name = self.env['res.partner'].browse(author_id).name
-            title = "%s: %s" % (author_name, title)
-            icon = "/web/image/res.partner/%d/avatar_128" % author_id
+        if model:
+            icon = modules.module.get_module_icon(self.env[model]._original_module)
         else:
             icon = '/web/static/img/odoo-icon-192x192.png'
 
@@ -4137,7 +4138,7 @@ class MailThread(models.AbstractModel):
         return {
             'title': title,
             'options': {
-                'body': html2plaintext(body, include_references=False),
+                'body': f"{author.name}: {html2plaintext(body, include_references=False)}",
                 'icon': icon,
                 'data': {
                     'model': model if model else '',
