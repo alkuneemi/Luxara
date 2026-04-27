@@ -12,6 +12,11 @@ from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
 
+# sms.composer stores recipient IDs as repr() in a Char field and decodes them
+# with ast.literal_eval, which rejects strings over 100 KiB. Batch so the
+# encoded list stays well under that limit.
+SMS_RECIPIENT_BATCH_SIZE = 1000
+
 
 class Mailing(models.Model):
     _inherit = 'mailing.mailing'
@@ -248,8 +253,10 @@ class Mailing(models.Model):
             if not res_ids:
                 res_ids = mailing._get_remaining_recipients()
             if res_ids:
-                composer = self.env['sms.composer'].with_context(active_id=False).create(mailing._send_sms_get_composer_values(res_ids))
-                composer._action_send_sms()
+                for batch_start in range(0, len(res_ids), SMS_RECIPIENT_BATCH_SIZE):
+                    batch_ids = res_ids[batch_start:batch_start + SMS_RECIPIENT_BATCH_SIZE]
+                    composer = self.env['sms.composer'].with_context(active_id=False).create(mailing._send_sms_get_composer_values(batch_ids))
+                    composer._action_send_sms()
         return True
 
     # ------------------------------------------------------
