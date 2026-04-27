@@ -331,7 +331,6 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
             'end': {'date': str(event.stop_date + relativedelta(days=1)), 'dateTime': None},
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'declined'}],
             'extendedProperties': {'private': {'%s_odoo_id' % self.env.cr.dbname: event.id}},
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
         })
 
     @patch_api
@@ -1439,7 +1438,6 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
                           {'email': 'odoobot@example.com', 'responseStatus': 'accepted'},],
             'extendedProperties': {'shared': {'%s_odoo_id' % self.env.cr.dbname: event.id,
                                               '%s_owner_id' % self.env.cr.dbname: other_user.id}},
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'transparency': 'opaque',
         }, timeout=3)
 

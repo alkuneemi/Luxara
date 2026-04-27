@@ -14,7 +14,7 @@ const StorePatch = {
                     if (meeting.start) {
                         const date = deserializeDateTime(meeting.start);
                         meeting.formattedStart = formatDateTime(date, {
-                            format: localization.timeFormat,
+                            format: localization.timeFormat.replace(":ss", ""),
                         });
                     }
                 }

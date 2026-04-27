@@ -134,6 +134,10 @@ class CalendarEvent(models.Model):
         return defaults
 
     @api.model
+    def _default_alarm_ids(self):
+        return self.env.ref('calendar.alarm_notif_1', raise_if_not_found=False)
+
+    @api.model
     def _default_partners(self):
         """ When active_model is res.partner, the current partners should be attendees """
         partners = self.env.user.partner_id
@@ -250,7 +254,6 @@ class CalendarEvent(models.Model):
     alarm_ids = fields.Many2many(
         'calendar.alarm', 'calendar_alarm_calendar_event_rel',
         string='Reminders', ondelete="restrict",
-        default=lambda self: self.env.ref('calendar.alarm_notif_1', raise_if_not_found=False),
         help="Notifications sent to all attendees to remind of the meeting.")
     # RECURRENCE FIELD
     recurrency = fields.Boolean('Recurrent')
@@ -310,8 +313,10 @@ class CalendarEvent(models.Model):
 
     @api.onchange("allday")
     def _onchange_allday(self):
+        default_alarm_ids = self._default_alarm_ids()
         for event in self:
             event.show_as = 'free' if event.allday else 'busy'
+            event.alarm_ids = False if event.allday else default_alarm_ids
 
     @api.depends("attendee_ids")
     def _compute_should_show_status(self):
@@ -708,9 +713,11 @@ class CalendarEvent(models.Model):
             'res_model_id', 'res_id', 'start', 'user_id',
         ])
 
+        default_alarm_ids = self._default_alarm_ids()
         vals_list = [  # Else bug with quick_create when we are filter on an other user
             {
                 **vals,
+                'alarm_ids': vals.get('alarm_ids', False if vals.get('allday', defaults.get('allday')) else default_alarm_ids),
                 'meeting_activity_ids': vals.get('meeting_activity_ids', defaults.get('meeting_activity_ids')),
                 'allday': vals.get('allday', defaults.get('allday')),
                 'description': vals.get('description', defaults.get('description')),
