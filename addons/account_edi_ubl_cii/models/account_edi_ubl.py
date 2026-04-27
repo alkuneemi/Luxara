@@ -871,21 +871,15 @@ class AccountEdiUBL(models.AbstractModel):
     def _ubl_add_line_item_name_description_nodes(self, vals):
         item_node = vals['item_node']
         base_line = vals['line_vals']['base_line']
-        product = base_line['product_id']
 
-        if base_line.get('_removed_tax_data'):
+        line_name = name = base_line.get('name', '')  # Regular business line.
+        description = None
+        if product := base_line['product_id']:
+            name = product.display_name
+            description = line_name.replace(name, '').strip()
+        elif base_line.get('_removed_tax_data'):
             # Emptying tax extra line.
             name = description = base_line['_removed_tax_data']['tax'].name
-        else:
-            name = product.name or ''
-            if line_name := base_line.get('name'):
-                # Regular business line.
-                description = line_name
-                if not name:
-                    name = line_name
-            else:
-                # Undefined line.
-                description = product.description_sale or ''
 
         if description:
             item_node['cbc:Description'] = {'_text': description}
@@ -2515,13 +2509,22 @@ class AccountEdiUBL(models.AbstractModel):
             taxes_values.append(tax_values)
 
     def _import_ubl_invoice_line_add_name(self, collected_values):
+        """
+        In UBL, both Name and Description elements are optional
+        An item may contain multiple Description elements
+        """
         line_tree = collected_values['line_tree']
-        name = collected_values['name'] = (
-            line_tree.findtext('.//{*}Item/{*}Description')
-            or line_tree.findtext('.//{*}Item/{*}Name')
-        )
-        if name:
+        name = collected_values['name'] = line_tree.findtext('.//{*}Item/{*}Name')
+        description = ''
+        for description_elem in line_tree.iterfind('.//{*}Item/{*}Description'):
+            description += description_elem.text + '\n'
+
+        if name and description:
+            collected_values['to_write']['name'] = f'{name}\n{description.strip()}'
+        elif name:
             collected_values['to_write']['name'] = name
+        elif description:
+            collected_values['to_write']['name'] = description.strip()
 
     def _import_ubl_invoice_line_add_allowance_charges_values(self, collected_values):
         line_tree = collected_values['line_tree']
@@ -2958,7 +2961,7 @@ class AccountEdiUBL(models.AbstractModel):
         if account := collected_values['account_values'].get('account'):
             base_line_kwargs['account_id'] = account
 
-        if name := collected_values.get('name'):
+        if name := to_write.get('name'):
             base_line_kwargs['_create_values']['name'] = name
         if deferred_start_date := to_write.get('deferred_start_date'):
             base_line_kwargs['_create_values']['deferred_start_date'] = deferred_start_date
