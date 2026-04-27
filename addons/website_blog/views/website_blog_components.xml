@@ -210,6 +210,7 @@ Options:
         <div class="o_wblog_sidebar_block pb-4" t-ignore="true">
             <h2 class="h6">Follow Us</h2>
             <t t-snippet-call="website.s_social_media"
+                string="Social Media"
                 _classes.f="no_icon_color"
                 _icon_classes.f="rounded-circle o_sm_custom_size"
                 _style.f="--fa-icon-size: 40px;"/>
@@ -295,14 +296,15 @@ Display a sidebar beside the post content.
 <!-- (Option) Post Sidebar: Share Links Display -->
 <template id="opt_blog_post_share_links_display" name="Share Links" inherit_id="website_blog.blog_post_sidebar" active="False" priority="2">
     <xpath expr="//div[@id='o_wblog_post_sidebar_sticky']" position="inside">
-        <div class="o_wblog_sidebar_block mb-2 pb-4">
+        <div class="o_wblog_sidebar_block mb-2 pb-4" t-ignore="true">
             <div>
                 <h2 class="mb-3 small">Share this post</h2>
             </div>
 
             <t t-snippet-call="website.s_share"
+                string="Share"
                 _classes.f="no_icon_color"
-                _icon_classes.f="rounded-circle o_sm_custom_size"
+                _icon_classes.f="rounded-circle o_sm_custom_size shadow-sm"
                 _style.f="--fa-icon-size: 40px;"
                 _link_classes.f="o_wblog_share_links"/>
         </div>

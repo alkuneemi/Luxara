@@ -345,12 +345,11 @@ list of filtered posts (by date or tag).
     <div t-field="blog_post.content"
         class="o_wblog_post_content_field"/>
         <div class="d-flex align-items-center flex-wrap gap-3 justify-content-between mt-5">
-            <t t-if="opt_blog_post_header_share_links_display" t-snippet-call="website.s_share">
-                <t t-set="_classes" t-value="'no_icon_color'"/>
-                <t t-set="_icon_classes" t-value="'rounded-circle o_sm_custom_size'"/>
-                <t t-set="_style" t-value="'--fa-icon-size: 40px;'"/>
-                <t t-set="_link_classes" t-value="'o_wblog_share_links'"/>
-            </t>
+            <t t-if="opt_blog_post_header_share_links_display" t-snippet-call="website.s_share"
+                _classes.f="no_icon_color"
+                _icon_classes.f="rounded-circle o_sm_custom_size shadow-sm"
+                _style.f="--fa-icon-size: 40px;"
+                _link_classes.f="o_wblog_share_links"/>
             <div t-if="blog_post.tag_ids">
                 <t t-foreach="blog_post.tag_ids" t-as="one_tag">
                     <a t-attf-class="badge post_link text-decoration-none o_tag o_color_#{one_tag.color}" t-attf-href="#{blog_url(tag=slug(one_tag))}" t-out="one_tag.name"/>
@@ -382,7 +381,7 @@ list of filtered posts (by date or tag).
     <xpath expr="//div[@id='title']" position="replace">
         <div t-att-class="'container' if not opt_blog_post_full_width_cover else 'container-fluid'">
 
-            <div id="title" class="blog_header o_wblog_regular_cover_container row">
+            <div id="title" class="blog_header o_wblog_regular_cover_container row g-0">
                 <div class="col-12 col-lg-8 offset-lg-2">
                     <t t-if="opt_blog_post_breadcrumb" t-call="website_blog.post_breadcrumbs"/>
 
@@ -398,15 +397,14 @@ list of filtered posts (by date or tag).
                     <div t-if="opt_blog_post_header_author_avatar_display or opt_blog_post_header_share_links_display" class="d-flex flex-column flex-md-row justify-content-between gap-3 gap-md-0 mt-5">
                         <t t-if="opt_blog_post_header_author_avatar_display" t-call="website_blog.post_published_info"
                             is_post_page.f="True"
-                            additionnal_classes.f="'d-inline-flex me-2'"
+                            additionnal_classes.f="d-inline-flex me-2"
                             opt_posts_loop_show_author.f="True"
                             opt_posts_loop_show_date.f="True"/>
-                        <t t-if="opt_blog_post_header_share_links_display" t-snippet-call="website.s_share">
-                            <t t-set="_classes" t-value="'no_icon_color'"/>
-                            <t t-set="_icon_classes" t-value="'rounded-circle o_sm_custom_size'"/>
-                            <t t-set="_style" t-value="'--fa-icon-size: 40px;'"/>
-                            <t t-set="_link_classes" t-value="'o_wblog_share_links'"/>
-                        </t>
+                        <t t-if="opt_blog_post_header_share_links_display" t-snippet-call="website.s_share"
+                            _classes.f="no_icon_color"
+                            _icon_classes.f="rounded-circle o_sm_custom_size shadow-sm"
+                            _style.f="--fa-icon-size: 40px;"
+                            _link_classes.f="o_wblog_share_links"/>
                     </div>
                 </div>
                 <t t-call="website.record_cover"
@@ -445,16 +443,15 @@ list of filtered posts (by date or tag).
                     <div class="d-flex flex-column gap-3 mt-auto">
                         <t t-if="opt_blog_post_header_author_avatar_display" t-call="website_blog.post_published_info"
                             is_post_page.f="True"
-                            additionnal_classes.f="'d-inline-flex me-2'"
+                            additionnal_classes.f="d-inline-flex me-2"
                             opt_posts_loop_show_author.f="True"
                             opt_posts_loop_show_date.f="True"/>
                         <t t-if="opt_blog_post_header_share_links_display">
-                            <t t-snippet-call="website.s_share">
-                                <t t-set="_classes" t-value="'no_icon_color'"/>
-                                <t t-set="_icon_classes" t-value="'rounded-circle o_sm_custom_size'"/>
-                                <t t-set="_style" t-value="'--fa-icon-size: 40px;'"/>
-                                <t t-set="_link_classes" t-value="'o_wblog_share_links'"/>
-                            </t>
+                            <t t-snippet-call="website.s_share"
+                                _classes.f="no_icon_color"
+                                _icon_classes.f="rounded-circle o_sm_custom_size shadow-sm"
+                                _style.f="--fa-icon-size: 40px;"
+                                _link_classes.f="o_wblog_share_links"/>
                         </t>
                     </div>
                 </div>
