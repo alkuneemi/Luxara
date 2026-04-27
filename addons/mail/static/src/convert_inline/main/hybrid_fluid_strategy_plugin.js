@@ -50,11 +50,20 @@ export class HybridFluidStrategyPlugin extends Plugin {
         // the current nodeAnalysis should be replaced with the list of rows
         // need feature to insert multiple nodes as children of another
         // nodeAnalysis
-
         // features needed here:
         // - replace an item in nodeAnalysis.children
         // // currently setParent appends -> this is not enough
         // // -> honestly, need to replace the set by a special set+list structure
+        // // done
+        // Logic:
+        // exact copy paste of buildFragment logic except we create a datastructure of
+        // template arguments instead of the templates directly?
+        // Real idea here is that I should create a synthetic nodeAnalysis
+        // I already have my basic nodeAnalysis from the first pass which identifies the row
+        // and potentially some other nodeAnalysis as children of that row that may have any purpose.
+        // Objective here is to make sure that every child of the row is classified as a CELL,
+        // be it a child itself becomes a CELL, or 1+ children are wrapped in a CELL
+        // BTW the row node itself can become multiple row in some circumstances
     }
 
     analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {

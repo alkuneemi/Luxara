@@ -2,6 +2,9 @@ import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
 import { Analysis, ElementIdentity, NodeAnalysis, TextIdentity } from "./node_models";
 
+/**
+ * TODO EGGMAIL: proof-read all logic here (need re-review)
+ */
 export class AnalysisPlugin extends Plugin {
     static id = "analysis";
     static dependencies = ["measurementSnapshot", "nodeInfo", "rules"];

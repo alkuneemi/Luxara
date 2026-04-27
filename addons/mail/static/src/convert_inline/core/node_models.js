@@ -49,22 +49,25 @@ export class NodeAnalysis {
 
     constructor({ identity, nodeInfo, parent, analysis = {} } = {}) {
         this.identity = identity;
-        this.setParent(parent);
+        parent.appendChild(this);
         this.pushNodeInfo(nodeInfo);
         this.analysis.merge(analysis);
     }
 
-    setParent(parent) {
-        if (this.parent === parent) {
-            return;
+    spliceChildren(start, deleteCount, ...items) {
+        const removedChildren = this.children.splice(start, deleteCount, ...items);
+        for (const child of removedChildren) {
+            if (!this.children.has(child)) {
+                child.parent = undefined;
+            }
         }
-        if (this.parent) {
-            this.parent.deleteChild(this);
+        for (const child of items) {
+            if (child.parent && child.parent.children !== this.children) {
+                child.parent.removeChild(child);
+            }
+            child.parent = this;
         }
-        this.parent = parent || undefined;
-        if (this.parent) {
-            this.parent.appendChild(this);
-        }
+        return removedChildren;
     }
 
     pushNodeInfo(nodeInfo) {
@@ -80,11 +83,20 @@ export class NodeAnalysis {
     }
 
     appendChild(nodeAnalysis) {
+        if (nodeAnalysis.parent && nodeAnalysis.parent !== this) {
+            nodeAnalysis.parent.removeChild(nodeAnalysis);
+        }
+        nodeAnalysis.parent = this;
         return this.children.push(nodeAnalysis);
     }
 
-    deleteChild(nodeAnalysis) {
-        return this.children.delete(nodeAnalysis);
+    removeChild(nodeAnalysis) {
+        if (this.children.has(nodeAnalysis)) {
+            nodeAnalysis.parent = undefined;
+            return this.children.delete(nodeAnalysis);
+        } else {
+            return false;
+        }
     }
 
     get firstChild() {

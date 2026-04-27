@@ -40,7 +40,10 @@ export class FilterContentPlugin extends Plugin {
         attribute_rules_processors: [
             [this.provideAttributeRules.bind(this), FilterContentPlugin.id],
         ],
-        element_identity_analysis_processors: withSequence(1, this.analyzeElementIdentity.bind(this)),
+        element_identity_analysis_processors: withSequence(
+            1,
+            this.analyzeElementIdentity.bind(this)
+        ),
         style_rules_processors: [[this.provideStyleRules.bind(this), FilterContentPlugin.id]],
         is_blocked_rule_selector_predicates: this.blockUserContextSelectors.bind(this),
         should_discard_reference_node_predicates: this.isInvisible.bind(this),
@@ -59,7 +62,7 @@ export class FilterContentPlugin extends Plugin {
             !parentNodeAnalysis ||
             parentNodeAnalysis.nodeInfos.size === 0 ||
             !this.isBlock(node) ||
-            !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo)) ||
+            !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo.referenceNode)) ||
             parentNode.referenceNode.nodeName !== "DIV"
         ) {
             analysis.parsingConstraints.canParentMerge = false;

@@ -18,12 +18,14 @@ export class UniqueArray {
     }
 
     push(...items) {
-        const newItems = new Set(items);
-        const currentArray = this.array.filter((item) => {
+        const newItemSet = new Set();
+        const newItemArray = [];
+        for (const item of items) {
+            newItemSet.add(item);
+            newItemArray.push(item);
             this.set.add(item);
-            return !newItems.has(item);
-        });
-        this.array = currentArray.concat(...items);
+        }
+        this.array = this.array.filter((item) => !newItemSet.has(item)).concat(newItemArray);
         return this.array.length;
     }
 
@@ -41,16 +43,21 @@ export class UniqueArray {
         for (const item of deleted) {
             this.set.delete(item);
         }
+        for (const item of items) {
+            this.set.add(item);
+        }
         return deleted;
     }
 
     unshift(...items) {
-        const newItems = new Set(items);
-        const currentArray = this.array.filter((item) => {
+        const newItemSet = new Set();
+        const newItemArray = [];
+        for (const item of items) {
+            newItemSet.add(item);
+            newItemArray.push(item);
             this.set.add(item);
-            return !newItems.has(item);
-        });
-        this.array = Array.from(items).concat(...currentArray);
+        }
+        this.array = newItemArray.concat(this.array.filter((item) => !newItemSet.has(item)));
         return this.array.length;
     }
 
