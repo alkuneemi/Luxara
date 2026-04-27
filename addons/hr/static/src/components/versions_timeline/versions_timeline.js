@@ -28,9 +28,9 @@ export class VersionsTimeline extends StatusBarField {
     }
 
     /** @override **/
-    getDomain() {
+    getDomain(props = {}) {
         return Domain.and([super.getDomain(),
-            [["employee_id", "=", this.props.record.evalContext.id]]]
+            [["employee_id", "=", (props || this.props).record.evalContext.id]]]
         ).toList()
     }
 
