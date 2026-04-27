@@ -3,6 +3,7 @@ import { registry } from '@web/core/registry';
 import { hasTouch, isBrowserFirefox } from '@web/core/browser/feature_detection';
 import { redirect } from '@web/core/utils/urls';
 import { setElementContent } from "@web/core/utils/html";
+import { updateShopContent } from "./shop_ajax";
 import { _t } from "@web/core/l10n/translation";
 
 export class ShopPage extends Interaction {
@@ -40,6 +41,10 @@ export class ShopPage extends Interaction {
         if (isBrowserFirefox() || hasTouch() || !isFilmstripScrollable) {
             filmstripContainer?.classList.add('o_wsale_filmstrip_fancy_disabled');
         }
+        const applyBtn = document.querySelector('#o_wsale_apply_filters_btn');
+        if (applyBtn){
+            this._fetchInitialCount(applyBtn);
+        }
     }
 
     /**
@@ -47,12 +52,27 @@ export class ShopPage extends Interaction {
      *
      * @param {Event} ev
      */
-    onChangeAttribute(ev) {
-        const productGrid = this.el.querySelector('.o_wsale_products_grid_table_wrapper');
-        if (productGrid) {
-            productGrid.classList.add('opacity-50');
-        }
+    async onChangeAttribute(ev) {
         const form = ev.currentTarget.closest('form');
+        const searchParams = this._getSearchParams(form);
+        const url = new URL(form.action);
+        const isOffcanvas = !!ev.currentTarget.closest('#o_wsale_offcanvas');
+
+        const productGridWrapper = document.querySelector('.o_wsale_products_grid_table_wrapper');
+        if (productGridWrapper) productGridWrapper.classList.add('opacity-50');
+
+        if (isOffcanvas) {
+            await updateShopContent({
+                url,
+                searchParams,
+                services: this.services,
+            });
+        }else {
+            redirect(`${url.pathname}?${searchParams.toString()}`);
+        }
+    }
+
+    _getSearchParams(form) {
         const filters = form.querySelectorAll('input:checked, select');
         const attributeValues = new Map();
         const tags = new Set();
@@ -80,7 +100,18 @@ export class ShopPage extends Interaction {
         if (tags.size) {
             searchParams.set('tags', [...tags].join(','));
         }
-        redirect(`${url.pathname}?${searchParams.toString()}`);
+        return searchParams;
+    }
+
+    async _fetchInitialCount(applyBtn) {
+        const response = await fetch(`${window.location.href}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+        const data = await response.json();
+
+        applyBtn.innerHTML = `Apply Filters <span class="badge rounded-pill bg-o-color-3 text-o-color-1 ms-2">${data.count}</span>`;
     }
 
     /**

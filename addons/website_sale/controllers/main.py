@@ -582,6 +582,16 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 indent=2,
             )
         values.update(self._get_additional_shop_values(values, **post))
+
+        if request.httprequest.headers.get("X-Requested-With") == "XMLHttpRequest":
+            html_content = request.env["ir.ui.view"]._render_template(
+                "website_sale.products", values
+            )
+
+            return request.make_response(
+                json.dumps({"count": product_count, "html": str(html_content)}),
+                headers=[("Content-Type", "application/json")],
+            )
         return request.render("website_sale.products", values)
 
     @route(
