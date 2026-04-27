@@ -515,7 +515,7 @@
         <field name="name">Shop</field>
         <field name="description">Sell more with an eCommerce</field>
         <field name="sequence">9</field>
-        <field name="website_config_preselection">online_store</field>
+        <field name="website_config_preselection">eCommerce</field>
         <field name="module_id" ref="base.module_website_sale"/>
         <field name="icon">fa-shopping-cart</field>
         <field name="menu_sequence">15</field>
