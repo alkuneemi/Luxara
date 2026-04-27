@@ -436,6 +436,7 @@ class ResCompany(models.Model):
                         install_demo=False,
                     )
                 self.env.cr.precommit.add(try_loading)
+        companies._set_category_defaults()
         return companies
 
     def get_new_account_code(self, current_code, old_prefix, new_prefix):
@@ -676,6 +677,11 @@ class ResCompany(models.Model):
         locks.sort()
         return locks
 
+    def _set_category_defaults(self):
+        for company in self:
+            self.env['ir.default'].set('product.category', 'property_account_expense_categ_id', company.expense_account_id.id, company_id=company.id)
+            self.env['ir.default'].set('product.category', 'property_account_income_categ_id', company.income_account_id.id, company_id=company.id)
+
     def write(self, values):
         self._validate_locks(values)
 
@@ -697,6 +703,7 @@ class ResCompany(models.Model):
                     raise UserError(_('You cannot change the currency of the company since some journal items already exist'))
 
         companies = super().write(values)
+        self._set_category_defaults()
 
         # We revoke all active exceptions affecting the changed lock dates and recreate them (with the updated lock dates)
         changed_soft_lock_fields = [field for field in SOFT_LOCK_DATE_FIELDS if field in values]
