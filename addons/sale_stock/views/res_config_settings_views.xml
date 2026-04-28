@@ -35,7 +35,7 @@
                         </div>
                         <button
                             string="Manage Return Reasons"
-                            name="%(stock.action_open_return_reasons)d"
+                            name="%(sale_stock.action_open_return_reasons)d"
                             type="action"
                             class="btn-link"
                             icon="oi-arrow-right"

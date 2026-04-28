@@ -332,8 +332,8 @@ class StockPicking(models.Model):
         """Get return related details."""
         self.ensure_one()
         return {
-            "delivery_id": self.id,
-            "delivery_name": self.name,
+            "picking_id": self.id,
+            "picking_name": self.name,
         }
 
     def _prepare_return_move_default_values(self, move_id):

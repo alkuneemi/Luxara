@@ -14,7 +14,7 @@ class CustomerPortal(sale_portal.CustomerPortal):
 
     @route(
         "/return/order/content",
-        type="jsonrpc", auth="user", website=True, readonly=True
+        type="jsonrpc", auth="user", readonly=True
     )
     def return_order_content(self, order_id, access_token):
         """Prepare return details of order depending on deliveries.
@@ -33,6 +33,7 @@ class CustomerPortal(sale_portal.CustomerPortal):
 
         return_data = {
             "company_name": sale_order.company_id.name,
+            "currency_id": sale_order.currency_id.id,
             "warehouse_address": sale_order.warehouse_id.partner_id.address,
             "returnable_lines": [],
             "return_reasons": [{
@@ -45,14 +46,12 @@ class CustomerPortal(sale_portal.CustomerPortal):
                 continue
             common_line_vals = {
                 "name": line.product_id.with_context(display_default_code=False).display_name,
-                "currency_id": line.currency_id.id,
-                "description_sale": line.name,
                 "price": line.price_unit,
                 "product_id": line.product_id.id,
             }
             for move in line.move_ids:
                 picking = move.picking_id
-                if picking.picking_type_code != "outgoing" or picking.state != "done":
+                if not (picking.picking_type_code == "outgoing" and picking.state == "done"):
                     continue
                 returned_qty = sum(
                     rm.quantity for rm in move.returned_move_ids if rm.state == "done"
@@ -62,8 +61,8 @@ class CustomerPortal(sale_portal.CustomerPortal):
                     return_data["returnable_lines"].append({
                         **common_line_vals,
                         **picking._get_return_details(),
-                        "delivered_qty": remaining_delivered_qty,
-                        "lot_name": move.lot_ids and ", ".join(move.lot_ids.mapped("name")) or "",
+                        "remaining_delivered_qty": remaining_delivered_qty,
+                        "lot_name": ", ".join(move.lot_ids.mapped("name")),
                     })
 
         return return_data
@@ -72,14 +71,18 @@ class CustomerPortal(sale_portal.CustomerPortal):
     def return_order_dowload_label(
         self, order_id, access_token=False, picking_details="", return_reason=""
     ):
-        """Return return pdf of picking for selected products with return reason.
+        """Render a PDF summarizing product returns per picking.
+
+        Each picking is rendered on a separate page, listing the returned products along with the
+        selected return reason.
 
         :param int order_id: The order for which we are preparing return content.
         :param str access_token: The access token used to authenticate the request.
-        :param str selected_lines: Selected products in json formated string.
+        :param dict[int, list[tuple[int, float]]] picking_details: Mapping of picking IDs
+            to a list of (product_id, returned_quantity) tuples.
         :param str return_reason: Selected return reason id in string.
-        :return: A pdf of picking for selected products with return reason.
-        :rtype: bytes.
+        :return: PDF document as binary content.
+        :rtype: bytes
         """
         try:
             sale_order = self._document_check_access(
@@ -90,10 +93,10 @@ class CustomerPortal(sale_portal.CustomerPortal):
 
         picking_details = json.loads(picking_details)
         qty_by_delivery = defaultdict(dict)
-        for delivery_id, products in picking_details.items():
-            delivery_id = int(delivery_id)
+        for picking_id, products in picking_details.items():
+            picking_id = int(picking_id)
             for product_id, qty in products:
-                qty_by_delivery[delivery_id][product_id] = qty
+                qty_by_delivery[picking_id][product_id] = qty
 
         return_data = {
             "wh_address_id": sale_order.warehouse_id.partner_id,

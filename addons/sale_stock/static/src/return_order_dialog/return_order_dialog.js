@@ -22,12 +22,12 @@ export class ReturnOrderDialog extends Component {
         this.dialog = useService("dialog");
         this.orm = useService("orm");
         this.state =  useState({ returnableLines: [], returnReason: null });
-        this.url = `${ this.props.saleOrderId }/download_return_label`;
+        this.url = `/my/orders/${this.props.saleOrderId}/download_return_label`;
 
         onWillStart(async () => {
             this.content = await this._loadData();
             this.state.returnableLines = this.content.returnable_lines;
-            this.formatCurrency = formatCurrency;
+            this.formatCurrency = (amount) => formatCurrency(amount, this.content.currency_id);
         });
     }
 
@@ -47,21 +47,12 @@ export class ReturnOrderDialog extends Component {
     //--------------------------------------------------------------------------
 
     setQuantity(line, quantity) {
-        if (line.quantity === quantity) return;
-
-        if (quantity < 0) {
-            quantity = 0;
-        } else if (quantity > line.delivered_qty) {
-            quantity = line.delivered_qty;
-        }
-
-        line.quantity = quantity;
+        line.quantity = Math.min(Math.max(quantity, 0), line.remaining_delivered_qty);
         return true;
     }
 
-    onReturnReasonChange() {
-        const returnReason = document.querySelector("select[name='return_reason']");
-        this.state.returnReason = returnReason.value;
+    onReturnReasonChange(ev) {
+        this.state.returnReason = ev.target.value;
     }
 
     async onContinue() {
@@ -69,7 +60,7 @@ export class ReturnOrderDialog extends Component {
         const isSinglePickingWithLabel = (
             selectedLines.length > 0
             && selectedLines.every(
-                line => line.delivery_id === selectedLines[0].delivery_id
+                line => line.picking_id === selectedLines[0].picking_id
             )
             && !!selectedLines[0].shipping_label_url
 
@@ -91,7 +82,7 @@ export class ReturnOrderDialog extends Component {
                 ...dialogProps,
                 // Used cancel button as downloading shipping label button
                 cancelLabel: _t("Download Shipping Label"),
-                cancel: this._downloadShippingLabel(selectedLines[0].shipping_label_url),
+                cancel: () => this._downloadShippingLabel(selectedLines[0].shipping_label_url),
             }
         }
         this.dialog.add(ConfirmationDialog, dialogProps);
@@ -101,13 +92,13 @@ export class ReturnOrderDialog extends Component {
     // Private
     //--------------------------------------------------------------------------
 
-    async _downloadReturnLabel(selectedLines) {
+    _downloadReturnLabel(selectedLines) {
         const pickingDetails = {};
         selectedLines.forEach(line => {
-            if (!pickingDetails[line.delivery_id]) {
-                pickingDetails[line.delivery_id] = [];
+            if (!pickingDetails[line.picking_id]) {
+                pickingDetails[line.picking_id] = [];
             }
-            pickingDetails[line.delivery_id].push([line.product_id, line.quantity]);
+            pickingDetails[line.picking_id].push([line.product_id, line.quantity]);
         });
         const params = {
             order_id: this.props.saleOrderId,

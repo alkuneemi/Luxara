@@ -3,7 +3,7 @@
 import json
 import logging
 
-from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 
 from odoo import api, fields, models, _
 from odoo.fields import Command
@@ -263,8 +263,8 @@ class SaleOrder(models.Model):
             self.company_id.allow_spontaneous_returns
             and self.state == "sale"
             and self.effective_date
-            and self.effective_date.date() >= (
-                fields.Date.today() - relativedelta(days=self.company_id.return_validity_days)
+            and self.effective_date >= (
+                fields.Datetime.now() - timedelta(days=self.company_id.return_validity_days)
             )
         )
 

@@ -24,23 +24,23 @@
                                             Lot/Serial Number:
                                             <strong><t t-out="line.lot_name"/></strong>
                                         </div>
-                                        <div t-if="line.delivery_name" class="small">
+                                        <div t-if="line.picking_name" class="small">
                                             Delivery:
-                                            <strong><t t-out="line.delivery_name"/></strong>
+                                            <strong><t t-out="line.picking_name"/></strong>
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="d-flex d-sm-table-cell align-items-center justify-content-between w-sm-25 pb-3 p-0 text-sm-end">
                                 <span
-                                    t-out="formatCurrency(line.price, line.currency_id)"
+                                    t-out="formatCurrency(line.price)"
                                     class="o_return_order_dialog_price h6 d-block mb-0 mb-sm-2 text-nowrap fw-bold text-end"
                                 />
                                 <QuantityButtons
                                     quantity="line.quantity or 0"
                                     setQuantity="quantity => this.setQuantity(line, quantity)"
                                     isMinusButtonDisabled="line.quantity === 0"
-                                    isPlusButtonDisabled="line.quantity === line.delivered_qty"
+                                    isPlusButtonDisabled="line.quantity === line.remaining_delivered_qty"
                                 />
                             </td>
                         </tr>

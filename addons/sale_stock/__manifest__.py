@@ -25,11 +25,11 @@ Preferences
         'views/sale_order_views.xml',
         'views/sale_order_line_views.xml',
         'views/stock_route_views.xml',
-        'views/res_config_settings_views.xml',
+        'views/return_reason_views.xml',
+        'views/res_config_settings_views.xml',  # Needs return_reason_views
         'views/sale_stock_portal_template.xml',
         'views/stock_lot_views.xml',
         'views/res_users_views.xml',
-        'views/return_reason_views.xml',
         'views/stock_picking_views.xml',
         'views/stock_reference_views.xml',
 
