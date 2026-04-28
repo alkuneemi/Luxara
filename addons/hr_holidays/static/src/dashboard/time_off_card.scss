@@ -1,10 +1,11 @@
 .o_timeoff_card {
     display: flex;
     flex-direction: column;
-    justify-content: start;
+    justify-content: center;
     flex: 1;
     text-align: center;
     border-right: 1px solid $border-color;
+    min-height: 80px;
 
     &>* {
         width: fit-content;
@@ -28,10 +29,11 @@
     }
 
     .o_timeoff_duration {
-        font-size: 30px;
+        font-size: 40px;
         font-weight: bold;
         width: auto;
         padding: auto 5px;
+        line-height: 1;
 
         img {
             height: 30px;
@@ -40,7 +42,7 @@
     }
 
     .o_timeoff_validity {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .o_timeoff_details {
@@ -53,6 +55,21 @@
         display: inline-block;
         margin-right: -10px;
         padding-right: 10px;
+    }
+
+    .o_timeoff_card_inner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        cursor: pointer;
+    }
+
+    .o_timeoff_card_text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
     }
 }
 

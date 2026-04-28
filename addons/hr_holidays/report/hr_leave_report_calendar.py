@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from ast import literal_eval
 from odoo import api, fields, models, tools
 
 from odoo.addons.base.models.res_partner import _tz_get
@@ -131,3 +132,16 @@ class HrLeaveReportCalendar(models.Model):
         else:
             # If the user is not a leave manager, raise an error
             raise ValidationError(self.env._("You are not allowed to refuse this leave request."))
+
+    @api.model
+    def action_hr_holidays_overview_dashboard(self):
+        action = dict(self.env['ir.actions.act_window']._for_xml_id('hr_holidays.action_hr_holidays_dashboard'))
+        employee_count = self.env['hr.employee'].search_count([('company_id', 'in', self.env.companies.ids)])
+        subordinates = self.env.user.employee_id._get_subordinates()
+        context = literal_eval(action.get('context') or '{}')
+        context.update({
+            'search_default_my_team': 1 if employee_count >= 50 and subordinates else 0,
+            'search_default_department': 1 if employee_count >= 50 and not subordinates else 0,
+        })
+        action['context'] = context
+        return action

@@ -490,6 +490,9 @@
                 <widget name="web_ribbon" title="Refused" bg_color="bg-danger" invisible="state != 'refuse' or not id"/>
                 <widget name="web_ribbon" title="Approved" bg_color="bg-success" invisible="state != 'validate' or not id"/>
             </xpath>
+            <xpath expr="//field[@name='employee_id'][@widget='many2one_avatar_employee']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
         </field>
     </record>
 
@@ -731,7 +734,7 @@
     </record>
 
     <record id="hr_leave_action_new_request" model="ir.actions.act_window">
-        <field name="name">Dashboard</field>
+        <field name="name">My Time Off</field>
         <field name="path">time-off</field>
         <field name="res_model">hr.leave</field>
         <field name="view_mode">calendar,list,form,activity</field>
