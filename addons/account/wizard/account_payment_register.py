@@ -1041,7 +1041,7 @@ class AccountPaymentRegister(models.TransientModel):
                     payment_vals['write_off_line_vals'].append({
                         'name': self.writeoff_label,
                         'account_id': self.writeoff_account_id.id,
-                        'partner_id': self.partner_id.id,
+                        'partner_id': self.partner_id.commercial_partner_id.id,
                         'currency_id': self.currency_id.id,
                         'amount_currency': write_off_amount_currency,
                         'balance': self.currency_id._convert(write_off_amount_currency, self.company_id.currency_id, self.company_id, self.payment_date),
