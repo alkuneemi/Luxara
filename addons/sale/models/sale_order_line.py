@@ -601,7 +601,9 @@ class SaleOrderLine(models.Model):
                 line.product_id.sale_line_warn_msg if has_warning_group else ""
             )
 
-    @api.depends("product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids")
+    @api.depends(
+        "product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids"
+    )
     def _compute_allowed_uom_ids(self):
         for line in self:
             line.allowed_uom_ids = line.product_id._get_available_uoms()
@@ -852,6 +854,7 @@ class SaleOrderLine(models.Model):
                 company=self.company_id,
                 date=self.order_id.date_order,
             )
+            * self.product_uom_qty
             for combo_id in combo_line.product_template_id.sudo().combo_ids
         }
         total_combo_base_price = sum(combo_base_prices.values())
@@ -873,7 +876,7 @@ class SaleOrderLine(models.Model):
         # Add the extra price of this combo item, as well as the extra prices of any `no_variant`
         # attributes to the combo price.
         return (
-            combo_prices[self.combo_item_id.combo_id]
+            (combo_prices[self.combo_item_id.combo_id] / self.product_uom_qty)
             + self.combo_item_id.extra_price
             + self.product_id._get_no_variant_attributes_price_extra(
                 self.product_no_variant_attribute_value_ids
@@ -974,7 +977,7 @@ class SaleOrderLine(models.Model):
                 line.price_total / line.product_uom_qty if line.product_uom_qty else 0.0
             )
 
-    @api.depends('product_id', 'company_id')
+    @api.depends("product_id", "company_id")
     def _compute_customer_lead(self):
         for line in self:
             line.customer_lead = line.product_id.with_company(line.company_id).sale_delay
