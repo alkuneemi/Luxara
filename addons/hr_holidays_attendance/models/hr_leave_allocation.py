@@ -34,18 +34,7 @@ class HolidaysAllocation(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         res = super().create(vals_list)
-        for allocation in res:
-            if allocation.overtime_deductible:
-                duration = allocation.number_of_hours_display
-                if duration > allocation.employee_id.total_overtime:
-                    raise ValidationError(_('The employee does not have enough overtime hours to request this leave.'))
-                if not allocation.overtime_id:
-                    allocation.sudo().overtime_id = self.env['hr.attendance.overtime'].sudo().create({
-                        'employee_id': allocation.employee_id.id,
-                        'date': allocation.date_from,
-                        'adjustment': True,
-                        'duration': -1 * duration,
-                    })
+        res._create_overtimes()
         return res
 
     def write(self, vals):
@@ -64,10 +53,32 @@ class HolidaysAllocation(models.Model):
                 allocation.overtime_id.sudo().duration = -1 * duration
         return res
 
+    @api.ondelete(at_uninstall=False)
+    def _unlink_overtime_id(self):
+        self.overtime_id.sudo().unlink()
+
+    def action_set_to_confirm(self):
+        res = super().action_set_to_confirm()
+        self._create_overtimes()
+        return res
+
     def action_refuse(self):
         res = super().action_refuse()
         self.overtime_id.sudo().unlink()
         return res
+
+    def _create_overtimes(self):
+        for allocation in self.sudo().filtered('overtime_deductible'):
+            duration = allocation.number_of_hours_display
+            if duration > allocation.employee_id.total_overtime:
+                raise ValidationError(_('The employee does not have enough overtime hours to request this leave.'))
+            if not allocation.overtime_id:
+                allocation.overtime_id = self.env['hr.attendance.overtime'].sudo().create({
+                    'employee_id': allocation.employee_id.id,
+                    'date': allocation.date_from,
+                    'adjustment': True,
+                    'duration': -1 * duration,
+                })
 
     def _get_accrual_plan_level_work_entry_prorata(self, level, start_period, start_date, end_period, end_date):
         self.ensure_one()
