@@ -1,11 +1,13 @@
 import { useSubEnv } from "@web/owl2/utils";
-import { EventBus } from "@odoo/owl";
+import { EventBus, toRaw } from "@odoo/owl";
 
 import { x2ManyCommands } from "@web/core/orm_service";
 import { useService } from "@web/core/utils/hooks";
-import { createDocumentFragmentFromContent } from "@web/core/utils/html";
+import { createDocumentFragmentFromContent, isHtmlEmpty } from "@web/core/utils/html";
 import { patch } from "@web/core/utils/patch";
 import { FormController } from "@web/views/form/form_controller";
+
+import { discussComponentRegistry } from "@mail/core/common/discuss_component_registry";
 
 FormController.props = {
     ...FormController.props,
@@ -41,6 +43,26 @@ patch(FormController.prototype, {
 
     async onWillSaveRecord(record, changes) {
         if (record.resModel === "mail.compose.message") {
+            const messageId = record.context.default_message_id;
+            if (isHtmlEmpty(changes.body) && record.context.is_editing_message && messageId) {
+                const message = this.mailStore?.["mail.message"].get(messageId);
+                if (message) {
+                    this.env.services.dialog.add(
+                        discussComponentRegistry.get("MessageDeleteDialog"),
+                        {
+                            message,
+                            onConfirm: () => {
+                                toRaw(message).onShowDeleteConfirm(this);
+                                void this.env.services.action.doAction({
+                                    type: "ir.actions.act_window_close",
+                                });
+                            },
+                        },
+                        { context: this }
+                    );
+                    return false;
+                }
+            }
             const doc = createDocumentFragmentFromContent(changes.body);
             const partnerElements = doc.querySelectorAll('[data-oe-model="res.partner"]');
             const partnerIds = Array.from(partnerElements).map((element) =>
