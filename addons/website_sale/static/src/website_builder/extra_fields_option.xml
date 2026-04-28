@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-<t t-name="website_sale.SpecificationsOption">
+<t t-name="website_sale.ExtraFieldsOption">
 
-    <t t-set="availableFields" t-value="state.fields.filter(f => !extraFields.some(ef => ef.field_id[0] === f.id))"/>
-    <t t-set="noFields" t-value="availableFields.length === 0"/>
+    <t
+        t-set="availableFields"
+        t-value="this.state.fields.filter(f => !this.state.extraFields.some(ef => ef.field_id[0] === f.id))"
+    />
+    <t t-set="allFieldsAdded" t-value="availableFields.length === 0"/>
 
-    <BuilderRow label.translate="Field" disabled="noFields">
-        <BuilderSelect dataAttributeAction="'pendingFieldId'" preview="false" disabled="noFields">
-            <t t-if="noFields">
-                <BuilderSelectItem dataAttributeActionValue="''">— All fields added —</BuilderSelectItem>
+    <BuilderRow label.translate="Field">
+        <BuilderSelect dataAttributeAction="'pendingFieldId'" preview="false">
+            <t t-if="allFieldsAdded">
+                <BuilderSelectItem dataAttributeActionValue="''">
+                    — All fields added —
+                </BuilderSelectItem>
             </t>
             <t t-foreach="availableFields" t-as="field" t-key="field.id">
                 <BuilderSelectItem dataAttributeActionValue="`${field.id}`">
@@ -22,31 +27,31 @@
     <BuilderRow label.translate="Category">
         <BuilderSelect dataAttributeAction="'pendingCategoryId'" preview="false">
             <BuilderSelectItem dataAttributeActionValue="''">Others</BuilderSelectItem>
-            <t t-foreach="categories" t-as="category" t-key="category.id">
+            <t t-foreach="this.state.categories" t-as="category" t-key="category.id">
                 <BuilderSelectItem dataAttributeActionValue="`${category.id}`">
                     <t t-out="category.name"/>
                 </BuilderSelectItem>
             </t>
         </BuilderSelect>
         <BuilderButton
-            t-if="!categoryCreateMode.value"
-            title.translate="Create new category"
+            t-if="!this.state.categoryCreateMode.value"
+            title.translate="Create a new category"
             className="'fa fa-plus text-success border-0'"
             style="'background-color: transparent !important;'"
             preview="false"
-            t-on-click="() => this.openCategoryCreate()"
+            t-on-click="() => this.state.categoryCreateMode.value = true"
         />
         <BuilderButton
-            t-if="categoryCreateMode.value"
+            t-if="this.state.categoryCreateMode.value"
             title.translate="Cancel"
             className="'fa fa-times text-danger border-0'"
             style="'background-color: transparent !important;'"
             preview="false"
-            t-on-click="() => this.cancelCategoryCreate()"
+            t-on-click="() => this.state.categoryCreateMode.value = false"
         />
     </BuilderRow>
 
-    <t t-if="categoryCreateMode.value">
+    <t t-if="this.state.categoryCreateMode.value">
         <BuilderRow label.translate="Name" level="1">
             <BuilderTextInput
                 dataAttributeAction="'pendingNewCategoryName'"
@@ -54,24 +59,29 @@
             />
         </BuilderRow>
         <BuilderRow label.translate=" ">
-            <BuilderButton action="'createCategory'" preview="false" type="'success'" className="'w-auto'">
-                Create Category
+            <BuilderButton
+                action="'createCategory'"
+                preview="false"
+                type="'success'"
+                className="'w-auto'"
+            >
+                + Create Category
             </BuilderButton>
         </BuilderRow>
     </t>
 
-    <t t-if="!categoryCreateMode.value">
-        <BuilderRow label.translate=" " disabled="noFields">
+    <t t-if="!this.state.categoryCreateMode.value">
+        <BuilderRow label.translate=" ">
             <BuilderButton
-                action="'addSpecField'"
+                action="'addExtraField'"
+                t-if="!allFieldsAdded"
                 preview="false"
                 type="'success'"
-                className="noFields ? 'disabled pe-none' : ''"
             >
                 + Add Field
             </BuilderButton>
         </BuilderRow>
-        <BuilderRow t-if="noFields" label.translate=" ">
+        <BuilderRow t-if="allFieldsAdded" label.translate=" ">
             <small class="text-muted fst-italic">No more fields available to add.</small>
         </BuilderRow>
     </t>

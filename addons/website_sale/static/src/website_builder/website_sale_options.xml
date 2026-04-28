@@ -45,7 +45,7 @@
             editableOnly="false"
             reloadTarget="true"
             groups='["website.group_website_designer"]'/>
-        <specifications_option
+        <extra_fields_option
             selector=".o_wsale_specs"
             title="Specifications"
             editableOnly="false"
