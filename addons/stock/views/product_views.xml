@@ -187,10 +187,10 @@
                 </xpath>
                 <xpath expr="//div[@name='tracking_and_qty_no_stock']" position="replace">
                     <!-- Replace the single line tacking + qty without stock with 2 individual lines with stock (tracking + tracking method // qty) -->
-                    <field name="tracking" placeholder="None" invisible="type != 'consu'" groups="stock.group_production_lot"/>
+                    <field name="tracking" invisible="type != 'consu'" groups="stock.group_production_lot"/>
                     <!-- Qty line if storable -->
-                    <label for="qty_available" class="oe_inline" invisible="not is_storable or not tracking" groups="stock.group_stock_user"/>
-                    <div name="qty_available_with_stock" class="o_row" invisible="not is_storable or not tracking" groups="stock.group_stock_user">
+                    <label for="qty_available" class="oe_inline" invisible="tracking == 'untracked'" groups="stock.group_stock_user"/>
+                    <div name="qty_available_with_stock" class="o_row" invisible="tracking == 'untracked'" groups="stock.group_stock_user">
                         <a type="object" name="action_open_quants"
                            invisible="not show_qty_update_button" groups="stock.group_stock_manager">
                             <field name="qty_available" readonly="True"/>
@@ -644,7 +644,7 @@
             <field name="res_model">product.template</field>
             <field name="view_mode">kanban,list,form</field>
             <field name="search_view_id" ref="product_template_search_form_view_stock"/>
-            <field name="context">{"search_default_goods": 1, 'default_is_storable': True}</field>
+            <field name="context">{'search_default_goods': 1, 'default_is_storable': True, 'default_tracking': 'none'}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
                     No product found. Let's create one!
@@ -659,6 +659,7 @@
             <field name="res_model">product.product</field>
             <field name="view_mode">list,form,kanban</field>
             <field name="search_view_id" ref="stock_product_search_form_view"/>
+            <field name="context">{'default_is_storable': True, 'default_tracking': 'none'}</field>
         </record>
 
         <menuitem id="menu_product_variant_config_stock" name="Products" action="product_template_action_product"
