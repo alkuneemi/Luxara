@@ -55,6 +55,9 @@ export class InlineCodePlugin extends Plugin {
                 return false;
             }
         },
+        should_show_hint_predicates: (node) => !node.querySelector(".o_inline_code"),
+        should_show_power_buttons_predicates: ({ anchorNode }) =>
+            !closestBlock(anchorNode).querySelector(".o_inline_code"),
     };
 
     setup() {
@@ -153,7 +156,7 @@ export class InlineCodePlugin extends Plugin {
         // one in the text.
         let textNode = selection.startContainer;
         const wholeText = textNode.wholeText;
-        const textHasTwoTicks = /`[^`]+`/.test(wholeText);
+        const textHasTwoTicks = /`[^ `][^`]*`/.test(wholeText);
         // We don't apply the code tag if there is no content between the two `
         if (textHasTwoTicks && wholeText.replace(/`/g, "").length) {
             let offset = selection.startOffset;
