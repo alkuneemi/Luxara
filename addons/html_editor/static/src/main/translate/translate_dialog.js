@@ -100,7 +100,7 @@ export class TranslateDialog extends Component {
         const fragment = POSTPROCESS_GENERATED_CONTENT(content, this.props.baseContainer);
         let result = "";
         for (const child of fragment.children) {
-            this.props.sanitize(child, { IN_PLACE: true });
+            this.props.sanitize(child);
             result += child.outerHTML;
         }
         return markup(result);
@@ -167,7 +167,7 @@ export class TranslateDialog extends Component {
                 translatedText || "",
                 this.props.baseContainer
             );
-            this.props.sanitize(fragment, { IN_PLACE: true });
+            this.props.sanitize(fragment);
             this.props.insert(fragment);
         } catch (e) {
             this.props.close();

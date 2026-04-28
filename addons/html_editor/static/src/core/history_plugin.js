@@ -1499,7 +1499,8 @@ export class HistoryPlugin extends Plugin {
     applyAddMutation(mutation) {
         const { nodeId, serializedNode, parentNodeId, nextNodeId, previousNodeId } = mutation;
 
-        const toAdd = this.nodeMap.getNode(nodeId) || this.unserializeNode(serializedNode);
+        let toAdd = this.nodeMap.getNode(nodeId) || this.unserializeNode(serializedNode);
+        toAdd = this.processThrough("add_node_mutation_processors", toAdd);
         if (!toAdd) {
             return;
         }
@@ -1831,7 +1832,7 @@ export class HistoryPlugin extends Plugin {
         }
         const fakeNode = this.document.createElement("fake-el");
         fakeNode.appendChild(unserializedNode);
-        this.dependencies.sanitize.sanitize(fakeNode, { IN_PLACE: true });
+        this.dependencies.sanitize.sanitize(fakeNode);
         unserializedNode = fakeNode.firstChild;
         if (!unserializedNode) {
             return null;

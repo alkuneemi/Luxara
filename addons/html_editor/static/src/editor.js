@@ -405,7 +405,10 @@ export class Editor {
             warnOfNamingConvention("processThrough", resourceId, { suffix: "processors" });
         }
         this.getResource(resourceId).forEach((processor) => {
-            item = processor(item, ...args) || item;
+            const newValue = processor(item, ...args);
+            if (newValue !== undefined) {
+                item = newValue;
+            }
         });
         return item;
     }
