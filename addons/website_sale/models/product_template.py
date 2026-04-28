@@ -1251,13 +1251,6 @@ class ProductTemplate(models.Model):
             return request.pricelist
         return pricelist
 
-    def _is_sold_out(self):
-        """Return whether the product is sold out. Overridden in ``website_sale_stock``.
-
-        :rtype: bool
-        """
-        return False
-
     def _website_show_quick_add(self):
         self.ensure_one()
         if not self.filtered_domain(self.env["website"]._product_domain()):

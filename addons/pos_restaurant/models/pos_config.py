@@ -149,9 +149,6 @@ class PosConfig(models.Model):
         convert.convert_file(self._env_with_clean_context(), 'pos_restaurant', 'data/scenarios/restaurant_category_data.xml', idref=None, mode='init', noupdate=True)
         if with_demo_data:
             convert.convert_file(self._env_with_clean_context(), 'pos_restaurant', 'data/scenarios/restaurant_demo_data.xml', idref=None, mode='init', noupdate=True)
-            pa_sides = self.env.ref('pos_restaurant.pa_sides', raise_if_not_found=False)
-            if pa_sides and 'visibility' in self.env['product.attribute']._fields:
-                pa_sides.visibility = 'hidden'
         restaurant_categories = self.get_record_by_ref([
             'pos_restaurant.food',
             'pos_restaurant.drinks',

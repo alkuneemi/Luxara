@@ -238,9 +238,13 @@
                                 />
                                 <t
                                     t-set="has_active_filters"
-                                    t-value="attrib_values or tags or on_sale_active
+                                    t-value="(
+                                        attrib_values
+                                        or tags
+                                        or on_sale_active
                                         or in_stock_active
-                                        or (show_price_filter and isFilteringByPrice)"
+                                        or (show_price_filter and isFilteringByPrice)
+                                    )"
                                 />
                                 <div t-if="has_active_filters" class="py-3 border-bottom">
                                     <a
@@ -266,7 +270,7 @@
                                 >
                                 </t>
                                 <div
-                                    t-if="has_on_sale_filter or has_in_stock_filter"
+                                    t-if="show_on_sale_filter or show_in_stock_filter"
                                     class="d-flex flex-wrap gap-2 py-3 border-top"
                                 >
                                     <t t-call="website_sale.ribbon_filter_pills"/>
@@ -1054,7 +1058,7 @@
                    _classes_title.f="ms-n1 pt-3 pb-2"
                    isOffcanvas="True"/>
                 <div
-                    t-if="has_on_sale_filter or has_in_stock_filter"
+                    t-if="show_on_sale_filter or show_in_stock_filter"
                     class="d-flex flex-wrap gap-2 px-4 py-3 border-top"
                 >
                     <t t-call="website_sale.ribbon_filter_pills"/>
@@ -1062,14 +1066,19 @@
             </div>
             <div class="offcanvas-body d-flex justify-content-between flex-grow-0 border-top overflow-hidden">
                 <t
-                    t-set="has_no_active_filters"
-                    t-value="not attrib_values and not isFilteringByPrice
-                        and not tags and not on_sale_active and not in_stock_active"
+                    t-set="has_active_filters"
+                    t-value="(
+                        attrib_values
+                        or tags
+                        or on_sale_active
+                        or in_stock_active
+                        or isFilteringByPrice
+                    )"
                 />
                 <a
                     t-attf-class="btn btn-{{navClass}} d-flex py-1 mb-2
-                        {{has_no_active_filters and 'disabled'}}"
-                    t-att-aria-disabled="'true' if has_no_active_filters else 'false'"
+                        {{not has_active_filters and 'disabled'}}"
+                    t-att-aria-disabled="'true' if not has_active_filters else 'false'"
                     t-att-href="keep(
                         attribute_values=0, tags=0,
                         min_price=0, max_price=0,
@@ -1595,7 +1604,7 @@
         />
         <t t-set="inactive_pill_class" t-value="'btn border'"/>
         <a
-            t-if="has_on_sale_filter"
+            t-if="show_on_sale_filter"
             t-att-href="keep(on_sale=None if on_sale_active else 1)"
             t-att-class="active_pill_class if on_sale_active else inactive_pill_class"
             aria-label="Filter by on sale products"
@@ -1603,7 +1612,7 @@
             On sale
         </a>
         <a
-            t-if="has_in_stock_filter"
+            t-if="show_in_stock_filter"
             t-att-href="keep(in_stock=None if in_stock_active else 1)"
             t-att-class="active_pill_class if in_stock_active else inactive_pill_class"
             aria-label="Filter by in stock products"

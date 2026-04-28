@@ -463,17 +463,27 @@ class WebsiteSale(payment_portal.PaymentPortal):
         ribbon_assign_values = set(auto_assign_ribbons.mapped("assign"))
         has_sale_ribbon = "sale" in ribbon_assign_values
         has_out_of_stock_ribbon = "out_of_stock" in ribbon_assign_values
-        unfiltered_products = search_product
-        unfiltered_prices = {}
+
+        sales_prices = {}
+        show_on_sale_filter = False
+        show_in_stock_filter = False
+        if has_sale_ribbon:
+            sales_prices = search_product._get_sales_prices(website)
+            show_on_sale_filter = on_sale_active or any(
+                "base_price" in pv for pv in sales_prices.values()
+            )
+        if has_out_of_stock_ribbon:
+            show_in_stock_filter = in_stock_active or any(
+                p._is_sold_out() for p in search_product
+            )
 
         if on_sale_active and has_sale_ribbon:
-            unfiltered_prices = unfiltered_products._get_sales_prices(website)
-            on_sale_ids = {tid for tid, pv in unfiltered_prices.items() if "base_price" in pv}
-            search_product = search_product.filtered(lambda p: p.id in on_sale_ids)
+            search_product = search_product.filtered(
+                lambda p: "base_price" in sales_prices.get(p.id, {})
+            )
             product_count = len(search_product)
         if in_stock_active and has_out_of_stock_ribbon:
-            sold_out_ids = {p.id for p in search_product.sudo() if p._is_sold_out()}
-            search_product = search_product.filtered(lambda p: p.id not in sold_out_ids)
+            search_product = search_product.filtered(lambda p: not p._is_sold_out())
             product_count = len(search_product)
 
         ProductTag = request.env["product.tag"]
@@ -576,23 +586,10 @@ class WebsiteSale(payment_portal.PaymentPortal):
             .grouped("attribute_id")
         )
 
-        has_on_sale_filter = False
-        has_in_stock_filter = False
-        if has_sale_ribbon:
-            if not unfiltered_prices:
-                unfiltered_prices = unfiltered_products._get_sales_prices(website)
-            has_on_sale_filter = on_sale_active or any(
-                "base_price" in pv for pv in unfiltered_prices.values()
-            )
-        if has_out_of_stock_ribbon:
-            has_in_stock_filter = in_stock_active or any(
-                p._is_sold_out() for p in unfiltered_products.sudo()
-            )
-
         values = {
             "auto_assign_ribbons": auto_assign_ribbons,
-            "has_on_sale_filter": has_on_sale_filter,
-            "has_in_stock_filter": has_in_stock_filter,
+            "show_on_sale_filter": show_on_sale_filter,
+            "show_in_stock_filter": show_in_stock_filter,
             "on_sale_active": on_sale_active,
             "in_stock_active": in_stock_active,
             "search": fuzzy_search_term or search,
