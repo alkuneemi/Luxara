@@ -772,6 +772,9 @@ export class Composer extends Component {
     async sendMessage() {
         const composer = toRaw(this.props.composer);
         this.composerActions.activePicker?.close?.();
+        if (composer.thread?.channel) {
+            composer.thread.channel.hasDraft = false;
+        }
         if (composer.message) {
             this.editMessage();
             return;
@@ -982,6 +985,9 @@ export class Composer extends Component {
         }) => {
             if (isHtmlEmpty(composerHtml)) {
                 browser.localStorage.removeItem(composer.localId);
+                if (composer.thread?.channel) {
+                    composer.thread.channel.hasDraft = false;
+                }
             } else {
                 browser.localStorage.setItem(
                     composer.localId,
@@ -994,6 +1000,9 @@ export class Composer extends Component {
                         fromFullComposer,
                     })
                 );
+                if (composer.thread?.channel) {
+                    composer.thread.channel.hasDraft = true;
+                }
             }
         };
         if (this.state.isFullComposerOpen) {
