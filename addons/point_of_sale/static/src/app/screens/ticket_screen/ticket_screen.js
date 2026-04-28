@@ -31,6 +31,8 @@ import { NumberPopup } from "@point_of_sale/app/components/popups/number_popup/n
 import { ConnectionLostError } from "@web/core/network/rpc";
 import { TipCell } from "@point_of_sale/app/screens/ticket_screen/tip_cell/tip_cell";
 import { ProgressBar } from "@point_of_sale/app/screens/ticket_screen/progress_bar/progress_bar";
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { logPosMessage } from "@point_of_sale/app/utils/pretty_console_log";
 
 const { DateTime } = luxon;
@@ -51,6 +53,8 @@ export class TicketScreen extends Component {
         BarcodeVideoScanner,
         TipCell,
         ProgressBar,
+        Dropdown,
+        DropdownItem,
     };
     static props = {
         reuseSavedUIState: { type: Boolean, optional: true },

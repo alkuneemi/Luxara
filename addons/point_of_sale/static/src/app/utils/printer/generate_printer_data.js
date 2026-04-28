@@ -192,6 +192,28 @@ export class GeneratePrinterData {
                 unit_price: line.currencyDisplayPriceUnit,
                 product_unit_price: line.product_id.displayPriceUnit,
                 price_subtotal_incl: line.currencyDisplayPrice,
+                service_fee_pct: (() => {
+                    if (!line.is_service_charge) {
+                        return false;
+                    }
+                    const preset = line.order_id?.preset_id;
+                    if (preset?.service_fee_type === "percentage" && preset.service_fee_amount) {
+                        return String(
+                            parseFloat((preset.service_fee_amount * 100).toPrecision(10))
+                        );
+                    }
+                    return false;
+                })(),
+                service_fee_based_on: (() => {
+                    if (!line.is_service_charge) {
+                        return false;
+                    }
+                    const preset = line.order_id?.preset_id;
+                    if (preset?.service_fee_type !== "percentage") {
+                        return false;
+                    }
+                    return preset?.service_fee_based_on || false;
+                })(),
             };
         });
     }
@@ -222,6 +244,16 @@ export class GeneratePrinterData {
               ])
             : false;
 
+        const serviceChargeLine = this.order.getServiceChargeLine();
+        let serviceCharge = false;
+        if (serviceChargeLine) {
+            serviceCharge = {
+                amount: serviceChargeLine.currencyDisplayPrice,
+                qty: serviceChargeLine.qty,
+                name: serviceChargeLine.getFullProductName(),
+            };
+        }
+
         return {
             order: this.order.raw,
             config: this.config.raw,
@@ -251,6 +283,7 @@ export class GeneratePrinterData {
                 prices: this.generateTaxData(),
                 cashier_name: this.order.getCashierName(),
                 formated_date_order: this.order.formatDateOrTime("date_order", "datetime"),
+                service_charge: serviceCharge,
             },
         };
     }

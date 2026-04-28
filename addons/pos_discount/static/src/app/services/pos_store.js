@@ -75,7 +75,9 @@ patch(PosStore.prototype, {
         const isGlobalDiscountBtnClicked = Object.keys(discountLinesMap).length === 0;
 
         const lines = order.getOrderlines();
-        const discountableLines = lines.filter((line) => line.isGlobalDiscountApplicable());
+        const discountableLines = lines.filter(
+            (line) => line.isGlobalDiscountApplicable() && !line.is_service_charge
+        );
         const baseLines = discountableLines.map((line) =>
             accountTaxHelpers.prepare_base_line_for_taxes_computation(
                 line,
@@ -101,6 +103,7 @@ patch(PosStore.prototype, {
             }
         );
         let lastDiscountLine = null;
+        let hasUpdatedExisting = false;
         for (const baseLine of globalDiscountBaseLines) {
             const extra_tax_data = accountTaxHelpers.export_base_line_extra_tax_data(baseLine);
             extra_tax_data.discount_value = value;
@@ -111,6 +114,7 @@ patch(PosStore.prototype, {
             if (existingLine) {
                 existingLine.extra_tax_data = extra_tax_data;
                 existingLine.price_unit = baseLine.price_unit;
+                hasUpdatedExisting = true;
                 delete discountLinesMap[key];
             } else {
                 lastDiscountLine = await this.addLineToOrder(
@@ -132,6 +136,10 @@ patch(PosStore.prototype, {
         Object.values(discountLinesMap).forEach((line) => {
             line.delete();
         });
+
+        if (hasUpdatedExisting) {
+            order.triggerRecomputeAllPrices();
+        }
 
         if (lastDiscountLine && isGlobalDiscountBtnClicked) {
             order.selectOrderline(lastDiscountLine);

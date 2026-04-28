@@ -30,6 +30,7 @@ export function clickLine(productName, quantity = "1") {
         ...Order.hasLine({ withClass: ".selected", productName, quantity }),
     ].flat();
 }
+
 export function clickSelectedLine(productName, quantity = "1") {
     return [
         ...Order.hasLine({

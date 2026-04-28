@@ -284,7 +284,9 @@ export class PaymentScreen extends Component {
         }
         let tip = valueParsed;
         if (type === "percent") {
-            const total = this.currentOrder.priceIncl - currentTipAmount;
+            const serviceChargeLine = this.currentOrder.getServiceChargeLine();
+            const serviceChargeAmount = serviceChargeLine ? serviceChargeLine.priceIncl : 0;
+            const total = this.currentOrder.priceIncl - currentTipAmount - serviceChargeAmount;
             tip = (total * valueParsed) / 100;
         }
         return this.pos.currency.round(tip);

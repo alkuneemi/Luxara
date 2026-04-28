@@ -25,3 +25,9 @@ class PosOrderLine(models.Model):
         params = super()._load_pos_data_fields(config)
         params += ['is_reward_line', 'reward_id', 'reward_identifier_code', 'points_cost', 'coupon_id']
         return params
+
+    @api.depends('is_reward_line')
+    def _compute_is_special_line(self):
+        super()._compute_is_special_line()
+        for line in self:
+            line.is_special_line = line.is_special_line or line.is_reward_line

@@ -50,6 +50,11 @@
     &:hover {
         background-color: $o-gray-200;
     }
+
+    &.active {
+        background-color: $o-action;
+        color: #fff;
+    }
 }
 
 .pos .o-dropdown--menu .dropdown-item.focus {

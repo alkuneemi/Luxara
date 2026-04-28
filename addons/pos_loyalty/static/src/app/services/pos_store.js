@@ -523,7 +523,7 @@ patch(PosStore.prototype, {
             }
 
             const points = order._getRealCouponPoints(couponProgram.coupon_id);
-            const hasLine = order.lines.filter((line) => !line.is_reward_line).length > 0;
+            const hasLine = order.lines.filter((line) => !line.isSpecialLine).length > 0;
             for (const reward of program.reward_ids.filter(
                 (reward) => reward.reward_type == "product"
             )) {

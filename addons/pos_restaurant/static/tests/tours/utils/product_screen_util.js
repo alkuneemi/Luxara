@@ -2,6 +2,7 @@ import * as Order from "@point_of_sale/../tests/generic_helpers/order_widget_uti
 import * as ProductScreen from "@point_of_sale/../tests/pos/tours/utils/product_screen_util";
 import * as TextInputPopup from "@point_of_sale/../tests/generic_helpers/text_input_popup_util";
 import * as Dialog from "@point_of_sale/../tests/generic_helpers/dialog_util";
+import * as NumberPopup from "@point_of_sale/../tests/generic_helpers/number_popup_util";
 
 export function clickOrderButton() {
     return [
@@ -20,6 +21,20 @@ export function orderlineIsToOrder(name) {
         productName: name,
         withClass: ".orderline.has-change",
     });
+}
+export function changeGuestNumber(num) {
+    const steps = [...ProductScreen.clickControlButton("Guest")];
+    const numStr = num.toString();
+    for (const digit of numStr) {
+        steps.push({
+            content: `click numpad button: ${digit}`,
+            trigger: `.modal div.numpad button:text(${digit})`,
+            run: "click",
+        });
+    }
+    steps.push(...NumberPopup.isShown(numStr));
+    steps.push(Dialog.confirm());
+    return steps;
 }
 export function guestNumberIs(num) {
     return [

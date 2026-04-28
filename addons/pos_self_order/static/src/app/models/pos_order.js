@@ -53,6 +53,9 @@ patch(PosOrder.prototype, {
                 custom_attribute_value_ids: JSON.stringify(
                     line.custom_attribute_value_ids.map((a) => a.id).sort()
                 ),
+                serviceChargePrice: line.is_service_charge
+                    ? line.getDisplayPriceWithQty(line.qty)
+                    : undefined,
             };
         }
 

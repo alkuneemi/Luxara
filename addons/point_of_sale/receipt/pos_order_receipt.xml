@@ -179,9 +179,20 @@
 
         <template id="point_of_sale.pos_orderline_receipt_information">
             <div class="name text-large" t-out="line['product_data']['display_name']" />
-            <span class="text-normal price-unit font-monospace" name="standard-unit-price" t-if="not conditions['basic_receipt'] and not len(line['combo_line_ids'])">
-                <t t-out="line['unit_price']" /> / <t t-out="line['product_uom_name']" />
-            </span>
+            <t t-if="not conditions['basic_receipt'] and not len(line['combo_line_ids'])">
+                <t t-if="line['service_fee_pct']">
+                    <span class="text-normal price-unit font-monospace" name="standard-unit-price">
+                        <t t-out="line['service_fee_pct']" />%
+                        <t t-if="line['service_fee_based_on'] == 'pre_discount'"> (before discount)</t>
+                        <t t-elif="line['service_fee_based_on'] == 'post_discount'"> (after discount)</t>
+                    </span>
+                </t>
+                <t t-elif="not line['is_service_charge']">
+                    <span class="text-normal price-unit font-monospace" name="standard-unit-price">
+                        <t t-out="line['unit_price']" /> / <t t-out="line['product_uom_name']" />
+                    </span>
+                </t>
+            </t>
             <div t-if="line['customer_note']" class="text-small">
                 <strong>Note: </strong>
                 <span class="line-note" t-out="line['customer_note']" />

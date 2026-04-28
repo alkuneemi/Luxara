@@ -44,6 +44,22 @@ export class OrdersHistoryPage extends Component {
         return { productName: fullName, attributes: "" };
     }
 
+    getServiceChargeInfo(order) {
+        const preset = order.preset_id;
+        if (!preset || preset.service_fee_type !== "percentage") {
+            return false;
+        }
+        const pct = parseFloat((preset.service_fee_amount * 100).toPrecision(6));
+        const basedOn = preset.service_fee_based_on;
+        let label = `${pct}%`;
+        if (basedOn === "pre_discount") {
+            label += ` (${_t("before discount")})`;
+        } else if (basedOn === "post_discount") {
+            label += ` (${_t("after discount")})`;
+        }
+        return label;
+    }
+
     editOrder(order) {
         if (order.state === "draft") {
             this.selfOrder.selectedOrderUuid = order.uuid;

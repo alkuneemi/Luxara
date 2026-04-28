@@ -82,4 +82,7 @@ patch(PosOrderline.prototype, {
             "fst-italic": this.is_reward_line,
         };
     },
+    get isSpecialLine() {
+        return super.isSpecialLine || this.is_reward_line;
+    },
 });

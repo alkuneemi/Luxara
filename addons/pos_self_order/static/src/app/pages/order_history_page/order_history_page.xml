@@ -37,9 +37,13 @@
                                     <div t-attf-class="d-flex {{ line.qty ? 'flex-column align-items-start' : 'flex-row align-items-center' }} ">
                                         <t t-set="lineName" t-value="this.getNameAndDescription(line)" />
                                         <div class="fw-bold mb-0 o_self_product_name" t-out="lineName.productName" />
-                                        <div t-if="line.qty">
+                                        <div t-if="line.qty and !line.is_service_charge">
                                             <span class="small" t-out="`${line.qty}x `" />
                                             <span class="flex-grow-1 me-3 small text-muted" t-out="this.selfOrder.formatMonetary(this.getPrice(line) / line.qty)"/>
+                                        </div>
+                                        <t t-if="line.is_service_charge" t-set="serviceChargeInfo" t-value="this.getServiceChargeInfo(order)"/>
+                                        <div t-if="line.is_service_charge and serviceChargeInfo">
+                                            <span class="flex-grow-1 me-3 small text-muted" t-out="serviceChargeInfo"/>
                                         </div>
                                         <span
                                             t-if="lineName.attributes"

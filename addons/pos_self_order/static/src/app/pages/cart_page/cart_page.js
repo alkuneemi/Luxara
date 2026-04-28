@@ -59,10 +59,20 @@ export class CartPage extends Component {
         const lines =
             (selfOrder.config.self_ordering_pay_after === "meal" &&
             Object.keys(order.changes).length > 0
-                ? order.unsentLines
+                ? order.unsentLines.filter((line) => !line.is_service_charge)
                 : this.selfOrder.currentOrder.lines) || [];
 
-        return lines.filter((line) => !line.combo_parent_id);
+        return lines
+            .filter((line) => !line.combo_parent_id)
+            .sort((a, b) => (a.sequence || 10) - (b.sequence || 10));
+    }
+
+    get isShowingUnsent() {
+        const order = this.selfOrder.currentOrder;
+        return (
+            this.selfOrder.config.self_ordering_pay_after === "meal" &&
+            Object.keys(order.changes).length > 0
+        );
     }
 
     get totalPriceAndTax() {
@@ -262,6 +272,14 @@ export class CartPage extends Component {
     }
 
     getPrice(line) {
+        if (line.is_service_charge && this.isShowingUnsent) {
+            const lastChange = this.selfOrder.currentOrder.uiState.lineChanges[line.uuid];
+            const fullPrice = line.getDisplayPriceWithQty(line.qty);
+            if (lastChange?.serviceChargePrice !== undefined) {
+                return fullPrice - lastChange.serviceChargePrice;
+            }
+            return fullPrice;
+        }
         const childLines = line.combo_line_ids;
         if (childLines.length === 0) {
             const qty = this.getLineChangeQty(line) || line.qty;
@@ -274,6 +292,10 @@ export class CartPage extends Component {
             }
             return price;
         }
+    }
+
+    isServiceCharge(line) {
+        return line.is_service_charge;
     }
 
     canChangeQuantity(line) {
@@ -333,6 +355,8 @@ export class CartPage extends Component {
 
         if (line.qty <= 0) {
             this.removeLine(line);
+        } else {
+            this.selfOrder.currentOrder.updateServiceCharge();
         }
     }
 

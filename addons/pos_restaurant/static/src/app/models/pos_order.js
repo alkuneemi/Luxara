@@ -18,6 +18,7 @@ patch(PosOrder.prototype, {
     },
     setCustomerCount(count) {
         this.customer_count = Math.max(count, 1);
+        this.updateServiceCharge();
     },
     getTable() {
         return this.table_id;
@@ -182,5 +183,14 @@ patch(PosOrder.prototype, {
                 0
             ) + 1
         );
+    },
+    updateServiceCharge() {
+        super.updateServiceCharge();
+        if (this.hasCourses()) {
+            const serviceChargeLine = this.getServiceChargeLine();
+            if (serviceChargeLine) {
+                serviceChargeLine.course_id = this.getLastCourse();
+            }
+        }
     },
 });

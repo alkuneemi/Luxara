@@ -46,6 +46,14 @@ class ProductTemplate(models.Model):
         if missing_delivery:
             products.extend(self.browse(missing_delivery).read(fields, load=False))
 
+        special_products = config._get_special_products().filtered(
+            lambda p: not p.sudo().company_id or p.sudo().company_id == config.company_id,
+        )
+        special_tmpl_ids = special_products.product_tmpl_id.ids
+        missing_special = [tid for tid in special_tmpl_ids if tid not in loaded_ids]
+        if missing_special:
+            products.extend(self.browse(missing_special).read(fields, load=''))
+
         self._process_pos_self_ui_products(products)
 
         return products

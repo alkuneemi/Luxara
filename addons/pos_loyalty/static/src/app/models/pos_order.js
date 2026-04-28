@@ -166,7 +166,7 @@ patch(PosOrder.prototype, {
         for (const line of orderlines) {
             if (line.is_reward_line) {
                 rewardLines.push(line);
-            } else {
+            } else if (!line.is_service_charge) {
                 nonRewardLines.push(line);
             }
         }
