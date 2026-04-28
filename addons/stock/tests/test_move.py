@@ -4607,10 +4607,11 @@ class TestStockMove(TestStockCommon):
         storable product.
         """
         self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 1)
+        copy_location = self.scrap_location.copy()
         scrap_form = Form(self.env['stock.move'].with_context(default_is_scrap=True), view='stock.view_scrap_move_form')
         scrap_form.product_id = self.productA
         scrap_form.location_id = self.stock_location
-        scrap_form.location_dest_id = self.scrap_location
+        scrap_form.location_dest_id = copy_location
         scrap_form.quantity = 1
         scrap_form.company_id = self.env.company
         scrap = scrap_form.save()
@@ -4618,7 +4619,7 @@ class TestStockMove(TestStockCommon):
         move = self.env['stock.move'].search([('product_id', '=', self.productA.id), ('is_scrap', '=', True)])
         self.assertEqual(move.state, 'done')
         self.assertEqual(move.quantity, 1)
-        self.assertEqual(move.location_dest_usage, 'inventory')
+        self.assertEqual(move.location_dest_id, copy_location)
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.productA, self.stock_location), 0)
 
     def test_scrap_2(self):
