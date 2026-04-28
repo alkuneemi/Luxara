@@ -10,6 +10,8 @@ class StockRule(models.Model):
         Subcontracting delay =
             max(Vendor lead time, Manufacturing lead time + DTPMO) + Days to Purchase + Purchase security lead time
         """
+        if not product.bom_ids and not product.product_tmpl_id.bom_ids:
+            return super()._get_lead_days(product, **values)
         bypass_delay_description = self.env.context.get('bypass_delay_description')
         buy_rule = self.filtered(lambda r: r.action == 'buy')
         seller = 'supplierinfo' in values and values['supplierinfo'] or product.with_company(buy_rule.company_id)._select_seller(quantity=None)

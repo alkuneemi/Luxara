@@ -17,7 +17,10 @@ class MrpBom(models.Model):
         domain = self._bom_find_domain(product, picking_type=picking_type, company_id=company_id, bom_type=bom_type)
         if subcontractor:
             domain = AND([domain, [('subcontractor_ids', 'parent_of', subcontractor.ids)]])
-            return self.search(domain, order='sequence, product_id, id', limit=1)
+            boms = (product.bom_ids | product.product_tmpl_id.bom_ids).filtered_domain(domain)
+            if len(boms) <= 1:
+                return boms
+            return boms.sorted(key=lambda b: (b.sequence, b.product_id.id, b.id))[0]
         else:
             return self.env['mrp.bom']
 

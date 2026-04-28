@@ -350,12 +350,15 @@ class MrpBom(models.Model):
 
         # Performance optimization, allow usage of limit and avoid the for loop `bom.product_tmpl_id.product_variant_ids`
         if len(products) == 1:
-            bom = self.search(domain, order='sequence, product_id, id', limit=1)
-            if bom:
-                bom_by_product[products] = bom
+            boms = (products.bom_ids | products.product_tmpl_id.bom_ids).filtered_domain(domain)
+            if len(boms) <= 1:
+                bom_by_product[products] = boms
+                return bom_by_product
+            bom_by_product[products] = boms.sorted(key=lambda b: (b.sequence, b.product_id.id, b.id))[0]
             return bom_by_product
 
-        boms = self.search(domain, order='sequence, product_id, id')
+        boms = (products.mapped('bom_ids') | products.mapped('product_tmpl_id.bom_ids')).filtered_domain(domain)
+        boms.sorted(key=lambda b: (b.sequence, b.product_id.id, b.id))
 
         products_ids = set(products.ids)
         for bom in boms:
