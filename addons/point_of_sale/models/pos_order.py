@@ -51,7 +51,13 @@ class PosOrder(models.Model):
 
     @api.model
     def _load_pos_data_domain(self, data, config):
-        return [('state', '=', 'draft'), ('config_id', '=', config.id)]
+        return Domain.AND([
+            [('config_id', 'in', [config.id] + config.trusted_config_ids.ids)],
+            Domain.OR([
+                [('state', '=', 'draft')],
+                [('state', '=', 'cancel'), ('session_id', '=', config.current_session_id.id)],
+            ]),
+        ])
 
     @api.model
     def _process_order(self, order, existing_order):
@@ -1201,6 +1207,10 @@ class PosOrder(models.Model):
         invoice_receivable_lines = invoice.line_ids.filtered(lambda line: line.account_id == receivable_account and not line.reconciled)
         (payment_receivable_lines | invoice_receivable_lines).sudo().with_company(invoice.company_id).reconcile()
 
+    def _get_cashier(self):
+        self.ensure_one()
+        return self.user_id.partner_id
+
     def cancel_order_from_pos(self):
         draft_orders = self.filtered(lambda o: o.state == 'draft')
         if self.env.context.get('active_ids'):
@@ -1213,6 +1223,9 @@ class PosOrder(models.Model):
 
         if draft_orders:
             draft_orders.write({'state': 'cancel'})
+            for order in draft_orders:
+                order.message_post(body=_('Point of Sale Order Cancelled'), author_id=order._get_cashier().id)
+
             for config in draft_orders.mapped('config_id'):
                 config.notify_synchronisation(config.current_session_id.id, self.env.context.get('device_identifier', 0))
 

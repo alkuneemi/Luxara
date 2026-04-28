@@ -504,20 +504,24 @@ export class TicketScreen extends Component {
     }
     activeOrderFilter(o) {
         const oScreen = o.getScreenData();
-        return (!o.finalized || oScreen.name == "TipScreen") && o.uiState.displayed;
+        return !o.finalized || o.state === "cancel" || oScreen.name == "TipScreen";
     }
     getFilteredOrderList() {
         const orderModel = this.pos.models["pos.order"];
         let orders =
             this.state.filter === "SYNCED"
-                ? orderModel.filter((o) => o.finalized && o.uiState.displayed)
+                ? orderModel.filter((o) => o.finalized && o.state !== "cancel")
                 : orderModel.filter(this.activeOrderFilter);
 
         if (this.state.filter && !["ACTIVE_ORDERS", "SYNCED"].includes(this.state.filter)) {
-            orders = orders.filter((order) => {
-                const screen = order.getScreenData();
-                return this._getScreenToStatusMap()[screen.name] === this.state.filter;
-            });
+            if (this.state.filter === "CANCELLED") {
+                orders = orders.filter((order) => order.state === "cancel");
+            } else {
+                orders = orders.filter((order) => {
+                    const screen = order.getScreenData();
+                    return this._getScreenToStatusMap()[screen.name] === this.state.filter;
+                });
+            }
         }
 
         if (this.state.search.searchTerm) {
@@ -596,7 +600,9 @@ export class TicketScreen extends Component {
         return order.employee_id ? order.employee_id.name : "";
     }
     getStatus(order) {
-        if (
+        if (order.state === "cancel") {
+            return _t("Cancelled");
+        } else if (
             order.finalized &&
             (order.getScreenData().name === "" || this.state.filter === "SYNCED")
         ) {
@@ -604,6 +610,17 @@ export class TicketScreen extends Component {
         } else {
             const screen = order.getScreenData();
             return this._getOrderStates().get(this._getScreenToStatusMap()[screen.name])?.text;
+        }
+    }
+    getStatusDecoration(status) {
+        if (status === "Ongoing" || status === "Payment") {
+            return "info";
+        } else if (status === "Receipt" || status === "Paid") {
+            return "success";
+        } else if (status === "Cancelled") {
+            return "danger";
+        } else {
+            return "secondary";
         }
     }
     /**
@@ -885,6 +902,7 @@ export class TicketScreen extends Component {
         } else {
             states.set("PAYMENT", { text: _t("Payment"), indented: true });
         }
+        states.set("CANCELLED", { text: _t("Cancelled"), indented: true });
         return states;
     }
     //#region SEARCH SYNCED ORDERS

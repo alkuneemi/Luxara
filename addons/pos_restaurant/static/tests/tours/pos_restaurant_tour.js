@@ -712,11 +712,11 @@ registry.category("web_tour.tours").add("test_preset_timing_restaurant", {
             FloorScreen.clickTable("4"),
             ProductScreen.clickDisplayedProduct("Coca-Cola"),
             Chrome.clickOrders(),
-            TicketScreen.nthRowContains(1, "John"),
-            TicketScreen.nthRowContains(1, "Takeaway", false),
-            TicketScreen.nthRowNotContains(1, "06/15/2025", false),
-            TicketScreen.nthRowContains(2, "002"),
-            TicketScreen.nthRowContains(2, "Eat in", false),
+            TicketScreen.nthRowContains(2, "John"),
+            TicketScreen.nthRowContains(2, "Takeaway", false),
+            TicketScreen.nthRowNotContains(2, "06/15/2025", false),
+            TicketScreen.nthRowContains(3, "002"),
+            TicketScreen.nthRowContains(3, "Eat in", false),
             Chrome.clickPlanButton(),
             FloorScreen.clickTable("5"),
             ProductScreen.clickDisplayedProduct("Coca-Cola"),
@@ -726,7 +726,7 @@ registry.category("web_tour.tours").add("test_preset_timing_restaurant", {
             Chrome.selectPresetTimingSlotHour({ title: "takeaway", hour: "11:00am" }),
             Dialog.isNot(),
             Chrome.clickOrders(),
-            TicketScreen.nthRowContains(3, "06/16/2025", false),
+            TicketScreen.nthRowContains(4, "06/16/2025", false),
         ].flat(),
 });
 
@@ -750,9 +750,7 @@ registry.category("web_tour.tours").add("test_open_register_with_preset_takeaway
             Dialog.isNot({ title: "Existing orderlines" }),
             FloorScreen.isShown(),
             Chrome.clickOrders(),
-            {
-                trigger: ".orders:contains(no orders found)",
-            },
+            TicketScreen.checkStatus("001", "Cancelled"),
         ].flat(),
 });
 
@@ -777,7 +775,7 @@ registry.category("web_tour.tours").add("test_cancel_future_order", {
             TicketScreen.deleteOrder("001"),
             Dialog.confirm(),
             refresh(),
-            negateStep(...TicketScreen.selectOrder("001")),
+            TicketScreen.checkStatus("001", "Cancelled"),
         ].flat(),
 });
 
@@ -1016,7 +1014,10 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
 
             // Should have 4 orders
             Chrome.clickOrders(),
-            TicketScreen.nbOrdersIs(4),
+            TicketScreen.checkStatus("0001", "Ongoing"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Ongoing"),
+            TicketScreen.checkStatus("0004", "Ongoing"),
 
             // Transfer floating order to another floating order
             TicketScreen.selectOrder("Cola"),
@@ -1031,7 +1032,10 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
             ProductScreen.clickLine("Coca-Cola", "3"),
             ProductScreen.clickLine("Water", "3"),
             Chrome.clickOrders(),
-            TicketScreen.nbOrdersIs(3),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Ongoing"),
+            TicketScreen.checkStatus("0004", "Ongoing"),
 
             // Transfering order from table 5 to table 4
             Chrome.clickPlanButton(),
@@ -1041,7 +1045,10 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
             ProductScreen.clickLine("Minute Maid", "3"),
             ProductScreen.clickLine("Coca-Cola", "3"),
             Chrome.clickOrders(),
-            TicketScreen.nbOrdersIs(2),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Cancelled"),
+            TicketScreen.checkStatus("0004", "Ongoing"),
 
             // Transfering order from table to floating order
             Chrome.clickPlanButton(),
@@ -1057,7 +1064,10 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
             ProductScreen.clickLine("Water", "3"),
             ProductScreen.clickLine("Minute Maid", "3"),
             Chrome.clickOrders(),
-            TicketScreen.nbOrdersIs(1),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Cancelled"),
+            TicketScreen.checkStatus("0004", "Cancelled"),
 
             // Transfering floating order to empty table
             TicketScreen.selectOrder("Water"),
@@ -1069,13 +1079,25 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
             ProductScreen.clickLine("Minute Maid", "3"),
             Chrome.clickPlanButton(),
             FloorScreen.orderCountSyncedInTableIs("5", "1"),
+            Chrome.clickOrders(),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Cancelled"),
+            TicketScreen.checkStatus("0004", "Cancelled"),
 
             // Create a new floating order and transfer it to filled table
+            Chrome.clickPlanButton(),
             FloorScreen.clickNewOrder(),
             ProductScreen.clickDisplayedProduct("Water"),
             ProductScreen.setTab("Water2"),
             Chrome.clickPlanButton(),
             Chrome.clickOrders(),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Cancelled"),
+            TicketScreen.checkStatus("0004", "Cancelled"),
+            TicketScreen.checkStatus("0005", "Ongoing"),
+
             TicketScreen.selectOrder("Water2"),
             TicketScreen.loadSelectedOrder(),
             ProductScreen.clickControlButton("Transfer"),
@@ -1084,7 +1106,11 @@ registry.category("web_tour.tours").add("test_transfering_orders", {
             ProductScreen.clickLine("Coca-Cola", "6"),
             ProductScreen.clickLine("Minute Maid", "3"),
             Chrome.clickOrders(),
-            TicketScreen.nbOrdersIs(1),
+            TicketScreen.checkStatus("0001", "Cancelled"),
+            TicketScreen.checkStatus("0002", "Ongoing"),
+            TicketScreen.checkStatus("0003", "Cancelled"),
+            TicketScreen.checkStatus("0004", "Cancelled"),
+            TicketScreen.checkStatus("0005", "Cancelled"),
         ].flat(),
 });
 registry.category("web_tour.tours").add("test_direct_sales", {

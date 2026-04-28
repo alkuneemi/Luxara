@@ -633,7 +633,6 @@ export class PosStore extends WithLazyGetterTrap {
         if (!orderIsDeleted) {
             return false;
         }
-        order.uiState.displayed = false;
         // Delete refunded lines linked to the current order
         for (const refundedLine of refundedOrderLines) {
             delete refundedLine.order?.uiState?.lineToRefund[refundedLine.uuid];
@@ -651,7 +650,7 @@ export class PosStore extends WithLazyGetterTrap {
     async deleteOrders(orders, serverIds = [], ignoreChange = false) {
         const ordersToDelete = [];
         const actionPosOrderCancelCall = async (orderIds) => {
-            await this.data.call("pos.order", "cancel_order_from_pos", [orderIds], {
+            await this.data.callRelated("pos.order", "cancel_order_from_pos", [orderIds], {
                 context: {
                     device_identifier: this.device.identifier,
                 },
@@ -692,7 +691,9 @@ export class PosStore extends WithLazyGetterTrap {
         } finally {
             // Remove orders locally at the end to avoid reactivity during the async process
             for (const order of ordersToDelete) {
-                this.removeOrder(order, false);
+                if (!order.isSynced) {
+                    this.removeOrder(order, false);
+                }
                 this.removePendingOrder(order);
             }
         }
