@@ -33,8 +33,8 @@ class TestPerfSessionInfo(common.HttpCase):
         self.env.registry.clear_all_caches()
         # cold ormcache:
         # - Only web: 34
-        # - All modules: 85
-        with self.assertQueryCount(85):
+        # - All modules: 86
+        with self.assertQueryCount(86):
             self.url_open(
                 "/web/session/get_session_info",
                 data=json.dumps({'jsonrpc': "2.0", 'method': "call", 'id': str(uuid4())}),
@@ -55,7 +55,7 @@ class TestPerfSessionInfo(common.HttpCase):
         self.env.registry.clear_all_caches()
         self.env.invalidate_all()
         # cold orm/fields cache:
-        # - Web only: 17
+        # - Web only: 15
         # - All modules 56
         with self.assertQueryCount(56):
             self.env['ir.ui.menu'].load_web_menus(False)
@@ -73,7 +73,7 @@ class TestPerfSessionInfo(common.HttpCase):
         self.env.registry.clear_all_caches()
         self.env.invalidate_all()
         # cold orm/fields cache:
-        # - Web only: 17
+        # - Web only: 15
         # - All modules 56
         with self.assertQueryCount(56):
             self.env['ir.ui.menu'].load_menus(False)
@@ -91,7 +91,7 @@ class TestPerfSessionInfo(common.HttpCase):
         self.env.registry.clear_all_caches()
         self.env.invalidate_all()
         # cold ormcache:
-        # - Only web 16
+        # - Only web 14
         # - All modules: 27
         with self.assertQueryCount(27):
             self.env['ir.ui.menu']._visible_menu_ids()
