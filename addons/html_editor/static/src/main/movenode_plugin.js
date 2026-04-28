@@ -58,10 +58,6 @@ export class MoveNodePlugin extends Plugin {
         // This container contains the differents widgets.
         this.widgetContainer =
             this.dependencies.localOverlay.makeLocalOverlay("oe-widgets-container");
-        // This container contains the jquery helper element.
-        this.dragHelperContainer = this.dependencies.localOverlay.makeLocalOverlay(
-            "oe-movenode-helper-container"
-        );
         // This container contains drop zones. They are the zones that handle where the drop should happen.
         this.dropzonesContainer =
             this.dependencies.localOverlay.makeLocalOverlay("oe-dropzones-container");
@@ -349,7 +345,6 @@ export class MoveNodePlugin extends Plugin {
                     container.style.width = style.width;
                     container.style.paddingLeft = "25px";
                     container.style.opacity = "0.4";
-                    this.dragHelperContainer.append(container);
                     return container;
                 },
             });

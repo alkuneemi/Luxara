@@ -1,6 +1,6 @@
 import { onWillRender, useLayoutEffect, useRef, useState } from "@web/owl2/utils";
 import { registry } from "@web/core/registry";
-import { loadJS } from "@web/core/assets";
+import { loadBundle, loadJS } from "@web/core/assets";
 
 // temporary for OnNoResultReturned bug
 import { ThirdPartyScriptError } from "@web/core/errors/error_service";
@@ -24,12 +24,14 @@ export class MondialRelayField extends Component {
         this.state = useState({
             libLoaded: false, // Whether the library is loaded or not
         });
-        onWillRender(() => {
+        onWillRender(async () => {
             // Do nothing if the record is not of type mondial_relay
             if (!this.enabled || this.state.libLoaded) {
                 return;
             }
-            loadJS(MONDIALRELAY_SCRIPT_URL).then(() => {this.state.libLoaded = true});
+            await loadBundle("web._assets_jquery");
+            await loadJS(MONDIALRELAY_SCRIPT_URL);
+            this.state.libLoaded = true;
         });
 
         useLayoutEffect(
