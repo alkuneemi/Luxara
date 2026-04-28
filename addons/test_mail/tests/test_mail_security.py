@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from contextlib import nullcontext
+
 from odoo.addons.mail.tests.common import mail_new_test_user, MailCommon
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
-from odoo.exceptions import AccessError
 
-
+@tagged('security')
 class TestSubtypeAccess(MailCommon):
 
     def test_subtype_access(self):
@@ -28,3 +30,24 @@ class TestSubtypeAccess(MailCommon):
 
         test_subtype.with_user(self.user_admin).write({'description': 'testing'})
         self.assertEqual(test_subtype.description, 'testing')
+
+    def test_subtype_protection(self):
+        """ Test master data protection """
+        for xml_id, is_protected in [
+            ('mail.mt_comment', True),
+            ('mail.mt_note', True),
+            ('mail.mt_activities', True),
+            ('test_mail.st_mail_test_simple_external', False),
+        ]:
+            with self.subTest(xml_id=xml_id):
+                subtype = self.env.ref(xml_id)
+                raiseIfProtected = self.assertRaises(UserError) if is_protected else nullcontext()
+
+                # protected against model change
+                with raiseIfProtected:
+                    subtype.write({'res_model': 'res.partner'})
+
+                raiseIfProtected = self.assertRaises(UserError) if is_protected else nullcontext()
+                # protected against removal
+                with raiseIfProtected:
+                    subtype.unlink()
