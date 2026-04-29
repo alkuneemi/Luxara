@@ -14,6 +14,15 @@ class Website(models.Model):
         suggested_controllers.append((_('Courses'), self.env['ir.http']._url_for('/slides'), 'website_slides'))
         return suggested_controllers
 
+    def get_cta_candidates(self, website_purpose, website_type):
+        candidates = super().get_cta_candidates(website_purpose, website_type)
+        if website_purpose == 'sell_more' and website_type == 'elearning':
+            candidates.append((60, {
+                'cta_btn_text': _('Browse Courses'),
+                'cta_btn_href': '/courses',
+            }))
+        return candidates
+
     def _search_get_details(self, search_type, order, options):
         result = super()._search_get_details(search_type, order, options)
         if search_type in ['slides', 'slide_channel', 'all']:
