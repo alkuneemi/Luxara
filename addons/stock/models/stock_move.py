@@ -1425,7 +1425,6 @@ Please change the quantity done or the rounding precision in your settings.""",
         self.quantity = self.product_id.uom_id._compute_quantity(quantity, self.uom_id, round=False)
         base_location = self.location_id
         quants = self.env['stock.quant'].sudo().search([
-            ('tracking', '=', 'serial'),
             ('product_id', '=', self.product_id.id),
             ('lot_id', 'in', self.lot_ids.ids),
             ('quantity', '!=', 0),
