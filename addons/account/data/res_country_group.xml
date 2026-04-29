@@ -31,5 +31,25 @@
                 ref('base.es'),ref('base.se'),ref('base.uk'),ref('base.xi'),
             ])]"/>
         </record>
+
+        <record id="unece_uom" model="res.country.group">
+            <field name="name">UNECE UoM Countries</field>
+            <field name="code">UNECE-UOM</field>
+            <field name="country_ids" eval="[Command.set([
+                ref('base.al'),ref('base.ad'),ref('base.am'),ref('base.at'),ref('base.az'),
+                ref('base.by'),ref('base.be'),ref('base.ba'),ref('base.bg'),ref('base.ca'),
+                ref('base.hr'),ref('base.cy'),ref('base.cz'),ref('base.dk'),ref('base.ee'),
+                ref('base.fi'),ref('base.fr'),ref('base.ge'),ref('base.de'),ref('base.gr'),
+                ref('base.hu'),ref('base.is'),ref('base.ie'),ref('base.il'),ref('base.it'),
+                ref('base.kz'),ref('base.kg'),ref('base.lv'),ref('base.li'),ref('base.lt'),
+                ref('base.lu'),ref('base.mt'),ref('base.md'),ref('base.mc'),ref('base.me'),
+                ref('base.nl'),ref('base.mk'),ref('base.no'),ref('base.pl'),ref('base.pt'),
+                ref('base.ro'),ref('base.ru'),ref('base.sm'),ref('base.rs'),ref('base.sk'),
+                ref('base.si'),ref('base.es'),ref('base.se'),ref('base.ch'),ref('base.tj'),
+                ref('base.tr'),ref('base.tm'),ref('base.ua'),ref('base.uk'),ref('base.us'),
+                ref('base.uz'),ref('base.jo'),ref('base.jp'),ref('base.au'),ref('base.nz'),
+                ref('base.my'),ref('base.sa'),ref('base.sg'),
+            ])]"/>
+        </record>
     </data>
 </odoo>

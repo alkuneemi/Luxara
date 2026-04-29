@@ -339,28 +339,28 @@ class AccountEdiUBL(models.AbstractModel):
         base_line = vals['line_vals']['base_line']
         vals['line_node']['cbc:Quantity'] = {
             '_text': base_line['quantity'],
-            'unitCode': self._get_uom_unece_code(base_line['product_uom_id']),
+            'unitCode': base_line['product_uom_id'].unece_code or 'C62',
         }
 
     def _ubl_add_line_invoiced_quantity_node(self, vals):
         base_line = vals['line_vals']['base_line']
         vals['line_node']['cbc:InvoicedQuantity'] = {
             '_text': base_line['quantity'],
-            'unitCode': self._get_uom_unece_code(base_line['product_uom_id']),
+            'unitCode': base_line['product_uom_id'].unece_code or 'C62',
         }
 
     def _ubl_add_line_credited_quantity_node(self, vals):
         base_line = vals['line_vals']['base_line']
         vals['line_node']['cbc:CreditedQuantity'] = {
             '_text': base_line['quantity'],
-            'unitCode': self._get_uom_unece_code(base_line['product_uom_id']),
+            'unitCode': base_line['product_uom_id'].unece_code or 'C62',
         }
 
     def _ubl_add_line_debited_quantity_node(self, vals):
         base_line = vals['line_vals']['base_line']
         vals['line_node']['cbc:DebitedQuantity'] = {
             '_text': base_line['quantity'],
-            'unitCode': self._get_uom_unece_code(base_line['product_uom_id']),
+            'unitCode': base_line['product_uom_id'].unece_code or 'C62',
         }
 
     def _ubl_add_line_item_name_description_nodes(self, vals):
