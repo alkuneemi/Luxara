@@ -310,6 +310,12 @@ class PosSelfOrderController(http.Controller):
         table = table_sudo.sudo(False).with_company(company).with_user(user).with_context(allowed_company_ids=company.ids)
         return pos_config, table
 
+    @http.route(['/pos-self-order/send-order-receipt'], type='jsonrpc', auth='public')
+    def pos_self_order_send_order_receipt(self, access_token, order_id):
+        pos_config = self._verify_pos_config(access_token)
+        order = pos_config.env['pos.order'].browse(order_id)
+        return bool(order.exists())
+
     @http.route(['/pos-self/ping'], type='jsonrpc', auth='public')
     def pos_ping(self, access_token):
         self._verify_pos_config(access_token, check_active_session=False)

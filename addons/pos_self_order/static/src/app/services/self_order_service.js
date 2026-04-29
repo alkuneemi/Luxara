@@ -518,6 +518,21 @@ export class SelfOrder extends Reactive {
         }
     }
 
+    _checkBeforeSendOrderReceipt(order) {
+        return false;
+    }
+
+    async _sendOrderReceipt(order) {
+        try {
+            await rpc("/pos-self-order/send-order-receipt", {
+                access_token: this.access_token,
+                order_id: order.id,
+            });
+        } catch (error) {
+            this.handleErrorNotification(error);
+        }
+    }
+
     get currentOrder() {
         const currentOrder = this.getOrder();
         if (currentOrder) {
