@@ -17,7 +17,7 @@ class PaymentMethod(models.Model):
     code = fields.Char(
         string="Code", help="The technical code of this payment method in Odoo.", required=True
     )
-    sequence = fields.Integer(string="Sequence", default=1)
+    sequence = fields.Integer(string="Sequence", default=1000)
     primary_payment_method_id = fields.Many2one(
         string="Primary Payment Method",
         help="The primary payment method of the current payment method, if the latter is a brand."
@@ -42,7 +42,7 @@ class PaymentMethod(models.Model):
         comodel_name="payment.provider",
         required=True,
     )
-    active = fields.Boolean(string="Active", default=True)
+    active = fields.Boolean(string="Active", default=False)
     image = fields.Image(
         string="Image",
         help="The base image used for this payment method; in a 64x64 px format.",
