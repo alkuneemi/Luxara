@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
+from odoo.tools import format_date
 
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.website_sale_collect import const
@@ -63,3 +64,13 @@ class PaymentProvider(models.Model):
             )
 
         return compatible_providers
+
+    def _get_pending_msg(self, *, order=None, **kwargs):
+        """Override to return a specific pending message for on-site orders."""
+        if order.website_id and self.custom_mode == "on_site":
+            if order.commitment_date and order.commitment_date.date() != order.date_order.date():
+                return self.env._(
+                    "Your order will be ready on %s.", format_date(self.env, order.commitment_date)
+                )
+            return self.env._("Your order will be ready soon.")
+        return super()._get_pending_msg(order=order, **kwargs)

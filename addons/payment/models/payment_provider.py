@@ -706,6 +706,15 @@ class PaymentProvider(models.Model):
 
         return providers
 
+    def _get_pending_msg(self, **_kwargs):
+        """Return the message when the payment is pending after processing.
+
+        :return: The pending message.
+        :rtype: str
+        """
+        self.ensure_one()
+        return self.pending_msg
+
     def _is_tokenization_required(self, **_kwargs):
         """Return whether tokenizing the transaction is required given its context.
 

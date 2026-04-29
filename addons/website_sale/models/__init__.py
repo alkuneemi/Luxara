@@ -7,6 +7,7 @@ from . import (
     digest,
     ir_http,
     ir_module_module,
+    payment_provider,
     payment_token,
     payment_transaction,
     product_attribute,
