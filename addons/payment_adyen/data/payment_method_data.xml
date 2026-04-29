@@ -1125,6 +1125,7 @@
         <field name="code">amex</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/amex.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_carnet" model="payment.method">
@@ -1132,6 +1133,7 @@
         <field name="code">carnet</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/wallet.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_cartes_bancaires" model="payment.method">
@@ -1139,6 +1141,7 @@
         <field name="code">cartes_bancaires</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_dankort" model="payment.method">
@@ -1146,6 +1149,7 @@
         <field name="code">dankort</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/dankort.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_diners" model="payment.method">
@@ -1153,6 +1157,7 @@
         <field name="code">diners</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/diners.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_discover" model="payment.method">
@@ -1160,6 +1165,7 @@
         <field name="code">discover</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/discover.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_elo" model="payment.method">
@@ -1175,6 +1181,7 @@
         <field name="code">hipercard</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/hipercard.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_maestro" model="payment.method">
@@ -1182,6 +1189,7 @@
         <field name="code">maestro</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/maestro.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_mastercard" model="payment.method">
@@ -1189,6 +1197,7 @@
         <field name="code">mastercard</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/mastercard.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_jcb" model="payment.method">
@@ -1196,6 +1205,7 @@
         <field name="code">jcb</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/jcb.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_troy" model="payment.method">
@@ -1203,6 +1213,7 @@
         <field name="code">troy</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/troy.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_visa" model="payment.method">
@@ -1210,6 +1221,7 @@
         <field name="code">visa</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/visa.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
     <record id="payment_method_unionpay" model="payment.method">
@@ -1217,6 +1229,7 @@
         <field name="code">unionpay</field>
         <field name="primary_payment_method_id" eval="ref('payment_adyen.payment_method_card')"/>
         <field name="image" type="bytes" file="payment/static/img/unionpay.png"/>
+        <field name="provider_id" ref="payment.payment_provider_adyen"/>
     </record>
 
 </odoo>
