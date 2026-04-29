@@ -79,6 +79,7 @@ import { StylePlugin } from "./core/style_plugin";
 import { ContentEditablePlugin } from "./core/content_editable_plugin";
 import { SelectionPlaceholderPlugin } from "./main/selection_placeholder_plugin";
 import { ResizePlugin } from "./main/resize_plugin";
+import { EmbeddedWhiteboardPlugin } from "./others/embedded_components/plugins/embedded_whiteboard_plugin/embedded_whiteboard_plugin";
 
 export const CORE_PLUGINS = [
     BaseContainerPlugin,
@@ -168,6 +169,8 @@ export const EMBEDDED_COMPONENT_PLUGINS = [
     EmbeddedYoutubePlugin,
     CaptionPlugin,
     SyntaxHighlightingPlugin,
+    // TODO make it an opt-in plugin ?
+    EmbeddedWhiteboardPlugin,
 ];
 
 export const NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS = [VideoPlugin, YoutubePlugin];
