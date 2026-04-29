@@ -92,3 +92,23 @@ $o-we-color-success: #00ff9e !default;
         color: $o-we-color-success;
     }
 }
+
+.o_bottom_sheet_body .o_font_color_selector {
+    width: unset;
+    box-shadow: unset;
+    
+    .o_colorpicker_section, .o_color_section {
+        width: -webkit-fill-available;
+    }
+
+    .o_color_picker_button {
+        &:not(.o_gradient_color_button, .o_custom_gradient_button) {
+            width: unset;
+            height: unset;
+            aspect-ratio: 1 / 1;
+        }
+        &.o_gradient_color_button, &.o_custom_gradient_button {
+            height: 40px;
+        }
+    }
+}

@@ -9,6 +9,7 @@ import {
 import { effect } from "@web/core/utils/reactive";
 import { toolbarButtonProps } from "../toolbar/toolbar";
 import { getCSSVariableValue, getHtmlStyle } from "@html_editor/utils/formatting";
+import { hasTouch } from "@web/core/browser/feature_detection";
 import { useChildRef } from "@web/core/utils/hooks";
 import { useDropdownAutoVisibility } from "@html_editor/dropdown_autovisibility_hook";
 
@@ -27,6 +28,7 @@ export class ColorSelector extends Component {
         colorPrefix: { type: String },
         enabledTabs: { type: Array, optional: true },
         cssVarColorPrefix: { type: String, optional: true },
+        onOpen: { type: Function, optional: true },
         onClose: Function,
         useDefaultThemeColors: { type: Boolean, optional: true },
     };
@@ -76,11 +78,13 @@ export class ColorSelector extends Component {
             },
             {
                 env: this.__owl__.childEnv,
+                onOpen: this.props.onOpen,
                 onClose: () => {
                     this.props.applyColorResetPreview();
                     this.props.onClose();
                 },
                 ref: colorPickerRef,
+                useBottomSheet: this.env.isSmall && hasTouch(),
             }
         );
         useDropdownAutoVisibility(this.env.overlayState, colorPickerRef);

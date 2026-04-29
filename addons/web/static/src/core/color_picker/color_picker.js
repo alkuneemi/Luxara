@@ -373,6 +373,7 @@ export function useColorPicker(refName, props, options = {}) {
 
     function onClick() {
         colorPicker.isOpen ? colorPicker.close() : colorPicker.open(root.el, props);
+        options.onOpen?.(root.el);
     }
 
     useLayoutEffect(

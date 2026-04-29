@@ -79,6 +79,8 @@ export class FontSizeSelector extends Component {
                 this.fontSizeInput.addEventListener("click", () => {
                     if (!this.dropdown.isOpen) {
                         this.dropdown.open();
+                        // Needed for mobile to make focus available inside bottom sheet.
+                        iframeEl.focus();
                     }
                 });
                 this.fontSizeInput.addEventListener("input", this.debouncedCustomFontSizeInput);
@@ -135,7 +137,7 @@ export class FontSizeSelector extends Component {
     }
 
     onKeyDownFontSizeInput(ev) {
-        if (["Enter", "Tab"].includes(ev.key) && this.dropdown.isOpen) {
+        if (["Enter", "Tab", "Escape"].includes(ev.key) && this.dropdown.isOpen) {
             this.dropdown.close();
         } else if (["ArrowUp", "ArrowDown"].includes(ev.key)) {
             const fontSizeSelectorMenu = document.querySelector(".o_font_size_selector_menu div");

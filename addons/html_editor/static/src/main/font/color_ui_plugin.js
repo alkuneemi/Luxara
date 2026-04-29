@@ -70,6 +70,7 @@ export class ColorUIPlugin extends Plugin {
             applyColorPreview: (color) => this.applyColorPreview({ color, mode }),
             applyColorResetPreview: this.applyColorResetPreview.bind(this),
             colorPrefix: mode === "color" ? "text-" : "bg-",
+            onOpen: () => this.document.activeElement?.blur(),
             onClose: () => this.dependencies.selection.focusEditable(),
             getTargetedElements: () => {
                 const nodes = this.dependencies.selection.getTargetedNodes().filter(isTextNode);

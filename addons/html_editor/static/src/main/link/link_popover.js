@@ -3,6 +3,7 @@ import { session } from "@web/session";
 import { _t } from "@web/core/l10n/translation";
 import { Component } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { scrollTo } from "@web/core/utils/scrolling";
 import { cleanZWChars, deduceURLfromText } from "./utils";
 import { CheckBox } from "@web/core/checkbox/checkbox";
 import { isAbsoluteURLInCurrentDomain } from "@html_editor/utils/url";
@@ -48,6 +49,7 @@ export class LinkPopover extends Component {
         allowStripDomain: { type: Boolean, optional: true },
         publicAttachments: { type: Boolean, optional: true },
         advancedAttributeOptions: { type: Array, optional: true },
+        close: { type: Function, optional: true },
     };
     static defaultProps = {
         canEdit: true,
@@ -142,6 +144,11 @@ export class LinkPopover extends Component {
             // Listen to pointerdown outside the iframe
             useExternalListener(document, "pointerdown", onPointerDown);
         }
+
+        this.onDiscard = () => {
+            this.props.onDiscard();
+            this.props.close?.();
+        };
     }
 
     toggleAdvancedOptions() {
@@ -196,6 +203,7 @@ export class LinkPopover extends Component {
         this.applyDeducedUrl();
         const params = this.prepareLinkParams();
         this.props.onApply(params);
+        this.props.close?.();
     }
     applyDeducedUrl() {
         if (this.state.label === "") {
@@ -220,6 +228,12 @@ export class LinkPopover extends Component {
         this.state.editing = true;
         this.props.onEdit();
         this.updateUrlAndLabel();
+        setTimeout(() => {
+            // Once rendered, make bottom sheet fully visible:
+            if (this.editingWrapper.el) {
+                scrollTo(this.editingWrapper.el);
+            }
+        });
     }
     updateUrlAndLabel() {
         this.state.url = this.props.linkElement.getAttribute("href");
@@ -290,6 +304,18 @@ export class LinkPopover extends Component {
     onSelectedLinkType(type) {
         this.state.type = type;
         this.onChange();
+    }
+
+    /**
+     * Called when the preview image is loaded.
+     *
+     * @param {Event} ev
+     */
+    onImageLoaded(ev) {
+        // On mobile, we want to scroll the bottom sheet up to display the whole preview.
+        if (ev.target.closest(".o_bottom_sheet")) {
+            scrollTo(ev.target, { behavior: "smooth" });
+        }
     }
 
     /**
