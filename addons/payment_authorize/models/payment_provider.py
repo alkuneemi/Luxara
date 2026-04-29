@@ -57,10 +57,10 @@ class PaymentProvider(models.Model):
 
     # Authorize.Net supports only one currency: "One gateway account is required for each currency"
     # See https://community.developer.authorize.net/t5/The-Authorize-Net-Developer-Blog/Authorize-Net-UK-Europe-Update/ba-p/35957
-    @api.constrains("available_currency_ids", "state")
+    @api.constrains("available_currency_ids")
     def _limit_available_currency_ids(self):
         for provider in self.filtered(lambda p: p.code == "authorize"):
-            if len(provider.available_currency_ids) > 1 and provider.state != "disabled":
+            if len(provider.available_currency_ids) > 1:
                 raise ValidationError(
                     _("Only one currency can be selected by Authorize.Net account.")
                 )
@@ -91,9 +91,6 @@ class PaymentProvider(models.Model):
         """Fetch the merchant details to update the client key and the account currency."""
         self.ensure_one()
 
-        if self.state == "disabled":
-            raise UserError(_("This action cannot be performed while the provider is disabled."))
-
         authorize_API = AuthorizeAPI(self)
 
         # Validate the API Login ID and Transaction Key
@@ -121,9 +118,6 @@ class PaymentProvider(models.Model):
         :rtype: dict
         """
         self.ensure_one()
-
-        if self.state == "disabled":
-            raise UserError(_("This action cannot be performed while the provider is disabled."))
 
         webhook_url = urls.urljoin(self.get_base_url(), const.WEBHOOK_ROUTE)
         # Authorize.Net allows only letters, numbers, and underscores in webhook names.
@@ -192,7 +186,7 @@ class PaymentProvider(models.Model):
         if self.code != "authorize":
             return super()._build_request_url(endpoint, **kwargs)
 
-        if self.state == "enabled":
+        if not self.is_test:
             return f"https://api.authorize.net{endpoint}"
         return f"https://apitest.authorize.net{endpoint}"
 

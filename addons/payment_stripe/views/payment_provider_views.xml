@@ -6,32 +6,32 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <group name="provider_credentials" position="before">
-                <div
-                     name="stripe_onboarding_group"
-                     invisible="context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key or stripe_publishable_key)">
-                    <button string="Connect Stripe"
+            <sheet position="before">
+                <header invisible="context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key or stripe_publishable_key)">
+                    <div name="stripe_onboarding_group">
+                        <button
+                            string="Connect"
                             type="object"
                             name="action_start_onboarding"
                             class="btn-primary"
                             colspan="2"
-                            invisible="state == 'enabled'"/>
-                </div>
-            </group>
-            <group name="provider_credentials" position="inside">
-                <group invisible="code != 'stripe'" name="stripe_credentials">
-                    <field name="stripe_publishable_key" required="code == 'stripe' and state != 'disabled'"/>
-                    <field name="stripe_secret_key" required="code == 'stripe' and state != 'disabled'" password="True"/>
-                    <label for="stripe_webhook_secret"/>
-                    <div class="o_row" col="2">
-                        <field name="stripe_webhook_secret" password="True"/>
-                        <button string="Generate your webhook"
-                                type="object"
-                                name="action_stripe_create_webhook"
-                                class="btn-primary"
-                                invisible="stripe_webhook_secret or not stripe_secret_key"/>
+                            invisible="is_test == False"
+                        />
                     </div>
-                </group>
+                </header>
+            </sheet>
+            <group name="provider_credentials" position="inside">
+                <field name="stripe_publishable_key" required="code == 'stripe'" invisible="code != 'stripe'"/>
+                <field name="stripe_secret_key" required="code == 'stripe'" invisible="code != 'stripe'" password="True"/>
+                <label for="stripe_webhook_secret" invisible="code != 'stripe'"/>
+                <div name="stripe_webhook" class="o_row" col="2" invisible="code != 'stripe'">
+                    <field name="stripe_webhook_secret" password="True"/>
+                    <button string="Generate your webhook"
+                            type="object"
+                            name="action_stripe_create_webhook"
+                            class="btn-primary"
+                            invisible="stripe_webhook_secret or not stripe_secret_key"/>
+                </div>
                 <div name="stripe_keys_link"
                      invisible="not context.get('stripe_onboarding', False) or (code != 'stripe' or stripe_secret_key and stripe_publishable_key)">
                     <a class="btn btn-link" role="button" href="https://dashboard.stripe.com/account/apikeys" target="_blank">

@@ -9,7 +9,7 @@ from dateutil import relativedelta
 from markupsafe import Markup
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import ValidationError
 from odoo.fields import Domain
 from odoo.tools import email_normalize_all, float_round
 
@@ -212,7 +212,7 @@ class PaymentTransaction(models.Model):
             if not values.get("reference"):
                 values["reference"] = self._compute_reference(provider.code, **values)
 
-            values["is_live"] = provider.state == "enabled"
+            values["is_live"] = not provider.is_test
 
             # Duplicate partner values.
             partner = self.env["res.partner"].browse(values["partner_id"])
@@ -603,7 +603,6 @@ class PaymentTransaction(models.Model):
         :return: None
         """
         self.ensure_one()
-        self._ensure_provider_is_not_disabled()
         self._log_sent_message()
         try:
             self._send_payment_request()
@@ -635,7 +634,6 @@ class PaymentTransaction(models.Model):
         :rtype: payment.transaction
         """
         self.ensure_one()
-        self._ensure_provider_is_not_disabled()
 
         capture_tx = self._create_child_transaction(amount_to_capture or self.amount)
         capture_tx._log_sent_message()
@@ -667,7 +665,6 @@ class PaymentTransaction(models.Model):
         :rtype: payment.transaction
         """
         self.ensure_one()
-        self._ensure_provider_is_not_disabled()
 
         void_tx = self._create_child_transaction(amount_to_void or self.amount)
         void_tx._log_sent_message()
@@ -699,7 +696,6 @@ class PaymentTransaction(models.Model):
         :rtype: payment.transaction
         """
         self.ensure_one()
-        self._ensure_provider_is_not_disabled()
 
         refund_tx = self._create_child_transaction(amount_to_refund or self.amount, is_refund=True)
         refund_tx._log_sent_message()
@@ -720,21 +716,6 @@ class PaymentTransaction(models.Model):
         :return: None
         """
         return
-
-    def _ensure_provider_is_not_disabled(self):
-        """Ensure that the provider's state is not `disabled` before sending a request to its
-        provider.
-
-        :return: None
-        :raise UserError: If the provider's state is `disabled`.
-        """
-        if self.provider_id.state == "disabled":
-            raise UserError(
-                _(
-                    "Making a request to the provider is not possible because the provider is"
-                    " disabled."
-                )
-            )
 
     def _create_child_transaction(self, amount, is_refund=False, **custom_create_values):
         """Create a new transaction with the current transaction as its parent transaction.

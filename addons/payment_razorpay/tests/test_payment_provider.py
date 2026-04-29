@@ -16,7 +16,7 @@ class TestPaymentProvider(RazorpayCommon):
         """Test that enabling a Razorpay provider without credentials raises a ValidationError."""
         self.provider.write({"razorpay_key_id": None, "razorpay_key_secret": None})
         with self.assertRaises(ValidationError):
-            self.provider.state = "enabled"
+            self.provider.is_test = False
 
     def test_incompatible_with_unsupported_currencies(self):
         """Test that Razorpay providers are filtered out from compatible providers when the

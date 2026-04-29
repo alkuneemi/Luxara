@@ -55,7 +55,7 @@ class PaymentProvider(models.Model):
         if self.code != "iyzico":
             return super()._build_request_url(endpoint, **kwargs)
 
-        if self.state == "enabled":
+        if not self.is_test:
             api_url = "https://api.iyzipay.com"
         else:
             api_url = "https://sandbox-api.iyzipay.com"

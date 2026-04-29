@@ -329,7 +329,7 @@ class TestFlows(PaymentHttpCommon):
         self.authenticate(self.portal_user.login, self.portal_user.login)
 
         token = self._create_token()
-        provider_b = self.provider.copy({"is_published": True, "state": "test"})
+        provider_b = self.provider.copy({"is_published": True, "is_test": True})
         token_b = self._create_token(provider_id=provider_b.id)
 
         # User must see both tokens and compatible payment methods.
@@ -338,12 +338,6 @@ class TestFlows(PaymentHttpCommon):
         self.assertIn(token.id, payment_context["token_ids"])
         self.assertIn(token_b.id, payment_context["token_ids"])
         self.assertIn(self.payment_method_id, payment_context["payment_method_ids"])
-
-        # Token of disabled provider(s) should not be shown.
-        self.provider.state = "disabled"
-        payment_context = self._get_portal_payment_method_context()
-        self.assertEqual(payment_context["partner_id"], self.partner.id)
-        self.assertEqual(payment_context["token_ids"], [token_b.id])
 
         # Archived tokens must be hidden from the user
         token_b.active = False

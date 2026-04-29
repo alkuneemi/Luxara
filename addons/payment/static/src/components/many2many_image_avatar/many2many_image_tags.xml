@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+    <t
+        t-name="payment.Many2ManyImage"
+        t-inherit="web.Many2ManyTagsAvatarField"
+        t-inherit-mode="primary"
+    />
+
+</templates>

@@ -67,7 +67,7 @@ class PaymentProvider(models.Model):
         :return: The API URL.
         :rtype: str
         """
-        if self.state == "enabled":
+        if not self.is_test:
             api_url = "https://payment.direct.worldline-solutions.com"
         else:  # 'test'
             api_url = "https://payment.preprod.direct.worldline-solutions.com"

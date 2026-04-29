@@ -59,7 +59,7 @@ class PaymentProvider(models.Model):
         :rtype: str
         """
         self.ensure_one()
-        if self.state == "enabled":
+        if not self.is_test:
             api_url = "https://checkout.buckaroo.nl/html/"
         else:  # test
             api_url = "https://testcheckout.buckaroo.nl/html/"

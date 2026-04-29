@@ -94,7 +94,7 @@ class PaymentProvider(models.Model):
             "page_size": 500,
             "is_deprecated": "false",
             "is_standalone": "false",
-            "is_live": self.state == "enabled",
+            "is_live": not self.is_test,
         }
         paymob_gateways_data = self._send_api_request(
             "GET", "/api/ecommerce/integrations", params=params
@@ -190,7 +190,7 @@ class PaymentProvider(models.Model):
                 if not installment_payment_method:
                     continue
                 payment_method_code = "installments_eg"
-            environment = "live" if self.state == "enabled" else "test"
+            environment = "live" if not self.is_test else "test"
             payload = {"integration_name": f"{payment_method_code.replace('_', '')}{environment}"}
             self._send_api_request(
                 "PUT", f"/api/ecommerce/integrations/{gateway_data['id']}", json=payload

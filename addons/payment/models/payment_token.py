@@ -86,15 +86,9 @@ class PaymentToken(models.Model):
         """
         if "active" in vals:
             if vals["active"]:
-                if any(
-                    not token.payment_method_id.active or token.provider_id.state == "disabled"
-                    for token in self
-                ):
+                if any(not token.payment_method_id.active for token in self):
                     raise UserError(
-                        _(
-                            "You can't unarchive tokens linked to inactive payment methods or"
-                            " disabled providers."
-                        )
+                        _("You can't unarchive tokens linked to inactive payment methods.")
                     )
             else:
                 # Call the handlers in sudo mode because this method might have been called by RPC.

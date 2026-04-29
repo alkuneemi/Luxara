@@ -57,7 +57,7 @@ class PaymentProvider(models.Model):
     # === BUSINESS METHODS === #
 
     def _nuvei_get_api_url(self):
-        if self.state == "enabled":
+        if not self.is_test:
             api_url = "https://secure.safecharge.com/ppp/purchase.do"
         else:  # 'test'
             api_url = "https://ppp-test.safecharge.com/ppp/purchase.do"

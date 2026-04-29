@@ -18,13 +18,6 @@ class TestPaymentMethod(PaymentCommon):
         self.payment_method.provider_ids = [Command.unlink(self.payment_method.provider_ids[:1].id)]
         self.assertFalse(token.active)
 
-    def test_payment_method_requires_provider_to_be_activated(self):
-        """Test that activating a payment method that is not linked to an enabled provider is
-        forbidden."""
-        self.provider.state = "disabled"
-        with self.assertRaises(UserError):
-            self.payment_methods.active = True
-
     def test_brand_compatible_with_manual_capture(self):
         """Test that a "brand" can be enabled for providers which support manual capture."""
         self.provider.update({"capture_manually": True, "support_manual_capture": "partial"})
@@ -65,10 +58,10 @@ class TestPaymentMethod(PaymentCommon):
         )
         self.assertIn(self.payment_method, compatible_payment_methods)
 
-    def test_payment_method_not_compatible_when_provider_is_disabled(self):
-        """Test that a payment method is not available when there is no enabled provider that
+    def test_payment_method_not_compatible_when_provider_is_not_installed(self):
+        """Test that a payment method is not available when there is no installed provider that
         supports it."""
-        self.provider.state = "disabled"
+        self.provider._remove_provider("none")
         compatible_payment_methods = self.env["payment.method"]._get_compatible_payment_methods(
             self.provider.ids, self.partner.id
         )

@@ -55,7 +55,7 @@ class PaymentProvider(models.Model):
 
     # === CONSTRAINT METHODS === #
 
-    @api.constrains("state", "stripe_publishable_key", "stripe_secret_key")
+    @api.constrains("is_test", "stripe_publishable_key", "stripe_secret_key")
     def _check_state_of_connected_account_is_never_test(self):
         """Check that the provider of a connected account can never been set to 'test'.
 
@@ -63,15 +63,15 @@ class PaymentProvider(models.Model):
         string of the `ValidationError` should it be raised by modules that would fully implement
         Stripe Connect.
 
-        Additionally, the field `state` is used as a trigger for this constraint to allow those
+        Additionally, the field `is_test` is used as a trigger for this constraint to allow those
         modules to indirectly trigger it when writing on custom fields. Indeed, by always writing on
-        `state` together with writing on those custom fields, the constraint would be triggered.
+        `is_test` together with writing on those custom fields, the constraint would be triggered.
 
         :return: None
-        :raise ValidationError: If the provider of a connected account is set in state 'test'.
+        :raise ValidationError: If the provider of a connected account is set in test.
         """
         for provider in self:
-            if provider.state == "test" and provider._stripe_has_connected_account():
+            if provider.is_test and provider._stripe_has_connected_account():
                 raise ValidationError(
                     _(
                         "You cannot set the provider to Test Mode while it is linked with your"
@@ -91,23 +91,23 @@ class PaymentProvider(models.Model):
         self.ensure_one()
         return False
 
-    @api.constrains("state")
+    @api.constrains("is_test")
     def _check_onboarding_of_enabled_provider_is_completed(self):
-        """Check that the provider cannot be set to 'enabled' if the onboarding is ongoing.
+        """Check that the provider cannot be enabled if the onboarding is ongoing.
 
         This constraint is defined in the present module to allow the export of the translation
         string of the `ValidationError` should it be raised by modules that would fully implement
         Stripe Connect.
 
         :return: None
-        :raise ValidationError: If the provider of a connected account is set in state 'enabled'
+        :raise ValidationError: If the provider of a connected account is set in live mode
                                 while the onboarding is not finished.
         """
         for provider in self:
-            if provider.state == "enabled" and provider._stripe_onboarding_is_ongoing():
+            if not provider.is_test and provider._stripe_onboarding_is_ongoing():
                 raise ValidationError(
                     _(
-                        "You cannot set the provider state to Enabled until your onboarding to"
+                        "You cannot enable the provider until your onboarding to"
                         " Stripe is completed."
                     )
                 )
@@ -170,7 +170,7 @@ class PaymentProvider(models.Model):
                 _("Other Payment Providers"),
             )
 
-        if self.state == "enabled":
+        if not self.is_test:
             action = {"type": "ir.actions.act_window_close"}
         else:
             # Account creation

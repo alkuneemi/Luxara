@@ -29,12 +29,12 @@ class AuthorizeAPI:
 
         :param recordset provider: payment.provider account that will be contacted
         """
-        if provider.state == "enabled":
+        if not provider.is_test:
             self.url = "https://api.authorize.net/xml/v1/request.api"
         else:
             self.url = "https://apitest.authorize.net/xml/v1/request.api"
 
-        self.state = provider.state
+        self.is_test = provider.is_test
         self.name = provider.authorize_login
         self.transaction_key = provider.authorize_transaction_key
 

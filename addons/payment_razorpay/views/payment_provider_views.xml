@@ -31,43 +31,43 @@
                 </header>
             </sheet>
             <group name="provider_credentials" position='inside'>
-                <group
-                    name="razorpay_credentials"
-                    invisible="code != 'razorpay'"
-                >
-                    <field name="razorpay_account_id"
-                        string="Account ID"
-                        invisible="not razorpay_is_oauth_supported"
-                        readonly="True"
-                    />
+                <field name="razorpay_account_id"
+                    string="Account ID"
+                    invisible="code != 'razorpay' or not razorpay_is_oauth_supported"
+                    readonly="True"
+                       required="True"
+                />
+                <field
+                    name="razorpay_key_id"
+                    string="Key Id"
+                    invisible="code != 'razorpay' or razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
+                    required="code == 'razorpay'"
+                    readonly="razorpay_account_id"
+                />
+                <field
+                    name="razorpay_key_secret"
+                    string="Key Secret"
+                    invisible="code != 'razorpay' or razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
+                    required="code == 'razorpay'"
+                    readonly="razorpay_account_id"
+                    password="True"
+                />
+                <label for="razorpay_webhook_secret" invisible="code != 'razorpay'"/>
+                <div class="o_row" invisible="code != 'razorpay'">
                     <field
-                        name="razorpay_key_id"
-                        string="Key Id"
-                        invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
-                    />
-                    <field
-                        name="razorpay_key_secret"
-                        string="Key Secret"
+                        name="razorpay_webhook_secret"
+                        string="Webhook Secret"
                         password="True"
-                        invisible="razorpay_is_oauth_supported and (not razorpay_key_id or not razorpay_key_secret)"
+                        readonly="razorpay_is_oauth_supported"
                     />
-                    <label for="razorpay_webhook_secret"/>
-                    <div class="o_row">
-                        <field
-                            name="razorpay_webhook_secret"
-                            string="Webhook Secret"
-                            password="True"
-                            readonly="razorpay_is_oauth_supported"
-                        />
-                        <button
-                            string="Generate your webhook"
-                            type="object"
-                            name="action_razorpay_create_webhook"
-                            class="btn-primary ms-2"
-                            invisible="not razorpay_account_id or razorpay_webhook_secret"
-                        />
-                    </div>
-                </group>
+                    <button
+                        string="Generate your webhook"
+                        type="object"
+                        name="action_razorpay_create_webhook"
+                        class="btn-primary ms-2"
+                        invisible="not razorpay_account_id or razorpay_webhook_secret"
+                    />
+                </div>
             </group>
             <group name="provider_credentials" position="after">
                 <div

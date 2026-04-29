@@ -15,7 +15,6 @@ class PaymentProvider(models.Model):
         if any(
             p.code == "custom"
             and p.custom_mode == "wire_transfer"
-            and p.state in ("enabled", "test")
             for p in providers
         ):
             self._toggle_confirm_wire_transfer_transactions_cron()
@@ -24,7 +23,7 @@ class PaymentProvider(models.Model):
     def write(self, vals):
         """Enable the cron to confirm wire transfers if provider Wire Transfer is enabled."""
         res = super().write(vals)
-        if "state" in vals and any(
+        if any(
             p.code == "custom" and p.custom_mode == "wire_transfer" for p in self
         ):
             self._toggle_confirm_wire_transfer_transactions_cron()
@@ -47,7 +46,6 @@ class PaymentProvider(models.Model):
                     [
                         ("code", "=", "custom"),
                         ("custom_mode", "=", "wire_transfer"),
-                        ("state", "in", ("enabled", "test")),
                     ],
                     limit=1,
                 )

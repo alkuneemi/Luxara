@@ -75,6 +75,31 @@
                 groups="product.group_product_pricelist"
                 sequence="30"/>
 
+            <menuitem id="menu_product_attribute_action"
+                    action="product.attribute_action"
+                    groups="product.group_product_variant"
+                    sequence="40"/>
+            <menuitem
+                id="menu_product_combos"
+                name="Combo Choices"
+                action="product.product_combo_action"
+                sequence="50"
+            />
+            <menuitem id="menu_product_categories"
+                action="product.product_category_action_form"
+                sequence="60"/>
+            <menuitem id="menu_product_uom_form_action"
+                name="Units &amp; Packagings"
+                action="uom.product_uom_form_action"
+                groups="uom.group_uom"
+                sequence="70"/>
+
+        </menuitem>
+
+        <menuitem id="menu_sale_marketplaces"
+                name="Marketplaces"
+        sequence="37">
+
         </menuitem>
 
         <menuitem id="menu_sale_report"
@@ -115,74 +140,31 @@
             <menuitem id="sales_team_config"
                 name="Sales Teams"
                 action="sales_team.crm_team_action_config"
-                sequence="20"/>
+                sequence="10"/>
+
+            <menuitem
+                id="payment_provider_menu"
+                name="Payments"
+                action="payment.action_payment_provider"
+                sequence="10"
+            />
+
+            <menuitem
+                id="payment_method_menu"
+                action="payment.action_payment_method"
+                groups="base.group_no_one"
+                sequence="20"
+            />
 
             <menuitem id="menu_sales_config"
                 sequence="30"
                 name="Sales Orders">
-
-                <menuitem id="menu_tag_config"
-                    name="Tags"
-                    action="sales_team.sales_team_crm_tag_action"
-                    sequence="10"/>
-
             </menuitem>
 
             <menuitem id="prod_config_main"
                 name="Products"
                 sequence="40">
 
-                <menuitem id="menu_product_attribute_action"
-                    action="product.attribute_action"
-                    groups="product.group_product_variant"
-                    sequence="10"/>
-
-                <menuitem
-                    id="menu_product_combos"
-                    name="Combo Choices"
-                    action="product.product_combo_action"
-                    sequence="15"
-                />
-
-                <menuitem id="menu_product_categories"
-                    action="product.product_category_action_form"
-                    sequence="20"/>
-
-                <menuitem id="menu_product_tags"
-                    action="product.product_tag_action"
-                    sequence="30"/>
-
-                <menuitem id="menu_product_uom_form_action"
-                    name="Units &amp; Packagings"
-                    action="uom.product_uom_form_action"
-                    groups="uom.group_uom"
-                    sequence="35"/>
-
-            </menuitem>
-
-            <menuitem id="payment_menu"
-                      name="Online Payments"
-                      groups="base.group_system"
-                      sequence="45"
-            >
-                <menuitem id="payment_provider_menu"
-                          action="payment.action_payment_provider"
-                          sequence="10"
-                />
-                <menuitem id="payment_method_menu"
-                          action="payment.action_payment_method"
-                          sequence="20"
-                />
-                <menuitem id="payment_token_menu"
-                          action="payment.action_payment_token"
-                          groups="base.group_no_one"
-                          sequence="30"
-                />
-                <menuitem id="payment_transaction_menu"
-                          action="payment.action_payment_transaction"
-                          groups="base.group_no_one"
-                          sequence="40"
-                />
             </menuitem>
 
             <menuitem
