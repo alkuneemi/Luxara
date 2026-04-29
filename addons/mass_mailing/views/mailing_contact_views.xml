@@ -99,6 +99,34 @@
             <form string="Mailing List Contacts">
                 <field name="id" invisible="1"/>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_mailings"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-envelope-o">
+                            <field name="mailing_count" string="Mailings" widget="statinfo"/>
+                        </button>
+                         <button name="action_view_received"
+                            type="object"
+                            class="oe_stat_button">
+                            <field name="received_ratio" string="Received" widget="percentpie"/>
+                        </button>
+                        <button name="action_view_opened"
+                            type="object"
+                            class="oe_stat_button">
+                            <field name="opened_ratio" string="Opened" widget="percentpie"/>
+                        </button>
+                        <button name="action_view_replied"
+                            type="object"
+                            class="oe_stat_button">
+                            <field name="replied_ratio" string="Replied" widget="percentpie"/>
+                        </button>
+                        <button name="action_view_clicked"
+                            type="object"
+                            class="oe_stat_button">
+                            <field name="clicks_ratio" string="Clicked" widget="percentpie"/>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <label for="name" string="Contact Name"/>
                         <h1>
