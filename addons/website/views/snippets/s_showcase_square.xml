@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Template -->
+<template name="showcase_square" id="s_showcase_square">
+    <section class="s_showcase_square pt80 pb80">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="row">
+                        <div class="col-12 pb32">
+                            <h2 class="h3-fs">Our Features</h2>
+                            <p class="lead">Our features are designed to highlight your product's key attributes, engage visitors and boost conversions.</p>
+                        </div>
+                        <div class="col-12 col-lg-6 pt8 pb8" data-name="Feature">
+                            <i class="fa fa-star-o rounded bg-o-color-3" role="img"/>
+                            <div class="d-flex flex-column">
+                                <h3 class="h5-fs"><br/>Highlights Attributes</h3>
+                                <p>We clearly showcase the main benefits and unique aspects of your product.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 pt8 pb8" data-name="Feature">
+                            <i class="fa fa-user-o rounded bg-o-color-3" role="img"/>
+                            <div class="d-flex flex-column">
+                                <h3 class="h5-fs"><br/>Engages Visitors</h3>
+                                <p>We capture your visitors' attention and help them quickly understand the value of your product.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 pt8 pb8" data-name="Feature">
+                            <i class="fa fa-heart-o rounded bg-o-color-3" role="img"/>
+                            <div class="d-flex flex-column">
+                                <h3 class="h5-fs"><br/>Boosts Conversions</h3>
+                                <p>We organize and present key information effectively, increasing the likelihood of turning your visitors into customers.</p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 pt8 pb8" data-name="Feature">
+                            <i class="fa fa-heart-o rounded bg-o-color-3" role="img"/>
+                            <div class="d-flex flex-column">
+                                <h3 class="h5-fs"><br/>Organizes Information</h3>
+                                <p>We organize and present key information effectively, increasing the likelihood of turning your visitors into customers.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 o_snippet_mobile_invisible d-lg-block d-none">
+                    <img src="/web/image/website.s_showcase_default_image" class="img img-fluid ms-auto rounded float-end" alt="" style="width: 100% !important;"/>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>
