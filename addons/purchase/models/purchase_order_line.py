@@ -121,8 +121,9 @@ class PurchaseOrderLine(models.Model):
             base_line = line._prepare_base_line_for_taxes_computation()
             AccountTax._add_tax_details_in_base_line(base_line, company)
             AccountTax._round_base_lines_tax_details([base_line], company)
-            line.price_subtotal = base_line['tax_details']['total_excluded_currency']
-            line.price_total = base_line['tax_details']['total_included_currency']
+            tax_details = base_line['tax_details']
+            line.price_subtotal = tax_details['total_excluded_currency'] + tax_details['delta_total_excluded_currency']
+            line.price_total = line.price_subtotal + sum(tax_data['tax_amount_currency'] for tax_data in tax_details['taxes_data'])
             line.price_tax = line.price_total - line.price_subtotal
 
     def _prepare_base_line_for_taxes_computation(self):
