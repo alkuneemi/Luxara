@@ -1113,13 +1113,13 @@ class Website(Home):
         Raises:
             werkzeug.exceptions.Forbidden: If the user lacks the required access rights.
         """
-        def _get_translation(record, field_name):
+        def _get_translation(record, field_name, lang_code=None):
             """ Return the translation for a field in the current language, or ''. """
             field = record._fields.get(field_name)
             if not field.store:
                 return record[field_name] or ''
             translations = field._get_stored_translations(record) or {}
-            return translations.get(request.lang.code, '')
+            return translations.get(lang_code or request.lang.code, '')
 
         # Access checks
         if not request.env.user.has_group('website.group_website_restricted_editor'):
@@ -1154,10 +1154,16 @@ class Website(Home):
         res.update(record.read(base_fields)[0])
 
         # Translatable fields
+        # Use view_id for website.page translations
+        source_record = record.view_id if res_model == 'website.page' else record
         for field_name in ['website_meta_title', 'website_meta_description', 'website_meta_keywords']:
-            # Use view_id for website.page translations
-            source_record = record.view_id if res_model == 'website.page' else record
             res[field_name] = _get_translation(source_record, field_name)
+            # The client needs to know whether the default language is empty
+            # before writing from another language, otherwise the translated
+            # value may become the fallback/base value.
+            res[f'default_{field_name}'] = _get_translation(
+                source_record, field_name, request.website.default_lang_id.code
+            )
 
         res['has_social_default_image'] = request.website.has_social_default_image
 

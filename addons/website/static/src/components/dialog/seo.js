@@ -1091,9 +1091,31 @@ export class OptimizeSEODialog extends Component {
         if (seoContext.metaImage !== this.previousMetaImage) {
             data.website_meta_og_img = seoContext.metaImage;
         }
+
+        const currentLang = this.website.currentWebsite.metadata.lang;
+        const defaultLang = this.data.default_lang_code;
+        // Avoid using translated SEO fields as fallback/base values when the
+        // default language is empty.
+        for (const fieldName of [
+            "website_meta_title",
+            "website_meta_description",
+            "website_meta_keywords",
+        ]) {
+            if (
+                data[fieldName] &&
+                currentLang !== defaultLang &&
+                !this.data[`default_${fieldName}`]
+            ) {
+                data[fieldName] = {
+                    [defaultLang]: "",
+                    [currentLang]: data[fieldName],
+                };
+            }
+        }
+
         await this.orm.write(this.object.model, [this.object.id], data, {
             context: {
-                lang: this.website.currentWebsite.metadata.lang,
+                lang: currentLang,
                 website_id: this.website.currentWebsite.id,
             },
         });
