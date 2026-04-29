@@ -67,7 +67,7 @@ export class MainTableStrategyPlugin extends Plugin {
         }
         if (hasMainTable) {
             analysis.freeze();
-            Object.assign(analysis.parsingConstraints, {
+            Object.assign(analysis.parsingFacts, {
                 canMerge: false,
                 canParentMerge: false,
             });

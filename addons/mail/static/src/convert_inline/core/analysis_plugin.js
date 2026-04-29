@@ -8,7 +8,7 @@ import { Analysis, ElementIdentity, NodeAnalysis, TextIdentity } from "./node_mo
 export class AnalysisPlugin extends Plugin {
     static id = "analysis";
     static dependencies = ["measurementSnapshot", "nodeInfo", "rules"];
-    static shared = ["createAnalysisReversedTreeWalker", "createAnalysisTreeWalker"];
+    static shared = ["getAnalysisTree"];
     resources = {
         on_build_analysis_tree_handlers: this.buildAnalysisTree.bind(this),
     };
@@ -19,12 +19,8 @@ export class AnalysisPlugin extends Plugin {
         this.needSyntheticNodeAnalysis = new Set();
     }
 
-    createAnalysisTreeWalker() {
-        return;
-    }
-
-    createAnalysisReversedTreeWalker() {
-        return;
+    getAnalysisTree() {
+        return this.analysisTree;
     }
 
     buildAnalysisTree() {
@@ -32,8 +28,8 @@ export class AnalysisPlugin extends Plugin {
         this.mergeRedundantNodes();
         this.addSyntheticNodeAnalysis();
         if (this.analysisTree) {
-            this.annotateFromChildNodeAnalysis();
-            this.annotateFromParentNodeAnalysis();
+            this.annotateFromChildNodeAnalysis(this.analysisTree);
+            this.annotateFromParentNodeAnalysis(this.analysisTree);
         }
     }
 
@@ -73,13 +69,19 @@ export class AnalysisPlugin extends Plugin {
     // discard other specifics (they are still available on the nodeInfo)
     // maybe store tag, styleInfo, attributes and classNames on nodeInfo? to determine
 
-    // A) analysis phase
-    // // 0) discard phase (reference treewalk)
-    // // 1) absorption phase (reference treewalk) + create analysis tree
-    // // 1.5) synthetic wrappers phase (filtered treewalk-y loop on analysis tree)
-    // // 2) bottom up analysis (analysis reversed treewalk) + context (register and propagate concerns from different plugins)
-    // // 3) top down analysis (analysis treewalk) + context (register and propagate concerns from different plugins)
-    // B) conversion phase (analysis treewalk) + create render tree (meet constraint requests)
+    /**
+     * pass 2 = identify semantic/grouping boundaries
+     * pass 3 = analyze those boundaries
+     * pass 4 = lower them into email-specific concrete structures
+     */
+
+    // 2 A) analysis phase
+    // 2 // 0) discard phase (reference treewalk)
+    // 2 // 1) absorption phase (reference treewalk) + create analysis tree
+    // 2 // 1.5) synthetic wrappers phase (filtered treewalk-y loop on analysis tree)
+    // 3 // 2) bottom up analysis (analysis reversed treewalk) + context (register and propagate concerns from different plugins)
+    // 3 // 3) top down analysis (analysis treewalk) + context (register and propagate concerns from different plugins)
+    // 4 B) conversion phase (analysis treewalk) + create render tree (meet constraint requests)
     // C) render phase (render treewalk)
 
     // 1) split "discard" concern from "applyStrategy" concern.
@@ -117,12 +119,12 @@ export class AnalysisPlugin extends Plugin {
                 nodeInfo,
                 parentNodeAnalysis
             );
-            const parentParsingConstraints = parentNodeAnalysis.analysis.parsingConstraints;
-            if (parentNodeAnalysis && !analysis.parsingConstraints.canParentMerge) {
-                parentParsingConstraints.canMerge = false;
+            const parentParsingFacts = parentNodeAnalysis.analysis.parsingFacts;
+            if (parentNodeAnalysis && !analysis.parsingFacts.canParentMerge) {
+                parentParsingFacts.canMerge = false;
             }
             nodeAnalysis = parentNodeAnalysis;
-            if (parentNodeAnalysis && parentParsingConstraints.canMerge) {
+            if (parentNodeAnalysis && parentParsingFacts.canMerge) {
                 parentNodeAnalysis.pushNodeInfo(nodeInfo);
                 // defaults to keeping the lowest identity as the main identity,
                 // written on top of the parent values.
@@ -139,10 +141,10 @@ export class AnalysisPlugin extends Plugin {
             }
             childNodes = this.processChildNodes(node, this.isAllowedNode);
             if (childNodes.length !== 1) {
-                nodeAnalysis.analysis.parsingConstraints.canMerge = false;
+                nodeAnalysis.analysis.parsingFacts.canMerge = false;
             }
         }
-        if (nodeAnalysis.analysis.parsingConstraints.addSyntheticNodeAnalysis) {
+        if (nodeAnalysis.analysis.parsingFacts.addSyntheticNodeAnalysis) {
             this.needSyntheticNodeAnalysis.add(nodeAnalysis);
         }
         for (const childNode of childNodes ?? []) {
@@ -189,7 +191,7 @@ export class AnalysisPlugin extends Plugin {
                     style: this.getStyleInfo(nodeInfo),
                 }),
                 analysis: new Analysis({
-                    parsingConstraints: { canParentMerge: true, canMerge: true },
+                    parsingFacts: { canParentMerge: true, canMerge: true },
                 }),
             },
             { nodeInfo, parentNodeAnalysis }
@@ -201,12 +203,59 @@ export class AnalysisPlugin extends Plugin {
         return { identity, analysis };
     }
 
-    annotateFromChildNodeAnalysis() {
-        return;
+    /**
+     * Allow descendants to propagate facts to their ancestors through constraints
+     * callbacks
+     */
+    annotateFromChildNodeAnalysis(nodeAnalysis) {
+        const childConstraints = [];
+        for (const child of nodeAnalysis.children) {
+            childConstraints.concat(this.annotateFromChildNodeAnalysis(child));
+        }
+        const propagatedConstraints = [];
+        for (const constraint of childConstraints) {
+            // `constraint` API => return object with "shouldPropagate"+ "facts"
+            const annotations = constraint(nodeAnalysis);
+            if (annotations.shouldPropagate) {
+                propagatedConstraints.push(constraint);
+            }
+            for (const [fact, value] of Object.entries(annotations.facts ?? {})) {
+                if (!this.delegateTo("merge_fact_overrides", { nodeAnalysis, fact, value })) {
+                    // TODO EGGMAIL: better default action for merging current fact with a new value
+                    // should we save descendantFacts separately from localFacts?
+                    // TODO EGGMAIL: here a fact from a descendant is directly applied to the current
+                    // nodeAnalysis, maybe it makes sense to aggregate all descendant facts, then apply
+                    // the final result on the current nodeAnalysis?
+                    nodeAnalysis.analysis.facts[fact] = value;
+                }
+            }
+        }
+        return nodeAnalysis.constraintsForAncestors.concat(propagatedConstraints);
     }
 
-    annotateFromParentNodeAnalysis() {
-        return;
+    /**
+     * Allow ancestors to propagate facts to their descendants through constraints
+     * callbacks
+     */
+    annotateFromParentNodeAnalysis(nodeAnalysis, constraints = []) {
+        const propagatedConstraints = [];
+        for (const constraint of constraints) {
+            const annotations = constraint(nodeAnalysis);
+            if (annotations.shouldPropagate) {
+                propagatedConstraints.push(constraint);
+            }
+            for (const [fact, value] of Object.entries(annotations.facts ?? {})) {
+                if (!this.delegateTo("merge_fact_overrides", { nodeAnalysis, fact, value })) {
+                    nodeAnalysis.analysis.facts[fact] = value;
+                }
+            }
+        }
+        for (const child of nodeAnalysis.children) {
+            this.annotateFromParentNodeAnalysis(
+                child,
+                nodeAnalysis.constraintsForDescendants.concat(propagatedConstraints)
+            );
+        }
     }
 }
 

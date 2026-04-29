@@ -10,15 +10,18 @@ export class NodeInfo {
     }
 }
 
+/**
+ * TODO EGGMAIL: simplify/flatten model and combine properties with NodeAnalysis?
+ */
 export class Analysis {
-    parsingConstraints = {};
-    ancestorConstraints = {};
-    descendantConstraints = {};
+    parsingFacts = {};
+    constraintsForAncestors = [];
+    constraintsForDescendants = [];
     facts = {};
     isFrozen = false;
 
     constructor(options = {}) {
-        options.parsingConstraints ??= {
+        options.parsingFacts ??= {
             canMerge: false,
             canParentMerge: false,
         };
@@ -34,9 +37,13 @@ export class Analysis {
     }
 
     merge(analysis) {
-        Object.assign(this.parsingConstraints, analysis.parsingConstraints ?? {});
-        Object.assign(this.ancestorConstraints, analysis.ancestorConstraints ?? {});
-        Object.assign(this.descendantConstraints, analysis.descendantConstraints ?? {});
+        Object.assign(this.parsingFacts, analysis.parsingFacts ?? {});
+        this.constraintsForAncestors = this.constraintsForAncestors.concat(
+            analysis.constraintsForAncestors
+        );
+        this.constraintsForDescendants = this.constraintsForDescendants.concat(
+            analysis.constraintsForDescendants
+        );
         Object.assign(this.facts, analysis.facts ?? {});
         return this;
     }

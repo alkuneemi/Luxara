@@ -18,9 +18,9 @@ export class TableStrategyPlugin extends Plugin {
             return;
         }
         if (parentNodeAnalysis.identity.tag === "TABLE") {
-            analysis.parsingConstraints.canParentMerge = true;
+            analysis.parsingFacts.canParentMerge = true;
         }
-        analysis.parsingConstraints.canMerge = false;
+        analysis.parsingFacts.canMerge = false;
         analysis.facts.isTable = true;
         identity.pluginIds.add(TableStrategyPlugin.id);
     }

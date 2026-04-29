@@ -59,7 +59,7 @@ export class ImageStrategyPlugin extends Plugin {
             analysis.facts.imageData = detectionResult;
         }
         if (detectionResult) {
-            Object.assign(analysis.parsingConstraints, {
+            Object.assign(analysis.parsingFacts, {
                 canMerge: false,
                 canParentMerge: false,
             });

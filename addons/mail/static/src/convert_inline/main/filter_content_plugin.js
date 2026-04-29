@@ -66,7 +66,7 @@ export class FilterContentPlugin extends Plugin {
             !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo.referenceNode)) ||
             parentNode.referenceNode.nodeName !== "DIV"
         ) {
-            analysis.parsingConstraints.canParentMerge = false;
+            analysis.parsingFacts.canParentMerge = false;
             return;
         }
         const mobileParentBlock = this.getLayoutBlock(parentNode, MOBILE);
@@ -77,7 +77,7 @@ export class FilterContentPlugin extends Plugin {
             !this.areRectEqual(mobileParentBlock.rect, mobileBlock.rect) ||
             !this.areRectEqual(desktopParentBlock.rect, desktopBlock.rect)
         ) {
-            analysis.parsingConstraints.canParentMerge = false;
+            analysis.parsingFacts.canParentMerge = false;
         }
     }
 

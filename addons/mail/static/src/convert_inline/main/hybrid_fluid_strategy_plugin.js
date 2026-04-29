@@ -129,7 +129,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         if (analysis.isFrozen || !this.detectHybridFluidLayout(nodeInfo)) {
             return;
         }
-        Object.assign(analysis.parsingConstraints, {
+        Object.assign(analysis.parsingFacts, {
             canMerge: false,
             addSyntheticNodeAnalysis: true,
         });
