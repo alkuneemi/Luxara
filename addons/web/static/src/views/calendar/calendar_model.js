@@ -742,13 +742,19 @@ export class CalendarModel extends Model {
         };
     }
     /**
+     * @private
+     */
+    _getScheduleContext() {
+        return { ...this.meta.context };
+    }
+    /**
      * @protected
      * @param {Number} eventId
      * @param {DateTime} rawRecord
      */
     async scheduleEvent(eventId, date) {
         await this.orm.write(this.meta.resModel, [eventId], this._getScheduleData(date), {
-            context: this.meta.context,
+            context: this._getScheduleContext(),
         });
         await this.load();
     }
