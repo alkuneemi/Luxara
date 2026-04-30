@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="website.ServicesPackItemOption">
+    <BuilderContext applyTo="':scope > .row'">
+        <WebsiteBackgroundOption
+            withColors="true"
+            withImages="false"
+            withColorCombinations="true"
+        />
+    </BuilderContext>
+
+    <BuilderContext applyTo="':scope > .row'">
+        <BorderConfigurator label.translate="Border"/>
+        <ShadowOption/>
+    </BuilderContext>
+
+    <BuilderRow label.translate="Text Position" applyTo="':scope > .row'">
+        <!-- Don't use the standard Vert. Alignement option to not suggest
+            Equal Height, which is useless for this snippet. -->
+        <BuilderButtonGroup>
+            <BuilderButton title.translate="Align Top" classAction="'align-items-start'" iconImg="'/html_builder/static/img/snippets_options/align_top.svg'"/>
+            <BuilderButton title.translate="Align Middle" classAction="'align-items-center'" iconImg="'/html_builder/static/img/snippets_options/align_middle.svg'"/>
+            <BuilderButton title.translate="Align Bottom" classAction="'align-items-end'" iconImg="'/html_builder/static/img/snippets_options/align_bottom.svg'"/>
+        </BuilderButtonGroup>
+    </BuilderRow>
+</t>
+
+<t t-inherit="website.BuilderOptions" t-inherit-mode="extension">
+    <xpath expr="//t[@id='snippet_specific_options']" position="after">
+        <services_pack_item_option selector=".s_services_pack_item"/>
+    </xpath>
+</t>
+
+</templates>

@@ -1,0 +1,6 @@
+.s_services_pack {
+    .s_services_pack_item > .row {
+        overflow: hidden; // To support rounded option
+        padding: map-get($spacers, 5) map-get($spacers, 4);
+    }
+}
