@@ -384,10 +384,8 @@ class PaymentTransaction(models.Model):
             payment_data = payment_data["refund"]
         else:  # 'online_direct', 'online_token', 'offline'
             payment_data = payment_data["payment_intent"]
-        amount = payment_utils.to_major_currency_units(
-            payment_data.get("amount", 0),
-            self.currency_id,
-            arbitrary_decimal_number=self.provider_id._get_amount_precision(self.currency_id),
+        amount = self.provider_id._to_major_currency_units(
+            payment_data.get("amount", 0), self.currency_id
         )
         currency_code = payment_data.get("currency", "").upper()
         return {

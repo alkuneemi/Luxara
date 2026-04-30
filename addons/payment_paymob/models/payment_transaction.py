@@ -151,6 +151,6 @@ class PaymentTransaction(models.Model):
             return super()._extract_amount_data(payment_data)
 
         amount_cents = float(payment_data.get("amount_cents"))
-        amount = payment_utils.to_major_currency_units(amount_cents, self.currency_id)
+        amount = self.provider_id._to_major_currency_units(amount_cents, self.currency_id)
         currency_code = payment_data.get("currency")
         return {"amount": amount, "currency_code": currency_code}

@@ -237,12 +237,8 @@ class PaymentTransaction(models.Model):
             ])
             if source_tx:
                 payment_data_amount = payment_data.get("amount", {}).get("value")
-                converted_notification_amount = payment_utils.to_major_currency_units(
-                    payment_data_amount,
-                    source_tx.currency_id,
-                    arbitrary_decimal_number=self.provider_id._get_amount_precision(
-                        self.currency_id
-                    ),
+                converted_notification_amount = self.provider_id._to_major_currency_units(
+                    payment_data_amount, source_tx.currency_id
                 )
                 if tx and tx.amount != converted_notification_amount:
                     # If the void was requested expecting a certain amount but, in the meantime,
@@ -304,11 +300,7 @@ class PaymentTransaction(models.Model):
             _logger.warning("Received data for child transaction with missing transaction values.")
             return self.env["payment.transaction"]
 
-        converted_amount = payment_utils.to_major_currency_units(
-            amount,
-            source_tx.currency_id,
-            arbitrary_decimal_number=self.provider_id._get_amount_precision(self.currency_id),
-        )
+        converted_amount = self.provider_id._to_major_currency_units(amount, source_tx.currency_id)
         return source_tx._create_child_transaction(
             converted_amount, is_refund=is_refund, provider_reference=provider_reference
         )
@@ -423,8 +415,8 @@ class PaymentTransaction(models.Model):
 
         amount_data = payment_data.get("amount", {})
         precision = self.provider_id._get_amount_precision(self.currency_id)
-        amount = payment_utils.to_major_currency_units(
-            amount_data.get("value", 0), self.currency_id, arbitrary_decimal_number=precision
+        amount = self.provider_id._to_major_currency_units(
+            amount_data.get("value", 0), self.currency_id
         )
         currency_code = amount_data.get("currency")
         return {"amount": amount, "currency_code": currency_code, "precision_digits": precision}

@@ -793,6 +793,36 @@ class PaymentProvider(models.Model):
         """
         return CURRENCY_MINOR_UNITS.get(currency.name, currency.decimal_places)
 
+    def _to_major_currency_units(self, minor_amount, currency):
+        """Return the amount converted to the major units of its currency.
+
+        The conversion is done by dividing the amount by 10^k where k is the number of decimals of
+        the currency as per the ISO 4217 norm.
+
+        :param float minor_amount: The amount in minor units, to convert in major units
+        :param recordset currency: The currency of the amount, as a `res.currency` record
+        :return: The amount in major units of its currency
+        :rtype: int
+        """
+        return payment_utils.to_major_currency_units(
+            minor_amount, currency, arbitrary_decimal_number=self._get_amount_precision(currency)
+        )
+
+    def _to_minor_currency_units(self, major_amount, currency):
+        """Return the amount converted to the minor units of its currency.
+
+        The conversion is done by multiplying the amount by 10^k where k is the number of decimals
+        of the currency as per the ISO 4217 norm.
+
+        :param float major_amount: The amount in major units, to convert in minor units
+        :param recordset currency: The currency of the amount, as a `res.currency` record
+        :return: The amount in minor units of its currency
+        :rtype: int
+        """
+        return payment_utils.to_minor_currency_units(
+            major_amount, currency, arbitrary_decimal_number=self._get_amount_precision(currency)
+        )
+
     # === REQUEST HELPERS === #
 
     def _send_api_request(
