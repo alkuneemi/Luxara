@@ -10,7 +10,7 @@ export class ImageStrategyPlugin extends Plugin {
         "measurementSnapshot",
         "responsiveBlock",
         "rules",
-        "nodeInfo",
+        "node",
     ];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
@@ -42,19 +42,19 @@ export class ImageStrategyPlugin extends Plugin {
         rules.block("width", { when: this.isImg.bind(this) });
     }
 
-    isImg({ nodeInfo }) {
-        return nodeInfo.referenceNode.nodeName === "IMG";
+    isImg({ referenceNode }) {
+        return referenceNode.nodeName === "IMG";
     }
 
-    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
+    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
         if (analysis.isFrozen) {
             return;
         }
-        let detectionResult = this.detectImageLink(nodeInfo);
+        let detectionResult = this.detectImageLink(referenceNode);
         if (detectionResult) {
             analysis.facts.isImageLink = true;
             analysis.facts.imageLinkData = detectionResult;
-        } else if ((detectionResult = this.detectImage(nodeInfo))) {
+        } else if ((detectionResult = this.detectImage(referenceNode))) {
             analysis.facts.isImage = true;
             analysis.facts.imageData = detectionResult;
         }
@@ -67,56 +67,55 @@ export class ImageStrategyPlugin extends Plugin {
         }
     }
 
-    applyLayoutStrategy(nodeInfo) {
+    applyLayoutStrategy(referenceNode) {
         let detectionResult;
-        if ((detectionResult = this.detectImageLink(nodeInfo))) {
+        if ((detectionResult = this.detectImageLink(referenceNode))) {
             this.buildImageLinkFragment(detectionResult);
-        } else if ((detectionResult = this.detectImage(nodeInfo))) {
+        } else if ((detectionResult = this.detectImage(referenceNode))) {
             this.buildImageFragment(detectionResult);
         }
         if (detectionResult) {
-            for (const nodeInfo of detectionResult.nodeInfos) {
-                nodeInfo.defineLayoutStrategy({ pluginId: ImageStrategyPlugin.id });
+            for (const referenceNode of detectionResult.referenceNodes) {
+                referenceNode.defineLayoutStrategy({ pluginId: ImageStrategyPlugin.id });
             }
             return true;
         }
     }
 
-    detectImageLink(nodeInfo) {
-        if (nodeInfo.referenceNode.nodeName === "A") {
+    detectImageLink(referenceNode) {
+        if (referenceNode.nodeName === "A") {
             const visibleChildNodes = this.processChildNodes(
-                nodeInfo.referenceNode,
-                (node) => !this.isInvisible(this.getNodeInfo(node))
+                referenceNode,
+                (node) => !this.isInvisible(node)
             );
             if (visibleChildNodes.length === 1 && visibleChildNodes[0].nodeName === "IMG") {
-                const imageNodeInfo = this.getNodeInfo(visibleChildNodes[0]);
+                const imageNode = visibleChildNodes[0];
                 return {
-                    imageInfo: imageNodeInfo,
-                    linkInfo: nodeInfo,
-                    shouldBeBlock: this.shouldBeBlock(nodeInfo),
+                    imageNode: imageNode,
+                    linkNode: referenceNode,
+                    shouldBeBlock: this.shouldBeBlock(referenceNode),
                 };
             }
         }
     }
 
-    detectImage(nodeInfo) {
-        if (this.isImg(nodeInfo)) {
+    detectImage(referenceNode) {
+        if (this.isImg(referenceNode)) {
             return {
-                imageInfo: nodeInfo,
-                shouldBeBlock: this.shouldBeBlock(nodeInfo),
+                imageNode: referenceNode,
+                shouldBeBlock: this.shouldBeBlock(referenceNode),
             };
         }
     }
 
-    shouldBeBlock(nodeInfo) {
-        if (this.isBlock(nodeInfo.referenceNode)) {
+    shouldBeBlock(referenceNode) {
+        if (this.isBlock(referenceNode)) {
             return true;
         }
-        const isVisibleBlock = (node) =>
-            this.isBlock(node) && !this.isInvisible(this.getNodeInfo(node));
-        const prevSibling = nodeInfo.referenceNode.previousSibling;
-        const nextSibling = nodeInfo.referenceNode.nextSibling;
-        const parent = nodeInfo.referenceNode.parentElement;
+        const isVisibleBlock = (node) => this.isBlock(node) && !this.isInvisible(node);
+        const prevSibling = referenceNode.previousSibling;
+        const nextSibling = referenceNode.nextSibling;
+        const parent = referenceNode.parentElement;
         return (
             this.isBlock(parent) &&
             (!prevSibling || isVisibleBlock(prevSibling)) &&
@@ -124,24 +123,24 @@ export class ImageStrategyPlugin extends Plugin {
         );
     }
 
-    buildImageLinkFragment({ imageInfo, linkInfo, shouldBeBlock }) {
+    buildImageLinkFragment({ imageNode, linkNode, shouldBeBlock }) {
         const styleInfo = new StyleInfo();
         styleInfo.setProperty("text-decoration", "none");
         if (shouldBeBlock) {
             styleInfo.setProperty("display", "block");
         }
-        styleInfo.applyOnElement(linkInfo.fragment.firstElementChild);
-        this.buildImageFragment({ imageInfo, shouldBeBlock });
+        styleInfo.applyOnElement(linkNode.fragment.firstElementChild);
+        this.buildImageFragment({ imageNode, shouldBeBlock });
     }
 
-    buildImageFragment({ imageInfo, shouldBeBlock }) {
-        const img = imageInfo.fragment.firstElementChild;
+    buildImageFragment({ imageNode, shouldBeBlock }) {
+        const img = imageNode.fragment.firstElementChild;
         img.replaceChildren();
         const style = Object.assign(
             { "border-width": { value: "0", priority: "important" } },
             shouldBeBlock ? { display: "block" } : {}
         );
-        const dimensions = this.extractImageDimensions(imageInfo);
+        const dimensions = this.extractImageDimensions(imageNode);
         Object.assign(style, dimensions.style);
         StyleInfo.from(style).applyOnElement(img);
         for (const [name, value] of Object.entries(dimensions.attributes)) {
@@ -149,16 +148,16 @@ export class ImageStrategyPlugin extends Plugin {
         }
     }
 
-    extractImageDimensions(nodeInfo) {
-        const styleInfo = this.getStyleInfo(nodeInfo);
+    extractImageDimensions(referenceNode) {
+        const styleInfo = this.getStyleInfo(referenceNode);
         const attributes = {};
         const style = {};
         const width = parseCssValue(styleInfo.getPropertyValue("width"));
         const height = parseCssValue(styleInfo.getPropertyValue("height"));
         const maxWidth = parseCssValue(styleInfo.getPropertyValue("max-width"));
-        width.rendered = this.getStyleWidth(nodeInfo.referenceNode);
-        width.natural = nodeInfo.referenceNode.naturalWidth;
-        height.natural = nodeInfo.referenceNode.naturalHeight;
+        width.rendered = this.getStyleWidth(referenceNode);
+        width.natural = referenceNode.naturalWidth;
+        height.natural = referenceNode.naturalHeight;
         if (height.unit === "px") {
             if (width.unit !== "px") {
                 if (width.natural > 0 && height.natural > 0) {

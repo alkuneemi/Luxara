@@ -7,14 +7,14 @@ const { DESKTOP, MOBILE } = DIMENSIONS;
 
 export class TableStrategyPlugin extends Plugin {
     static id = "tableStrategy";
-    static dependencies = ["responsiveBlock", "nodeInfo"];
+    static dependencies = ["responsiveBlock", "node"];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
         element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
     };
 
-    analyzeElementIdentity({ identity, analysis }, { nodeInfo, parentNodeAnalysis }) {
-        if (analysis.isFrozen || !this.detectTableLayout(nodeInfo)) {
+    analyzeElementIdentity({ identity, analysis }, { referenceNode, parentNodeAnalysis }) {
+        if (analysis.isFrozen || !this.detectTableLayout(referenceNode)) {
             return;
         }
         if (parentNodeAnalysis.identity.tag === "TABLE") {
@@ -30,11 +30,11 @@ export class TableStrategyPlugin extends Plugin {
     // - builder case (convert to mega wrapper table + background color -> smaller table (mail_wrapper) with margin)
     // - unknown case (add mega wrapper table -> can use "reference" element for this, if mega table strategy was not applied
     // below)
-    applyLayoutStrategy(nodeInfo) {
+    applyLayoutStrategy(referenceNode) {
         // TODO EGGMAIL NOW: check that `hasTableLayout` can capture a table
         // if so, maybe we shouldn't hardcode "table" here, because we want to
         // allow a table to be an "hybrid" and match other strategies.
-        if (!this.detectTableLayout(nodeInfo)) {
+        if (!this.detectTableLayout(referenceNode)) {
             // look at element tag, if it's a table.
             // look in // at desktopBlocks and mobileBlocks, they should have:
             // - always the same amount of bands, and the same amount of clusters per band?
@@ -43,8 +43,8 @@ export class TableStrategyPlugin extends Plugin {
             // look for a block with multiple bands, every band has 1 cluster
             return;
         }
-        this.buildFragment(nodeInfo);
-        nodeInfo.defineLayoutStrategy({ pluginId: TableStrategyPlugin.id });
+        this.buildFragment(referenceNode);
+        referenceNode.defineLayoutStrategy({ pluginId: TableStrategyPlugin.id });
         return true;
     }
 
@@ -60,10 +60,10 @@ export class TableStrategyPlugin extends Plugin {
     // ideally email strategies should render nodes that can be in any block
     // and few exceptions (table) should verify that they don't have a table
     // as their direct ancestor
-    detectTableLayout(nodeInfo) {
+    detectTableLayout(referenceNode) {
         let isTableCandidate;
-        const mobileBlock = this.getLayoutBlock(nodeInfo.referenceNode, MOBILE);
-        const desktopBlock = this.getLayoutBlock(nodeInfo.referenceNode, DESKTOP);
+        const mobileBlock = this.getLayoutBlock(referenceNode, MOBILE);
+        const desktopBlock = this.getLayoutBlock(referenceNode, DESKTOP);
         if (
             !desktopBlock ||
             !mobileBlock ||
@@ -101,13 +101,12 @@ export class TableStrategyPlugin extends Plugin {
         return isTableCandidate;
     }
 
-    buildFragment(nodeInfo) {
+    buildFragment(referenceNode) {
         // => about tables
         // normally, a table will ask that its direct container is not a table nor a row nor a tbody => if it is, we create a row + td to wrap
         // it => becomes legal again
         // -> how to handle it => actual constraint should come from the parent (table) if the child is also a table => it should be
         // wrapped in a tr + td?
-
 
         // TODO EGGMAIL NOW: render fragment
         // The above heuristic will match a `tbody` and transform it into a
@@ -116,7 +115,7 @@ export class TableStrategyPlugin extends Plugin {
         // => re-evaluate strategy of parent in such a case
         // => match a table tagName directly and handle it from that node,
         // aggregate unsupported sub-parts
-        nodeInfo.fragment;
+        referenceNode.fragment;
     }
 }
 

@@ -14,7 +14,7 @@ import { Analysis, ElementIdentity, NodeAnalysis, TextIdentity } from "./node_mo
  */
 export class AnalysisPlugin extends Plugin {
     static id = "analysis";
-    static dependencies = ["measurementSnapshot", "nodeInfo", "rules"];
+    static dependencies = ["measurementSnapshot", "node", "rules"];
     static shared = ["getAnalysisTree"];
     resources = {
         on_build_analysis_tree_handlers: this.buildAnalysisTree.bind(this),
@@ -50,16 +50,14 @@ export class AnalysisPlugin extends Plugin {
         });
         let node = treeWalker.root;
         do {
-            const nodeInfo = this.getNodeInfo(node);
-            if (!this.checkPredicates("should_discard_reference_node_predicates", nodeInfo)) {
+            if (!this.checkPredicates("should_discard_reference_node_predicates", node)) {
                 continue;
             }
             this.rejectedNodes.add(node);
             this.processChildNodes(node, (child) => {
                 rejectedChildren.add(child);
             });
-            nodeInfo.isDiscarded = true;
-            console.log("discarded", nodeInfo);
+            console.log("discarded", node);
         } while ((node = treeWalker.nextNode()));
     }
 
@@ -68,23 +66,23 @@ export class AnalysisPlugin extends Plugin {
     // -- -- deny future children absorption (without considering children identities)
     // -- -- provide useful identity info (styleInfo selection, attributes, etc)
     buildNodeAnalysis(node, parentNodeAnalysis) {
-        const nodeInfo = this.getNodeInfo(node);
         let childNodes, nodeAnalysis;
         if (node.nodeType === Node.TEXT_NODE) {
             const identity = new TextIdentity({ content: node.nodeValue });
-            nodeAnalysis = new NodeAnalysis({ identity, nodeInfo, parent: parentNodeAnalysis });
+            nodeAnalysis = new NodeAnalysis({
+                identity,
+                referenceNode: node,
+                parent: parentNodeAnalysis,
+            });
         } else {
-            const { identity, analysis } = this.processElementIdentity(
-                nodeInfo,
-                parentNodeAnalysis
-            );
+            const { identity, analysis } = this.processElementIdentity(node, parentNodeAnalysis);
             const parentParsingFacts = parentNodeAnalysis.analysis.parsingFacts;
             if (parentNodeAnalysis && !analysis.parsingFacts.canParentMerge) {
                 parentParsingFacts.canMerge = false;
             }
             nodeAnalysis = parentNodeAnalysis;
             if (parentNodeAnalysis && parentParsingFacts.canMerge) {
-                parentNodeAnalysis.pushNodeInfo(nodeInfo);
+                parentNodeAnalysis.pushReferenceNode(node);
                 // defaults to keeping the lowest identity as the main identity,
                 // written on top of the parent values.
                 // merge can be overridden to change that behavior.
@@ -93,7 +91,7 @@ export class AnalysisPlugin extends Plugin {
             } else {
                 nodeAnalysis = new NodeAnalysis({
                     identity,
-                    nodeInfo,
+                    referenceNode: node,
                     parent: parentNodeAnalysis,
                     analysis,
                 });
@@ -139,25 +137,25 @@ export class AnalysisPlugin extends Plugin {
 
     // TODO EGGMAIL: search and replace all usages of:
     // apply_layout_strategy_overrides
-    processElementIdentity(nodeInfo, parentNodeAnalysis) {
+    processElementIdentity(referenceNode, parentNodeAnalysis) {
         const { identity, analysis } = this.processThrough(
             "element_identity_analysis_processors",
             {
                 identity: new ElementIdentity({
-                    tag: nodeInfo.referenceNode.tagName,
-                    attributes: this.getAttributes(nodeInfo),
-                    style: this.getStyleInfo(nodeInfo),
+                    tag: referenceNode.tagName,
+                    attributes: this.getAttributes(referenceNode),
+                    style: this.getStyleInfo(referenceNode),
                 }),
                 analysis: new Analysis({
                     parsingFacts: { canParentMerge: true, canMerge: true },
                 }),
             },
-            { nodeInfo, parentNodeAnalysis }
+            { referenceNode, parentNodeAnalysis }
         );
         if (identity.pluginIds.size === 0) {
             identity.pluginIds.add(AnalysisPlugin.id);
         }
-        console.log(Array.from(identity.pluginIds).join(", "), nodeInfo);
+        console.log(Array.from(identity.pluginIds).join(", "), referenceNode);
         return { identity, analysis };
     }
 

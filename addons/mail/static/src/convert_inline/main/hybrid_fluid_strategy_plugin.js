@@ -17,7 +17,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         "math",
         "responsiveBlock",
         "rules",
-        "nodeInfo",
+        "node",
     ];
     resources = {
         element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
@@ -58,10 +58,10 @@ export class HybridFluidStrategyPlugin extends Plugin {
     // be it a child itself becomes a CELL, or 1+ children are wrapped in a CELL
     // BTW the row node itself can become multiple row in some circumstances
     addSyntheticNodeAnalysis(nodeAnalysis) {
-        // TODO EGGMAIL: arbitrary choice to take the last nodeInfo to motivate
-        const nodeInfo = nodeAnalysis.lastNodeInfo;
+        // TODO EGGMAIL: arbitrary choice to take the last referenceNode to motivate
+        const referenceNode = nodeAnalysis.lastReferenceNode;
         const parent = nodeAnalysis.parent;
-        const desktopBlock = this.getLayoutBlock(nodeInfo.referenceNode, DESKTOP);
+        const desktopBlock = this.getLayoutBlock(referenceNode, DESKTOP);
         const rows = [];
         // TODO EGGMAIL: some values for text-align are not supported
         // getStylePropertyValue should probably filter values and only
@@ -69,8 +69,8 @@ export class HybridFluidStrategyPlugin extends Plugin {
         // TODO EGGMAIL: style should probably be refined in this fragment
         const styleContext = {
             style: {
-                "text-align": this.getStylePropertyValue(nodeInfo.referenceNode, "text-align"),
-                "font-size": this.getStylePropertyValue(nodeInfo.referenceNode, "font-size"),
+                "text-align": this.getStylePropertyValue(referenceNode, "text-align"),
+                "font-size": this.getStylePropertyValue(referenceNode, "font-size"),
             },
         };
         for (const band of desktopBlock.bands) {
@@ -125,8 +125,8 @@ export class HybridFluidStrategyPlugin extends Plugin {
         parent.spliceChildren(parent.children.indexOf(nodeAnalysis), 1, ...rows);
     }
 
-    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
-        if (analysis.isFrozen || !this.detectHybridFluidLayout(nodeInfo)) {
+    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
+        if (analysis.isFrozen || !this.detectHybridFluidLayout(referenceNode)) {
             return;
         }
         Object.assign(analysis.parsingFacts, {
@@ -140,15 +140,15 @@ export class HybridFluidStrategyPlugin extends Plugin {
     /**
      * TODO EGGMAIL: can I get an hybrid fluid row with only inline children? to investigate
      */
-    detectHybridFluidLayout(nodeInfo) {
+    detectHybridFluidLayout(referenceNode) {
         // detect hybrid fluid "rows"
         // -> detect a band with multiple clusters inside a block
         // -> look in mobile mode, the amount of bands should be different
         // -> should not be captured by table, since the table strictly verifies
         // that the amount of bands is the same
         let isHybridFluidCandidate;
-        const mobileBlock = this.getLayoutBlock(nodeInfo.referenceNode, MOBILE);
-        const desktopBlock = this.getLayoutBlock(nodeInfo.referenceNode, DESKTOP);
+        const mobileBlock = this.getLayoutBlock(referenceNode, MOBILE);
+        const desktopBlock = this.getLayoutBlock(referenceNode, DESKTOP);
         if (!desktopBlock || !mobileBlock) {
             return;
         }
@@ -175,8 +175,8 @@ export class HybridFluidStrategyPlugin extends Plugin {
         const clusterAnalysis = [];
         for (const childAnalysis of nodeAnalysis.children) {
             if (
-                childAnalysis.nodeInfos.length &&
-                range.comparePoint(childAnalysis.firstNodeInfo.referenceNode, 0) === 0
+                childAnalysis.referenceNodes.length &&
+                range.comparePoint(childAnalysis.firstReferenceNode, 0) === 0
             ) {
                 clusterAnalysis.push(childAnalysis);
             }

@@ -21,7 +21,7 @@ export class RulesPlugin extends Plugin {
     };
 
     setup() {
-        this.nodeInfoToStyleInfos = new WeakMap();
+        this.nodeToStyleInfos = new WeakMap();
     }
 
     specifyRules() {
@@ -32,24 +32,23 @@ export class RulesPlugin extends Plugin {
         this.styleRules = this.processRules("style_rules_processors", new Rules());
     }
 
-    cloneReferenceNode(nodeInfo, layoutDimensions = this.layoutDimensions) {
-        const { referenceNode } = nodeInfo;
+    cloneReferenceNode(referenceNode, layoutDimensions = this.layoutDimensions) {
         let clone;
         if (referenceNode.nodeType === Node.ELEMENT_NODE) {
             clone = this.config.referenceDocument.createElement(referenceNode.tagName);
-            this.applyAttributeRules(clone, this.getAttributes(nodeInfo));
-            this.applyStyleRules(clone, this.getStyleInfo(nodeInfo, layoutDimensions));
+            this.applyAttributeRules(clone, this.getAttributes(referenceNode));
+            this.applyStyleRules(clone, this.getStyleInfo(referenceNode, layoutDimensions));
         } else {
             clone = referenceNode.cloneNode();
         }
         return clone;
     }
 
-    getStyleInfoToFiltered(nodeInfo) {
-        if (!this.nodeInfoToStyleInfos.has(nodeInfo)) {
-            this.nodeInfoToStyleInfos.set(nodeInfo, new WeakMap());
+    getStyleInfoToFiltered(referenceNode) {
+        if (!this.nodeToStyleInfos.has(referenceNode)) {
+            this.nodeToStyleInfos.set(referenceNode, new WeakMap());
         }
-        return this.nodeInfoToStyleInfos.get(nodeInfo);
+        return this.nodeToStyleInfos.get(referenceNode);
     }
 
     applyAttributeRules(targetElement, attributes) {
@@ -65,7 +64,7 @@ export class RulesPlugin extends Plugin {
         return targetElement;
     }
 
-    filterAttributes(attributes, nodeInfo, rules = this.attributeRules) {
+    filterAttributes(attributes, referenceNode, rules = this.attributeRules) {
         let attributesMap = attributes;
         if (attributes instanceof Array) {
             attributesMap = new Map(attributes);
@@ -81,7 +80,7 @@ export class RulesPlugin extends Plugin {
                 {
                     attributeName,
                     attributeValue,
-                    nodeInfo,
+                    referenceNode,
                 },
             ],
             onPass: (attributeName, attributeValue, fixedArgs = {}) => {
@@ -92,21 +91,21 @@ export class RulesPlugin extends Plugin {
             },
             onMiss: (attributeName) => {
                 console.warn(
-                    `Attribute ${attributeName} is missing or was marked as blocked on the given attributes, in relation to nodeInfo`,
+                    `Attribute ${attributeName} is missing or was marked as blocked on the given attributes, in relation to referenceNode`,
                     attributes,
-                    nodeInfo
+                    referenceNode
                 );
             },
         });
         return filteredAttributes;
     }
 
-    getAttributes(nodeInfo) {
+    getAttributes(referenceNode) {
         return this.filterAttributes(
-            nodeInfo.referenceNode
+            referenceNode
                 .getAttributeNames()
-                .map((name) => [name, nodeInfo.referenceNode.getAttribute(name)]),
-            nodeInfo
+                .map((name) => [name, referenceNode.getAttribute(name)]),
+            referenceNode
         );
     }
 
@@ -122,13 +121,13 @@ export class RulesPlugin extends Plugin {
     /**
      * Return a new styleInfo instance filtered with rules
      */
-    filterStyleInfo(styleInfo, nodeInfo, rules = this.styleRules) {
+    filterStyleInfo(styleInfo, referenceNode, rules = this.styleRules) {
         const filteredStyleInfo = new StyleInfo();
         if (!rules) {
             return filteredStyleInfo.merge(styleInfo);
         }
         if (rules === this.styleRules) {
-            const styleInfoToFiltered = this.getStyleInfoToFiltered(nodeInfo);
+            const styleInfoToFiltered = this.getStyleInfoToFiltered(referenceNode);
             if (styleInfoToFiltered.has(styleInfo)) {
                 return filteredStyleInfo.merge(styleInfoToFiltered.get(styleInfo));
             }
@@ -139,7 +138,7 @@ export class RulesPlugin extends Plugin {
                     propertyName,
                     propertyValue: propertyInfo.value,
                     propertyPriority: propertyInfo.priority,
-                    nodeInfo,
+                    referenceNode,
                 },
             ],
             onPass: (propertyName, propertyInfo, fixedArgs = {}) => {
@@ -157,21 +156,21 @@ export class RulesPlugin extends Plugin {
                 // TODO EGGMAIL: search parents before applying computed style?
                 filteredStyleInfo.setProperty(
                     propertyName,
-                    this.getStylePropertyValue(nodeInfo.referenceNode)
+                    this.getStylePropertyValue(referenceNode)
                 );
             },
         });
         if (rules === this.styleRules) {
-            const styleInfoToFiltered = this.getStyleInfoToFiltered(nodeInfo);
+            const styleInfoToFiltered = this.getStyleInfoToFiltered(referenceNode);
             styleInfoToFiltered.set(styleInfo, new StyleInfo().merge(filteredStyleInfo));
         }
         return filteredStyleInfo;
     }
 
-    getStyleInfo(nodeInfo, layoutDimensions = this.layoutDimensions) {
+    getStyleInfo(referenceNode, layoutDimensions = this.layoutDimensions) {
         return this.filterStyleInfo(
-            this.getRawStyleInfo(nodeInfo.referenceNode, layoutDimensions),
-            nodeInfo
+            this.getRawStyleInfo(referenceNode, layoutDimensions),
+            referenceNode
         );
     }
 

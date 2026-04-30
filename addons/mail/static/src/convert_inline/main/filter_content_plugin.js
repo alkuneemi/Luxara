@@ -33,7 +33,7 @@ export class FilterContentPlugin extends Plugin {
         "responsiveBlock",
         "rules",
         "style",
-        "nodeInfo",
+        "node",
     ];
     static shared = ["getBodyGlobalStyleInfo", "getBodyTextStyleInfo", "isInvisible"];
     resources = {
@@ -55,16 +55,16 @@ export class FilterContentPlugin extends Plugin {
         this.provideBodyStyleRules();
     }
 
-    analyzeElementIdentity({ analysis }, { nodeInfo, parentNodeAnalysis }) {
-        const node = nodeInfo.referenceNode;
+    analyzeElementIdentity({ analysis }, { referenceNode, parentNodeAnalysis }) {
+        const node = referenceNode;
         let parentNode;
         if (
             !parentNodeAnalysis ||
-            parentNodeAnalysis.nodeInfos.size === 0 ||
+            parentNodeAnalysis.referenceNodes.length === 0 ||
             !this.isBlock(node) ||
-            // TODO EGGMAIL: arbitrary choice to take the lastNodeInfo to motivate
-            !this.isBlock((parentNode = parentNodeAnalysis.lastNodeInfo.referenceNode)) ||
-            parentNode.referenceNode.nodeName !== "DIV"
+            // TODO EGGMAIL: arbitrary choice to take the lastReferenceNode to motivate
+            !this.isBlock((parentNode = parentNodeAnalysis.lastReferenceNode)) ||
+            parentNode.nodeName !== "DIV"
         ) {
             analysis.parsingFacts.canParentMerge = false;
             return;
@@ -95,10 +95,9 @@ export class FilterContentPlugin extends Plugin {
      * text ancestors (eg presentation table td)
      */
     getBodyTextStyleInfo() {
-        const bodyNodeInfo = this.getNodeInfo(this.config.referenceDocument.body);
         return this.filterStyleInfo(
-            this.getRawStyleInfo(bodyNodeInfo.referenceNode),
-            bodyNodeInfo,
+            this.getRawStyleInfo(this.config.referenceDocument.body),
+            this.config.referenceDocument.body,
             this.bodyTextStyleRules
         );
     }
@@ -108,10 +107,9 @@ export class FilterContentPlugin extends Plugin {
      * main layout ancestors (eg main table)
      */
     getBodyGlobalStyleInfo() {
-        const bodyNodeInfo = this.getNodeInfo(this.config.referenceDocument.body);
         return this.filterStyleInfo(
-            this.getRawStyleInfo(bodyNodeInfo.referenceNode),
-            bodyNodeInfo,
+            this.getRawStyleInfo(this.config.referenceDocument.body),
+            this.config.referenceDocument.body,
             this.bodyGlobalStyleRules
         );
     }
@@ -144,8 +142,8 @@ export class FilterContentPlugin extends Plugin {
         rules.block("style");
         rules.block(/.*/, {
             // TODO EGGMAIL: should we allow attributes not starting with `t-` for qweb `t` elements?
-            when: ({ attributeName, nodeInfo }) =>
-                nodeInfo.referenceNode.nodeName === "T" && !attributeName.startsWith("t-"),
+            when: ({ attributeName, referenceNode }) =>
+                referenceNode.nodeName === "T" && !attributeName.startsWith("t-"),
         });
     }
 
@@ -163,7 +161,7 @@ export class FilterContentPlugin extends Plugin {
             // Block all style for `t` elements
             // TODO EGGMAIL: should we wrap the `T` element to a `DIV` or a `SPAN`?
             // should we move the style there?
-            when: ({ nodeInfo }) => nodeInfo.referenceNode.nodeName === "T",
+            when: ({ referenceNode }) => referenceNode.nodeName === "T",
         });
         rules.block(/.*/, {
             when: ({ propertyValue }) => INDIRECT_CSS_PROPERTY_VALUES.has(propertyValue),
@@ -198,8 +196,7 @@ export class FilterContentPlugin extends Plugin {
         rules.allow(/^padding(-.*)?$/);
         rules.allow(/^margin(-.*)?$/, {
             when: [
-                ({ nodeInfo }) =>
-                    paragraphRelatedElements.includes(nodeInfo.referenceNode.nodeName),
+                ({ referenceNode }) => paragraphRelatedElements.includes(referenceNode.nodeName),
                 ({ attributeValue }) => attributeValue !== "auto",
             ],
         });
@@ -238,20 +235,19 @@ export class FilterContentPlugin extends Plugin {
         });
     }
 
-    isInvisible(nodeInfo) {
-        if (!nodeInfo) {
+    isInvisible(referenceNode) {
+        if (!referenceNode) {
             return true;
         }
-        let { rect } = this.getLayoutBlock(nodeInfo.referenceNode) ?? {};
+        let { rect } = this.getLayoutBlock(referenceNode) ?? {};
         if (!rect) {
-            rect = this.getBoundingClientRect(nodeInfo.referenceNode);
+            rect = this.getBoundingClientRect(referenceNode);
         }
         // TODO EGGMAIL: investigate if some more node should bypass this rule
         if (
             rect &&
             rect.height === 0 &&
-            (nodeInfo.referenceNode.nodeType !== Node.ELEMENT_NODE ||
-                !this.hasVisibleBorder(nodeInfo.referenceNode))
+            (referenceNode.nodeType !== Node.ELEMENT_NODE || !this.hasVisibleBorder(referenceNode))
         ) {
             return true;
         }

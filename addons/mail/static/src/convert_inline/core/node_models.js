@@ -2,18 +2,6 @@ import { UniqueArray } from "../data_structures";
 import { StyleInfo } from "./style_models";
 
 /**
- * NodeInfo is obsolete => only use referenceNode
- */
-export class NodeInfo {
-    isDiscarded = false;
-
-    constructor({ referenceNode }) {
-        // node from this.config.reference
-        this.referenceNode = referenceNode;
-    }
-}
-
-/**
  * TODO EGGMAIL: simplify/flatten model and combine properties with NodeAnalysis?
  */
 export class Analysis {
@@ -53,17 +41,17 @@ export class Analysis {
 }
 
 export class NodeAnalysis {
-    nodeInfos = new UniqueArray();
+    referenceNodes = new UniqueArray();
     analysis = new Analysis();
     children = new UniqueArray();
 
-    constructor({ identity, nodeInfo, parent, analysis = {} } = {}) {
+    constructor({ identity, referenceNode, parent, analysis = {} } = {}) {
         this.identity = identity;
         if (parent) {
             parent.appendChild(this);
         }
-        if (nodeInfo) {
-            this.pushNodeInfo(nodeInfo);
+        if (referenceNode) {
+            this.pushReferenceNode(referenceNode);
         }
         this.analysis.merge(analysis);
     }
@@ -84,16 +72,16 @@ export class NodeAnalysis {
         return removedChildren;
     }
 
-    pushNodeInfo(nodeInfo) {
-        return this.nodeInfos.push(nodeInfo);
+    pushReferenceNode(referenceNode) {
+        return this.referenceNodes.push(referenceNode);
     }
 
-    get firstNodeInfo() {
-        return this.nodeInfos.at(0);
+    get firstReferenceNode() {
+        return this.referenceNodes.at(0);
     }
 
-    get lastNodeInfo() {
-        return this.nodeInfos.at(-1);
+    get lastReferenceNode() {
+        return this.referenceNodes.at(-1);
     }
 
     appendChild(nodeAnalysis) {
@@ -152,10 +140,6 @@ export class ElementIdentity extends Identity {
         this.setAttributes(options);
     }
 
-    /**
-     * TODO EGGMAIL: evaluate if we really need the following here
-     * (maybe it's enough to store nodeInfo)
-     */
     merge(originalIdentity) {
         originalIdentity.setAttributes(this);
         originalIdentity.tag = this.tag;

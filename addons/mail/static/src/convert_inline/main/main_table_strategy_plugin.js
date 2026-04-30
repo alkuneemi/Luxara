@@ -7,7 +7,7 @@ import { StyleInfo } from "../core/style_models";
 
 export class MainTableStrategyPlugin extends Plugin {
     static id = "mainTableStrategy";
-    static dependencies = ["filterContent", "measurementSnapshot", "rules", "style", "nodeInfo"];
+    static dependencies = ["filterContent", "measurementSnapshot", "rules", "style", "node"];
     resources = {
         apply_layout_strategy_overrides: withSequence(2, this.applyLayoutStrategy.bind(this)),
         element_identity_analysis_processors: withSequence(
@@ -32,8 +32,7 @@ export class MainTableStrategyPlugin extends Plugin {
     provideLayoutStyleRules() {
         const root = this.layoutRulesByRef.root.forPlugin(MainTableStrategyPlugin.id);
         root.allow("background-color", {
-            when: ({ nodeInfo }) =>
-                nodeInfo.referenceNode.matches?.(".o_layout:not(.o_basic_theme)"),
+            when: ({ referenceNode }) => referenceNode.matches?.(".o_layout:not(.o_basic_theme)"),
         });
     }
 
@@ -55,14 +54,14 @@ export class MainTableStrategyPlugin extends Plugin {
      * prevent another plugin from claiming another identity? To think about.
      * evaluate withSequence
      */
-    analyzeElementIdentity({ identity, analysis }, { nodeInfo }) {
+    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
         if (analysis.isFrozen) {
             return;
         }
-        let hasMainTable = this.detectMainTableLayout(nodeInfo);
+        let hasMainTable = this.detectMainTableLayout(referenceNode);
         if (hasMainTable) {
             analysis.facts.isMainTableLayout = true;
-        } else if ((hasMainTable = this.detectMainTableWrapper(nodeInfo))) {
+        } else if ((hasMainTable = this.detectMainTableWrapper(referenceNode))) {
             analysis.facts.isMainTableWrapper = true;
         }
         if (hasMainTable) {
@@ -75,39 +74,39 @@ export class MainTableStrategyPlugin extends Plugin {
         }
     }
 
-    applyLayoutStrategy(nodeInfo) {
-        let hasMainTable = this.detectMainTableLayout(nodeInfo);
+    applyLayoutStrategy(referenceNode) {
+        let hasMainTable = this.detectMainTableLayout(referenceNode);
         if (hasMainTable) {
-            this.buildLayoutFragment(nodeInfo);
-        } else if ((hasMainTable = this.detectMainTableWrapper(nodeInfo))) {
-            this.buildWrapperFragment(nodeInfo);
+            this.buildLayoutFragment(referenceNode);
+        } else if ((hasMainTable = this.detectMainTableWrapper(referenceNode))) {
+            this.buildWrapperFragment(referenceNode);
         }
         if (hasMainTable) {
-            nodeInfo.defineLayoutStrategy({ pluginId: MainTableStrategyPlugin.id });
+            referenceNode.defineLayoutStrategy({ pluginId: MainTableStrategyPlugin.id });
             return true;
         }
     }
 
-    detectMainTableLayout(nodeInfo) {
+    detectMainTableLayout(referenceNode) {
         if (this.layout) {
-            return nodeInfo.referenceNode === this.layout;
+            return referenceNode === this.layout;
         } else {
-            return nodeInfo.referenceNode === this.config.reference;
+            return referenceNode === this.config.reference;
         }
     }
 
-    detectMainTableWrapper(nodeInfo) {
-        return nodeInfo.referenceNode.matches?.(".o_mail_wrapper");
+    detectMainTableWrapper(referenceNode) {
+        return referenceNode.matches?.(".o_mail_wrapper");
     }
 
-    buildMainTableFragment(nodeInfo, MainTableModel, rulesByRef) {
+    buildMainTableFragment(referenceNode, MainTableModel, rulesByRef) {
         const refs = Object.fromEntries(
             Object.entries(rulesByRef).map(([ref, rules]) => [
                 ref,
                 {
                     style: this.filterStyleInfo(
-                        this.getRawStyleInfo(nodeInfo.referenceNode),
-                        nodeInfo,
+                        this.getRawStyleInfo(referenceNode),
+                        referenceNode,
                         rules
                     ),
                 },
@@ -122,22 +121,21 @@ export class MainTableStrategyPlugin extends Plugin {
         const tdStyle = refs.td.style ?? {};
         refs.td.style = this.getBodyTextStyleInfo().merge(StyleInfo.from(tdStyle));
         const vNodes = [];
-        this.processChildNodes(nodeInfo.referenceNode, (node) =>
-            vNodes.push(this.getNodeInfo(node).vNode)
-        );
+        // TODO REMOVE VNODE:
+        this.processChildNodes(referenceNode, (node) => vNodes.push(node.vNode));
         const mainTable = new MainTableModel({
             refs,
             childNodes: vNodes,
         });
-        nodeInfo.fragment = mainTable.renderToFragment();
+        referenceNode.fragment = mainTable.renderToFragment();
     }
 
-    buildLayoutFragment(nodeInfo) {
-        this.buildMainTableFragment(nodeInfo, MainTableLayout, this.layoutRulesByRef);
+    buildLayoutFragment(referenceNode) {
+        this.buildMainTableFragment(referenceNode, MainTableLayout, this.layoutRulesByRef);
     }
 
-    buildWrapperFragment(nodeInfo) {
-        this.buildMainTableFragment(nodeInfo, MainTableWrapper, this.wrapperRulesByRef);
+    buildWrapperFragment(referenceNode) {
+        this.buildMainTableFragment(referenceNode, MainTableWrapper, this.wrapperRulesByRef);
     }
 }
 
