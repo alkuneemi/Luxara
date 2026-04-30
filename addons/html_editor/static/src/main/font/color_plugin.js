@@ -240,8 +240,9 @@ export class ColorPlugin extends Plugin {
                 let font = closestElement(
                     node,
                     (node) =>
-                        (hasColor(node, "color") || hasColor(node, "backgroundColor")) &&
-                        node.nodeName !== "LI"
+                        (color
+                            ? hasColor(node, "color") || hasColor(node, "backgroundColor")
+                            : hasColor(node, mode)) && node.nodeName !== "LI"
                 );
                 if (
                     color &&
