@@ -8,7 +8,6 @@ from odoo.tools import float_round
 from odoo.tools.urls import urljoin
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.const import CURRENCY_MINOR_UNITS
 from odoo.addons.payment.logging import get_payment_logger
 from odoo.addons.payment_mercado_pago import const
 
@@ -169,13 +168,11 @@ class PaymentTransaction(models.Model):
         :return: The transaction amount rounded to Mercado Pago's required decimal precision.
         :rtype: float
         """
-        unit_price = self.amount
-        decimal_places = const.CURRENCY_DECIMALS.get(
-            self.currency_id.name, CURRENCY_MINOR_UNITS.get(self.currency_id.name)
+        return float_round(
+            self.amount,
+            precision_digits=self.provider_id._get_amount_precision(self.currency_id),
+            rounding_method="DOWN",
         )
-        if decimal_places is not None:
-            unit_price = float_round(unit_price, decimal_places, rounding_method="DOWN")
-        return unit_price
 
     @api.model
     def _extract_reference(self, provider_code, payment_data):
@@ -259,7 +256,7 @@ class PaymentTransaction(models.Model):
         return {
             "amount": float(amount),
             "currency_code": currency_code,
-            "precision_digits": const.CURRENCY_DECIMALS.get(currency_code),
+            "precision_digits": self.provider_id._get_amount_precision(self.currency_id),
         }
 
     def _extract_token_values(self, payment_data):
@@ -267,7 +264,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "mercado_pago":
             return super()._extract_token_values(payment_data)
 
-        if not payment_data.get('token'):
+        if not payment_data.get("token"):
             return {}
 
         # Fetch the customer id or create a new one.

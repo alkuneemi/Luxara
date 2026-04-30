@@ -186,7 +186,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "redsys":
             return super()._extract_amount_data(payment_data)
 
-        amount = payment_utils.to_major_currency_units(
+        amount = self.provider_id._to_major_currency_units(
             float(payment_data.get("Ds_Amount", 0)), self.currency_id
         )
         currency = (

@@ -8,7 +8,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.const import REPORT_REASONS_MAPPING, SENSITIVE_KEYS
+from odoo.addons.payment.const import CURRENCY_MINOR_UNITS, REPORT_REASONS_MAPPING, SENSITIVE_KEYS
 from odoo.addons.payment.logging import get_payment_logger
 
 # Pass the possibly empty set of sensitive keys to the logger in case a provider module extends it.
@@ -778,6 +778,49 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
         return self.redirect_form_view_id
+
+    def _get_amount_precision(self, currency):
+        """Return the precision of the transaction amount for the given currency.
+
+        The precision is determined by the currency's `decimal_places` field. For a provider to
+        enforce different precision, it must override this method and return the desired number of
+        decimal places.
+
+        :param recordset currency: The currency of the transaction, as a `res.currency` record.
+        :return: The number of decimal places.
+        :rtype: int
+        """
+        return CURRENCY_MINOR_UNITS.get(currency.name, currency.decimal_places)
+
+    def _to_major_currency_units(self, minor_amount, currency):
+        """Return the amount converted to the major units of its currency.
+
+        The conversion is done by dividing the amount by 10^k where k is the number of decimals of
+        the currency as per the ISO 4217 norm.
+
+        :param float minor_amount: The amount in minor units, to convert in major units
+        :param recordset currency: The currency of the amount, as a `res.currency` record
+        :return: The amount in major units of its currency
+        :rtype: int
+        """
+        return payment_utils.to_major_currency_units(
+            minor_amount, currency, arbitrary_decimal_number=self._get_amount_precision(currency)
+        )
+
+    def _to_minor_currency_units(self, major_amount, currency):
+        """Return the amount converted to the minor units of its currency.
+
+        The conversion is done by multiplying the amount by 10^k where k is the number of decimals
+        of the currency as per the ISO 4217 norm.
+
+        :param float major_amount: The amount in major units, to convert in minor units
+        :param recordset currency: The currency of the amount, as a `res.currency` record
+        :return: The amount in minor units of its currency
+        :rtype: int
+        """
+        return payment_utils.to_minor_currency_units(
+            major_amount, currency, arbitrary_decimal_number=self._get_amount_precision(currency)
+        )
 
     # === REQUEST HELPERS === #
 

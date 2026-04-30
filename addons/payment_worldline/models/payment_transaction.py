@@ -281,7 +281,7 @@ class PaymentTransaction(models.Model):
         amount_of_money = (
             payment_result.get("payment", {}).get("paymentOutput", {}).get("amountOfMoney", {})
         )
-        amount = payment_utils.to_major_currency_units(
+        amount = self.provider_id._to_major_currency_units(
             amount_of_money.get("amount", 0), self.currency_id
         )
         currency_code = amount_of_money.get("currencyCode")

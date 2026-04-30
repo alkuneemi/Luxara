@@ -347,7 +347,7 @@ class PaymentTransaction(models.Model):
         if not refund_provider_reference or not amount_to_refund:
             raise ValidationError(_("Received incomplete refund data."))
 
-        converted_amount = payment_utils.to_major_currency_units(
+        converted_amount = self.provider_id._to_major_currency_units(
             amount_to_refund, source_tx.currency_id
         )
         return source_tx._create_child_transaction(
@@ -442,7 +442,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "razorpay":
             return super()._extract_amount_data(payment_data)
 
-        amount = payment_utils.to_major_currency_units(payment_data["amount"], self.currency_id)
+        amount = self.provider_id._to_major_currency_units(payment_data["amount"], self.currency_id)
         return {"amount": amount, "currency_code": payment_data["currency"]}
 
     def _extract_token_values(self, payment_data):
