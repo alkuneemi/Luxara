@@ -1,6 +1,9 @@
 import { UniqueArray } from "../data_structures";
 import { StyleInfo } from "./style_models";
 
+/**
+ * NodeInfo is obsolete => only use referenceNode
+ */
 export class NodeInfo {
     isDiscarded = false;
 
