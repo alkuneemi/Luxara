@@ -1,3 +1,62 @@
+.o_form_view {
+    --o-subtotal-footer-label-padding: 20px;
+
+    @include media-breakpoint-up(md) {
+        .o_inner_group.oe_subtotal_footer {
+            grid-template-columns: 1fr auto;
+            width: auto;
+            margin-left: auto;
+            border-top: 1px solid $border-color;
+
+            .o_cell {
+                padding: 0;
+
+                &.o_wrap_label {
+                    text-align: right;
+                }
+
+                .o_form_label {
+                    padding-right: var(--o-subtotal-footer-label-padding);
+                    margin-right: 0;
+                    min-width: 0;
+                    white-space: nowrap;
+                    &:after {
+                        content: ":";
+                    }
+                }
+
+                .o_field_widget {
+                    text-align: right;
+                    justify-content: flex-end;
+                    width: 100%;
+                }
+            }
+
+            .oe_subtotal_footer_separator {
+                width: 100%;
+                text-align: right;
+                border-top: 1px solid $border-color;
+                font-weight: $font-weight-bold;
+                font-size: 1.3em;
+            }
+        }
+    }
+
+    @include media-breakpoint-down(md) {
+        .o_notebook > .tab-content > .tab-pane.active {
+            .oe_subtotal_footer {
+                width: 100% !important;
+                tr > td {
+                    width: 0% !important;
+                    &:first-child {
+                        width: 65% !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
 .gray_ribbon {
     color: $o-gray-600 !important;
     background-color: $o-gray-200 !important;
