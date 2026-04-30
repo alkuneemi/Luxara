@@ -72,6 +72,8 @@ export class DatePlugin extends Plugin {
                 categoryId: "date",
             },
         ],
+
+        selectors_for_feff_providers: () => 'span[data-embedded="date"]',
     };
 
     setup() {

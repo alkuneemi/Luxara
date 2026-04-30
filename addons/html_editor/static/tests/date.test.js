@@ -11,7 +11,7 @@ import {
     test,
 } from "@odoo/hoot";
 import { setupEditor } from "./_helpers/editor";
-import { insertText } from "./_helpers/user_actions";
+import { insertText, simulateArrowKeyPress } from "./_helpers/user_actions";
 import {
     contains,
     defineModels,
@@ -22,6 +22,7 @@ import {
 } from "@web/../tests/web_test_helpers";
 import { user } from "@web/core/user";
 import { expectElementCount } from "./_helpers/ui_expectations";
+import { getContent } from "./_helpers/selection";
 
 const { DateTime } = luxon;
 
@@ -214,6 +215,39 @@ describe("date command", () => {
         expect(`[name="txt"] .o_readonly`).toHaveCount(1);
         expect(`[name="txt"] .o_readonly [data-embedded="date"]`).toHaveInnerHTML(
             `<span class="oe-date-pill">April 5, 2026</span>`
+        );
+    });
+    test("should navigate correctly around embedded date components", async () => {
+        const dateUTC = DateTime.now().toUTC().toISO();
+        const { el, editor } = await setupEditor(
+            `<p>abc</p><p><span data-embedded="date" data-embedded-props='{"date":"${dateUTC}","type":"date"}'></span></p><p>def<span data-embedded="date" data-embedded-props='{"date":"${dateUTC}","type":"date"}'></span>[]</p>`,
+            {
+                config: configWithEmbeddings,
+            }
+        );
+        const embeddedDate = `<span data-embedded="date" data-embedded-props='{"date":"${dateUTC}","type":"date"}' data-oe-protected="true" contenteditable="false"><span class="oe-date-pill cursor-pointer">April 5, 2026</span></span>`;
+        expect(getContent(el)).toBe(
+            `<p>abc</p><p>\uFEFF${embeddedDate}\uFEFF</p><p>def\uFEFF${embeddedDate}\uFEFF[]</p>`
+        );
+
+        await simulateArrowKeyPress(editor, "ArrowUp");
+        expect(getContent(el)).toBe(
+            `<p>abc</p><p>\uFEFF${embeddedDate}\uFEFF[]</p><p>def\uFEFF${embeddedDate}\uFEFF</p>`
+        );
+
+        await simulateArrowKeyPress(editor, "ArrowUp");
+        expect(getContent(el)).toBe(
+            `<p>abc[]</p><p>\uFEFF${embeddedDate}\uFEFF</p><p>def\uFEFF${embeddedDate}\uFEFF</p>`
+        );
+
+        await simulateArrowKeyPress(editor, "ArrowDown");
+        expect(getContent(el)).toBe(
+            `<p>abc</p><p>\uFEFF${embeddedDate}\uFEFF[]</p><p>def\uFEFF${embeddedDate}\uFEFF</p>`
+        );
+
+        await simulateArrowKeyPress(editor, "ArrowDown");
+        expect(getContent(el)).toBe(
+            `<p>abc</p><p>\uFEFF${embeddedDate}\uFEFF</p><p>def\uFEFF${embeddedDate}[]\uFEFF</p>`
         );
     });
 });
