@@ -5,7 +5,6 @@ from odoo.exceptions import ValidationError
 from odoo.tools import urls
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.const import CURRENCY_MINOR_UNITS
 from odoo.addons.payment.logging import get_payment_logger
 from odoo.addons.payment_mollie import const
 from odoo.addons.payment_mollie.controllers.main import MollieController
@@ -56,9 +55,7 @@ class PaymentTransaction(models.Model):
         base_url = self.provider_id.get_base_url()
         redirect_url = urls.urljoin(base_url, MollieController._return_url)
         webhook_url = urls.urljoin(base_url, MollieController._webhook_url)
-        decimal_places = CURRENCY_MINOR_UNITS.get(
-            self.currency_id.name, self.currency_id.decimal_places
-        )
+        decimal_places = self.provider_id._get_amount_precision(self.currency_id)
 
         payload = {
             "description": self.reference,

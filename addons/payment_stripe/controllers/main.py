@@ -110,7 +110,7 @@ class StripeController(http.Controller):
                     if not stripe_object["captured"]:  # The charge was authorized and then voided
                         return request.make_json_response("")  # Don't process void-related events
 
-                    refunds = stripe_object['refunds']['data']
+                    refunds = stripe_object["refunds"]["data"]
                     # The refunds linked to this charge are paginated, fetch the remaining refunds.
                     has_more = stripe_object["refunds"]["has_more"]
                     while has_more:
@@ -180,7 +180,9 @@ class StripeController(http.Controller):
         converted_amount = payment_utils.to_major_currency_units(
             amount_to_refund,
             source_tx_sudo.currency_id,
-            arbitrary_decimal_number=const.CURRENCY_DECIMALS.get(source_tx_sudo.currency_id.name),
+            arbitrary_decimal_number=source_tx_sudo.provider_id._get_amount_precision(
+                source_tx_sudo.currency_id
+            ),
         )
         return source_tx_sudo._create_child_transaction(converted_amount, is_refund=True)
 
