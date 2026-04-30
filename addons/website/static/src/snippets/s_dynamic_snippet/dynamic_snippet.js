@@ -18,7 +18,7 @@ export class DynamicSnippet extends Interaction {
         "[data-url]": {
             "t-on-click": this.callToAction,
         },
-        _window: { "t-on-resize": this.throttled(this.render) },
+        _window: { "t-on-resize": this.throttled(this.onResize) },
         _root: {
             "t-att-class": () => ({
                 // Compatibility code: A dynamic snippet may end up with one,
@@ -44,6 +44,7 @@ export class DynamicSnippet extends Interaction {
          * @type {*|jQuery.fn.init|jQuery|HTMLElement}
          */
         this.data = [];
+        this.isDisplayedAsMobile = uiUtils.isSmall();
         this.renderedContentNode = document.createDocumentFragment();
         this.uniqueId = uniqueId("s_dynamic_snippet_");
         this.templateKey = "website.s_dynamic_snippet.grid";
@@ -202,6 +203,16 @@ export class DynamicSnippet extends Interaction {
      */
     callToAction(ev) {
         window.location = verifyHttpsUrl(ev.currentTarget.dataset.url);
+    }
+
+    /**
+     * Re-render when bootstrap size media breapoint change
+     */
+    onResize() {
+        if (this.isDisplayedAsMobile !== uiUtils.isSmall()) {
+            this.isDisplayedAsMobile = uiUtils.isSmall();
+            this.render();
+        }
     }
 }
 
