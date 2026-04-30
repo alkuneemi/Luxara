@@ -53,13 +53,16 @@ class AccountMoveSend(models.AbstractModel):
         for invoice, invoice_data in invoices_data.items():
             if 'ro_edi' in invoice_data['extra_edis']:
 
-                if invoice.l10n_ro_edi_document_ids:
-                    # If a document is on the invoice, we shouldn't send it again
-                    invoice_data['error'] = _("The CIUS-RO E-Factura has already been sent")
-                    continue
-
                 if invoice_data.get('ubl_cii_xml_attachment_values'):
                     xml_data = invoice_data['ubl_cii_xml_attachment_values']['raw']
+                elif invoice.l10n_ro_edi_document_ids:
+                    xml_data, build_errors = self.env['account.edi.xml.ubl_ro']._export_invoice(invoice)
+                    if build_errors:
+                        invoice_data['error'] = {
+                            'error_title': _("Error when building the CIUS-RO E-Factura XML"),
+                            'errors': build_errors,
+                        }
+                        continue
                 elif invoice.ubl_cii_xml_id:
                     xml_data = invoice.ubl_cii_xml_id.raw
                 else:
