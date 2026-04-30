@@ -1,5 +1,4 @@
 import { rpc } from "@web/core/network/rpc";
-import { Deferred } from "@web/core/utils/concurrency";
 import { browser } from "@web/core/browser/browser";
 
 export const STREAM_TYPE = Object.freeze({
@@ -115,7 +114,7 @@ export class Peer {
         this.hasPriority = hasPriority;
         this.connectRetryDelay = connectRetryDelay;
         this.sequence = sequence;
-        this.ready = new Deferred();
+        this.ready = Promise.withResolvers();
     }
 
     disconnect() {
@@ -136,7 +135,7 @@ export class Peer {
                 }
             }
         }
-        this.ready.resolve?.();
+        this.ready.resolve();
         this.connection?.close();
         this.connection = undefined;
         this.dataChannel?.close();
@@ -326,7 +325,7 @@ export class PeerToPeer extends EventTarget {
             return peer;
         }
         const newPeer = this._createPeer(id, options);
-        await newPeer.ready;
+        await newPeer.ready.promise;
         return newPeer;
     }
     removePeer(id) {
@@ -434,7 +433,7 @@ export class PeerToPeer extends EventTarget {
         });
         const proms = [];
         for (const peer of this.peers.values()) {
-            proms.push(peer.ready.then(() => this._updateRemote(peer, streamType)));
+            proms.push(peer.ready.promise.then(() => this._updateRemote(peer, streamType)));
         }
         await Promise.all(proms);
     }
@@ -900,7 +899,7 @@ export class PeerToPeer extends EventTarget {
                 return;
             }
             peer.medias[streamType].track = track;
-            if (!(await peer.ready)) {
+            if (!(await peer.ready.promise)) {
                 return;
             }
             this._emitUpdate({

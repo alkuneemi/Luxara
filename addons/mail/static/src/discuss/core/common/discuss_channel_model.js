@@ -3,7 +3,6 @@ import { fields, Record } from "@mail/model/export";
 
 import { _t } from "@web/core/l10n/translation";
 import { user } from "@web/core/user";
-import { Deferred } from "@web/core/utils/concurrency";
 import { rpc } from "@web/core/network/rpc";
 import {
     compareDatetime,
@@ -57,34 +56,34 @@ export class DiscussChannel extends Record {
         if (channel?.fetchChannelInfoState === "fetched" || channel_id < 0) {
             return Promise.resolve(channel);
         }
-        const fetchChannelInfoDeferred = this.store.channelIdsFetchingDeferred.get(channel_id);
-        if (fetchChannelInfoDeferred) {
-            return fetchChannelInfoDeferred;
+        const fetchChannelInfoPromise = this.store.channelIdsFetchingPromise.get(channel_id);
+        if (fetchChannelInfoPromise) {
+            return fetchChannelInfoPromise;
         }
-        const def = new Deferred();
-        this.store.channelIdsFetchingDeferred.set(channel_id, def);
+        const { promise, reject, resolve } = Promise.withResolvers();
+        this.store.channelIdsFetchingPromise.set(channel_id, promise);
         this.store.fetchChannel(channel_id).then(
             () => {
-                this.store.channelIdsFetchingDeferred.delete(channel_id);
+                this.store.channelIdsFetchingPromise.delete(channel_id);
                 const channel = this.store["discuss.channel"].get(channel_id);
                 if (channel?.exists()) {
                     channel.fetchChannelInfoState = "fetched";
-                    def.resolve(channel);
+                    resolve(channel);
                 } else {
-                    def.resolve();
+                    resolve();
                 }
             },
             () => {
-                this.store.channelIdsFetchingDeferred.delete(channel_id);
+                this.store.channelIdsFetchingPromise.delete(channel_id);
                 const channel = this.store["discuss.channel"].get(channel_id);
                 if (channel?.exists()) {
-                    def.reject(channel);
+                    reject(channel);
                 } else {
-                    def.reject();
+                    reject();
                 }
             }
         );
-        return def;
+        return promise;
     }
 
     /** Equivalent to DiscussChannel._allow_invite_by_email */
