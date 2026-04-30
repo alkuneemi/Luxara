@@ -11,6 +11,9 @@ patch(ChannelMemberList.prototype, {
             position: "right",
         });
     },
+    canOpenChatWith(member) {
+        return super.canOpenChatWith(member) && Boolean(member.persona.main_user_id);
+    },
     onClickAvatar(ev, member) {
         if (!this.canOpenChatWith(member)) {
             return;
