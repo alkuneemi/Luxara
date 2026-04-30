@@ -332,10 +332,6 @@ class Cart(PaymentPortal):
         ) or 0.0
         return values
 
-    def _total_values(self):
-        """Pass additional values when rendering the 'website_sale.total' template."""
-        return {}
-
     @route(route="/shop/cart/history", type="jsonrpc", auth="public", website=True, readonly=True)
     def cart_history(self):
         """Prepare the order history of the current user.
