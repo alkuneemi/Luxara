@@ -47,6 +47,7 @@ const mainEditorPluginsToRemove = [
     "MoveNodePlugin",
     "FontFamilyPlugin",
     "SelectionPlaceholderPlugin",
+    "ContrastPlugin",
     // Replaced plugins:
     "ColorUIPlugin",
     "ImagePlugin",

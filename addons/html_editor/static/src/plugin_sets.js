@@ -79,6 +79,7 @@ import { StylePlugin } from "./core/style_plugin";
 import { ContentEditablePlugin } from "./core/content_editable_plugin";
 import { SelectionPlaceholderPlugin } from "./main/selection_placeholder_plugin";
 import { ResizePlugin } from "./main/resize_plugin";
+import { ContrastPlugin } from "./main/font/contrast_plugin";
 
 export const CORE_PLUGINS = [
     BaseContainerPlugin,
@@ -108,6 +109,7 @@ export const MAIN_PLUGINS = [
     CodeBlockPlugin,
     ColorPlugin,
     ColorUIPlugin,
+    ContrastPlugin,
     SeparatorPlugin,
     ColumnPlugin,
     EmojiPlugin,
