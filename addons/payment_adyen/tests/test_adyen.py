@@ -122,6 +122,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
         self.assertEqual(refund_tx.source_transaction_id, source_tx)
 
     def test_search_by_reference_returns_partial_capture_child_tx(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture == "none"
+        ).active = False
         self.provider.capture_manually = True
         source_tx = self._create_transaction(
             "direct", state="authorized", provider_reference=self.original_reference
@@ -148,6 +151,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
         self.assertEqual(returned_tx, capture_tx, msg="The existing capture tx is the one returned")
 
     def test_search_by_reference_creates_capture_tx_when_missing(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture == "none"
+        ).active = False
         self.provider.capture_manually = True
         source_tx = self._create_transaction(
             "direct", state="authorized", provider_reference=self.original_reference
@@ -171,6 +177,9 @@ class AdyenTest(AdyenCommon, PaymentHttpCommon):
         self.assertEqual(capture_tx.source_transaction_id, source_tx)
 
     def test_search_by_reference_returns_void_tx(self):
+        self.provider.payment_method_ids.filtered(
+            lambda pm: pm.support_manual_capture == "none"
+        ).active = False
         self.provider.capture_manually = True
         source_tx = self._create_transaction(
             "direct", state="authorized", provider_reference=self.original_reference

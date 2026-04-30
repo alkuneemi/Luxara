@@ -304,6 +304,14 @@ class PaymentProvider(models.Model):
     # === ONCHANGE METHODS === #
 
     @api.onchange("is_test")
+    def _onchange_state_switch_is_published(self):
+        """Automatically publish or unpublish the provider depending on its state.
+
+        :return: None
+        """
+        self.is_published = not self.is_test
+
+    @api.onchange("is_test")
     def _onchange_test_warn_before_disabling_tokens(self):
         related_tokens = self.env["payment.token"].search([("provider_id", "=", self._origin.id)])
         if related_tokens:
@@ -390,9 +398,7 @@ class PaymentProvider(models.Model):
             required_for_provider_code = getattr(field, "required_if_provider", None)
             if required_for_provider_code and any(
                 required_for_provider_code == provider._get_code() and not provider[field_name]
-                for provider in self.filtered(
-                    lambda provider: provider.module_state in ["installed", "uninstallable"]
-                )
+                for provider in self.filtered(lambda provider: provider.module_state == "installed")
             ):
                 ir_field = self.env["ir.model.fields"]._get(self._name, field_name)
                 field_names.append(ir_field.field_description)
@@ -522,7 +528,7 @@ class PaymentProvider(models.Model):
         :rtype: bool
         """
         self.ensure_one()
-
+        self = self.with_context(skip_required_if_provider_check=True)
         return self.write({"is_published": False, **self._get_reset_values()})
 
     def _get_reset_values(self):

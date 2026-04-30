@@ -10,7 +10,7 @@ from odoo.addons.payment_razorpay.tests.common import RazorpayCommon
 class TestPaymentProvider(RazorpayCommon):
     def test_allow_enabling_if_credentials_are_set(self):
         """Test that enabling a Razorpay provider with credentials succeeds."""
-        self._assert_does_not_raise(ValidationError, self.provider.write({"state": "enabled"}))
+        self._assert_does_not_raise(ValidationError, self.provider.write({"is_test": False}))
 
     def test_prevent_enabling_if_credentials_are_not_set(self):
         """Test that enabling a Razorpay provider without credentials raises a ValidationError."""

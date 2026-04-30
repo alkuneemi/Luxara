@@ -61,7 +61,7 @@
                     />
                 </div>
             </group>
-            <group name="provider_credentials" position="after">
+            <group name="provider_config" position="before">
                 <div
                     invisible="
                         code != 'mercado_pago'
@@ -77,13 +77,6 @@
                         Card payment method experience, which allows saving payment details for
                         recurring payments.
                     </div>
-                    <button
-                        string="Connect"
-                        type="object"
-                        name="action_start_onboarding"
-                        class="btn-primary"
-                        colspan="2"
-                    />
                 </div>
             </group>
             <field name="available_currency_ids" position="attributes">
