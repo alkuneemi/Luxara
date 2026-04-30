@@ -17,10 +17,6 @@ export class RenderPlugin extends Plugin {
     };
 
     buildRenderTree() {
-        const analysisTree = this.getAnalysisTree();
-        if (!analysisTree) {
-            return;
-        }
         // My idea right now:
         // identity starts as the simple element transcription
         // analysis accumulates facts during various kind of passes
@@ -36,6 +32,24 @@ export class RenderPlugin extends Plugin {
         // an identity can also have multiple slots instead of sub-identities (do I keep such flexibility?)
         // the "render" method of an Identity should take care of handling its subtree
         // the Identity subtree relates to only one NodeAnalysis, which was one render intention
+        const analysisTree = this.getAnalysisTree();
+        if (!analysisTree) {
+            return;
+        }
+        this.refineIdentity(analysisTree);
+    }
+
+    refineIdentity(nodeAnalysis) {
+        // keep original identity (inside nodeAnalysis) untouched during the
+        // whole process, but the current identity can be used
+        nodeAnalysis.identity = this.processThrough(
+            "refine_identity_processors",
+            nodeAnalysis.identity,
+            { nodeAnalysis }
+        );
+        for (const childAnalysis of nodeAnalysis.children) {
+            this.refineIdentity(childAnalysis);
+        }
     }
 
     ensureTemplateContent(template) {
