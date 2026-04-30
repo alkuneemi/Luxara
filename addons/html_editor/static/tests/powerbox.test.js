@@ -1,5 +1,5 @@
 import { Plugin } from "@html_editor/plugin";
-import { CORE_PLUGINS, MAIN_PLUGINS } from "@html_editor/plugin_sets";
+import { CORE_PLUGINS } from "@html_editor/plugin_sets";
 import { describe, expect, test } from "@odoo/hoot";
 import {
     click,
@@ -182,7 +182,7 @@ describe("search", () => {
             };
         }
         const { editor, el } = await setupEditor(`<p>[]</p>`, {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         await expectElementCount(".o-we-powerbox", 0);
         await insertText(editor, "/test12");
@@ -326,7 +326,7 @@ describe("search", () => {
                 };
             }
             const { editor, el } = await setupEditor(`<p>[]</p>`, {
-                config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+                config: { includePlugins: [TestPlugin] },
             });
             await expectElementCount(".o-we-powerbox", 0);
             insertText(editor, "/apple");
@@ -383,7 +383,8 @@ describe("search", () => {
             }
             const { editor, el } = await setupEditor(`<p>[]</p>`, {
                 config: {
-                    Plugins: [...CORE_PLUGINS, PowerboxPlugin, SearchPowerboxPlugin, TestPlugin],
+                    basePlugins: CORE_PLUGINS,
+                    includePlugins: [PowerboxPlugin, SearchPowerboxPlugin, TestPlugin],
                 },
             });
             await expectElementCount(".o-we-powerbox", 0);
@@ -477,7 +478,7 @@ describe("search", () => {
         });
         test("/video + enter should open the media dialog directly on the Videos tab", async () => {
             const { el, editor } = await setupEditor("<p>[]<br></p>", {
-                config: { Plugins: [...MAIN_PLUGINS, VideoPlugin] },
+                config: { includePlugins: [VideoPlugin] },
             });
             await insertText(editor, "/video");
             await waitFor(".o-we-powerbox");
@@ -601,7 +602,7 @@ test("should display the correct shorthand label for the corresponding command",
         };
     }
     const { editor, el } = await setupEditor(`<p>[]</p>`, {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
     });
     await expectElementCount(".o-we-powerbox", 0);
     await insertText(editor, "/test1");
@@ -664,7 +665,7 @@ class NoOpPlugin extends Plugin {
 
 test("should restore state before /command insertion when command is executed (1)", async () => {
     const { el, editor } = await setupEditor("<p>abc[]</p>", {
-        config: { Plugins: [...MAIN_PLUGINS, NoOpPlugin] },
+        config: { includePlugins: [NoOpPlugin] },
     });
     await insertText(editor, "/no-op");
     expect(getContent(el)).toBe("<p>abc/no-op[]</p>");
@@ -677,7 +678,7 @@ test("should restore state before /command insertion when command is executed (1
 
 test("should restore state before /command insertion when command is executed (2)", async () => {
     const { el, editor } = await setupEditor("<p>[]<br></p>", {
-        config: { Plugins: [...MAIN_PLUGINS, NoOpPlugin] },
+        config: { includePlugins: [NoOpPlugin] },
     });
 
     /** @todo fix warnings */
@@ -911,7 +912,7 @@ test.todo("add plugins with the same powerboxCategory should crash", async () =>
     }
     await expect(
         setupEditor("<p>ab[]cd</p>", {
-            config: { Plugins: [...MAIN_PLUGINS, Plugin1, Plugin2] },
+            config: { includePlugins: [Plugin1, Plugin2] },
         })
     ).rejects.toThrow();
     expect.verifyErrors(["Duplicate category id: test"]);

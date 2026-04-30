@@ -3,7 +3,6 @@ import { setupEditor, testEditor } from "../_helpers/editor";
 import { unformat } from "../_helpers/format";
 import { setFontSize, setFontSizeClassName, tripleClick } from "../_helpers/user_actions";
 import { Plugin } from "@html_editor/plugin";
-import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { animationFrame } from "@odoo/hoot-mock";
 import { execCommand } from "../_helpers/userCommands";
 import { press } from "@odoo/hoot-dom";
@@ -23,7 +22,7 @@ test("should change the font size the qweb tag", async () => {
         contentBefore: `<div><p t-out="'Test'" contenteditable="false">[Test]</p></div>`,
         stepFunction: setFontSize("36px"),
         contentAfter: `<div>[<p t-out="'Test'" style="font-size: 36px;">Test</p>]</div>`,
-        config: { Plugins: [...MAIN_PLUGINS, QWebPlugin] },
+        config: { includePlugins: [QWebPlugin] },
     });
 });
 
@@ -177,7 +176,7 @@ test("should apply font size in unsplittable span without class", async () => {
         contentBefore: `<h1><span t="unsplittable">some [text]</span></h1>`,
         stepFunction: setFontSize("18px"),
         contentAfter: `<h1><span t="unsplittable">some <span style="font-size: 18px;">[text]</span></span></h1>`,
-        config: { Plugins: [...MAIN_PLUGINS, AddUnsplittableRulePlugin] },
+        config: { includePlugins: [AddUnsplittableRulePlugin] },
     });
 });
 

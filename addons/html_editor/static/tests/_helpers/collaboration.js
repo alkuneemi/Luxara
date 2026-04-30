@@ -1,6 +1,5 @@
 import { HistoryPlugin } from "@html_editor/core/history_plugin";
 import { CollaborationPlugin } from "@html_editor/others/collaboration/collaboration_plugin";
-import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { createDOMPathGenerator } from "@html_editor/utils/dom_traversal";
 import { DIRECTIONS } from "@html_editor/utils/position";
 import { after, expect } from "@odoo/hoot";
@@ -21,7 +20,7 @@ import { setupEditor } from "./editor";
  * @property { string[] } peerIds
  * @property { string } contentBefore
  * @property { string } contentAfter
- * @property { Plugin[] } Plugins
+ * @property { includePlugins[] } includePlugins
  * @property { (peerInfos: Record<string, PeerInfo>) => Promise<void> } afterCreate
  * @property { (peerInfos: Record<string, PeerInfo>) => Promise<void> } afterCursorInserted
  *
@@ -67,14 +66,13 @@ export const setupMultiEditor = async (spec) => {
         let n = 0;
         HistoryPlugin.prototype.generateId = () => `fake_id_${n++}`;
         let selection;
-        const defaultPlugins = MAIN_PLUGINS;
         const base = await setupEditor(spec.contentBefore, {
             props: { iframe: true },
             onMounted: (editable) => {
                 selection = parseMultipleTextualSelection(editable, peerId);
             },
             config: {
-                Plugins: [...defaultPlugins, CollaborationPlugin, ...(spec.Plugins || [])],
+                includePlugins: [CollaborationPlugin, ...(spec.includePlugins || [])],
                 collaboration: { peerId },
                 resources: {
                     ...spec.resources,

@@ -1,5 +1,4 @@
 import { Plugin } from "@html_editor/plugin";
-import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { expect, test } from "@odoo/hoot";
 import { setupEditor } from "../_helpers/editor";
 import { press } from "@odoo/hoot-dom";
@@ -14,7 +13,7 @@ test("shortcut plugin allow registering shortcuts", async () => {
         };
     }
     await setupEditor(`<p>test[]</p>`, {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
     });
 
     expect(count).toBe(0);
@@ -35,7 +34,7 @@ test("shortcut plugin allow registering shortcuts in iframe", async () => {
         };
     }
     await setupEditor(`<p>test[]</p>`, {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
         props: { iframe: true },
     });
 

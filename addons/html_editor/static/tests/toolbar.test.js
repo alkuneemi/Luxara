@@ -39,7 +39,6 @@ import {
 import { range } from "@web/core/utils/numbers";
 import { fontSizeItems } from "../src/main/font/font_size_plugin";
 import { Plugin } from "../src/plugin";
-import { MAIN_PLUGINS } from "../src/plugin_sets";
 import { convertNumericToUnit, getCSSVariableValue, getHtmlStyle } from "../src/utils/formatting";
 import { setupEditor } from "./_helpers/editor";
 import { unformat } from "./_helpers/format";
@@ -1108,7 +1107,7 @@ test("toolbar correctly show namespace button group and stop showing when namesp
         };
     }
     const { el } = await setupEditor("<div>[<section><p>abc</p></section><div>d]ef</div></div>", {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
     });
     await expectElementCount(".o-we-toolbar .btn-group[name='test_group']", 1);
     setContent(el, "<div><section><p>[abc]</p></section><div>def</div></div>");
@@ -1145,7 +1144,7 @@ test("toolbar does not evaluate isActive when namespace does not match", async (
         </div>
     `,
         {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         }
     );
     await waitFor(".o-we-toolbar");
@@ -1203,7 +1202,7 @@ describe("compact toolbar", () => {
         }
         patchToUseOnlyTestButtons();
         await setupEditor("<p>[test]</p>", {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         await waitFor(".o-we-toolbar");
         expect(".o-we-toolbar").toHaveAttribute("data-namespace", "expanded");
@@ -1224,7 +1223,7 @@ describe("compact toolbar", () => {
         }
         patchToUseOnlyTestButtons();
         await setupEditor("<p>[test]</p>", {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         await waitFor(".o-we-toolbar");
         expect(".o-we-toolbar").toHaveAttribute("data-namespace", "compact");
@@ -1245,7 +1244,7 @@ describe("compact toolbar", () => {
         }
         patchToUseOnlyTestButtons();
         await setupEditor("<p>[test]</p>", {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         await waitFor(".o-we-toolbar");
         expect(".o-we-toolbar").toHaveAttribute("data-namespace", "expanded");
@@ -1267,7 +1266,7 @@ describe("compact toolbar", () => {
         }
         patchToUseOnlyTestButtons();
         await setupEditor("<p>[test]</p>", {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         await waitFor(".o-we-toolbar");
         expect(".o-we-toolbar").toHaveAttribute("data-namespace", "compact");
@@ -1310,7 +1309,7 @@ test("toolbar items without namespace default to 'expanded'", async () => {
         };
     }
     await setupEditor("<p>[test]</p>", {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
     });
     await waitFor(".o-we-toolbar");
     // Test button in not present in compact toolbar
@@ -1367,7 +1366,7 @@ test("plugins can create buttons with text in toolbar", async () => {
         };
     }
     await setupEditor(`<div> <p class="foo">[Foo]</p> </div>`, {
-        config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+        config: { includePlugins: [TestPlugin] },
     });
     await expandToolbar();
     expect("button[name='test_btn']").toHaveText("Text button");
