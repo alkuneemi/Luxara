@@ -2662,8 +2662,8 @@ class SaleOrder(models.Model):
         :param int product_id: The product, as a `product.product` id.
         :param int quantity: The quantity selected in the catalog.
         :param int section_id: The id of section selected in the catalog.
+        :param int uom_id: The UoM selected in the catalog, as a `uom.uom` id.
         :return: The unit price of the product, based on the pricelist of the sale order and the
-                 quantity selected.
         :rtype: float
         """
         request.update_context(catalog_skip_tracking=True)
@@ -2673,6 +2673,8 @@ class SaleOrder(models.Model):
             )
         )
         if sol:
+            if uom and sol.product_uom_id != uom:
+                sol.product_uom_id = uom.id
             if quantity != 0:
                 sol.product_uom_qty = quantity
             elif self.state in ["draft", "sent"]:
