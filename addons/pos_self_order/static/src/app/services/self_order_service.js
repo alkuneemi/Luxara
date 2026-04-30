@@ -551,6 +551,7 @@ export class SelfOrder extends Reactive {
             : this.currentOrder;
 
         const orderData = order.getOrderData();
+        order.last_order_preparation_change = { lines: {} };
         const changes = changesToOrder(order, this.config.preparationCategories);
         let printed = false;
         for (const printer of this.kitchenPrinters) {

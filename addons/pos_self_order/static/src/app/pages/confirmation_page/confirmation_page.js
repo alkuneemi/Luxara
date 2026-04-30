@@ -30,13 +30,16 @@ export class ConfirmationPage extends Component {
         });
         useEffect(
             () => {
-                if (!this.confirmedOrder || typeof this.confirmedOrder.id !== "number") {
+                if (
+                    !this.confirmedOrder?.uiState?.receiptReady ||
+                    typeof this.confirmedOrder.id !== "number"
+                ) {
                     return;
                 }
 
                 this.printOrder();
             },
-            () => [this.confirmedOrder?.id, this.confirmedOrder?.uiState?.receiptReady]
+            () => [this.confirmedOrder?.uiState?.receiptReady]
         );
         onWillUnmount(() => {
             clearTimeout(this.defaultTimeout);
