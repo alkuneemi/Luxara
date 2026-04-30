@@ -68,7 +68,9 @@ export class Chrome extends Component {
     }
 
     getCustomerDisplayExtraData(pos, routerState) {
-        return {};
+        return {
+            displayTheme: pos.colorScheme,
+        };
     }
 
     // GETTERS //

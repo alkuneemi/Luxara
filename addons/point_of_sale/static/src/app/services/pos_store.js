@@ -43,6 +43,7 @@ import { initLNA } from "../utils/init_lna";
 import { accountTaxHelpers } from "@account/helpers/account_tax";
 import { SnoozedProductTracker } from "@point_of_sale/app/models/utils/snooze_tracker";
 import { Domain } from "@web/core/domain";
+import { cookie } from "@web/core/browser/cookie";
 
 const { DateTime } = luxon;
 export const CONSOLE_COLOR = "#F5B427";
@@ -173,6 +174,10 @@ export class PosStore extends WithLazyGetterTrap {
         });
 
         this.handleQRPaymentLines();
+    }
+
+    get colorScheme() {
+        return cookie.get("pos_color_scheme") || "light";
     }
 
     handleQRPaymentLines() {
@@ -313,6 +318,14 @@ export class PosStore extends WithLazyGetterTrap {
                     this.router.state.current === "LoginScreen" && this.navigate("SaverScreen"),
             },
         ];
+    }
+
+    get customerDisplayPath() {
+        if (!localStorage.getItem("device_uuid")) {
+            localStorage.setItem("device_uuid", uuidv4());
+        }
+        const deviceUuid = localStorage.getItem("device_uuid");
+        return `/pos_customer_display/${this.config.id}/${deviceUuid}?theme=${this.colorScheme}`;
     }
 
     async reloadData(fullReload = false) {
