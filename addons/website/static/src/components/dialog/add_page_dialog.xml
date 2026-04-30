@@ -54,20 +54,34 @@
                 To add your page to this category, open the page properties: "Site -&gt; Properties".<br/>
                 Then enable the "Is a Template" option.
             </div>
-            <t t-foreach="[...this.columns.entries()]" t-as="column" t-key="column[0]">
-                <div class="col-lg-3 col-12">
-                    <t t-foreach="[...column[1].entries()]" t-as="template" t-key="template[0]">
+            <t t-if="this.props.singleColumn">
+                <div class="col-12">
+                    <t t-foreach="[...this.props.templates.entries()]" t-as="template" t-key="template[0]">
                         <AddPageTemplateBlank t-if="template[1].isBlank" firstRow="template_first" onPageKeydown="this.onPageKeydown"/>
                         <AddPageTemplatePreview t-else="" template="template[1]" firstRow="template_first"
-                            animationDelay="(column_index * 500) + (template_index * 350)"
+                            animationDelay="template_index * 350"
                             isCustom="this.props.isCustom"
                             onPageKeydown="this.onPageKeydown"
                         />
                     </t>
-                    <t t-if="column[1].length === 0">
-                        <div class="o_page_template position-relative"/>
-                    </t>
                 </div>
+            </t>
+            <t t-else="">
+                <t t-foreach="[...this.columns.entries()]" t-as="column" t-key="column[0]">
+                    <div class="col-lg-3 col-12">
+                        <t t-foreach="[...column[1].entries()]" t-as="template" t-key="template[0]">
+                            <AddPageTemplateBlank t-if="template[1].isBlank" firstRow="template_first" onPageKeydown="this.onPageKeydown"/>
+                            <AddPageTemplatePreview t-else="" template="template[1]" firstRow="template_first"
+                                animationDelay="(column_index * 500) + (template_index * 350)"
+                                isCustom="this.props.isCustom"
+                                onPageKeydown="this.onPageKeydown"
+                            />
+                        </t>
+                        <t t-if="column[1].length === 0">
+                            <div class="o_page_template position-relative"/>
+                        </t>
+                    </div>
+                </t>
             </t>
         </div>
     </div>
@@ -75,8 +89,51 @@
 
 <t t-name="website.AddPageTemplates">
     <div class="overflow-hidden w-100" t-att-class="{o_loading: this.state.loading}">
+
+        <!-- Mobile step 1: category list -->
+        <div class="d-flex d-md-none flex-column h-100" t-if="!this.state.mobileSelectedPageId">
+            <div class="list-group list-group-flush overflow-y-auto flex-grow-1">
+                <button type="button"
+                    class="list-group-item list-group-item-action p-3 fw-bold"
+                    t-on-click="() => this.addBlankPage()">
+                    <i class="oi oi-plus me-2"/>Add Blank
+                </button>
+                <t t-foreach="this.state.pages" t-as="page" t-key="page.id">
+                    <button
+                        class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between"
+                        t-att-disabled="page.isPreloading ? true : undefined"
+                        t-on-click="() => this.onMobileCategoryClick(page.id)">
+                        <span>
+                            <span t-if="page.isPreloading" class="fa fa-spin fa-circle-o-notch me-1"/>
+                            <t t-out="page.title"/>
+                        </span>
+                        <i class="fa fa-chevron-right text-muted small"/>
+                    </button>
+                </t>
+            </div>
+        </div>
+
+        <!-- Mobile step 2: templates with back button -->
+        <div class="d-flex d-md-none flex-column h-100" t-if="this.state.mobileSelectedPageId">
+            <div class="border-bottom px-2 py-1">
+                <button type="button"
+                    class="btn btn-link text-decoration-none fw-bold text-uppercase ps-0"
+                    t-on-click="() => this.onMobileBack()">
+                    <i class="fa fa-chevron-left me-1"/>Back
+                </button>
+            </div>
+            <div class="overflow-y-scroll flex-grow-1 bg-200">
+                <AddPageTemplatePreviews t-if="this.selectedMobilePage"
+                    templates="this.selectedMobilePage.props.templates"
+                    isCustom="this.selectedMobilePage.props.is_custom"
+                    singleColumn="true"
+                />
+            </div>
+        </div>
+
+        <!-- Desktop layout (hidden on mobile) -->
         <!-- Do not rely on Notebook to avoid pages from needing reload -->
-        <div class="d-flex w-100 h-100 vertical flex-row">
+        <div class="d-none d-md-flex w-100 h-100 vertical flex-row">
             <aside class="border-end overflow-auto d-flex flex-column">
                 <button type="button"
                     class="btn btn-secondary p-3"

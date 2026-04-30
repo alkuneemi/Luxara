@@ -306,6 +306,10 @@ class AddPageTemplatePreviews extends Component {
             type: Array,
             element: Object,
         },
+        singleColumn: {
+            type: Boolean,
+            optional: true,
+        },
     };
     static components = {
         AddPageTemplateBlank,
@@ -362,6 +366,7 @@ class AddPageTemplates extends Component {
                 },
             ],
             activePageId: "loading",
+            mobileSelectedPageId: null,
         });
         this.pages = undefined;
 
@@ -423,6 +428,20 @@ class AddPageTemplates extends Component {
 
     addBlankPage() {
         this.env.addPage();
+    }
+
+    get selectedMobilePage() {
+        return this.state.pages.find((p) => p.id === this.state.mobileSelectedPageId);
+    }
+
+    onMobileCategoryClick(id) {
+        this.state.mobileSelectedPageId = id;
+        const tabEl = this.tabsRef.el?.querySelector(`[data-id="${id}"]`);
+        this.props.onTemplatePageChanged(tabEl?.textContent?.trim() || "");
+    }
+
+    onMobileBack() {
+        this.state.mobileSelectedPageId = null;
     }
 
     onTabListBtnKeydown(ev) {
