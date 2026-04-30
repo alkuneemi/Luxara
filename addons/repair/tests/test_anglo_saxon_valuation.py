@@ -83,3 +83,77 @@ class TestAngloSaxonValuation(ValuationReconciliationTestCommon):
             {'debit': 0, 'credit': 10, 'account_id': self.company_data['default_account_stock_out'].id},
             {'debit': 10, 'credit': 0, 'account_id': self.company_data['default_account_expense'].id},
         ])
+
+
+@tagged('post_install', '-at_install')
+class TestAngloSaxonValuationNoSkip(ValuationReconciliationTestCommon):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.env.user.company_id.anglo_saxon_accounting = True
+
+        cls.fifo_product = cls.env['product.product'].create({
+            'name': 'product',
+            'is_storable': True,
+            'categ_id': cls.stock_account_product_categ.id,
+        })
+
+        cls.basic_accountman = cls.env['res.users'].create({
+            'name': 'Basic Accountman',
+            'login': 'basic_accountman',
+            'password': 'basic_accountman',
+            'group_ids': [(6, 0, cls.env.ref('account.group_account_invoice').ids)],
+        })
+
+    def test_ro_invoice_double_valuation(self):
+        """This test make sure that the valuation entry for a repair is created only once.
+           It could happen if the repair order was already creating the valuation, then the sale order would also create it
+           when invoiced"""
+
+        self.fifo_product.standard_price = 100
+        self.fifo_product.taxes_id = False
+
+        warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        self.env['stock.quant']._update_available_quantity(self.fifo_product, warehouse.lot_stock_id, 5)
+
+        self.account_inventory = self.env['account.account'].create({
+            'name': 'Inventory Account',
+            'code': '100101',
+            'account_type': 'asset_current',
+        })
+        inventory_locations = self.env['stock.location'].search([('usage', '=', 'internal'), ('company_id', '=', self.company.id)])
+        inventory_locations.valuation_account_id = self.account_inventory.id
+
+        ro = self.env['repair.order'].create({
+            'product_id': self.product_a.id,
+            'partner_id': self.partner_a.id,
+            'move_ids': [(0, 0, {
+                'repair_line_type': 'add',
+                'product_id': self.fifo_product.id,
+                'product_uom_qty': 1,
+            })],
+        })
+        ro.action_validate()
+        ro.action_repair_start()
+        ro.action_repair_end()
+
+        ro.sudo().action_create_sale_order()
+        so = ro.sale_order_id
+        so.sudo().action_confirm()
+        self.assertEqual(so.order_line.qty_to_invoice, 1)
+
+        invoice = so._create_invoices()
+        self.env.invalidate_all()
+        self.env.flush_all()
+        invoice.with_user(self.basic_accountman).action_post()
+
+        self.assertRecordValues(invoice.line_ids, [
+            {'debit': 0.0, 'credit': 1.0, 'account_id': self.company_data['default_account_revenue'].id},
+            {'debit': 1.0, 'credit': 0.0, 'account_id': self.company_data['default_account_receivable'].id},
+        ])
+        self.assertRecordValues(ro.move_ids.account_move_id.line_ids, [
+            {'debit': 0.0, 'credit': 100.0, 'account_id': self.account_inventory.id},
+            {'debit': 100.0, 'credit': 0.0, 'account_id': self.company_data['default_account_stock_valuation'].id},
+        ])
