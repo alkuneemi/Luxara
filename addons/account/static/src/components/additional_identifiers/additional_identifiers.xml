@@ -36,12 +36,22 @@
                     </label>
                 </div>
                 <div class="o_cell o_wrap_input">
-                    <input type="text"
-                           t-att-id="identifierType"
-                           class="o_input w-50"
-                           t-att-value="identifierValue"
-                           t-att-placeholder="meta ? meta.placeholder : ''"
-                           t-on-change="(ev) => this.onUpdateValue(identifierType, ev)"/>
+                    <t t-if="meta and meta.type === 'selection'">
+                        <SelectMenu
+                            value="identifierValue"
+                            choices="meta.choices"
+                            onSelect="(val) => this.onUpdateValue(identifierType, {target: {value: val}})"
+                            placeholder="'Select a scheme...'"
+                        />
+                    </t>
+                    <t t-else="">
+                        <input type="text"
+                               t-att-id="identifierType"
+                               class="o_input w-50"
+                               t-att-value="identifierValue"
+                               t-att-placeholder="meta ? meta.placeholder : ''"
+                               t-on-change="(ev) => this.onUpdateValue(identifierType, ev)"/>
+                    </t>
                 </div>
             </t>
         </div>

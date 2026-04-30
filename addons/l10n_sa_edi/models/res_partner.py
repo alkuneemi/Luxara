@@ -21,9 +21,9 @@ class ResPartner(models.Model):
         ('IQA', 'Iqama Number'),
         ('PAS', 'Passport ID'),
         ('OTH', 'Other ID')
-    ], default="OTH", string="Identification Scheme", help="Additional Identification Scheme for the Seller/Buyer")
+    ], compute='_compute_l10n_sa_edi_additional_identification_fields', inverse='_inverse_l10n_sa_edi_additional_identification_fields', string="Identification Scheme", help="Additional Identification Scheme for the Seller/Buyer")
 
-    l10n_sa_edi_additional_identification_number = fields.Char("Identification Number (SA)", help="Additional Identification Number for the Seller/Buyer")
+    l10n_sa_edi_additional_identification_number = fields.Char("Identification Number (SA)", compute='_compute_l10n_sa_edi_additional_identification_fields', inverse='_inverse_l10n_sa_edi_additional_identification_fields', help="Additional Identification Number for the Seller/Buyer")
 
     @api.depends('l10n_sa_edi_additional_identification_scheme', 'l10n_sa_edi_additional_identification_number')
     def _compute_is_company(self):
@@ -41,6 +41,17 @@ class ResPartner(models.Model):
         )
         l10n_sa_commercial_partners.is_company = True
         super(ResPartner, self - l10n_sa_commercial_partners)._compute_is_company()
+
+    @api.depends('additional_identifiers')
+    def _compute_l10n_sa_edi_additional_identification_fields(self):
+        for partner in self:
+            partner.l10n_sa_edi_additional_identification_scheme = partner._get_additional_identifier('SA_AIS') or False
+            partner.l10n_sa_edi_additional_identification_number = partner._get_additional_identifier('SA_AIN')
+
+    def _inverse_l10n_sa_edi_additional_identification_fields(self):
+        for partner in self:
+            partner._set_additional_identifier('SA_AIS', partner.l10n_sa_edi_additional_identification_scheme)
+            partner._set_additional_identifier('SA_AIN', partner.l10n_sa_edi_additional_identification_number)
 
     @api.model
     def _commercial_fields(self):

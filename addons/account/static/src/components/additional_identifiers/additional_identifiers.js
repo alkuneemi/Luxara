@@ -7,6 +7,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { debounce } from "@web/core/utils/timing";
 import { useRecordObserver } from "@web/model/relational_model/utils";
+import { SelectMenu } from "@web/core/select_menu/select_menu";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 export class AdditionalIdentifiersCommon extends Component {
@@ -100,6 +101,7 @@ export class AdditionalIdentifiersButton extends AdditionalIdentifiersCommon {
 
 export class AdditionalIdentifiersList extends AdditionalIdentifiersCommon {
     static template = "account.AdditionalIdentifiersList";
+    static components = { SelectMenu };
 
     get sortedIdentifiers() {
         return Object.entries(this.state.identifiers).sort(([keyA, _valA], [keyB, _valB]) => {
@@ -114,7 +116,7 @@ export class AdditionalIdentifiersList extends AdditionalIdentifiersCommon {
     }
 
     onUpdateValue(identifierType, event) {
-        const currentVal = event.target.value.trim();
+        const currentVal = event.target.value ? event.target.value.trim() : "";
         if (currentVal === "") {
             delete this.state.identifiers[identifierType];
         } else {
