@@ -139,12 +139,6 @@ class Website(models.Model):
         selection="_get_product_sort_mapping", required=True, default="website_sequence asc"
     )
 
-    shop_extra_field_ids = fields.One2many(
-        string="E-Commerce Extra Fields",
-        comodel_name="website.sale.extra.field",
-        inverse_name="website_id",
-    )
-
     product_page_container = fields.Selection(
         selection=[("unset", "Unset"), ("regular", "Regular"), ("fluid", "Full-width")],
         default="unset",
@@ -1213,18 +1207,16 @@ class Website(models.Model):
         """
         return json_scriptsafe.dumps(self._prepare_ecommerce_store_markup_data(), indent=2)
 
-    def get_extra_spec_fields_by_category(self):
-        """Return a dict mapping category (or False) to extra fields for this website.
-
-        :return: dict {product.attribute.category}
-        """
-        extra_fields = self.shop_extra_field_ids
-        result = {}
-        for extra_field in extra_fields:
-            key = extra_field.category_id or False
-            result.setdefault(key, self.env["website.sale.extra.field"])
-            result[key] |= extra_field
-        return result
+    def get_extra_specs(self, product_variant, product_template):
+        """Return fields grouped by category and pre-computed values in a single DB query."""
+        all_fields = self.env["website.sale.extra.field"].search([("website_id", "=", self.id)])
+        by_category = {}
+        for extra_field in all_fields:
+            key = extra_field.category_id or self.env["product.attribute.category"]
+            by_category.setdefault(key, self.env["website.sale.extra.field"])
+            by_category[key] |= extra_field
+        values = all_fields._get_values_for_display(product_variant, product_template)
+        return by_category, values
 
     def _get_product_available_qty(self, product, **_kwargs):
         """Give the available quantity of a given product.

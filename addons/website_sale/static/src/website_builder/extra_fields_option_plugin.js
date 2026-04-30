@@ -2,65 +2,26 @@ import { reactive } from "@web/owl2/utils";
 import { BuilderAction } from "@html_builder/core/builder_action";
 import { Plugin } from "@html_editor/plugin";
 import { registry } from "@web/core/registry";
-import { _t } from "@web/core/l10n/translation";
-import { withSequence } from "@html_editor/utils/resource";
 
 class ExtraFieldsPlugin extends Plugin {
     static id = "extraFieldsOption";
-    static dependencies = ["remove"];
     static shared = [
-        "loadExtraFields",
+        "clearLoadedExtraFields",
         "getExtraFields",
         "getCategories",
-        "getCategoryCreateMode",
-        "setCategoryCreateMode",
-        "clearLoadedExtraFields",
+        "loadExtraFields",
     ];
 
-    setup() {
-        this._extraFields = reactive([]);
-        this._categories = reactive([]);
-        this._categoryCreateMode = reactive({ value: false });
-        this._loadedExtraFields = null;
-        this._pendingUnlinkIds = new Set();
-    }
+    _extraFields = reactive([]);
+    _categories = reactive([]);
+    _loadedExtraFields = null;
 
     resources = {
-        builder_actions: { AddExtraFieldAction, CreateCategoryAction },
-
-        has_overlay_options: {
-            editableOnly: false,
-            hasOption: (el) => el.matches("tr[data-extra-field-id]"),
-        },
-
-        get_overlay_buttons: withSequence(10, {
-            editableOnly: false,
-            getButtons: (target) => {
-                if (!target.matches("tr[data-extra-field-id]")) {
-                    return [];
-                }
-                return [{
-                    class: "oe_snippet_remove text-danger fa fa-trash",
-                    title: _t("Remove"),
-                    handler: () => this.dependencies.remove.removeElement(target),
-                }];
-            },
-        }),
-
-        on_will_remove_handlers: (toRemoveEl) => {
-            if (toRemoveEl.matches("tr[data-extra-field-id]")) {
-                const extraFieldId = parseInt(toRemoveEl.dataset.extraFieldId);
-                this._pendingUnlinkIds.add(extraFieldId);
-                const extraFieldIndex = this._extraFields.findIndex((ef) => ef.id === extraFieldId);
-                this._extraFields.splice(extraFieldIndex, 1);
-            }
-        },
-
-        on_will_save_handlers: async () => {
-            if (!this._pendingUnlinkIds.size) return;
-            const idsToRemove = [...this._pendingUnlinkIds];
-            await this.services.orm.unlink("website.sale.extra.field", idsToRemove);
-            this._pendingUnlinkIds.clear();
+        builder_actions: {
+            AddExtraFieldAction,
+            CreateCategoryAction,
+            DeleteExtraFieldAction,
+            ChangeExtraFieldCategoryAction,
         },
     };
 
@@ -68,20 +29,9 @@ class ExtraFieldsPlugin extends Plugin {
         return this._extraFields;
     }
 
-
     getCategories() {
         return this._categories;
     }
-
-    getCategoryCreateMode() {
-        return this._categoryCreateMode;
-    }
-
-    setCategoryCreateMode(value) {
-        this._categoryCreateMode.value = value;
-    }
-
-
 
     async loadExtraFields() {
         if (!this._loadedExtraFields) {
@@ -110,7 +60,6 @@ class ExtraFieldsPlugin extends Plugin {
 
             this._categories.splice(0, this._categories.length, ...categories);
             this._extraFields.splice(0, this._extraFields.length, ...extraFields);
-
             this._loadedExtraFields = { fields: modelFields };
         }
         return this._loadedExtraFields;
@@ -164,9 +113,48 @@ class CreateCategoryAction extends BuilderAction {
         const categories = this.dependencies.extraFieldsOption.getCategories();
         categories.push({ id: newId, name });
 
-        editingElement.dataset.pendingCategoryId = String(newId);
         delete editingElement.dataset.pendingNewCategoryName;
-        this.dependencies.extraFieldsOption.setCategoryCreateMode(false);
+
+        editingElement.__onCategoryCreated?.({ id: newId, name });
+        delete editingElement.__onCategoryCreated;
+
+        this.dependencies.extraFieldsOption.clearLoadedExtraFields();
+    }
+}
+
+class DeleteExtraFieldAction extends BuilderAction {
+    static id = "deleteExtraField";
+    static dependencies = ["extraFieldsOption"];
+
+    setup() {
+        this.reload = {};
+    }
+
+    async apply({ editingElement }) {
+        const extraFieldId = parseInt(editingElement.dataset.extraFieldId);
+        await this.services.orm.unlink("website.sale.extra.field", [extraFieldId]);
+        this.dependencies.extraFieldsOption.clearLoadedExtraFields();
+    }
+}
+
+class ChangeExtraFieldCategoryAction extends BuilderAction {
+    static id = "changeExtraFieldCategory";
+    static dependencies = ["extraFieldsOption"];
+
+    setup() {
+        this.reload = {};
+    }
+
+    async apply({ editingElement }) {
+        const extraFieldId = parseInt(editingElement.dataset.extraFieldId);
+        const categoryId = parseInt(editingElement.dataset.changeExtraFieldCategory) || false;
+        delete editingElement.dataset.changeExtraFieldCategory;
+        await this.services.orm.write(
+            "website.sale.extra.field",
+            [extraFieldId],
+            { category_id: categoryId }
+        );
+        this.dependencies.extraFieldsOption.clearLoadedExtraFields();
     }
 }
 

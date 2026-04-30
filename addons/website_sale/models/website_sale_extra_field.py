@@ -22,3 +22,7 @@ class WebsiteSaleExtraField(models.Model):
     label = fields.Char(related="field_id.field_description")
     name = fields.Char(related="field_id.name")
     category_id = fields.Many2one(comodel_name="product.attribute.category")
+
+    def _get_values_for_display(self, product_variant, product_template):
+        record = product_variant.sudo() if product_variant else product_template.sudo()
+        return {ef: record[ef.name] for ef in self if record[ef.name]}

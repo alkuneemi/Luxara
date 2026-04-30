@@ -5,11 +5,11 @@
 
     <t
         t-set="availableFields"
-        t-value="this.state.fields.filter(f => !this.state.extraFields.some(ef => ef.field_id[0] === f.id))"
+        t-value="this.state.fields.filter(f => !this.sharedState.extraFields.some(ef => ef.field_id[0] === f.id))"
     />
     <t t-set="allFieldsAdded" t-value="availableFields.length === 0"/>
 
-    <BuilderRow label.translate="Field">
+    <BuilderRow label.translate="Add Field">
         <BuilderSelect dataAttributeAction="'pendingFieldId'" preview="false">
             <t t-if="allFieldsAdded">
                 <BuilderSelectItem dataAttributeActionValue="''">
@@ -27,50 +27,33 @@
     <BuilderRow label.translate="Category">
         <BuilderSelect dataAttributeAction="'pendingCategoryId'" preview="false">
             <BuilderSelectItem dataAttributeActionValue="''">Others</BuilderSelectItem>
-            <t t-foreach="this.state.categories" t-as="category" t-key="category.id">
+            <t t-foreach="this.sharedState.categories" t-as="category" t-key="category.id">
                 <BuilderSelectItem dataAttributeActionValue="`${category.id}`">
                     <t t-out="category.name"/>
                 </BuilderSelectItem>
             </t>
         </BuilderSelect>
-        <BuilderButton
-            t-if="!this.state.categoryCreateMode.value"
-            title.translate="Create a new category"
-            className="'fa fa-plus text-success border-0'"
-            style="'background-color: transparent !important;'"
-            preview="false"
-            t-on-click="() => this.state.categoryCreateMode.value = true"
-        />
-        <BuilderButton
-            t-if="this.state.categoryCreateMode.value"
-            title.translate="Cancel"
-            className="'fa fa-times text-danger border-0'"
-            style="'background-color: transparent !important;'"
-            preview="false"
-            t-on-click="() => this.state.categoryCreateMode.value = false"
+        <t
+            t-call="website_sale.CategoryCreateToggle"
+            t-call-context="{
+                categoryCreateMode: this.state.categoryCreateMode,
+                onOpenCreateMode: () => {
+                    this.env.getEditingElement().__onCategoryCreated = this.onCategoryCreated.bind(this);
+                    this.setCategoryCreateMode(true);
+                },
+                onCloseCreateMode: () => this.setCategoryCreateMode(false),
+            }"
         />
     </BuilderRow>
 
-    <t t-if="this.state.categoryCreateMode.value">
-        <BuilderRow label.translate="Name" level="1">
-            <BuilderTextInput
-                dataAttributeAction="'pendingNewCategoryName'"
-                placeholder.translate="Category name..."
-            />
-        </BuilderRow>
-        <BuilderRow label.translate=" ">
-            <BuilderButton
-                action="'createCategory'"
-                preview="false"
-                type="'success'"
-                className="'w-auto'"
-            >
-                + Create Category
-            </BuilderButton>
-        </BuilderRow>
+    <t t-if="this.state.categoryCreateMode">
+        <t
+            t-call="website_sale.CategoryCreateForm"
+            t-call-context="{createActionName: 'createCategory'}"
+        />
     </t>
 
-    <t t-if="!this.state.categoryCreateMode.value">
+    <t t-if="!this.state.categoryCreateMode">
         <BuilderRow label.translate=" ">
             <BuilderButton
                 action="'addExtraField'"
@@ -78,7 +61,7 @@
                 preview="false"
                 type="'success'"
             >
-                + Add Field
+                Confirm
             </BuilderButton>
         </BuilderRow>
         <BuilderRow t-if="allFieldsAdded" label.translate=" ">
@@ -86,6 +69,41 @@
         </BuilderRow>
     </t>
 
+</t>
+
+<t t-name="website_sale.CategoryCreateToggle">
+    <BuilderButton
+        t-if="!categoryCreateMode"
+        title.translate="Create a new category"
+        className="'fa fa-plus text-success border-0'"
+        style="'background-color: transparent !important;'"
+        preview="false"
+        t-on-click="onOpenCreateMode"
+    />
+    <BuilderButton
+        t-if="categoryCreateMode"
+        title.translate="Cancel"
+        className="'fa fa-times text-danger border-0'"
+        style="'background-color: transparent !important;'"
+        preview="false"
+        t-on-click="onCloseCreateMode"
+    />
+</t>
+
+<t t-name="website_sale.CategoryCreateForm">
+    <BuilderRow label.translate="Name" level="1">
+        <BuilderTextInput
+            dataAttributeAction="'pendingNewCategoryName'"
+            placeholder.translate="Category name..."
+        />
+    </BuilderRow>
+    <BuilderRow label.translate=" ">
+        <BuilderButton
+            t-props="{ action: createActionName, preview: false, type: 'success', className: 'w-auto' }"
+        >
+            + Create Category
+        </BuilderButton>
+    </BuilderRow>
 </t>
 
 </templates>
