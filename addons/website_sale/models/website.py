@@ -15,7 +15,7 @@ from odoo.fields import Domain
 from odoo.http import request
 from odoo.tools import BinaryBytes, file_open, ormcache
 from odoo.tools.json import scriptsafe as json_scriptsafe
-from odoo.tools.translate import LazyTranslate, _
+from odoo.tools.translate import LazyTranslate
 
 from odoo.addons.website_sale import const
 
@@ -307,18 +307,18 @@ class Website(models.Model):
     @staticmethod
     def _get_product_sort_mapping():
         return [
-            ("website_sequence asc", _("Featured")),
-            ("publish_date desc", _("Newest Arrivals")),
-            ("name asc", _("Name (A-Z)")),
-            ("list_price asc", _("Price - Low to High")),
-            ("list_price desc", _("Price - High to Low")),
+            ("website_sequence asc", _lt("Featured")),
+            ("publish_date desc", _lt("Newest Arrivals")),
+            ("name asc", _lt("Name (A-Z)")),
+            ("list_price asc", _lt("Price - Low to High")),
+            ("list_price desc", _lt("Price - High to Low")),
         ]
 
     # === BUSINESS METHODS ===#
 
     def get_cta_data(self, website_purpose, website_type):
         cta_data = super().get_cta_data(website_purpose, website_type)
-        cta_data['shop_btn_href'] = '/shop'
+        cta_data["shop_btn_href"] = "/shop"
         return cta_data
 
     @api.model
@@ -903,7 +903,7 @@ class Website(models.Model):
     def get_suggested_controllers(self):
         suggested_controllers = super().get_suggested_controllers()
         suggested_controllers.append((
-            _("eCommerce"),
+            self.env._("eCommerce"),
             self.env["ir.http"]._url_for("/shop"),
             "website_sale",
         ))
@@ -914,7 +914,9 @@ class Website(models.Model):
         if not self.has_ecommerce_access():
             return result
         if search_type in ["products", "product_public_category", "all"]:
-            result.append(self.env["product.public.category"]._search_get_detail(self, order, options))
+            result.append(
+                self.env["product.public.category"]._search_get_detail(self, order, options)
+            )
         if search_type in ["products", "product_template", "all"]:
             result.append(self.env["product.template"]._search_get_detail(self, order, options))
         return result
