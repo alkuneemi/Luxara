@@ -14,6 +14,7 @@ class SaleOrderLine(models.Model):
         readonly=False,
         store=True,
         groups="base.group_user",
+        copy=False,
         precompute=True,
     )
     margin_percent = fields.Float(
@@ -22,6 +23,7 @@ class SaleOrderLine(models.Model):
         readonly=False,
         store=True,
         groups="base.group_user",
+        copy=False,
         precompute=True,
     )
     purchase_price = fields.Float(
@@ -64,17 +66,19 @@ class SaleOrderLine(models.Model):
                 line.margin = line.price_subtotal - (line.purchase_price * line.product_uom_qty)
                 line.margin_percent = line.price_subtotal and line.margin / line.price_subtotal
 
-    @api.onchange('margin')
+    @api.onchange("margin")
     def _onchange_margin(self):
         for line in self:
             if line.qty_delivered and not line.product_uom_qty:
-                line.price_unit = line.margin / line.qty_delivered + line.purchase_price
+                computed_price = line.margin / line.qty_delivered + line.purchase_price
             elif line.product_uom_qty:
-                line.price_unit = line.margin / line.product_uom_qty + line.purchase_price
+                computed_price = line.margin / line.product_uom_qty + line.purchase_price
+            if computed_price:
+                line._set_price_based_on_tax(computed_price)
             line.margin_percent = line.price_unit and 1 - line.purchase_price / line.price_unit
 
-    @api.onchange('margin_percent')
-    def _onchage_margin_percent(self):
+    @api.onchange("margin_percent")
+    def _onchange_margin_percent(self):
         for line in self:
             if line.margin_percent == 1 and line.purchase_price != 0:
                 raise UserError(
@@ -82,12 +86,22 @@ class SaleOrderLine(models.Model):
                 )
             discount = (1 - line.discount / 100) if line.discount else 1
             if line.purchase_price != 0:
-                line.price_unit = (line.purchase_price) / (1 - line.margin_percent) / discount
-                tax_included_prices = line.tax_ids.filtered(lambda tax: tax.price_include)
-                for tax in tax_included_prices:
-                    line.price_unit *= 1 + tax.amount / 100
+                computed_price = (line.purchase_price) / (1 - line.margin_percent) / discount
+                line._set_price_based_on_tax(computed_price)
             line_difference = line.price_unit - line.purchase_price
             if line.qty_delivered and not line.product_uom_qty:
                 line.margin = line_difference * line.qty_delivered
             else:
                 line.margin = line_difference * line.product_uom_qty
+
+    def _set_price_based_on_tax(self, price):
+        """Update the line price based on tax configuration.
+        If any tax on the line is price-included, update `price_total`.
+        Otherwise, update `price_unit`.
+
+        :param float price: The price value to assign.
+        """
+        if any(self.tax_ids.filtered(lambda tax: tax.price_include)):
+            self.price_total = price
+        else:
+            self.price_unit = price
