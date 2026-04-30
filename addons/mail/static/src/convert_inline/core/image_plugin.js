@@ -32,6 +32,12 @@ export class ImagePlugin extends Plugin {
      *
      */
     // TODO EGGMAIL: fontToImg
+
+    // TODO EGGMAIL:
+    // case study: background color + color filter => should apply the same logic as a normal
+    // filter? => if the logic is to create a new attachment. If it uses browser rendering
+    // capabilities, then it won't work
+    // issue: the filter is currently an external div with position: absolute
 }
 
 registry.category("mail-html-conversion-core-plugins").add(ImagePlugin.id, ImagePlugin);

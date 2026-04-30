@@ -3,7 +3,14 @@ import { registry } from "@web/core/registry";
 import { Analysis, ElementIdentity, NodeAnalysis, TextIdentity } from "./node_models";
 
 /**
- * TODO EGGMAIL: proof-read all logic here (need re-review)
+ * This plugin handles 2 conversion phases:
+ * 1) identify semantic grouping boundaries
+ * // a) discard pass to remove irrelevant nodes
+ * // b) absorption pass to eliminate containers overlapping their content (no visual value)
+ * // c) add synthetic nodes pass to group some content inside a container that is implied by css only
+ * 2) propagate constraints from these groupings to annotate them:
+ * // a) bottom up analysis (descendants propagate constraints and information to their ancestors)
+ * // b) top down analysis (ancestors propagate constraints and information to their descendants)
  */
 export class AnalysisPlugin extends Plugin {
     static id = "analysis";
@@ -56,58 +63,10 @@ export class AnalysisPlugin extends Plugin {
         } while ((node = treeWalker.nextNode()));
     }
 
-    /**
-     * Order of operations:
-     * - hybrid fluid synthetic nodes creation
-     * - treewalking + reverse treewalking
-     * - conversion phase => build more specialized blocks/wrap them with MSO entities, etc
-     * - render phase should be pretty straightforward from the conversion phase models
-     */
-
-    // heuristics suggestion: methodically choose what information is relevant for each semantic node
-    // and normalize it in a way that other plugins can use. (not easy because longhand/shorthand stuff in css)
-    // discard other specifics (they are still available on the nodeInfo)
-    // maybe store tag, styleInfo, attributes and classNames on nodeInfo? to determine
-
-    /**
-     * pass 2 = identify semantic/grouping boundaries
-     * pass 3 = analyze those boundaries
-     * pass 4 = lower them into email-specific concrete structures
-     */
-
-    // 2 A) analysis phase
-    // 2 // 0) discard phase (reference treewalk)
-    // 2 // 1) absorption phase (reference treewalk) + create analysis tree
-    // 2 // 1.5) synthetic wrappers phase (filtered treewalk-y loop on analysis tree)
-    // 3 // 2) bottom up analysis (analysis reversed treewalk) + context (register and propagate concerns from different plugins)
-    // 3 // 3) top down analysis (analysis treewalk) + context (register and propagate concerns from different plugins)
-    // 4 B) conversion phase (analysis treewalk) + create render tree (meet constraint requests)
-    // C) render phase (render treewalk)
-
-    // 1) split "discard" concern from "applyStrategy" concern.
-    // -- evaluate discard for every node preemptively, and create the set of rejected nodes.
-
-    // probleme: how can I share responsibility here? -> have to avoid any concern that is not "always true"
-    // => maybe it's best not to delegate absorption concern, then each plugin can provide the opinion to
-    // proceed with absorption or prevent it, node per node?
-    // then, default for 1 child is absorption, and "evaluate identity" should deny absorption
     // -- multiple objectives:
     // -- -- deny absorption by parent (if parent allows it)
     // -- -- deny future children absorption (without considering children identities)
     // -- -- provide useful identity info (styleInfo selection, attributes, etc)
-
-    // 2) always evaluate discard one step ahead, so that I know which nodes are actually there
-    // -- b) inside loop, the node is never discarded
-    // -- -- 1) evaluate identity
-    // -- -- -- a) if parent exists and is absorbing and identity allows absorption (no deny) -> merge
-    // -- -- -- b) else -> create new NodeAnalysis with this identity
-    // -- -- -- -- PROBLEM: how do I create a "CELL" identity from a subset of inline children in a "ROW"?
-    // -- -- -- -- SOLUTION: add a grouping pass on some identities that requested it (eg columnsCandidate (row))
-    // -- -- -- -- that grouping pass then occurs on the already existing AnalysisTree and can Insert NodeAnalysis that are not related to an existing node
-    // -- -- 2) evaluate discard for every child of the current node from the rejected set
-    // -- -- -- a) if 1 child and identity (of the "parent") allows it, mark NodeAnalysis as "absorbing"
-    // -- -- -- b) else -> remove absorbing (never absorb multiple references into one NodeAnalysis, because
-    // -- -- -- -- that would mean multiple "children" positions, more difficult to handle tree navigation)
     buildNodeAnalysis(node, parentNodeAnalysis) {
         const nodeInfo = this.getNodeInfo(node);
         let childNodes, nodeAnalysis;
@@ -169,12 +128,11 @@ export class AnalysisPlugin extends Plugin {
      * phase
      */
     addSyntheticNodeAnalysis() {
-        // TODO EGGMAIL: what if a nodeAnalysis processed later
-        // was removed from the tree by a prior nodeAnalysis? =>
-        // should not happen as the only removed node should be the one requesting
-        // the analysis, all other nodes should still exist in the tree
         for (const nodeAnalysis of [...this.needSyntheticNodeAnalysis]) {
             this.needSyntheticNodeAnalysis.delete(nodeAnalysis);
+            // IMPORTANT: if nodeAnalysis is replaced/removed, all of its children
+            // should be given a new parent, this is not a phase where nodes
+            // can be discarded.
             this.processThrough("synthetic_node_analysis_processors", nodeAnalysis);
         }
     }
