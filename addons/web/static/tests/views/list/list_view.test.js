@@ -20736,3 +20736,119 @@ test(`Grouped list: count and pager behavior - mobile`, async () => {
     expect(`.o_group_header:eq(1) th:eq(-1) .btn-group`).toBeVisible();
     expect(`.o_group_header:eq(1) th:eq(-1) .o_pager_counter`).toHaveCount(0);
 });
+
+test.tags("desktop");
+test("save filter with optional field, untoggle, and reapply", async () => {
+    // Intercept the RPC call to prevent the missing 'ir.filters' model error
+    onRpc("create_filter", () => [99]);
+
+    await mountView({
+        type: "list",
+        resModel: "foo",
+        arch: `
+            <list>
+                <field name="foo"/>
+                <field name="bar" optional="hide"/>
+            </list>`,
+    });
+
+    expect("th[data-name='bar']").toHaveCount(0);
+
+    await contains("table .o_optional_columns_dropdown .dropdown-toggle").click();
+    await contains(".o-dropdown--menu span.dropdown-item:eq(0)").click();
+
+    expect("th[data-name='bar']").toHaveCount(1);
+
+    await toggleSearchBarMenu();
+    await toggleSaveFavorite();
+    await editFavoriteName("My favorite");
+    await saveFavorite();
+
+    await removeFacet("My favorite");
+
+    await contains("table .o_optional_columns_dropdown .dropdown-toggle").click();
+    await contains(".o-dropdown--menu span.dropdown-item:eq(0)").click();
+
+    expect("th[data-name='bar']").toHaveCount(0);
+
+    await toggleSearchBarMenu();
+    await toggleMenuItem("My favorite");
+
+    expect("th[data-name='bar']").toHaveCount(1);
+});
+
+test.tags("desktop");
+test("apply a filter with optional_show property", async () => {
+    // Use an in-memory store so getItem correctly returns what setItem saves
+    let localStore = {};
+    patchWithCleanup(localStorage, {
+        getItem(key) {
+            return key in localStore ? localStore[key] : null;
+        },
+        setItem(key, value) {
+            localStore[key] = String(value);
+            if (key.startsWith("optional_fields")) {
+                expect.step(`localStorage set: ${value}`);
+            }
+        },
+        removeItem(key) {
+            delete localStore[key];
+        },
+        clear() {
+            localStore = {};
+        },
+    });
+
+    await mountView({
+        type: "list",
+        resModel: "foo",
+        arch: `
+            <list>
+                <field name="foo"/>
+                <field name="bar" optional="hide"/>
+            </list>`,
+        searchViewArch: `
+            <search>
+                <filter name="my_filter" string="My Filter" domain="[]" context="{'optional_show': ['bar']}"/>
+            </search>`,
+    });
+
+    expect("th[data-name='bar']").toHaveCount(0);
+
+    await toggleSearchBarMenu();
+    await toggleMenuItem("My Filter");
+    await animationFrame();
+
+    expect("th[data-name='bar']").toHaveCount(1);
+    expect.verifySteps(["localStorage set: bar"]);
+
+    await removeFacet("My Filter");
+    await animationFrame();
+
+    expect("th[data-name='bar']").toHaveCount(1);
+});
+
+test.tags("desktop");
+test("apply a filter with optional_show property containing an unknown field", async () => {
+    await mountView({
+        type: "list",
+        resModel: "foo",
+        arch: `
+            <list>
+                <field name="foo"/>
+                <field name="bar" optional="hide"/>
+            </list>`,
+        searchViewArch: `
+            <search>
+                <filter name="my_filter" string="My Filter" domain="[]" context="{'optional_show': ['unknown_field', 'bar']}"/>
+            </search>`,
+    });
+
+    await toggleSearchBarMenu();
+    await toggleMenuItem("My Filter");
+    await animationFrame();
+
+    expect(".o_list_table").toHaveCount(1);
+    expect("th[data-name='bar']").toHaveCount(1);
+    expect("th[data-name='unknown_field']").toHaveCount(0);
+});
