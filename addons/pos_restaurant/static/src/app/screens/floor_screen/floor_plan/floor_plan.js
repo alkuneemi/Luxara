@@ -1,4 +1,4 @@
-import { useExternalListener, useLayoutEffect } from "@web/owl2/utils";
+import { useExternalListener, useLayoutEffect, useState } from "@web/owl2/utils";
 import { FloorPlanBase } from "@pos_restaurant/app/screens/floor_screen/floor_plan_base";
 import { markRaw, onWillUnmount } from "@odoo/owl";
 import { useDebounced } from "@web/core/utils/timing";
@@ -9,6 +9,7 @@ import { useService } from "@web/core/utils/hooks";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 
 const TABLE_LINKING_DELAY = 400;
+const TIMER_INTERVAL = 60000;
 
 export class FloorPlan extends FloorPlanBase {
     static template = "pos_restaurant.floor_plan";
@@ -22,6 +23,10 @@ export class FloorPlan extends FloorPlanBase {
         this.ui = useService("ui");
         useExternalListener(window, "resize", useDebounced(this.handleWindowResize, 100));
         this.scrollFloorId = null;
+
+        this.state = useState({ tableTimer: {} });
+        this._updateTimer();
+        const timerInterval = setInterval(() => this._updateTimer(), TIMER_INTERVAL);
         useLayoutEffect(
             (selectedFloor, isKanban) => {
                 this.onFloorChange(selectedFloor, isKanban);
@@ -31,7 +36,27 @@ export class FloorPlan extends FloorPlanBase {
         this.initTableLinkDND();
         onWillUnmount(() => {
             this.saveScrollPosition();
+            clearInterval(timerInterval);
         });
+    }
+
+    getTableTimerStart(table) {
+        const order = this.pos.getActiveOrdersOnTable(table)?.[0];
+        return order?.create_date ? order.create_date.toJSDate() : null;
+    }
+
+    getTimerClasses(table) {
+        return "text-bg-light bg-opacity-50";
+    }
+
+    _updateTimer() {
+        const tables = this.floorPlanStore.getFloorTables();
+        const now = new Date();
+        for (const table of tables) {
+            const start = this.getTableTimerStart(table.record);
+            this.state.tableTimer[table.id] =
+                this.floorPlanStore.formatDuration(start, now) || false;
+        }
     }
 
     onFloorChange(selectedFloor, isKanban) {
