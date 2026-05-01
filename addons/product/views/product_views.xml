@@ -182,13 +182,18 @@
                         <page string="Sales" name="sales" invisible="1 or not sale_ok">
                             <group name="sale" class="o_label_nowrap">
                                 <group string="Upsell &amp; Cross-Sell" name="upsell" invisible="product_variant_count != 1">
-                                    <field
-                                        name="uom_ids"
-                                        widget="many2many_uom_tags"
-                                        options="{'no_quick_create': True, 'on_tag_click': 'open_form'}"
-                                        groups="uom.group_uom"
-                                        force_save="1"
-                                        context="{'product_id': product_variant_id if product_variant_count == 1 else False, 'product_ids': product_variant_ids, 'show_variant_name': product_variant_count > 1}"/>
+                                    <label for="uom_ids"/>
+                                    <div>
+                                        <field
+                                            name="uom_ids"
+                                            widget="many2many_uom_tags"
+                                            options="{'no_quick_create': True, 'on_tag_click': 'open_form'}"
+                                            groups="uom.group_uom"
+                                            force_save="1"
+                                            context="{'product_id': product_variant_id if product_variant_count == 1 else False, 'default_product_id': product_variant_id, 'product_ids': product_variant_ids, 'show_variant_name': product_variant_count > 1}"/>
+                                        <button string="Barcodes" name="%(product_uom_action_view_list)d" type="action" icon="oi-arrow-right" context="{'default_product_id': product_variant_id,  'product_ids': product_variant_ids, 'uom_ids': uom_ids, 'no_create': True}"
+                                            class="btn btn-link pt-0" invisible="type != 'consu' or not uom_ids"/>
+                                    </div>
                                 </group>
                                 <group string="Short Description" name="description">
                                     <field colspan="2" name="description_sale" nolabel="1" placeholder="This note is added to sales orders and invoices."/>
@@ -473,7 +478,7 @@
                         readonly="1"
                         sum="Total Forecasted"
                     />
-                    <field name="uom_id" groups="uom.group_uom" optional="show" readonly="1"/>
+                    <field name="uom_id" groups="uom.group_uom" optional="show" readonly="1" options="{'no_open': True}"/>
                     <field
                         name="extra_uom_ids"
                         widget="many2many_uom_tags"
@@ -572,6 +577,9 @@
                         invisible="product_variant_count == 1"
                     />
                 </field>
+                <label for="uom_ids" position="replace">
+                    <label for="extra_uom_ids"/>
+                </label>
                 <field name="uom_ids" position="replace">
                 <field
                     name="extra_uom_ids"
@@ -582,6 +590,10 @@
                     context="{'product_id': id}"
                 />
                 </field>
+                <button name="%(product_uom_action_view_list)d" position="attributes">
+                    <attribute name="invisible">type != 'consu' or (not uom_ids and not extra_uom_ids)</attribute>
+                    <attribute name="context">{'create': True, 'default_product_id': id, 'uom_ids': extra_uom_ids, 'product_ids': [id]}</attribute>
+                </button>
             </field>
         </record>
 
