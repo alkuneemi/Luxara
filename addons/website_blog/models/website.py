@@ -12,6 +12,15 @@ class Website(models.Model):
         suggested_controllers.append((_('Blog'), self.env['ir.http']._url_for('/blog'), 'website_blog'))
         return suggested_controllers
 
+    def get_cta_candidates(self, website_purpose, website_type):
+        candidates = super().get_cta_candidates(website_purpose, website_type)
+        if website_purpose == 'inform_customers' and website_type == 'blog':
+            candidates.append((60, {
+                'cta_btn_text': _('Read Blog'),
+                'cta_btn_href': '/blog',
+            }))
+        return candidates
+
     def configurator_set_menu_links(self, menu_company, module_data):
         blogs = module_data.get('#blog', [])
         for idx, blog in enumerate(blogs):

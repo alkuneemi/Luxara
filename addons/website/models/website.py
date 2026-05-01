@@ -488,7 +488,37 @@ class Website(models.CachedModel):
         return self._api_rpc(route, params, 'website.olg_api_endpoint', DEFAULT_OLG_ENDPOINT, timeout=45)
 
     def get_cta_data(self, website_purpose, website_type):
-        return {'cta_btn_text': False, 'cta_btn_href': '/contactus', 'shop_btn_href': '#'}
+        """Resolve CTA button data using a priority-based approach.
+
+        Each installed module contributes CTA candidates via
+        `get_cta_candidates()`. The candidate with the highest priority wins.
+        """
+        candidates = self.get_cta_candidates(website_purpose, website_type)
+        # candidates.sort(key=lambda c: c[0], reverse=True)
+
+        if candidates:
+            # cta = candidates[0][1]
+            cta = max(candidates, key=lambda c: c[0])[1]
+        else:
+            cta = {'cta_btn_text': False, 'cta_btn_href': '/contactus'}
+        cta['shop_btn_href'] = '#'
+        return cta
+
+    def get_cta_candidates(self, website_purpose, website_type):
+        """Return a list of (priority, cta_dict) tuples."""
+        candidates = []
+        if website_purpose == 'develop_brand' and website_type == 'business':
+            candidates.append((0, {
+                'cta_btn_text': _('Contact Us'),
+                'cta_btn_href': '/contactus',
+            }))
+        # POS override (priority 100) — no bridge module exists
+        if 'pos_restaurant_appointment' in self.env['ir.module.module']._installed():
+            candidates.append((100, {
+                'cta_btn_text': self.env._('Book a Table'),
+                'cta_btn_href': '/appointment',
+            }))
+        return candidates
 
     def _get_snippet_defaults(self, snippet):
         """Retrieve the default configuration for a given dynamic snippet."""
@@ -751,41 +781,6 @@ class Website(models.CachedModel):
                     {f'o-color-{i}': color for i, color in enumerate(selected_palette, 1)}
                 )
 
-        # Update CTA
-        cta_data = website.get_cta_data(kwargs.get('website_purpose'), kwargs.get('website_type'))
-        if cta_data['cta_btn_text']:
-            xpath_view = 'website.snippets'
-            parent_view = self.env['website'].with_context(website_id=website.id).viewref(xpath_view)
-            self.env['ir.ui.view'].create({
-                'name': parent_view.key + ' CTA',
-                'key': parent_view.key + "_cta",
-                'inherit_id': parent_view.id,
-                'website_id': website.id,
-                'type': 'qweb',
-                'priority': 32,
-                'arch_db': """
-                    <data>
-                        <xpath expr="//t[@t-set='cta_btn_href']" position="replace">
-                            <t t-set="cta_btn_href">%s</t>
-                        </xpath>
-                        <xpath expr="//t[@t-set='cta_btn_text']" position="replace">
-                            <t t-set="cta_btn_text">%s</t>
-                        </xpath>
-                    </data>
-                """ % (cta_data['cta_btn_href'], cta_data['cta_btn_text'])
-            })
-            try:
-                view_id = self.env['website'].viewref('website.header_call_to_action')
-                if view_id:
-                    el = etree.fromstring(view_id.arch_db)
-                    btn_cta_el = el.xpath("//a[hasclass('btn_cta')]")
-                    if btn_cta_el:
-                        btn_cta_el[0].attrib['href'] = cta_data['cta_btn_href']
-                        btn_cta_el[0].text = cta_data['cta_btn_text']
-                    view_id.with_context(website_id=website.id).write({'arch_db': etree.tostring(el)})
-            except ValueError as e:
-                logger.warning(e)
-
         # Configure the features
         features = self.env['website.configurator.feature'].browse(kwargs.get('selected_features'))
 
@@ -840,6 +835,41 @@ class Website(models.CachedModel):
         # some new module and we need the overrides of these new menus e.g. for
         # the call to `get_cta_data`.
         website = self.env['website'].browse(website.id)
+
+        # Update CTA
+        cta_data = website.get_cta_data(kwargs.get('website_purpose'), kwargs.get('website_type'))
+        if cta_data['cta_btn_text']:
+            xpath_view = 'website.snippets'
+            parent_view = self.env['website'].with_context(website_id=website.id).viewref(xpath_view)
+            self.env['ir.ui.view'].create({
+                'name': parent_view.key + ' CTA',
+                'key': parent_view.key + "_cta",
+                'inherit_id': parent_view.id,
+                'website_id': website.id,
+                'type': 'qweb',
+                'priority': 32,
+                'arch_db': """
+                    <data>
+                        <xpath expr="//t[@t-set='cta_btn_href']" position="replace">
+                            <t t-set="cta_btn_href">%s</t>
+                        </xpath>
+                        <xpath expr="//t[@t-set='cta_btn_text']" position="replace">
+                            <t t-set="cta_btn_text">%s</t>
+                        </xpath>
+                    </data>
+                """ % (cta_data['cta_btn_href'], cta_data['cta_btn_text']),
+            })
+            try:
+                view_id = self.env['website'].viewref('website.header_call_to_action')
+                if view_id:
+                    el = etree.fromstring(view_id.arch_db)
+                    btn_cta_el = el.xpath("//a[hasclass('btn_cta')]")
+                    if btn_cta_el:
+                        btn_cta_el[0].attrib['href'] = cta_data['cta_btn_href']
+                        btn_cta_el[0].text = cta_data['cta_btn_text']
+                    view_id.with_context(website_id=website.id).write({'arch_db': etree.tostring(el)})
+            except ValueError as e:
+                logger.warning(e)
 
         # Update footers links, needs to be done after "Features" addition to go
         # through module overrides of `configurator_get_footer_links`.
