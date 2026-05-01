@@ -14,9 +14,9 @@ from odoo.addons.portal.controllers.portal import pager as portal_pager
 class CustomerPortal(payment_portal.PaymentPortal):
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
-        partner = request.env.user.partner_id
+        partner = self.env.user.partner_id
 
-        SaleOrder = request.env["sale.order"]
+        SaleOrder = self.env["sale.order"]
         if "quotation_count" in counters:
             values["quotation_count"] = (
                 SaleOrder.search_count(self._prepare_quotations_domain(partner))
@@ -56,12 +56,12 @@ class CustomerPortal(payment_portal.PaymentPortal):
         quotation_page=False,
         **kwargs,  # noqa: ARG002
     ):
-        SaleOrder = request.env["sale.order"]
+        SaleOrder = self.env["sale.order"]
 
         if not sortby:
             sortby = "date"
 
-        partner = request.env.user.partner_id
+        partner = self.env.user.partner_id
         values = self._prepare_portal_layout_values()
 
         if quotation_page:
@@ -172,7 +172,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
 
         # If the route is fetched from the link previewer avoid triggering that quotation is viewed.
         is_link_preview = request.httprequest.headers.get("Odoo-Link-Preview")
-        if request.env.user.share and access_token and is_link_preview != "True":
+        if self.env.user.share and access_token and is_link_preview != "True":
             # If a public/portal user accesses the order with the access token
             # Log a note on the chatter.
             today = fields.Date.today().isoformat()
@@ -188,8 +188,8 @@ class CustomerPortal(payment_portal.PaymentPortal):
                 }
                 author = (
                     order_sudo.partner_id
-                    if request.env.user._is_public()
-                    else request.env.user.partner_id
+                    if self.env.user._is_public()
+                    else self.env.user.partner_id
                 )
                 msg = _("Quotation viewed by customer %s", author.name)
                 del context
@@ -267,8 +267,8 @@ class CustomerPortal(payment_portal.PaymentPortal):
         :rtype: dict
         """
         company = order_sudo.company_id
-        logged_in = not request.env.user._is_public()
-        partner_sudo = request.env.user.partner_id if logged_in else order_sudo.partner_id
+        logged_in = not self.env.user._is_public()
+        partner_sudo = self.env.user.partner_id if logged_in else order_sudo.partner_id
         currency = order_sudo.currency_id
 
         if is_down_payment:
@@ -284,7 +284,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
         availability_report = {}
         # Select all the payment methods and tokens that match the payment context.
         providers_sudo = (
-            request
+            self
             .env["payment.provider"]
             .sudo()
             ._get_compatible_providers(
@@ -298,7 +298,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
             )
         )  # In sudo mode to read the fields of providers and partner (if logged out).
         payment_methods_sudo = (
-            request
+            self
             .env["payment.method"]
             .sudo()
             ._get_compatible_payment_methods(
@@ -311,7 +311,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
             )
         )  # In sudo mode to read the fields of providers.
         tokens_sudo = (
-            request
+            self
             .env["payment.token"]
             .sudo()
             ._get_available_tokens(providers_sudo.ids, partner_sudo.id, **kwargs)
@@ -374,7 +374,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
                 "signature": signature,
             })
             # flush now to make signature data available to PDF render request
-            request.env.cr.flush()
+            self.env.cr.flush()
         except (TypeError, binascii.Error):
             return {"error": _("Invalid signature data.")}
 
@@ -382,7 +382,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
             order_sudo._validate_order()
 
         pdf = (
-            request
+            self
             .env["ir.actions.report"]
             .sudo()
             .with_context(sale_include_signature=True)
@@ -393,8 +393,8 @@ class CustomerPortal(payment_portal.PaymentPortal):
             attachments=[("%s.pdf" % order_sudo.name, pdf)],
             author_id=(
                 order_sudo.partner_id.id
-                if request.env.user._is_public()
-                else request.env.user.partner_id.id
+                if self.env.user._is_public()
+                else self.env.user.partner_id.id
             ),
             body=_("Order signed by %s", name),
             message_type="comment",
@@ -436,8 +436,8 @@ class CustomerPortal(payment_portal.PaymentPortal):
             order_sudo.message_post(
                 author_id=(
                     order_sudo.partner_id.id
-                    if request.env.user._is_public()
-                    else request.env.user.partner_id.id
+                    if self.env.user._is_public()
+                    else self.env.user.partner_id.id
                 ),
                 body=decline_message,
                 message_type="comment",
@@ -463,7 +463,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
         except (AccessError, MissingError):
             return request.redirect("/my")
 
-        document = request.env["product.document"].browse(document_id).sudo().exists()
+        document = self.env["product.document"].browse(document_id).sudo().exists()
         if not document or not document.active:
             return request.redirect("/my")
 
@@ -471,7 +471,7 @@ class CustomerPortal(payment_portal.PaymentPortal):
             return request.redirect("/my")
 
         return (
-            request
+            self
             .env["ir.binary"]
             ._get_stream_from(document.ir_attachment_id)
             .get_response(as_attachment=True)
@@ -529,8 +529,8 @@ class PaymentPortal(payment_portal.PaymentPortal):
         except AccessError:
             raise ValidationError(_("The access token is invalid.")) from None
 
-        logged_in = not request.env.user._is_public()
-        partner_sudo = request.env.user.partner_id if logged_in else order_sudo.partner_invoice_id
+        logged_in = not self.env.user._is_public()
+        partner_sudo = self.env.user.partner_id if logged_in else order_sudo.partner_invoice_id
         self._validate_transaction_kwargs(kwargs)
         kwargs.update({
             "partner_id": partner_sudo.id,
