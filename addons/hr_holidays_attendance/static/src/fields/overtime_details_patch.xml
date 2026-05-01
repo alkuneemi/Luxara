@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-inherit="hr_attendance.OvertimeDetailsPopover"
+    <!-- <t t-inherit="hr_attendance.OvertimeDetailsPopover"
        t-inherit-mode="extension">
         <xpath expr="//thead/tr/th[@name='overtime_pay_rate']" position="before">
             <th>Compensable as Time Off</th>
@@ -15,5 +15,5 @@
                 <Field name="'leave_compensation_rate'" record="data.record" readonly="true"/>
             </td>
         </xpath>
-    </t>
+    </t> -->
 </templates>
