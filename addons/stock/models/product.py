@@ -1118,7 +1118,8 @@ class ProductTemplate(models.Model):
         ]
         return (
             any(self.env.user.has_group(g) for g in advanced_option_groups)
-            or self.tracking != "none"
+            or self.tracking != 'none'
+            or self.product_variant_ids.stock_quant_ids.lot_id
         )
 
     # Be aware that the exact same function exists in product.product
