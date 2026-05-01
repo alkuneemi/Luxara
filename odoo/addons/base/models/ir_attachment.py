@@ -838,6 +838,36 @@ class IrAttachment(models.Model):
                 ids.append(attachment.id)
         return ids
 
+    @api.model
+    def create_unique_batch(self, variants):
+        """Create linked image variants in batch using `create_unique`."""
+        ids = []
+        first_attachment_id = False
+        for variant in variants:
+            values_list = variant.get('images', [])
+            if not values_list:
+                continue
+            primary_id = False
+            for index, vals in enumerate(values_list):
+                values = dict(vals)
+                values['res_model'] = 'ir.attachment'
+                if index == 0:
+                    # Primary image: link resized variants to first attachment.
+                    values['res_id'] = first_attachment_id
+                else:
+                    # Additional formats of the same size point to that size primary.
+                    values['res_id'] = primary_id
+
+                created_ids = self.create_unique([values])
+                attachment_id = created_ids[0] if created_ids else False
+                ids.append(attachment_id)
+
+                if index == 0:
+                    primary_id = attachment_id
+                    if not first_attachment_id:
+                        first_attachment_id = attachment_id
+        return ids
+
     def _generate_access_token(self):
         return str(uuid.uuid4())
 
