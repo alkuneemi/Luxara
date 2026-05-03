@@ -181,8 +181,8 @@
           <!-- P_15: Total gross amount of the invoice (including all taxes). -->
         <P_15 t-out="float_repr(invoice.amount_total_in_currency_signed, 2)"/>
 
-          <!-- KursWalutyZ: Exchange rate of the currency to PLN on the invoice date. TO-CHECK -->
-          <KursWalutyZ t-out="float_repr(1 / (invoice.invoice_currency_rate or 1), 5)"/>
+          <!-- KursWalutyZ: Exchange rate of the currency to PLN on the invoice date. -->
+          <KursWalutyZ t-if="invoice.currency_id.name != 'PLN'" t-out="float_repr(1 / (invoice.invoice_currency_rate or 1), 5)"/>
         <!--
           ======================================================================
           Adnotacje (Annotations)
