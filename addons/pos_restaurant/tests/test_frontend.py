@@ -293,7 +293,32 @@ class TestFrontend(TestFrontendCommon):
 
     def test_07_split_bill_screen(self):
         # disable kitchen printer to avoid printing errors
+<<<<<<< 95e7552fd9bba44af260d5b6303d65457b7ba2b0
         self.pos_config.use_order_printer = False
+||||||| ec3c45cb25f03c99b686aa39deb26ab9d4e51e2b
+        self.pos_config.is_order_printer = False
+=======
+        self.pos_config.is_order_printer = False
+
+        attribute = self.env['product.attribute'].create({
+            'name': 'Attribute',
+            'create_variant': 'always',
+        })
+        attribute_normal = self.env['product.attribute.value'].create({
+            'name': 'Normal',
+            'attribute_id': attribute.id,
+        })
+        attribute_zero = self.env['product.attribute.value'].create({
+            'name': 'Zero',
+            'attribute_id': attribute.id,
+        })
+
+        self.env['product.template.attribute.line'].create({
+            'product_tmpl_id': self.coca_cola_test.product_tmpl_id.id,
+            'attribute_id': attribute.id,
+            'value_ids': [Command.set([attribute_normal.id, attribute_zero.id])],
+        })
+>>>>>>> ec6ba57b6d128be830176079e36c8dc538320006
         self.pos_config.with_user(self.pos_user).open_ui()
         self.start_pos_tour('SplitBillScreenTour3')
         self.start_pos_tour('SplitBillScreenTourPay')
