@@ -60,8 +60,8 @@
                                     t-out="return_barcode"
                                     t-options="{
                                         'widget': 'barcode',
-                                        'width': 200,
-                                        'height': 40,
+                                        'img_style': 'width:200px;height:40px',
+                                        'humanreadable': 1,
                                     }"
                                 />
                             </div>

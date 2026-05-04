@@ -285,7 +285,7 @@ class StockPicking(models.Model):
     def _create_return(self):
         return_picking = super()._create_return()
         return_reason_id = self.env.context.get("return_reason_id")
-        if return_reason_id:
+        if return_reason_id and return_reason_id.isdigit():
             return_picking.return_reason_id = int(return_reason_id)
 
         return return_picking
