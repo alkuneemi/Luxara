@@ -40,19 +40,21 @@ export class PortalPasskeyCreate extends Interaction {
     }
 
     async createPasskey(serverOptions, name) {
-        const registration = await passkeyLib
+        await passkeyLib
             .startRegistration(serverOptions)
+            .then(async (registration) => {
+                const [new_key] = await this.services.orm.create("auth.passkey.key.create", [{name}]);
+                await handleCheckIdentity(
+                    this.services.orm.call("auth.passkey.key.create", "make_key", [
+                        new_key,
+                        registration,
+                    ]),
+                    this.services.orm,
+                    this.services.dialog
+                );
+                location.reload();
+            })
             .catch((e) => console.error(e));
-        const [new_key] = await this.services.orm.create("auth.passkey.key.create", [{ name }]);
-        await handleCheckIdentity(
-            this.services.orm.call("auth.passkey.key.create", "make_key", [
-                new_key,
-                registration,
-            ]),
-            this.services.orm,
-            this.services.dialog
-        );
-        location.reload();
     }
 }
 
