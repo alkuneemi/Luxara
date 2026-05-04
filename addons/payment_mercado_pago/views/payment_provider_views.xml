@@ -12,21 +12,17 @@
                         string="Account Country"
                         name="mercado_pago_account_country_id"
                         required="code == 'mercado_pago' and state != 'disabled'"
-                        readonly="mercado_pago_access_token and mercado_pago_account_country_id"
                         options="{'no_create': True}"
                     />
                     <label
                         for="mercado_pago_access_token"
-                        invisible="not mercado_pago_access_token"
                     />
                     <div
                         class="o_row"
-                        invisible="not mercado_pago_access_token"
                     >
                         <field
                             string="Access Token"
                             name="mercado_pago_access_token"
-                            readonly="True"
                             password="True"
                         />
                         <button
