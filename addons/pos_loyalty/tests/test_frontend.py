@@ -2318,6 +2318,7 @@ class TestUi(TestPointOfSaleHttpCommon):
             })],
             'reward_ids': [(0, 0, {
                 'reward_type': 'product',
+                'reward_product_id': False,
                 'reward_product_tag_id': free_product_tag.id,
                 'reward_product_qty': 1,
                 'required_points': 2,
