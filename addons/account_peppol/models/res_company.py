@@ -133,15 +133,6 @@ class ResCompany(models.Model):
 
         return self.env['res.company']
 
-    def _have_unauthorized_peppol_parent_company(self):
-        """
-        Returns True if the company is using the active peppol connection of the parent company
-        but the user does not have access to that parent company.
-        """
-        self.ensure_one()
-        parent_company = self.peppol_parent_company_id
-        return parent_company and parent_company not in self.env.user.company_ids
-
     def _reset_peppol_configuration(self, soft=False):
         """
         Reset all peppol configuration fields to their default value before registering.
