@@ -739,6 +739,14 @@ class AccountMove(models.Model):
         copy=False,
     )
     invoice_incoterm_placeholder = fields.Char(compute='_compute_invoice_incoterm_placeholder')
+    import_source_attachment_ids = fields.Many2many(
+        comodel_name='ir.attachment',
+        relation='account_move_import_source_attachment_rel',
+        column1='move_id',
+        column2='attachment_id',
+        string="Import Source Attachments",
+        copy=False,
+    )
 
     # === Display purpose fields === #
     # used to have a dynamic domain on journal / taxes in the form view.
@@ -4873,9 +4881,20 @@ class AccountMove(models.Model):
     # EDI
     # -------------------------------------------------------------------------
 
+    def _should_store_import_source_attachments(self, file_data_group, new=False):
+        return True
+
+    def _set_import_source_attachments(self, file_data_group, new=False):
+        for move in self:
+            if move._should_store_import_source_attachments(file_data_group, new=new):
+                move.import_source_attachment_ids = move._from_files_data(file_data_group)
+
     def _extend_with_attachments(self, files_data, new=False):
         existing_lines = self.invoice_line_ids
         res = super()._extend_with_attachments(files_data, new)
+
+        if res:
+            self._set_import_source_attachments(files_data, new=new)
 
         if new_lines := (self.invoice_line_ids - existing_lines):
             new_lines.is_imported = True
@@ -6480,6 +6499,38 @@ class AccountMove(models.Model):
     def action_delete_duplicates(self):
         for move in self:
             move.duplicated_ref_ids.unlink()
+
+    def _reset_fields_for_reload(self):
+        with self._get_edi_creation() as move_form:
+            move_form.partner_id = False
+            move_form.invoice_date = False
+            move_form.invoice_payment_term_id = False
+            move_form.invoice_date_due = False
+
+            if move_form.is_purchase_document(include_receipts=True):
+                move_form.ref = False
+            elif move_form.is_sale_document(include_receipts=True) and move_form.quick_edit_mode:
+                move_form.name = False
+
+            move_form.payment_reference = False
+            move_form.currency_id = move_form.company_currency_id
+            move_form.invoice_line_ids = [Command.clear()]
+
+    def action_reload_imported_data(self):
+        self.ensure_one()
+
+        self = self.with_context(skip_is_manually_modified=True)  # noqa: PLW0642
+        try:
+            self._reset_fields_for_reload()
+
+            files_data = self._to_files_data(self.import_source_attachment_ids)
+            files_data.extend(self._unwrap_attachments(files_data))
+            file_data_groups = self._group_files_data_into_groups_of_mixed_types(files_data)
+            self._extend_with_attachments(file_data_groups[0])
+
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("Error while reloading imported data on account.move %d: %s", self.id, e)
+            raise UserError(_("Couldn't reload data."))
 
     def _get_mail_template(self):
         """
