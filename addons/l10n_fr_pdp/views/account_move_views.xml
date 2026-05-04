@@ -47,10 +47,6 @@
                         string="Send Response"
                         invisible="not pdp_can_send_response"/>
             </header>
-            <!-- TODO: add a computed field for the label in account_peppol -->
-            <xpath expr="//label[@for='peppol_move_state']" position="attributes">
-                <attribute name="string">E-Invoicing Status</attribute>
-            </xpath>
             <xpath expr="//div[@name='peppol_div']" position="after">
                 <field name="pdp_ppf_move_state" invisible="not pdp_ppf_move_state"/>
             </xpath>

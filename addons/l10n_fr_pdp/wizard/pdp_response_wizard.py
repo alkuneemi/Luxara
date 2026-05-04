@@ -135,8 +135,6 @@ class PdpResponseWizard(models.TransientModel):
         for company, moves in moves_by_company.items():
             if self.status == 'paid':
                 for move in moves:
-                    # TODO: Better to use actual payment data / match payment data with tax details?
-                    # TODO: What about discounts?
                     payments = [
                         {
                             "amount_changed": False,

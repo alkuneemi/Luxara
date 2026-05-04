@@ -4,6 +4,7 @@ from markupsafe import Markup
 
 from odoo import api, fields, models, tools
 from odoo.exceptions import UserError
+from odoo.tools.translate import LazyTranslate
 
 from odoo.addons.account_edi_proxy_client.models.account_edi_proxy_user import AccountEdiProxyError
 from odoo.addons.account_peppol.models.account_edi_proxy_user import IAP_ENDPOINT_MAP
@@ -11,6 +12,7 @@ from odoo.addons.l10n_fr_pdp.tools.demo_utils import handle_demo
 from odoo.addons.l10n_fr_pdp.utils.cdar import _parse_datetime_node as _parse_cdar_datetime_node
 
 _logger = logging.getLogger(__name__)
+_lt = LazyTranslate(__name__)
 BATCH_SIZE = 50
 
 CDAR_NSMAP = {
@@ -48,6 +50,17 @@ PROCESS_CONDITION_CODE_TO_RESPONSE_CODE = {
 
 STATUS_TO_PROCESS_CONDITION_CODE = {status: code for code, status in PROCESS_CONDITION_CODE_TO_RESPONSE_CODE.items()}
 
+PAYMENT_TYPE_CODES = {
+    'RAP': _lt("Amount remaining due"),  # Reste à payer
+    'ESC': _lt("Early Payment Discount granted"),  # Escompte accordé
+    'RAB': _lt("Discount granted"),  # Rabais accordé
+    'REM': _lt("Discount granted"),  # Remise accordée
+    'MPA': _lt("Amount paid"),  # Montant payé
+    'MEN': _lt("Amount collected (including VAT)"),  # Montant encaissé (TTC)
+}
+
+FULLY_PAID_CODES = {'MPA', 'MEN'}
+
 
 class AccountEdiProxyClientUser(models.Model):
     _inherit = 'account_edi_proxy_client.user'
@@ -68,7 +81,6 @@ class AccountEdiProxyClientUser(models.Model):
         urls['pdp'] = {
             'prod': 'https://pdp.api.odoo.com',
             'test': 'https://pdp.test.odoo.com',
-            # 'test': 'http://localhost:9999',  # TODO: for local testing
             'demo': 'demo',
         }
         return urls
@@ -141,11 +153,8 @@ class AccountEdiProxyClientUser(models.Model):
         datetime_in_1_hour = fields.Datetime.add(fields.Datetime.now(), hours=1)
         self.env.ref('account_peppol.ir_cron_peppol_get_participant_status')._trigger(at=datetime_in_1_hour)
 
-    def _peppol_get_new_documents(self):
-        super()._peppol_get_new_documents()
+    def _pdp_get_new_regulatory_documents(self):
         job_count = BATCH_SIZE
-        # TODO: we currently do not really respect the BATCH_SIZE because the function is just extended
-        #       Maybe better to make dedicated function / cron or merge the endpoints?
         need_retrigger = False
         for edi_user in self:
             edi_user = edi_user.with_company(edi_user.company_id)
@@ -185,7 +194,7 @@ class AccountEdiProxyClientUser(models.Model):
                     params={'message_uuids': list(processed_uuid_to_record)},
                 )
         if need_retrigger:
-            self.env.ref('account_peppol.ir_cron_peppol_get_new_documents')._trigger()
+            self.env.ref('l10n_fr_pdp.ir_cron_pdp_get_new_regulatory_documents')._trigger()
 
     def _peppol_process_messages_status(self, messages, uuid_to_record):
         self.ensure_one()
@@ -418,9 +427,8 @@ class AccountEdiProxyClientUser(models.Model):
             'pdp_status_info': '\n\n'.join([self._format_status_info(status, separator=Markup('\n')) for status in status_infos]),
             'pdp_issue_date': issue_date,
             'pdp_flow_number': flow_number,
+            'pdp_fully_paid': any(payment.get('type_code') in FULLY_PAID_CODES for status in status_infos for payment in status.get('payments', []))
         })
-        # TODO: Maybe we should "sort" all the imported responses by `issue_date` before logging the messages?
-        #       (So that they are posted in `issue_date` order)
         if content['state'] == 'done':
             origin_move._message_log(
                 body=self.env._(
@@ -437,6 +445,12 @@ class AccountEdiProxyClientUser(models.Model):
         return response
 
     @api.model
+    def _pdp_parse_included_note(self, note_node):
+        subject_code = note_node.findtext('./ram:SubjectCode', namespaces=CDAR_NSMAP)
+        content = note_node.findtext('./ram:Content', namespaces=CDAR_NSMAP)
+        return (f"({subject_code})" if subject_code else "") + content
+
+    @api.model
     def _pdp_extract_response_info(self, document):
         xml_node = etree.fromstring(document)
         status_nodes = xml_node.findall("rsm:AcknowledgementDocument/ram:ReferenceReferencedDocument/ram:SpecifiedDocumentStatus", namespaces=CDAR_NSMAP)
@@ -446,15 +460,19 @@ class AccountEdiProxyClientUser(models.Model):
               'index': node.findtext("./ram:SequenceNumeric", namespaces=CDAR_NSMAP),
               'reason_code': node.findtext("./ram:ReasonCode", namespaces=CDAR_NSMAP),
               'reason': node.findtext("./ram:Reason", namespaces=CDAR_NSMAP),
-              'payments': "\n".join([
-                  etree.tostring(payment_node, pretty_print=True, xml_declaration=False).decode()  # TODO: what details do we want to display
-                  for payment_node in node.findall("./ram:SpecifiedDocumentCharacteristic", namespaces=CDAR_NSMAP)
-              ]),
+              'payments': [
+                  {
+                      'type_code': pay_node.findtext("./ram:TypeCode", namespaces=CDAR_NSMAP),
+                      'value_amount': pay_node.findtext("./ram:ValueAmount", namespaces=CDAR_NSMAP),
+                      'value_amount_currency': n.get("currencyID") if (n := pay_node.find("./ram:ValueAmount", namespaces=CDAR_NSMAP)) is not None else None,
+                      'value_percent': pay_node.findtext("./ram:ValuePercent", namespaces=CDAR_NSMAP),
+                  }
+                  for pay_node in node.findall("./ram:SpecifiedDocumentCharacteristic", namespaces=CDAR_NSMAP)
+              ],
               'note': "\n".join([
-                  (f"({subject_code})" if subject_code else "") + content
+                  note
                   for note_node in node.findall("./ram:IncludedNote", namespaces=CDAR_NSMAP)
-                  if ((subject_code := note_node.findtext('./ram:SubjectCode', namespaces=CDAR_NSMAP))
-                      or (content := note_node.findtext('./ram:Content', namespaces=CDAR_NSMAP)))
+                  if (note := self._pdp_parse_included_note(note_node))
               ]),
             } for node in status_nodes
         ] if status_nodes is not None else []
@@ -467,6 +485,27 @@ class AccountEdiProxyClientUser(models.Model):
         }
 
     @api.model
+    def _format_payment_info(self, info, separator='\n'):
+        type_code = info.get('type_code')
+        type_string = PAYMENT_TYPE_CODES.get(type_code)
+        value_amount = info.get('value_amount')
+        value_amount_currency = info.get('value_amount_currency')
+        value_percent = info.get('value_percent')
+
+        infos = []
+        if type_code and type_string:
+            infos.append(f"[{type_code}] {type_string}")
+        elif type_code:
+            infos.append(f"[{type_code}]")
+        if value_amount and value_percent:
+            infos.append(self.env._("%(amount)s %(currency_code)s (including %(tax_percent)s%% VAT)",
+                                    amount=value_amount, currency_code=value_amount_currency, tax_percent=value_percent))
+        elif value_amount:
+            infos.append(self.env._("%(amount)s %(currency_code)s", amount=value_amount, currency_code=value_amount_currency))
+
+        return separator.join(infos)
+
+    @api.model
     def _format_status_info(self, status, separator='\n'):
         reason_code = status.get('reason_code')
         reason = status.get('reason')
@@ -477,7 +516,7 @@ class AccountEdiProxyClientUser(models.Model):
         if reason_code and reason:
             infos.append(f"[{reason_code}] {reason}")
         elif reason_code:
-            infos.append(f"Response Code: {reason_code}")
+            infos.append(f"[{reason_code}]")
         elif reason:
             infos.append(reason)
         # Note
@@ -486,7 +525,9 @@ class AccountEdiProxyClientUser(models.Model):
         # Payments
         payments = status.get('payments')
         if payments:
-            infos.append(payments)
+            infos.append(self.env._("Payment Info:"))
+            for payment in payments:
+                infos.append(self._format_payment_info(payment, separator=separator))
 
         return separator.join(infos)
 
@@ -494,3 +535,11 @@ class AccountEdiProxyClientUser(models.Model):
         if content['document_type'] == 'Factur-X':
             return "pdf", "application/pdf"
         return super()._peppol_get_filetype(content)
+
+    # -------------------------------------------------------------------------
+    # CRONS
+    # -------------------------------------------------------------------------
+
+    def _cron_pdp_get_new_regulatory_documents(self):
+        edi_users = self.search([('company_id.account_peppol_proxy_state', '=', 'receiver'), ('proxy_type', '=', 'pdp')])
+        edi_users._pdp_get_new_regulatory_documents()

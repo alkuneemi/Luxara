@@ -36,6 +36,18 @@ class ResPartner(models.Model):
     )
     is_using_pdp = fields.Boolean(compute='_compute_is_using_pdp')
 
+    @api.model
+    def fields_get(self, allfields=None, attributes=None):
+        # Extend to rename the `peppol` option in the `invoice_sending_method` selection
+        fields = super().fields_get(allfields, attributes)
+        company = self.env.company
+        if not self._context.get("studio") and (company.country_code == 'FR' or company.pdp_identifier) and 'invoice_sending_method' in fields:
+            field = fields['invoice_sending_method']
+            if 'selection' in field:
+                _translated_label = self.env._('by Approved Platform')
+                field['selection'] = [('peppol', 'by Approved Platform') if option[0] == 'peppol' else option for option in field['selection']]
+        return fields
+
     # -------------------------------------------------------------------------
     # COMPUTE METHODS
     # -------------------------------------------------------------------------
@@ -71,6 +83,10 @@ class ResPartner(models.Model):
     # -------------------------------------------------------------------------
     # OVERRIDE AND HELPERS
     # -------------------------------------------------------------------------
+
+    def _l10n_fr_pdp_is_b2c(self):
+        self.ensure_one()
+        return self.vat == '/' or not self.vat
 
     def _l10n_fr_pdp_get_base_identifier(self):
         self.ensure_one()
@@ -119,7 +135,7 @@ class ResPartner(models.Model):
 
     def _get_suggested_invoice_edi_format(self):
         # EXTENDS 'account'
-        if self.country_code == 'FR':
+        if self.country_code == 'FR' and not self._l10n_fr_pdp_is_b2c():
             return 'ubl_21_fr'
         return super()._get_suggested_invoice_edi_format()
 

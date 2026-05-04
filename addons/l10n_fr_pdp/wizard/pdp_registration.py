@@ -62,6 +62,7 @@ class PdpRegistration(models.TransientModel):
     def _compute_warnings(self):
         for wizard in self:
             warnings = {}
+            # Check identifier
             if (
                 wizard.pdp_identifier
                 and not self.env["res.company"]._check_pdp_identifier(wizard.pdp_identifier, warning=True)
@@ -71,7 +72,21 @@ class PdpRegistration(models.TransientModel):
                     'message': self.env._("The endpoint number might not be correct. "
                                           "Please check if you entered the right identification number."),
                 }
-            # TODO: check annuaire whether it is already registered
+            # Check whether the identifier is already associated with a platform on the annuaire
+            if (
+                wizard.pdp_identifier
+                and (participant_info := wizard.company_id.partner_id._pdp_annuaire_lookup_participant(f"0225:{wizard.pdp_identifier}")) is not None
+                and participant_info.get('platform_id')
+                and not participant_info.get('receiver_on_odoo')
+               ):
+                warnings["company_pdp_annuaire_warning"] = {
+                    "level": "warning",
+                    "message": self.env._(
+                        "There is already another platform assigned to this identifier on the annuaire (Platform ID %(platform_id)s). "
+                        "If you have previously registered to an Approved Platform, please deregister.",
+                        platform_id=participant_info.get("platform_id"),
+                    ),
+                }
             wizard.warnings = warnings or False
 
     # -------------------------------------------------------------------------

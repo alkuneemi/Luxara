@@ -5,7 +5,7 @@ class AccountJournal(models.Model):
     _inherit = 'account.journal'
 
     def peppol_get_message_status(self):
-        """Override to fetch incoming lifecycle message"""
+        """Extend to also fetch incoming lifecycle messages"""
         super().peppol_get_message_status()
         edi_users = self.env['account_edi_proxy_client.user'].search([
             ('company_id.account_peppol_proxy_state', '=', 'receiver'),
@@ -13,3 +13,13 @@ class AccountJournal(models.Model):
             ('proxy_type', '=', 'pdp'),
         ])
         edi_users._peppol_get_message_status()
+
+    def peppol_get_new_documents(self):
+        """Extend to also fetch regulatory messages (exchanged with the PPF)"""
+        super().peppol_get_new_documents()
+        edi_users = self.env['account_edi_proxy_client.user'].search([
+            ('company_id.account_peppol_proxy_state', '=', 'receiver'),
+            ('company_id', 'in', self.company_id.ids),
+            ('proxy_type', '=', 'pdp'),
+        ])
+        edi_users._pdp_get_new_regulatory_documents()

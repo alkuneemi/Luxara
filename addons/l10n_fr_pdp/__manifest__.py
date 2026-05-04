@@ -11,7 +11,9 @@
         'account_peppol_response',
     ],
     'data': [
+        'data/ir_cron.xml',
         'security/ir.model.access.csv',
+        'views/account_journal_dashboard_views.xml',
         'views/account_move_views.xml',
         'views/account_peppol_response_views.xml',
         'views/res_config_settings_views.xml',

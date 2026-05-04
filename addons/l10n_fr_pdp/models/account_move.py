@@ -2,6 +2,7 @@ from datetime import datetime
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import html2plaintext
 
 from odoo.addons.l10n_fr_pdp.models.account_edi_proxy_user import STATUS_TO_PROCESS_CONDITION_CODE
 from odoo.addons.l10n_fr_pdp.models.account_edi_xml_ubl_21_fr import PDP_CUSTOMIZATION_ID
@@ -17,6 +18,7 @@ class AccountMove(models.Model):
             ('made_available', 'Made Available'),
             ('approved', 'Approved'),
             ('refused', 'Refused'),
+            ('partially_paid', 'Partially Paid'),
             ('paid', 'Paid'),
             ('rejected', 'Rejected'),
             ('cancelled', 'Cancelled'),
@@ -48,6 +50,42 @@ class AccountMove(models.Model):
     )
     pdp_can_send_response = fields.Boolean(compute='_compute_pdp_can_send_response')
 
+    @api.model
+    def fields_get(self, allfields=None, attributes=None):
+        # Extend to rename the `peppol_move_state` field for French companies (to not say "Peppol")
+        fields = super().fields_get(allfields, attributes)
+        company = self.env.company
+        if not self._context.get("studio") and (company.country_code == 'FR' or company.pdp_identifier) and 'peppol_move_state' in fields:
+            fields['peppol_move_state']['string'] = self.env._("E-Invoicing Status")
+        return fields
+
+    def _get_view(self, view_id=None, view_type='form', **options):
+        # Extend to rename the `peppol_ready` and `peppol_move_state` filters for French companies (to not say "Peppol")
+        arch, view = super()._get_view(view_id, view_type, **options)
+        company = self.env.company
+        if (
+            self._context.get("studio")
+            or view_type != 'search'
+            or not self.env['account.move'].has_access('read')
+            or (company.country_code != 'FR' and not company.pdp_identifier)
+        ):
+            return arch, view
+
+        peppol_move_state_filter_node = arch.find('.//filter[@name="peppol_move_state"]')
+        if peppol_move_state_filter_node is not None:
+            peppol_move_state_filter_node.set('string', "E-Invoicing Status")
+
+        peppol_ready_filter_node = arch.find('.//filter[@name="peppol_ready"]')
+        if peppol_ready_filter_node is not None:
+            peppol_ready_filter_node.set('string', "E-Invoicing Ready")
+        return arch, view
+
+    @api.depends('peppol_is_sent')
+    def _compute_show_reset_to_draft_button(self):
+        # EXTEND 'account' to hide the reset to draft button for sent PDP moves
+        super()._compute_show_reset_to_draft_button()
+        self.filtered(lambda m: m.peppol_is_sent and m.company_id._get_peppol_proxy_type() == 'pdp').show_reset_to_draft_button = False
+
     @api.depends('peppol_response_ids', 'peppol_response_ids.peppol_state')
     def _compute_peppol_move_state(self):
         super()._compute_peppol_move_state()
@@ -76,13 +114,12 @@ class AccountMove(models.Model):
             return None
 
         # Take the latest response status if we have any
-        # TODO: I suppose "partially paid" is possible? Since 'paid' lifecyle does not have to be the full amount
         response_message = self.peppol_response_ids.filtered(lambda l: l.pdp_flow_number == '2' and l.peppol_state == 'done')
         latest_response = response_message.sorted(
-            lambda l: (l.pdp_issue_date or datetime.min, STATUS_TO_PROCESS_CONDITION_CODE.get(l.response_code, '0'), l.id), reverse=True
+            lambda l: (STATUS_TO_PROCESS_CONDITION_CODE.get(l.response_code, '0'), l.pdp_issue_date or datetime.min, l.id), reverse=True
         )[:1]
         if latest_response:
-            return latest_response.response_code
+            return latest_response.response_code if latest_response.response_code != 'paid' or latest_response.pdp_fully_paid else 'partially_paid'
 
         return None
 
@@ -117,10 +154,11 @@ class AccountMove(models.Model):
     def _l10n_fr_pdp_get_default_notes(self):
         self.ensure_one()
         # Mandatory / default notes for French e-invoicing [BR-FR-05]
+        payment_term = self.invoice_payment_term_id
         return {
             'PMT': self.env._("In the event of late payment, a flat-rate fee of €40 for collection costs will be charged (Articles L.441-10 and D.441-5 of the Code de commerce)."),
             'PMD': self.env._("Late payment penalties at an annual rate of 10% are applied if the payment is made after the due date."),
-            'AAB': self.env._("No discount for early payment."),  # TODO: Early payment discount information
+            'AAB': html2plaintext(payment_term.note) if payment_term.early_discount else self.env._("No discount for early payment."),
         }
 
     @api.model

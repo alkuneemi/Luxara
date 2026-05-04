@@ -46,7 +46,6 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         invoice = vals['invoice']
         super()._add_invoice_header_nodes(document_node, vals)
 
-        # TODO: B1 = goods , S1 = services
         # Les valeurs autorisées pour le Cadre (Mode de Facturation) sont:
         # B1 : Dépôt d'une facture de bien
         # S1 : Dépôt d'une facture de prestation de service
@@ -62,10 +61,22 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         # B7 : Dépôt d'une facture de bien ayant fait l'objet d'un e-reporting (TVA déjà collectée)
         # S7 : Dépôt d'une facture de prestation de service ayant fait l'objet d'un e-reporting (TVA déjà collectée)
 
-        profile_id = {
-            'invoice': 'S1',
-            'credit_note': 'S1',
-        }.get(vals['document_type'])
+        tax_scopes = set(invoice.invoice_line_ids.tax_ids.mapped('tax_scope'))
+        profile_scope = "S"
+        if tax_scopes == {'service', 'consu'}:
+            profile_scope = "M"
+        elif 'consu' in tax_scopes:
+            profile_scope = "G"
+
+        profile_number = "1"
+        if invoice.payment_state == 'paid':
+            # Already paid
+            profile_number = "2"
+        elif not invoice._is_downpayment() and invoice.invoice_line_ids._get_downpayment_lines():
+            # After downpayment
+            profile_number = "4"
+
+        profile_id = f"{profile_scope}{profile_number}"
         document_node.update({
             'cbc:CustomizationID': {'_text': PDP_CUSTOMIZATION_ID},
             'cbc:ProfileID': {'_text': profile_id},
@@ -90,12 +101,6 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
                     'cbc:IssueDate': {'_text': invoice.reversed_entry_id.invoice_date},
                 }
             }
-
-        # TODO:after_certification: Remove
-        if self.env['ir.config_parameter'].sudo().get_param('l10n_fr_pdp.superpdp_refuse', 'no') == 'yes':
-            document_node['cbc:Note'].append({
-                '_text': "#SAF#SUPER_PDP_ADR_ERROR",
-            })
 
     def _ubl_add_payment_means_nodes(self, vals):
         super()._ubl_add_payment_means_nodes(vals)

@@ -11,7 +11,7 @@ class AccountPeppolResponse(models.Model):
             ('made_available', 'Made Available'),  # required by Peppol
             ('approved', 'Approved'),  # used for PPF messages
             ('refused', 'Refused'),  # required by Peppol and PPF; used for PPF messages
-            ('paid', 'Paid'),  # required by PPF
+            ('paid', '(Partially) Paid'),  # required by PPF
             ('rejected', 'Rejected'),  # required by Peppol and PPF; used for PPF messages
             ('cancelled', 'Cancelled'),
         ],
@@ -34,7 +34,7 @@ class AccountPeppolResponse(models.Model):
             ('made_available', 'Made Available'),
             ('approved', 'Approved'),
             ('refused', 'Refused'),
-            ('paid', 'Paid'),
+            ('paid', '(Partially) Paid'),
             ('rejected', 'Rejected'),
             ('cancelled', 'Cancelled'),
         ],
@@ -48,5 +48,6 @@ class AccountPeppolResponse(models.Model):
             ('10', 'Report'),
         ],
     )
+    pdp_fully_paid = fields.Boolean(string="Fully Paid")
     pdp_issue_date = fields.Datetime(string="Issue Date", required=True)
     pdp_status_info = fields.Text(string="Status Info")
