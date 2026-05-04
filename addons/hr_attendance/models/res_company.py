@@ -3,6 +3,7 @@
 import uuid
 
 from odoo import fields, models, api
+from odoo.exceptions import ValidationError
 from odoo.fields import Domain
 from odoo.tools.urls import urljoin as url_join
 
@@ -39,7 +40,9 @@ class ResCompany(models.Model):
     ], string='Extra Hours Validation', default='no_validation')
     auto_check_out = fields.Boolean(string="Automatic Check Out", default=False)
     single_check_in = fields.Boolean(string="Single Check-In Attendance System")
+    auto_check_out_mode = fields.Selection([('tolerance', 'Tolerance'), ('specific_time', 'Specific Time')], default='tolerance')
     auto_check_out_tolerance = fields.Float(default=2, export_string_translation=False)
+    auto_check_out_specific_time = fields.Float(default=20.0, export_string_translation=False)
     absence_management = fields.Boolean(string="Absence Management", default=False)
     attendance_device_tracking = fields.Boolean(string="Device & Location Tracking", default=False)
 
@@ -47,6 +50,14 @@ class ResCompany(models.Model):
     def _compute_attendance_kiosk_url(self):
         for company in self:
             company.attendance_kiosk_url = url_join(self.env['res.company'].get_base_url(), '/hr_attendance/%s' % company.attendance_kiosk_key)
+
+    @api.constrains('auto_check_out_specific_time')
+    def _check_auto_checkout_specific_time_range(self):
+        for company in self:
+            if company.auto_check_out and company.auto_check_out_mode == 'specific_time' and not 0 <= company.auto_check_out_specific_time < 24:
+                raise ValidationError(self.env._(
+                    "Specific Time must be within a 24-hour range (0h 0m 0s to 23h 59m 59s).",
+                ))
 
     # ---------------------------------------------------------
     # ORM Overrides
