@@ -41,6 +41,7 @@ function removeTransitions() {
  * @param {string} [options.extraPrimaryBtnClasses]
  * @param {string} [options.modalId]
  * @param {boolean} [options.focusableElements]
+ * @param {string} [options.popupAttributes]
  * @returns {string} - popup template
  */
 function getPopupTemplate(options = {}) {
@@ -51,10 +52,11 @@ function getPopupTemplate(options = {}) {
         extraPrimaryBtnClasses = "",
         modalId = "",
         focusableElements = false,
+        popupAttributes = "",
     } = options;
     return `
         <div class="s_popup o_snippet_invisible" data-vcss="001" data-snippet="s_popup"
-             data-name="Popup" id="sPopup" data-invisible="1">
+             data-name="Popup" id="sPopup" data-invisible="1" ${popupAttributes}>
             <div class="modal fade s_popup_middle modal_shown ${
                 backdrop ? "" : "s_popup_no_backdrop"
             }"
@@ -166,6 +168,33 @@ describe("show popup", () => {
         await advanceTime(4500);
         expect(modal).not.toBeVisible();
         await advanceTime(1000);
+        expect(modal).toBeVisible();
+    });
+
+    test("popup stays hidden when its Show on selector does not match the page", async () => {
+        const { core } = await startInteractions(
+            getPopupTemplate({
+                showAfter: 5000,
+                popupAttributes: `data-show-on-selector=".allowed-page"`,
+            })
+        );
+        expect(core.interactions).toHaveLength(1);
+        expect(modal).not.toBeVisible();
+        await advanceTime(6000);
+        expect(modal).not.toBeVisible();
+    });
+
+    test("popup shows when its Show on selector matches the page", async () => {
+        const { core } = await startInteractions(`
+            <main class="allowed-page"></main>
+            ${getPopupTemplate({
+                showAfter: 5000,
+                popupAttributes: `data-show-on-selector=".allowed-page"`,
+            })}
+        `);
+        expect(core.interactions).toHaveLength(1);
+        expect(modal).not.toBeVisible();
+        await advanceTime(6000);
         expect(modal).toBeVisible();
     });
 

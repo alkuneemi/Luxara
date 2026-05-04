@@ -8,6 +8,7 @@ import {
     setupWebsiteBuilder,
 } from "@website/../tests/builder/website_helpers";
 import { Plugin } from "@html_editor/plugin";
+import { withSequence } from "@html_editor/utils/resource";
 import { insertText, redo, undo } from "@html_editor/../tests/_helpers/user_actions";
 import { setSelection } from "@html_editor/../tests/_helpers/selection";
 
@@ -63,6 +64,69 @@ describe("Popup options: empty page before edit", () => {
         });
     });
 });
+
+test("dropping the popup snippet moves it to the page popup container", async () => {
+    await setupWebsiteBuilder("", {
+        headerContent: "<main>",
+        footerContent: "</main>",
+        loadIframeBundles: true,
+        loadAssetsFrontendJS: true,
+    });
+    await insertCategorySnippet({ group: "content", snippet: "s_popup" });
+    expect(":iframe main .oe_structure.o_savable > .s_popup").toHaveCount(1);
+});
+
+test("Show on dropdown keeps module options and clears stale runtime selectors", async () => {
+    addPlugin(
+        class extends Plugin {
+            static id = "popup_show_on_test";
+            resources = {
+                popup_show_on_options: withSequence(30, {
+                    value: "allTestPages",
+                    label: "All Test Pages",
+                    pageSelector: ".test-page",
+                }),
+            };
+        }
+    );
+    await setupWebsiteBuilder(`<section class="test-page">Test page</section>`, {
+        headerContent: "<main>",
+        footerContent: `<div id="o_shared_blocks" class="oe_unremovable"></div></main>`,
+        loadIframeBundles: true,
+        loadAssetsFrontendJS: true,
+    });
+    await insertCategorySnippet({ group: "content", snippet: "s_popup" });
+    await contains(":iframe .s_popup .modal").click();
+
+    expect("[data-label='Show on'] .dropdown-toggle").toHaveText("This page");
+    await contains("[data-label='Show on'] .dropdown-toggle").click();
+    expect(".o_popover .dropdown-item:contains('This page')").toHaveCount(1);
+    expect(".o_popover .dropdown-item:contains('All pages')").toHaveCount(1);
+    expect(".o_popover .dropdown-item:contains('All Test Pages')").toHaveCount(1);
+
+    await contains(".o_popover .dropdown-item:contains('All Test Pages')").click();
+    expect(":iframe #o_shared_blocks > .s_popup").toHaveAttribute("data-show-on", "allTestPages");
+    expect(":iframe #o_shared_blocks > .s_popup").toHaveAttribute(
+        "data-show-on-selector",
+        ".test-page"
+    );
+
+    await contains("[data-label='Show on'] .dropdown-toggle").click();
+    await contains(".o_popover .dropdown-item:contains('All pages')").click();
+    expect(":iframe #o_shared_blocks > .s_popup").toHaveAttribute("data-show-on", "allPages");
+    expect(":iframe #o_shared_blocks > .s_popup").not.toHaveAttribute("data-show-on-selector");
+
+    await contains("[data-label='Show on'] .dropdown-toggle").click();
+    await contains(".o_popover .dropdown-item:contains('This page')").click();
+    expect(":iframe main .oe_structure.o_savable > .s_popup").toHaveAttribute(
+        "data-show-on",
+        "currentPage"
+    );
+    expect(":iframe main .oe_structure.o_savable > .s_popup").not.toHaveAttribute(
+        "data-show-on-selector"
+    );
+});
+
 describe("Popup options: popup in page before edit", () => {
     let builder;
     // Done in `beforeEach` because frontend JS takes too much time to load.
