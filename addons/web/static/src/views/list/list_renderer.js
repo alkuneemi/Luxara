@@ -148,6 +148,7 @@ export class ListRenderer extends Component {
 
         this.longTouchTimer = null;
         this.touchStartMs = 0;
+        this.lastOptionalShow = undefined;
 
         /**
          * When resizing columns, it's possible that the pointer is not above the resize
@@ -1188,23 +1189,44 @@ export class ListRenderer extends Component {
     }
 
     computeOptionalActiveFields() {
+        const optionalShow = this.env.searchModel?.context?.optional_show || null;
+        const optionalShowKey = JSON.stringify(optionalShow);
+        const optionalShowChanged = optionalShowKey !== this.lastOptionalShow;
+        const optionalActiveFields = {};
+
+        // only apply optional_show once when filter changes
+        if (optionalShowChanged) {
+            Object.assign(optionalActiveFields, this.optionalActiveFields);
+            this.lastOptionalShow = optionalShowKey;
+            if (optionalShow) {
+                for (const fieldName of optionalShow) {
+                    optionalActiveFields[fieldName] = true;
+                }
+                browser.localStorage.setItem(
+                    this.keyOptionalFields,
+                    Object.keys(optionalActiveFields)
+                        .filter((fieldName) => optionalActiveFields[fieldName])
+                        .join(",")
+                );
+            }
+        }
+
         const localStorageValue = browser.localStorage.getItem(this.keyOptionalFields);
         const optionalColumn = this.allColumns.filter(
             (col) => col.type === "field" && col.optional
         );
-        const optionalActiveFields = {};
+
         if (localStorageValue !== null) {
-            const localStorageOptionalActiveFields = localStorageValue.split(",");
+            const stored = localStorageValue.split(",");
             for (const col of optionalColumn) {
-                optionalActiveFields[col.name] = localStorageOptionalActiveFields.includes(
-                    col.name
-                );
+                optionalActiveFields[col.name] = stored.includes(col.name);
             }
         } else {
             for (const col of optionalColumn) {
                 optionalActiveFields[col.name] = col.optional === "show";
             }
         }
+
         return optionalActiveFields;
     }
 
