@@ -477,7 +477,7 @@ class StockPicking(models.Model):
                 products_to_create.append({
                     'name': name,
                     'default_code': self._get_tag_text('./cac:Item/cac:SellersItemIdentification/cbc:ID', receipt),
-                    'uom_id': self.env['uom.uom']._get_uom_from_unece_code(unece_code).id,
+                    'uom_id': self.env['uom.uom'].search([('unece_code', '=', unece_code)], limit=1).id,
                 })
 
         if products_to_create:
