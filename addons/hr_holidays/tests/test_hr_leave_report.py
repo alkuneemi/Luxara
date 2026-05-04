@@ -78,3 +78,52 @@ class TestHrLeaveReport(TestHrHolidaysCommon):
 
         self.assertEqual(sum(left_allocation.mapped('number_of_hours')), 104.5)
         self.assertEqual(sum(taken_allocation.mapped('number_of_hours')), 24.0)
+
+    def test_overlapping_allocations_leaves_balance(self):
+        """Test that leaves deduct correctly when they don't overlap all allocations in a group."""
+
+        leave_type = self.env['hr.leave.type'].create({
+            'name': 'Test Leave Type',
+            'requires_allocation': 'yes',
+            'leave_validation_type': 'no_validation',
+            'request_unit': 'day',
+        })
+
+        self.env['hr.leave.allocation'].create([
+            {
+                'employee_id': self.employee_emp.id,
+                'holiday_status_id': leave_type.id,
+                'date_from': '2024-01-01',
+                'date_to': '2025-12-31',
+                'number_of_days': 10,
+            },
+            {
+                'employee_id': self.employee_emp.id,
+                'holiday_status_id': leave_type.id,
+                'date_from': '2025-01-01',
+                'date_to': '2026-12-31',
+                'number_of_days': 10,
+            },
+        ]).action_validate()
+
+        self.env['hr.leave'].create([
+            {
+                'employee_id': self.employee_emp.id,
+                'holiday_status_id': leave_type.id,
+                'request_date_from': '2026-01-01',
+                'request_date_to': '2026-01-01',
+            },
+        ]).action_validate()
+
+        domain = [
+            ('employee_id', '=', self.employee_emp.id),
+            ('leave_type', '=', leave_type.id),
+        ]
+        leave_balance = self.env['hr.leave.employee.type.report'].search(domain)
+
+        left_records = leave_balance.filtered(lambda l: l.holiday_status == 'left')
+        taken_records = leave_balance.filtered(lambda l: l.holiday_status == 'taken')
+
+        # 20 total allocated - 1 taken = 19 remaining
+        self.assertEqual(sum(left_records.mapped('number_of_days')), 19)
+        self.assertEqual(sum(taken_records.mapped('number_of_days')), 1)
