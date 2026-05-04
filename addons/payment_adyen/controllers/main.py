@@ -220,7 +220,7 @@ class AdyenController(http.Controller):
         # of Odoo in some cases. For instance, when a 3DS1 authentication is required, or for
         # special payment methods that are not handled by the drop-in (e.g. Sofort).
         tx_sudo.with_context(
-            # The /payments/details request uses an idempotency key; the handler is safe to replay.
+            # The /payments/details request uses an idempotency key; the handler is safe to replay
             payment_trusted_write=True
         ).operation = "online_redirect"
 

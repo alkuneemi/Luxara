@@ -81,7 +81,10 @@ class PaymentTransaction(models.Model):
             self.source_transaction_id.provider_reference
         )
         if "err_code" in tx_details:  # Could not retrieve the transaction details.
-            self._set_error(
+            self.with_context(
+                # get_transaction_details is read-only; no funds-moving API call was made
+                payment_trusted_write=True
+            )._set_error(
                 _(
                     "Could not retrieve the transaction details. (error code: %(error_code)s;"
                     " error_details: %(error_message)s)",
@@ -94,11 +97,17 @@ class PaymentTransaction(models.Model):
         tx_status = tx_details.get("transaction", {}).get("transactionStatus")
         if tx_status in const.TRANSACTION_STATUS_MAPPING["voided"]:
             # The payment has been voided from Authorize.net side before we could refund it.
-            self._set_canceled(extra_allowed_states=("done",))
+            self.with_context(
+                # No refund API call was made; the transaction was already voided on provider side
+                payment_trusted_write=True
+            )._set_canceled(extra_allowed_states=("done",))
         elif tx_status in const.TRANSACTION_STATUS_MAPPING["refunded"]:
             # The payment has been refunded from Authorize.net side before we could refund it. We
             # create a refund tx on Odoo to reflect the move of the funds.
-            self._set_done()
+            self.with_context(
+                # No refund API call was made; the transaction was already refunded on provider side
+                payment_trusted_write=True
+            )._set_done()
             # Immediately post-process the transaction as the post-processing will not be
             # triggered by a customer browsing the transaction from the portal.
             self.env.ref("payment.cron_post_process_payment_tx")._trigger()
@@ -130,7 +139,10 @@ class PaymentTransaction(models.Model):
                 message=tx_details.get("messages", {}).get("message"),
             )
             _logger.warning(err_msg)
-            self._set_error(err_msg)
+            self.with_context(
+                # No refund API call was made; the transaction status is unrecognized
+                payment_trusted_write=True
+            )._set_error(err_msg)
 
     def _send_capture_request(self):
         """Override of `payment` to send a capture request to Authorize."""
