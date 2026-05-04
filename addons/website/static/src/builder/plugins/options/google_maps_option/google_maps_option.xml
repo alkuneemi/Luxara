@@ -2,7 +2,17 @@
 <templates xml:space="preserve">
 
 <t t-name="website.GoogleMapsOption">
-    <BuilderRow label.translate="Address" preview="false">
+    <BuilderRow label.translate="Height">
+        <BuilderRange
+            styleAction="'height'"
+            unit="'px'"
+            min="100"
+            max="1000"
+            step="1"
+            withNumberInput="true"
+        />
+    </BuilderRow>
+    <BuilderRow label.translate="Address" tooltip.translate="Write down your address or a GPS position" preview="false">
         <input
             type="text"
             class="o-hb-input-text o-hb-input-base"

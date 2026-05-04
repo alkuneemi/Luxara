@@ -8,7 +8,17 @@
 </t>
 
 <t t-name="website.mapOption">
-    <BuilderRow label.translate="Address" action="'mapUpdateSrc'" preview="false">
+    <BuilderRow label.translate="Height">
+        <BuilderRange
+            styleAction="'height'"
+            unit="'px'"
+            min="100"
+            max="1000"
+            step="1"
+            withNumberInput="true"
+        />
+    </BuilderRow>
+    <BuilderRow label.translate="Address" tooltip.translate="Write down your address or a GPS position" action="'mapUpdateSrc'" preview="false">
         <BuilderTextInput
             dataAttributeAction="'mapAddress'"
             placeholder.translate="e.g. Grand Place, Brussels"
