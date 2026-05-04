@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="project_todo.ProjectTaskControlPanel" t-inherit="project.ProjectTaskControlPanel" t-inherit-mode="extension">
+        <xpath expr="//t[contains(@t-if, 'showTaskOptions')]" position="attributes">
+            <attribute name="t-if">!env.isSmall and showTaskOptions</attribute>
+        </xpath>
+    </t>
+</templates>
