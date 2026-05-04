@@ -68,6 +68,7 @@ class AccountMove(models.Model):
         compute='_compute_l10n_gr_edi_inv_type',
         store=True,
         readonly=False,
+        copy=False,
     )
     l10n_gr_edi_payment_method = fields.Selection(
         selection=PAYMENT_METHOD_SELECTION,
@@ -194,13 +195,15 @@ class AccountMove(models.Model):
                     # If we have previously calculated the inv_type, reuse it here.
                     # For entry moves, we want the inv_type to be False. (we don't send anything to myDATA on entry moves)
                     move.l10n_gr_edi_inv_type = move.l10n_gr_edi_inv_type
-                elif move.move_type in ('out_refund', 'in_refund'):
-                    # inv_type specific for credit notes
+                elif move.move_type == 'out_refund':
+                    # inv_type specific for client credit notes
                     if move.l10n_gr_edi_correlation_id:
                         # when possible, we must add the associate invoice/bill mark (id)
                         move.l10n_gr_edi_inv_type = '5.1'
                     else:
                         move.l10n_gr_edi_inv_type = '5.2'
+                elif move.move_type == 'in_refund':
+                    move.l10n_gr_edi_inv_type = '11.4'
                 else:  # move.move_type in ('out_invoice', 'in_invoice', 'out_receipt', 'in_receipt')
                     inv_type = '1.1' if move.move_type == 'out_invoice' else '13.1'
                     preferred_clss = move.fiscal_position_id.l10n_gr_edi_preferred_classification_ids.filtered(
