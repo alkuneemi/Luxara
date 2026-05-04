@@ -185,6 +185,18 @@ class SaleOrder(models.Model):
         help="If set, the SO will invoice in this journal; "
         "otherwise the sales journal with the lowest sequence is used.",
     )
+    document_tax_mode = fields.Selection(
+        selection=[
+            ('tax_excluded', "Tax Excl."),
+            ('tax_included', "Tax Incl."),
+        ],
+        compute='_compute_document_tax_mode',
+        precompute=True,
+        store=True,
+        readonly=False,
+        required=True,
+    )
+    disable_tax_mode_selection = fields.Boolean(compute='_compute_disable_tax_mode_selection')
 
     # Partner-based computes
     note = fields.Html(
@@ -1134,6 +1146,17 @@ class SaleOrder(models.Model):
         for order in self:
             order.delivery_date = order.commitment_date or order.expected_date
 
+    @api.depends('company_id')
+    def _compute_document_tax_mode(self):
+        for order in self:
+            company = order.company_id or self.env.company
+            order.document_tax_mode = company.account_price_include
+
+    @api.depends('state')
+    def _compute_disable_tax_mode_selection(self):
+        for order in self:
+            order.disable_tax_mode_selection = order.state != 'draft'
+
     # === CONSTRAINT METHODS ===#
 
     @api.constrains("company_id", "order_line")
@@ -1724,7 +1747,7 @@ class SaleOrder(models.Model):
     def _recompute_prices(self):
         lines_to_recompute = self._get_update_prices_lines()
         lines_to_recompute.invalidate_recordset(["pricelist_item_id"])
-        lines_to_recompute.with_context(force_price_recomputation=True)._compute_price_unit()
+        lines_to_recompute._compute_price_unit()
         # Special case: we want to overwrite the existing discount on _recompute_prices call
         # i.e. to make sure the discount is correctly reset
         # if pricelist rule is different than when the price was first computed.
@@ -1806,6 +1829,7 @@ class SaleOrder(models.Model):
             "user_id": self.user_id.id,
             "invoice_incoterm_id": self.incoterm.id,
             "incoterm_location": self.incoterm_location,
+            "document_tax_mode": self.document_tax_mode,
         }
         if self.journal_id:
             values["journal_id"] = self.journal_id.id

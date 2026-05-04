@@ -627,6 +627,18 @@ class AccountMove(models.Model):
         string="Amount total in words",
         compute="_compute_amount_total_words",
     )
+    document_tax_mode = fields.Selection(
+        selection=[
+            ('tax_excluded', "Tax Excl."),
+            ('tax_included', "Tax Incl."),
+        ],
+        compute='_compute_document_tax_mode',
+        precompute=True,
+        store=True,
+        readonly=False,
+        required=True,
+    )
+    disable_tax_mode_selection = fields.Boolean(compute='_compute_disable_tax_mode_selection')
 
     # === Reverse feature fields === #
     reversed_entry_id = fields.Many2one(
@@ -2493,6 +2505,20 @@ class AccountMove(models.Model):
                     lambda line: line.account_type in ('asset_receivable', 'liability_payable'),
                 ).no_followup = move.no_followup
 
+    @api.depends('company_id')
+    def _compute_document_tax_mode(self):
+        for move in self:
+            company = move.company_id or self.env.company
+            move.document_tax_mode = company.account_price_include
+
+    @api.depends('state')
+    def _compute_disable_tax_mode_selection(self):
+        for move in self:
+            if move.state != 'draft' or any(line.sale_line_ids if 'sale_line_ids' in line._fields else False for line in move.invoice_line_ids):
+                move.disable_tax_mode_selection = True
+            else:
+                move.disable_tax_mode_selection = False
+
     # -------------------------------------------------------------------------
     # ALERTS
     # -------------------------------------------------------------------------
@@ -2805,6 +2831,14 @@ class AccountMove(models.Model):
                     'title': _("Warning for Cash Rounding Method: %s", move.invoice_cash_rounding_id.name),
                     'message': _("You must specify the Profit Account (company dependent)")
                 }}
+
+    @api.onchange('document_tax_mode')
+    def _onchange_document_tax_mode(self):
+        for move in self:
+            for line in move.invoice_line_ids:
+                line.document_tax_mode = move.document_tax_mode
+                if not line.product_id:
+                    continue
 
     # -------------------------------------------------------------------------
     # CONSTRAINT METHODS
@@ -3335,7 +3369,7 @@ class AccountMove(models.Model):
         moves_values_before = {
             move: {
                 field: get_value(move, field)
-                for field in ('currency_id', 'partner_id', 'move_type', 'invoice_currency_rate', 'invoice_date')
+                for field in ('currency_id', 'partner_id', 'move_type', 'invoice_currency_rate', 'invoice_date', 'document_tax_mode')
             }
             for move in container['records']
             if move.state == 'draft'
@@ -3377,6 +3411,7 @@ class AccountMove(models.Model):
                 and (
                     field_has_changed(moves_values_before, move, 'currency_id')
                     or field_has_changed(moves_values_before, move, 'move_type')
+                    or field_has_changed(moves_values_before, move, 'document_tax_mode')
                 )
             ):
                 # Changing the type of an invoice using 'switch to refund' feature or just changing the currency.
@@ -6095,12 +6130,13 @@ class AccountMove(models.Model):
                 lines_to_recompute |= line
                 continue
             new_taxes = line._get_computed_taxes()
-            if line.tax_ids.filtered('price_include') != new_taxes.filtered('price_include'):
+            if (tax for tax in line.tax_ids if tax._is_price_included(line.document_tax_mode)) != (tax for tax in new_taxes if tax._is_price_included(line.document_tax_mode)):
                 line.price_unit = line.product_id._get_tax_included_unit_price_from_price(
                     line.price_unit,
                     line.tax_ids,
                     fiscal_position=line.move_id.fiscal_position_id,
                     product_taxes_after_fp=new_taxes,
+                    document_tax_mode=line.document_tax_mode,
                 )
         lines_to_recompute._compute_price_unit()
         self.invoice_line_ids._compute_tax_ids()

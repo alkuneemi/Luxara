@@ -587,7 +587,7 @@ class TestSalePrices(SaleCommon):
             "order_id": self.sale_order.id,
         })
         self.assertEqual(so_line.price_unit, 0.0)
-        self.assertEqual(so_line.technical_price_unit, 0.0)
+        self.assertEqual(so_line.price_unit_json['price_unit'], 0.0)
 
         with Form(so_line) as so_line:
             so_line.price_unit = 10.0

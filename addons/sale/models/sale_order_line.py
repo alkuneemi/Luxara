@@ -208,6 +208,7 @@ class SaleOrderLine(models.Model):
         check_company=True,
         domain="[('type_tax_use', '=', 'sale'), ('country_id', '=', tax_country_id)]",
     )
+    document_tax_mode = fields.Selection(related='order_id.document_tax_mode')
 
     # Tech field caching pricelist rule used for price & discount computation
     pricelist_item_id = fields.Many2one(
@@ -223,7 +224,12 @@ class SaleOrderLine(models.Model):
         required=True,
         precompute=True,
     )
-    technical_price_unit = fields.Float()
+    # Technical field storing last computed values for price_unit computation.
+    price_unit_json = fields.Json(
+        compute='_compute_price_unit',
+        store=True,
+        precompute=True,
+    )
 
     discount = fields.Float(
         string="Discount (%)",
@@ -606,7 +612,7 @@ class SaleOrderLine(models.Model):
         for line in self:
             line.allowed_uom_ids = line.product_id._get_available_uoms()
 
-    @api.depends("product_id", "company_id")
+    @api.depends("product_id", "company_id", "document_tax_mode")
     def _compute_tax_ids(self):
         lines_by_company = defaultdict(lambda: self.env["sale.order.line"])
         cached_taxes = {}
@@ -658,16 +664,8 @@ class SaleOrderLine(models.Model):
                     **line._get_pricelist_kwargs(),
                 )
 
-    @api.depends("product_id", "product_uom_id", "product_uom_qty")
+    @api.depends("product_id", "product_uom_id", "product_uom_qty", "document_tax_mode")
     def _compute_price_unit(self):
-        def has_manual_price(line):
-            # `line.currency_id` can be False for NewId records
-            currency = (
-                line.currency_id or line.company_id.currency_id or line.env.company.currency_id
-            )
-            return currency.compare_amounts(line.technical_price_unit, line.price_unit)
-
-        force_recompute = self.env.context.get("force_price_recomputation")
         for line in self:
             # Don't compute the price for deleted lines or lines for which the
             # price unit doesn't come from the product.
@@ -677,17 +675,25 @@ class SaleOrderLine(models.Model):
             # check if the price has been manually set or there is already invoiced amount.
             # if so, the price shouldn't change as it might have been manually edited.
             if (
-                (not force_recompute and has_manual_price(line))
-                or line.qty_invoiced > 0
+                line.qty_invoiced > 0
                 or (line.product_id.reinvoice_policy == "cost" and line.is_expense)
             ):
                 continue
             line = line.with_context(sale_write_from_compute=True)
             if not line.product_uom_id or not line.product_id:
                 line.price_unit = 0.0
-                line.technical_price_unit = 0.0
             else:
-                line._reset_price_unit()
+                if line.price_unit_json and line.price_unit_json['product_id'] != line.product_id.id:
+                    line.price_unit = 0.0
+                    line.price_unit_json = None
+                line.price_unit = line.product_id._get_line_price_unit(line, 'sale', line._get_display_price())
+
+            line.price_unit_json = {
+                'price_unit': line.price_unit,
+                'uom_id': line.product_uom_id.id,
+                'product_id': line.product_id.id,
+                'document_tax_mode': line.document_tax_mode,
+            }
 
     @api.depends("is_storable", "product_uom_qty", "qty_delivered", "state", "product_uom_id")
     def _compute_display_qty_widget(self):
@@ -714,17 +720,6 @@ class SaleOrderLine(models.Model):
                 to_date=schedule_date
             ).virtual_available
             line.qty_available_today = line.product_id.free_qty
-
-    def _reset_price_unit(self):
-        self.ensure_one()
-
-        line = self.with_company(self.company_id)
-        price = line._get_display_price()
-        product_taxes = line.product_id.taxes_id._filter_taxes_by_company(line.company_id)
-        price_unit = line.product_id._get_tax_included_unit_price_from_price(
-            price, product_taxes=product_taxes, fiscal_position=line.order_id.fiscal_position_id
-        )
-        line.update({"price_unit": price_unit, "technical_price_unit": price_unit})
 
     def _get_order_date(self):
         self.ensure_one()
@@ -929,6 +924,7 @@ class SaleOrderLine(models.Model):
             "currency_id": self.order_id.currency_id or company.currency_id,
             "rate": self.order_id.currency_rate,
             "name": self.name,
+            "document_tax_mode": self.order_id.document_tax_mode,
         }
         if self._is_global_discount():
             base_values["special_type"] = "global_discount"
@@ -1509,14 +1505,6 @@ class SaleOrderLine(models.Model):
                     _("A sale order line's product must match its combo item's product.")
                 )
 
-    # === ONCHANGE METHODS ===#
-
-    @api.onchange("product_id")
-    def _onchange_product_id(self):
-        if not self.product_id:
-            return
-        self._reset_price_unit()
-
     # === CRUD METHODS ===#
 
     @api.model_create_multi
@@ -1524,12 +1512,6 @@ class SaleOrderLine(models.Model):
         for vals in vals_list:
             if vals.get("display_type") or self.default_get(["display_type"]).get("display_type"):
                 vals["product_uom_qty"] = 0.0
-
-            if "technical_price_unit" in vals and "price_unit" not in vals:
-                # price_unit field was set as readonly in the view (but technical_price_unit not)
-                # the field is not sent by the client and expected to be recomputed, but isn't
-                # because technical_price_unit is set.
-                vals.pop("technical_price_unit")
 
         lines = super().create(vals_list)
         for line in lines:
@@ -1552,12 +1534,6 @@ class SaleOrderLine(models.Model):
                 line.order_id.message_post(body=msg)
 
         return lines
-
-    def _add_precomputed_values(self, vals_list):
-        super()._add_precomputed_values(vals_list)
-        for vals in vals_list:
-            if "price_unit" in vals and "technical_price_unit" not in vals:
-                vals["technical_price_unit"] = vals["price_unit"]
 
     def write(self, vals):
         values = vals
@@ -1593,16 +1569,6 @@ class SaleOrderLine(models.Model):
                     != 0
                 )
             )._update_line_quantity(values)
-
-        if (
-            "technical_price_unit" in values
-            and "price_unit" not in values
-            and not self.env.context.get("sale_write_from_compute")
-        ):
-            # price_unit field was set as readonly in the view (but technical_price_unit not)
-            # the field is not sent by the client and expected to be recomputed, but isn't
-            # because technical_price_unit is set.
-            values.pop("technical_price_unit")
 
         if "qty_delivered" in values:
             for line in self:
