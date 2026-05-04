@@ -154,8 +154,6 @@ class PaymentTransaction(models.Model):
             json=data,
             endpoint_param=self.source_transaction_id.provider_reference,
         )
-        # Insert missing amount data to the request response to succeed the amount validation check
-        response_content["amount"] = {"currency": self.currency_id.name, "value": self.amount}
         self._record(response_content)
 
         # Notify the user that the deferred request has been sent and the response will come later
