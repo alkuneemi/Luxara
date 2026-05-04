@@ -94,4 +94,10 @@
     </xpath>
 </t>
 
+<t t-name="website.DeletePageButton" t-inherit="web.FormViewDialog.ToOne.buttons">
+    <xpath expr="//button[hasclass('o_form_button_cancel')]" position="after">
+        <button class="btn btn-danger ms-auto o_form_button_delete" t-on-click="this.props.deletePage"><i class="fa fa-fw fa-trash"/>Delete</button>
+    </xpath>
+</t>
+
 </templates>

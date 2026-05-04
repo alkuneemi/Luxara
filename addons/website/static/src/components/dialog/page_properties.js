@@ -242,6 +242,7 @@ export class PagePropertiesDialog extends FormViewDialog {
             ...(this.isPage
                 ? {
                       buttonTemplate: "website.PagePropertiesDialogButtons",
+                      buttonDialogTemplate: "website.DeletePageButton",
                       clonePage: this.clonePage.bind(this),
                       deletePage: this.deletePage.bind(this),
                   }
