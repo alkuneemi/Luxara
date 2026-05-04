@@ -21,8 +21,6 @@ class MailingFilter(models.Model):
     name = fields.Char(string='Filter Name', required=True)
     active = fields.Boolean(default=True)
     color = fields.Integer(string='Color', default=0)
-    mailing_ids = fields.Many2many('mailing.mailing', 'mail_mass_mailing_filter_rel',
-        'mailing_filter_id', 'mailing_mailing_id', string="Mailings")
     mailing_domain = fields.Char(string='Filter Domain', required=True)
     mailing_model_id = fields.Many2one('ir.model', string='Recipients Model', required=True, ondelete='cascade')
     mailing_model_name = fields.Char(string='Recipients Model Name', related='mailing_model_id.model')
@@ -40,7 +38,6 @@ class MailingFilter(models.Model):
                         _("The filter domain is not valid for this recipients.")
                     )
 
-    @api.depends('mailing_ids')
     def _compute_mailing_count(self):
         data = {}
         if self.ids:
