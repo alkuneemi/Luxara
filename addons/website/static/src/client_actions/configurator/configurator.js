@@ -1,4 +1,12 @@
-import { reactive, useEnv, useExternalListener, useLayoutEffect, useRef, useState, useSubEnv } from "@web/owl2/utils";
+import {
+    reactive,
+    useEnv,
+    useExternalListener,
+    useLayoutEffect,
+    useRef,
+    useState,
+    useSubEnv,
+} from "@web/owl2/utils";
 import { browser } from "@web/core/browser/browser";
 const sessionStorage = browser.sessionStorage;
 import { AutoComplete } from "@web/core/autocomplete/autocomplete";
@@ -16,12 +24,7 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { mixCssColors } from "@web/core/utils/colors";
 import { router } from "@web/core/browser/router";
-import {
-    Component,
-    markup,
-    onMounted,
-    onWillStart,
-} from "@odoo/owl";
+import { Component, markup, onMounted, onWillStart } from "@odoo/owl";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 import { fuzzyLevenshteinLookup } from "@web/core/utils/search";
 import { isBrowserSafari } from "@web/core/browser/feature_detection";
@@ -95,47 +98,233 @@ export const CUSTOM_BG_COLOR_ATTRS = ["menu", "footer"];
 // Columns = font class (Sans Serif, Serif, Script, Decorative, Gothic), rows = color palettes
 export const PALETTE_FONT_COMBOS = [
     // Row 1
-    { palette: "default-light-2", headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-light-2", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-light-2", headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-    { palette: "default-light-2", headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-light-2", headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-light-2",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-light-2",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-light-2",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-light-2",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-light-2",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        label: "Bold",
+        description: "Strong & Striking",
+    },
     // Row 2
-    { palette: "default-light-5", headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-light-5", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-light-5", headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-    { palette: "default-light-5", headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-light-5", headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-light-5",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-light-5",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-light-5",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-light-5",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-light-5",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        label: "Bold",
+        description: "Strong & Striking",
+    },
     // Row 3
-    { palette: "default-light-7", headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-light-7", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-light-7", headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-    { palette: "default-light-7", headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-light-7", headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-light-7",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-light-7",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-light-7",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-light-7",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-light-7",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        label: "Bold",
+        description: "Strong & Striking",
+    },
     // Row 4
-    { palette: "default-24", headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-24", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-24", headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-    { palette: "default-24", headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-24", headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-24",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-24",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-24",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-24",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-24",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        label: "Bold",
+        description: "Strong & Striking",
+    },
     // Row 5
-    { palette: "default-light-11", headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-light-11", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-light-11", headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-    { palette: "default-light-11", headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-light-11", headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-light-11",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-light-11",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-light-11",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-light-11",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-light-11",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        label: "Bold",
+        description: "Strong & Striking",
+    },
     // Row 6 (dark)
-    { palette: "default-9", headingsFont: "Roboto", bodyFont: "Inter", dark: true, label: "Modern", description: "Clean & Efficient" },
-    { palette: "default-9", headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", dark: true, label: "Classic", description: "Timeless & Refined" },
-    { palette: "default-9", headingsFont: "Dancing Script", bodyFont: "Open Sans", dark: true, label: "Creative", description: "Warm & Personal" },
-    { palette: "default-9", headingsFont: "Lobster", bodyFont: "Roboto", dark: true, label: "Playful", description: "Fun & Friendly" },
-    { palette: "default-9", headingsFont: "Oswald", bodyFont: "Inter", dark: true, label: "Bold", description: "Strong & Striking" },
+    {
+        palette: "default-9",
+        headingsFont: "Roboto",
+        bodyFont: "Inter",
+        dark: true,
+        label: "Modern",
+        description: "Clean & Efficient",
+    },
+    {
+        palette: "default-9",
+        headingsFont: "Playfair Display",
+        bodyFont: "Source Sans Pro",
+        dark: true,
+        label: "Classic",
+        description: "Timeless & Refined",
+    },
+    {
+        palette: "default-9",
+        headingsFont: "Dancing Script",
+        bodyFont: "Open Sans",
+        dark: true,
+        label: "Creative",
+        description: "Warm & Personal",
+    },
+    {
+        palette: "default-9",
+        headingsFont: "Lobster",
+        bodyFont: "Roboto",
+        dark: true,
+        label: "Playful",
+        description: "Fun & Friendly",
+    },
+    {
+        palette: "default-9",
+        headingsFont: "Oswald",
+        bodyFont: "Inter",
+        dark: true,
+        label: "Bold",
+        description: "Strong & Striking",
+    },
 ];
 
-const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css?family="
-    + "Roboto:400,700|Inter:400,700|Playfair+Display:400,700|Dancing+Script:400,700|"
-    + "Lobster:400|Oswald:400,700|Open+Sans:400,700|Source+Sans+Pro:400,700"
-    + "&display=swap";
+const GOOGLE_FONTS_URL =
+    "https://fonts.googleapis.com/css?family=" +
+    "Roboto:400,700|Inter:400,700|Playfair+Display:400,700|Dancing+Script:400,700|" +
+    "Lobster:400|Oswald:400,700|Open+Sans:400,700|Source+Sans+Pro:400,700" +
+    "&display=swap";
 
 let _googleFontsLoaded = false;
 function loadGoogleFonts() {
@@ -255,7 +444,14 @@ export class DescriptionScreen extends Component {
     }
 
     async fetchPositionings(industryLabel) {
-        const fallback = ["premium", "affordable", "professional", "modern", "community-focused", "innovative"];
+        const fallback = [
+            "premium",
+            "affordable",
+            "professional",
+            "modern",
+            "community-focused",
+            "innovative",
+        ];
         this.state.positionings = [];
         this.state.selectedPositioning = undefined;
         this.state.positioningsLoading = true;
@@ -488,15 +684,20 @@ export class PaletteSelectionScreen extends Component {
     }
 
     async fetchStyleRecommendation() {
-        const { selectedIndustry, selectedType, selectedPositioning, formerSelectedPositioning } = this.state;
+        const { selectedIndustry, selectedType, selectedPositioning, formerSelectedPositioning } =
+            this.state;
         const industry = selectedIndustry?.label || "general";
         const type = WEBSITE_TYPES[selectedType]?.name || "business";
         const positioning = selectedPositioning || formerSelectedPositioning || "";
         const catalog = {};
         PALETTE_FONT_COMBOS.forEach((c, idx) => {
-            catalog[idx] = `${c.label} font (${c.headingsFont}), palette ${c.palette}${c.dark ? " (dark)" : ""}`;
+            catalog[idx] = `${c.label} font (${c.headingsFont}), palette ${c.palette}${
+                c.dark ? " (dark)" : ""
+            }`;
         });
-        const prompt = `For a ${industry} ${type} business with a ${positioning} positioning, recommend a style from this catalog:\n${JSON.stringify(catalog)}\n\nReturn ONLY a JSON object with:
+        const prompt = `For a ${industry} ${type} business with a ${positioning} positioning, recommend a style from this catalog:\n${JSON.stringify(
+            catalog
+        )}\n\nReturn ONLY a JSON object with:
 - "id": the numeric ID from the catalog
 - "reason": a short sentence mentioning the business context, like: "For a family restaurant with a cozy positioning, I'd recommend a playful font and warm colors to feel welcoming."`;
         this.state.styleRecommendationLoading = true;
@@ -542,11 +743,36 @@ export class PaletteSelectionScreen extends Component {
             return [];
         }
         const FONT_CLASSES = [
-            { headingsFont: "Roboto", bodyFont: "Inter", label: "Modern", description: "Clean & Efficient" },
-            { headingsFont: "Playfair Display", bodyFont: "Source Sans Pro", label: "Classic", description: "Timeless & Refined" },
-            { headingsFont: "Dancing Script", bodyFont: "Open Sans", label: "Creative", description: "Warm & Personal" },
-            { headingsFont: "Lobster", bodyFont: "Roboto", label: "Playful", description: "Fun & Friendly" },
-            { headingsFont: "Oswald", bodyFont: "Inter", label: "Bold", description: "Strong & Striking" },
+            {
+                headingsFont: "Roboto",
+                bodyFont: "Inter",
+                label: "Modern",
+                description: "Clean & Efficient",
+            },
+            {
+                headingsFont: "Playfair Display",
+                bodyFont: "Source Sans Pro",
+                label: "Classic",
+                description: "Timeless & Refined",
+            },
+            {
+                headingsFont: "Dancing Script",
+                bodyFont: "Open Sans",
+                label: "Creative",
+                description: "Warm & Personal",
+            },
+            {
+                headingsFont: "Lobster",
+                bodyFont: "Roboto",
+                label: "Playful",
+                description: "Fun & Friendly",
+            },
+            {
+                headingsFont: "Oswald",
+                bodyFont: "Inter",
+                label: "Bold",
+                description: "Strong & Striking",
+            },
         ];
         return FONT_CLASSES.map((font) => ({
             ...font,
@@ -987,8 +1213,7 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
         });
 
         useLayoutEffect(
-            () =>
-                this.blockUiDuringImageLoading(this.state.themes, this.themeSVGPreviews),
+            () => this.blockUiDuringImageLoading(this.state.themes, this.themeSVGPreviews),
             () => [this.state.themes]
         );
 
@@ -1033,8 +1258,9 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
                 theme.svg,
                 "image/svg+xml"
             ).documentElement;
+            svgEl.classList.add("o_configurator_theme_preview_svg");
             const styleEl = document.createElementNS("http://www.w3.org/2000/svg", "style");
-            styleEl.textContent = `@import url('${GOOGLE_FONTS_URL}'); * { font-family: '${headingsFont}', '${bodyFont}', sans-serif !important; }`;
+            styleEl.textContent = `@import url('${GOOGLE_FONTS_URL}'); .o_configurator_theme_preview_svg text, .o_configurator_theme_preview_svg tspan, .o_configurator_theme_preview_svg foreignObject, .o_configurator_theme_preview_svg foreignObject * { font-family: '${headingsFont}', '${bodyFont}', sans-serif !important; }`;
             svgEl.insertBefore(styleEl, svgEl.firstChild);
             for (const imgEl of svgEl.querySelectorAll("image")) {
                 proms.push(
