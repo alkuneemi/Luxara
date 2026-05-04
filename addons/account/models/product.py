@@ -5,7 +5,7 @@ from difflib import SequenceMatcher
 from odoo import api, Command, fields, models, _
 from odoo.exceptions import ValidationError
 from odoo.osv import expression
-from odoo.tools import format_amount
+from odoo.tools import format_amount, split_every
 
 ACCOUNT_DOMAIN = "['&', ('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card','off_balance'))]"
 
@@ -316,15 +316,18 @@ class ProductProduct(models.Model):
             except ValueError:
                 similarity_threshold = 0.9
 
-            products = self.search(
+            product_ids = self.search(
                 expression.AND([
                     [('name', 'ilike', name)],
                     base_domain,
                 ]),
-            )
-            for product in products:
-                if SequenceMatcher(None, name.lower(), product.name.lower()).ratio() >= similarity_threshold:
-                    return product
+            ).ids
+            for batched_ids in split_every(25000, product_ids):
+                products = self.env['product.product'].browse(batched_ids)
+                for product in products:
+                    if SequenceMatcher(None, name.lower(), product.name.lower()).ratio() >= similarity_threshold:
+                        return product
+                self.env.invalidate_all()
 
         if name and '\n' in name:
             # cut Sales Description from the name
