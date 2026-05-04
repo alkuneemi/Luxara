@@ -39,6 +39,7 @@ class ProductTemplate(models.Model):
         "product.template",
         "website.seo.metadata",
         "website.published.multi.mixin",
+        "website.quick.add.mixin",
         "website.searchable.mixin",
     ]
     _mail_post_access = "read"
@@ -663,21 +664,25 @@ class ProductTemplate(models.Model):
 
         return res
 
-    def _can_be_added_to_cart(self):
-        """Pre-check to `_is_add_to_cart_possible` to know if product can be sold."""
-        self.ensure_one()
-        return bool(self.filtered_domain(self.env["website"]._product_domain()))
-
-    def _is_add_to_cart_possible(self):
+    def _is_base_catalog_eligible(self):
         """
-        It's possible to add to cart (potentially after configuration) if
-        there is at least one possible combination.
+        Pre-check to determine if the product template is sellable.
 
-        :return: True if it's possible to add to cart, else False
+        :return: True if the product matches the base eCommerce domain, False otherwise.
         :rtype: bool
         """
         self.ensure_one()
-        if not self.active or not self._can_be_added_to_cart():
+        return bool(self.filtered_domain(self.env["website"]._product_domain()))
+
+    def _has_purchasable_variants(self):
+        """
+        Determines if the product has at least one valid, configurable variant available.
+
+        :return: True if at least one valid variant combination exists, False otherwise.
+        :rtype: bool
+        """
+        self.ensure_one()
+        if not self.active or not self._is_base_catalog_eligible():
             # for performance: avoid calling `_get_possible_combinations`
             return False
         return next(self._get_possible_combinations(), False) is not False
@@ -1307,15 +1312,7 @@ class ProductTemplate(models.Model):
 
     def _website_show_quick_add(self):
         self.ensure_one()
-        if self._is_sold_out() or not self.filtered_domain(self.env["website"]._product_domain()):
-            return False
-        if not self._get_available_uoms():
-            return False
-        website = self.env["website"].get_current_website()
-        return not (
-            website.prevent_sale
-            and website._prevent_product_sale(self, not self._get_contextual_price())
-        )
+        self._website_show_quick_add_common()
 
     @api.model
     def _get_configurator_display_price(
