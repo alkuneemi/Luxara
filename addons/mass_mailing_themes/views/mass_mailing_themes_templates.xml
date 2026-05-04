@@ -45,7 +45,15 @@
             .o_layout .o_mail_wrapper .o_mail_wrapper_td {
                 --h3-color: #2b3b58;
                 --h3-font-size: 18px;
-                --h3-font-weight: bolder;
+
+                --btn-primary-background-color: #03f9e3;
+                --btn-primary-border-color: #03f9e3;
+                --btn-primary-color: #242530;
+
+                --btn-secondary-background-color: #111827;
+                --btn-secondary-color: #ffffff;
+                --btn-secondary-border-color: #03f9e3;
+                --btn-secondary-border-width: 2px;
             }
         </style>
         <t t-set="now" t-value="datetime.datetime.now()"/>
@@ -66,15 +74,44 @@
                 </div>
             </div>
         </section>
-        <section class="s_text_block o_mail_snippet_general pb16 pt32" data-vxml="001" style="background-color: rgb(43, 59, 88) !important; padding-left: 15px; padding-right: 15px;" data-snippet="s_text_block" data-name="Text">
-            <div class="container s_allow_columns">
-                <p><font style="color: rgb(255, 255, 255);">Hi there!</font></p>
-                <p><font style="color: rgb(255, 255, 255);">The next edition of <span style="font-weight: bolder;">Odoo Experience Online</span> is coming soon!
-                    <br/>To stir up your curiosity, have a look at all the great talks scheduled and highlighted in our agenda!</font>
-                </p>
+        <section class="s_cover o_mail_snippet_general" data-vxml="001" data-snippet="s_cover" data-name="Cover">
+            <div class="container">
+                <div class="row">
+                    <div class="oe_img_bg o_bg_img_center pb48 pt256 col-md-12" data-original-src="/mass_mailing_themes/static/src/img/theme_event/s_cover_default_image.jpg" style="background-image: url('/mass_mailing_themes/static/src/img/theme_event/s_cover_default_image.jpg');">
+                        <div class="o_we_bg_filter bg-black-50"/>
+                        <p><font class="text-white"><strong>SEPT 24-26, 2026</strong></font></p>
+                        <h1><span class="o_rfs" style="font-size: clamp(8px, 1em + 5.7851vw, 400px);"><font class="text-white">Join us at the</font></span><span class="display-4-fs"><font class="text-white"><br/></font></span><span class="o_rfs" style="font-size: clamp(8px, 1em + 5.7851vw, 400px);"><font class="text-white">Odoo Experience.</font></span></h1>
+                        <p class="lead"><font class="text-white">Join us for a 2-day event filled with tech and business talks,<br/>workshops, and networking opportunities.</font></p>
+                        <p><a class="btn btn-lg btn-primary" href="https://www.example.com">Grab your ticket!</a></p>
+                    </div>
+                </div>
             </div>
         </section>
-        <section class="s_media_list o_mail_snippet_general o_cc o_cc2 pb16 pt0" style="background-color: rgb(43, 59, 88) !important; padding-left: 15px; padding-right: 15px;" data-snippet="s_media_list" data-vcss="001" data-vxml="001" data-name="Media List">
+        <section class="s_company_team_shapes o_mail_snippet_general o_cc o_cc2 pt48 pb48" style="background-color: rgb(26, 36, 54);">
+            <div class="container">
+                <p style="text-align: center;">
+                    <font style="color: rgb(3, 249, 227);">TECH &amp; BUSINESS TALKS<br/>&#xFEFF;</font>
+                    <font class="text-o-color-4"><span class="h1-fs">Discover our panel of experts<br/><br/></span></font>
+                </p>
+                <div class="row">
+                    <div class="col-12 col-md-6 pb24">
+                       <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.s_company_team_default_image_1" style="width: 100% !important;" class="img img-fluid o_editable_media mx-auto d-block mw-100" alt=""/>
+                        </div>
+                        <h3 style="text-align: center;"><font class="text-o-color-4">Cee R.M</font></h3>
+                        <p style="text-align: center;"><font class="text-o-color-4">Go beyond the basics and unlock the full power of Odoo's framework.</font></p>
+                    </div>
+                    <div class="col-12 col-md-6 pb24">
+                        <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.s_company_team_default_image_2" style="width: 100% !important;" class="img img-fluid o_editable_media mx-auto d-block mw-100" alt=""/>
+                        </div>
+                        <h3 style="text-align: center;"><font class="text-o-color-4">Otto Mation</font></h3>
+                        <p style="text-align: center;"><font class="text-o-color-4">From idea to implementation, build smarter and faster in Odoo.</font></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="s_media_list o_mail_snippet_general o_cc o_cc2 pb16 pt0" style="background-color: rgb(26, 36, 54) !important; padding-left: 15px; padding-right: 15px;" data-snippet="s_media_list" data-vcss="001" data-vxml="001" data-name="Media List">
             <div class="container">
                 <div class="row s_nb_column_fixed">
                     <div class="col-md-12 s_media_list_item pt0 pb0" data-name="Media item">
