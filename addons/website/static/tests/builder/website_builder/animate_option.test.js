@@ -460,6 +460,7 @@ describe("animate text in toolbar", () => {
             `<p class="test">a<span class="o_animated_text o_animate o_anim_fade_in o_animate_preview">bc</span>d</p>`
         );
         const editable = websiteBuilder.getEditableContent();
+        const editor = websiteBuilder.getEditor();
         const selection = editable.ownerDocument.getSelection();
 
         // select the text in the span
@@ -480,7 +481,7 @@ describe("animate text in toolbar", () => {
         expect(":iframe span:contains('bc')").not.toHaveClass("o_anim_fade_in");
 
         // undo restore the classes
-        await contains("button.fa-undo").click();
+        editor.shared.history.undo();
         expect(":iframe span:contains('bc')").not.toHaveClass("o_anim_rotate_in");
         expect(":iframe span:contains('bc')").toHaveClass("o_anim_fade_in");
 
