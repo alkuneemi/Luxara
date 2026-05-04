@@ -1,4 +1,5 @@
 import { Interaction } from "@web/public/interaction";
+import { browser } from "@web/core/browser/browser";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { registry } from "@web/core/registry";
 import { onceAllImagesLoaded } from "@website/utils/images";
@@ -9,6 +10,7 @@ export class CarouselSlider extends Interaction {
         _root: {
             "t-on-slide.bs.carousel": this.onSlideCarousel,
             "t-on-slid.bs.carousel": this.onSlidCarousel,
+            "t-att-data-bs-ride": this.handleBsRide,
         },
         "img": {
             "t-on-load": this.computeMaxHeight,
@@ -49,7 +51,7 @@ export class CarouselSlider extends Interaction {
         if (this.el.dataset.bsRide === "false") {
             window.Carousel.getOrCreateInstance(this.el, { ride: false, pause: true });
         } else if (!this.hasInterval) {
-            this.el.dataset.bsInterval = "1000";
+            this.el.dataset.bsInterval = "5000";
         }
     }
 
@@ -164,6 +166,24 @@ export class CarouselSlider extends Interaction {
             const carouselItemsEls = this.carouselInnerEl.querySelectorAll(".carousel-item");
             this.carouselInnerEl.appendChild(carouselItemsEls[0]);
         }
+    }
+
+    /**
+     * Alters `data-bs-ride` if the user prefers reduced motion.
+     *
+     * @returns {'false'|Symbol} - "false" if prefers reduced motion, initial
+     * value otherwise
+     */
+    handleBsRide() {
+        if (browser.matchMedia(`(prefers-reduced-motion: reduce)`).matches) {
+            // Only recreate the Bootstrap carousel the 1st time.
+            if (this.el.dataset.bsRide !== "false") {
+                window.Carousel.getInstance(this.el)?.dispose();
+                window.Carousel.getOrCreateInstance(this.el, { ride: false, pause: true });
+            }
+            return "false";
+        }
+        return Interaction.INITIAL_VALUE;
     }
 
     /**
