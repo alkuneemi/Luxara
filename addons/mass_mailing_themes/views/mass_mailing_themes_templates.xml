@@ -24,7 +24,7 @@
             <div data-name="magazine" title="Magazine" data-img="/mass_mailing_themes/static/src/img/theme_imgs/magazine_thumb" data-images-info='{"logo": {"format": "png"}, "all": {"module": "mass_mailing_themes"}}'>
                 <t t-call="mass_mailing_themes.theme_magazine_template"/>
             </div>
-            <div data-name="bignews" title="Big News" data-img="/mass_mailing_themes/static/src/img/theme_imgs/bignews_thumb" data-images-info='{"logo": {"format": "png"}, "all": {"module": "mass_mailing_themes"}}'>
+            <div data-name="bignews" title="Big News" data-layout-styles="background-color: rgb(8, 82, 148) !important;" data-img="/mass_mailing_themes/static/src/img/theme_imgs/bignews_thumb" data-images-info='{"logo": {"format": "png"}, "all": {"module": "mass_mailing_themes"}}'>
                 <t t-call="mass_mailing_themes.theme_bignews_template"/>
             </div>
             <div data-name="promotion" title="Promotion Program" data-img="/mass_mailing_themes/static/src/img/theme_imgs/promotion_thumb" data-images-info='{"logo": {"format": "png"}, "all": {"module": "mass_mailing_themes"}}'>
@@ -627,82 +627,124 @@
     <template id="theme_bignews_template">
         <style id="design-element">
             .o_layout .o_mail_wrapper .o_mail_wrapper_td {
-                --h1-font-size: 36px;
-                --h1-font-weight: bolder;
-                --h1-font-style: italic;
-                --h1-color: #BA0013;
+                --h1-color: #0d283e;
+                --h1-font-family: Georgia, Times, "Times New Roman", serif;
 
-                --h2-font-size: 14px;
-                --h2-font-weight: bolder;
+                --h2-color: #0d283e;
 
-                --h3-font-size: 18px;
-                --h3-font-weight: bolder;
+                --h3-color: #0d283e;
 
-                --text-color: #6c757d;
+                --link-text-decoration-line: underline;
+                --link-color: #397B21;
 
-                --link-color: #BA0013;
+                --btn-primary-color: #ffffff;
+                --btn-primary-background-color: #0d283e;
+                --btn-primary-border-color: #0d283e;
 
-                --btn-primary-background-color: #BA0013;
-                --btn-primary-border-color: #BA0013;
+                --btn-secondary-color: #FFFFFF;
+                --btn-secondary-background-color: #543427;
+                --btn-secondary-border-color: #543427;
+                hr {
+                    background-color: rgba(0,0,0,0);
+                }
             }
         </style>
-        <t t-set="now" t-value="datetime.datetime.now()"/>
-        <t t-set="future_date" t-value="(datetime.date.today() + datetime.timedelta(days=30))"/>
-        <section class="s_header_logo o_mail_block_header_logo o_mail_snippet_general pt16 pb16 bg-200" data-vxml="001"  data-snippet="s_mail_block_header_logo" data-name="Header Logo">
+        <section class="s_header_logo o_mail_block_header_logo o_mail_snippet_general" style="background-color: rgb(220, 234, 255);" data-name="Centered Logo" data-vxml="001">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-4"></div>
-                    <div class="col-md-4 pt16 pb16" style="text-align: center;">
-                        <a style="text-decoration:none;" href="http://www.example.com">
-                            <img src="/mass_mailing_themes/static/src/img/theme_bignews/bignews_logo.png" width="70" style="height:auto;max-width:100%; width:70px;" class="img-fluid"/>
-                        </a>
+                    <div class="col-md-3"/>
+                    <div class="col-md-6" style="text-align: center;">
+                        <div class="o_not_editable">
+                            <a t-att-href="(company_id.website) or '#'" style="text-decoration:none;" target="_blank">
+                                <img src="/mass_mailing_themes/static/src/img/theme_coffeebreak/s_default_image_logo.png" style="height: auto; max-width: 100%; padding-bottom: 48px !important; width: 50% !important; padding-top: 32px !important;" alt="Your Logo" class="img img-fluid o_editable_media py-4"/>
+                            </a>
+                        </div>
                     </div>
-                    <div class="col-md-4" style="text-align:right"></div>
+                    <div class="col-md-3" style="text-align: right;"/>
                 </div>
             </div>
         </section>
-        <section class="s_title o_mail_snippet_general pt32 pb16" data-vxml="001"  data-snippet="s_title" data-name="Title">
+        <section class="s_picture o_mail_snippet_general pt0 pb0" style="padding-left: 16px; padding-right: 16px; background-color: rgb(220, 234, 255);" data-vxml="001">
             <div class="container s_allow_columns">
-                <h1 style="text-align: center;">WE'RE MOVING</h1>
-            </div>
-        </section>
-        <section class="s_cover o_mail_snippet_general pt0" data-vxml="001"  data-snippet="s_cover" data-name="Cover">
-            <img src="/mass_mailing_themes/static/src/img/theme_bignews/s_default_image_cover.jpg" alt="Cover image" class="img-fluid w-100 mx-auto" style="padding: 15px;"/>
-        </section>
-        <section class="s_text_block o_mail_snippet_general pt32 pb32" data-vxml="001"  data-snippet="s_text_block" data-name="Text" style="padding-left: 15px; padding-right: 15px;">
-            <div class="container s_allow_columns">
-                <h2>BEGINNING <t t-out="future_date.strftime('%B %d').upper()" /></h2>
-                <p>We are proud to announce that due to our remarkable growth in the Springfield area, we are moving to a new location on July 1.
-                   <br/>We will continue to offer the same friendly service at our new address on <span style="font-weight: bolder">1600 Main Street</span>,
-                   <br/>which will allow us to offer an even larger selection of products and services.
-                </p>
-                <p>See you there,</p>
-                <p><img src="/mass_mailing_themes/static/src/img/theme_bignews/signature.png" style="width:125px; margin-top:8px;margin-bottom:-25px;" alt="Signature" class="img-fluid"/></p>
-                <p>Michael Fletcher<br/>
-                   <span style="font-size: 12px; font-weight: bolder;">Customer Service</span>
-                </p>
+                <h1 style="text-align: center;">
+                    <span style="font-weight: normal; font-size: 48px;">Our biggest</span>
+                    <br/>
+                    <span style="font-weight: normal; font-size: 48px;">release to date!</span>
+                </h1>
                 <p style="text-align: center;">
-                    <a role="button" href="#" class="btn btn-primary">READ MORE</a>
+                    <a href="#" class="btn btn-lg btn-primary">Read more</a>
                 </p>
+                <div class="row">
+                    <div class="pt32 col-12" style="text-align: center;">
+                        <div class="o_not_editable"><img style="width: 50% !important;" class="img-fluid o_we_custom_image o_editable_media" src="/html_editor/image_shape/mass_mailing_themes.s_picture_default_image_2/html_builder/devices/galaxy_front_portrait_half.svg" data-shape="html_builder/devices/galaxy_front_portrait_half" data-file-name="s_picture_default_image_2.svg" data-shape-colors=";;;;" data-format-mimetype="image/jpeg"/></div>
+                    </div>
+                </div>
             </div>
         </section>
-        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_center o_mail_snippet_general bg-200 pt16 pb16" data-vxml="001"  data-snippet="s_mail_block_footer_social" data-name="Footer Center">
+        <section class="s_three_columns o_mail_snippet_general o_cc pt32 pb32" data-vxml="001" data-snippet="s_three_columns" data-name="Three Columns">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-12" style="text-align: center;" t-translation="off">
-                        <t t-call="mass_mailing.s_social_media_template" optionalSnippetClass.f="no_icon_color"
-                            optionalTextStyle.f="color: #BA0013" optionalTextPosition.f="text-center"/>
+                    <div class="col-md-6 o_mail_no_colorpicker pt16 pb16 col-12">
+                        <div class="card text-bg-white h-100" style="border-width: 0px !important;">
+                            <div class="o_not_editable">
+                                <img class="card-img-top o_editable_media" src="/mass_mailing_themes/static/src/img/theme_coffeebreak/set_ui_landscape_sm_1.webp" alt="" style="border-radius: 8px !important;"/>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="card-title"><span class="h3-fs">Revenue clarity</span></h2>
+                                <p class="card-text">Track churn instantly with a clear, visual gauge.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 o_mail_no_colorpicker pt16 pb16 col-12">
+                        <div class="card text-bg-white h-100" style="border-width: 0px !important;">
+                            <div class="o_not_editable">
+                                <img class="card-img-top o_editable_media" src="/mass_mailing_themes/static/src/img/theme_coffeebreak/set_ui_landscape_sm_2.webp" alt="" style="border-radius: 8px !important;"/>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="card-title"><span class="h3-fs">Growth insights</span></h2>
+                                <p class="card-text">Monitor revenue trends with simple, dynamic charts.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 o_mail_no_colorpicker pt16 pb16 col-12">
+                        <div class="card text-bg-white h-100" style="border-width: 0px !important;">
+                            <div class="o_not_editable">
+                                <img class="card-img-top o_editable_media" src="/mass_mailing_themes/static/src/img/theme_coffeebreak/set_ui_landscape_sm_3.webp" alt="" style="border-radius: 8px !important;"/>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="card-title"><span class="h3-fs">Team highlights</span></h2>
+                                <p class="card-text">Spot top contributors and key activity at a glance.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 o_mail_no_colorpicker pt16 pb16 col-12">
+                        <div class="card text-bg-white h-100" style="border-width: 0px !important;">
+                            <div class="o_not_editable">
+                                <img class="card-img-top o_editable_media" src="/mass_mailing_themes/static/src/img/theme_coffeebreak/set_ui_landscape_sm_4.webp" alt="" style="border-radius: 8px !important;"/>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="card-title"><span class="h3-fs">Subscription updates</span></h2>
+                                <p class="card-text">Follow new signups and plan changes in real time.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
+        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_center o_mail_snippet_general o_cc o_cc5 pt24 pb24 bg-900" data-vxml="001" data-snippet="s_mail_block_footer_social" data-name="Footer Center">
+            <div class="container">
                 <div class="row">
-                    <div class="col-md-12 o_mail_footer_links pt8 pb8" style="text-align: center;">
-                        <a role="button" href="/unsubscribe_from_list" class="btn btn-link">Unsubscribe</a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <p style="text-align: center;">
-                            © <t t-out="now.strftime('%Y')" /> All Rights Reserved
+                    <div class="col-10 offset-md-1">
+                        <div class="o_mail_footer_social pt16 pb16">
+                            <t t-call="mass_mailing.s_social_media_template"
+                                optionalTextPosition.f="text-start" optionalIconLayout.f="rounded-empty-circle shadow-sm"
+                                optionalTextStyle.f="color: white;" optionalSnippetClass.f="no_icon_color"/>
+                        </div>
+                        <div class="o_mail_footer_links">
+                            <a role="button" class="text-o-color-4" href="/unsubscribe_from_list">Unsubscribe</a> | <a role="button" class="text-o-color-4" href="/contactus">Contact</a>
+                        </div>
+                        <p class="o_mail_footer_copy text-o-color-4">
+                            © <t t-out="datetime.datetime.now().year"/> All Rights Reserved
                         </p>
                     </div>
                 </div>
