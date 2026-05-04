@@ -118,7 +118,7 @@ class Website(models.CachedModel):
         'domain', 'cookies_bar', 'sequence',
     )
 
-    @tools.ormcache(cache='default')
+    @api.ormcache(cache='default')
     def _cached_data(self):
         # method is overridden to use cache 'default' instead of 'stable'
         # hack: retrieve the original method to skip the ormcache wrapper
@@ -291,7 +291,7 @@ class Website(models.CachedModel):
         }
 
     # self.env.uid for ir.rule groups on menu
-    @tools.ormcache('self.env.uid', 'self.id', cache='templates')
+    @api.ormcache('self.env.uid', 'self.id', cache='templates')
     def is_menu_cache_disabled(self):
         """
         Checks if the website menu contains a record like url.
@@ -339,7 +339,7 @@ class Website(models.CachedModel):
         if 'cdn_activated' in values or 'cdn_url' in values or 'cdn_filters' in values:
             # invalidate the caches from static node at compile time
             if any(self._ids):
-                self.env.registry.clear_cache()
+                self.env.transaction.invalidate_ormcache()
 
         # invalidate cache for `company.website_id` to be recomputed
         if 'sequence' in values or 'company_id' in values:
@@ -432,7 +432,7 @@ class Website(models.CachedModel):
 
         companies = self.company_id
         res = super().unlink()
-        self.env.registry.clear_cache()
+        self.env.transaction.invalidate_ormcache()
         companies._compute_website_id()
         return res
 
@@ -1432,7 +1432,7 @@ class Website(models.CachedModel):
         return self.browse(website_id)
 
     @api.model
-    @tools.ormcache('domain_name', 'fallback')
+    @api.ormcache('domain_name', 'fallback')
     def _get_current_website_id(self, domain_name, fallback=True):
         """Get the current website id.
 

@@ -58,9 +58,9 @@ except ImportError:
 
 from odoo import api, sql_db
 from odoo.modules.registry import Registry
+from odoo.orm.cache import log_ormcache_stats
 from odoo.release import nt_service_name
 from odoo.tools import OrderedSet, config, gc, osutil, profiler
-from odoo.tools.cache import log_ormcache_stats
 from odoo.tools.misc import dumpstacks, mute_logger, stripped_sys_argv
 
 _logger = logging.getLogger(__name__)
@@ -1095,7 +1095,8 @@ class PreforkServer(CommonServer):
                 return
             for registry in registries.values():
                 with registry.cursor() as cr:
-                    registry.check_signaling(cr)
+                    # check signaling by instantiating an environment
+                    api.Environment(cr, api.SUPERUSER_ID, {})
             registries.clear()
             # Close all opened cursors
             sql_db.close_all()
@@ -1665,6 +1666,7 @@ def preload_registries(dbnames):
                     if post_install_suite.has_http_case():
                         with registry.cursor() as cr:
                             env = api.Environment(cr, api.SUPERUSER_ID, {})
+                            env.registry._assertion_report = registry._assertion_report
                             env['ir.qweb']._pregenerate_assets_bundles()
                     result = loader.run_suite(post_install_suite, global_report=registry._assertion_report)
                     registry._assertion_report.update(result)

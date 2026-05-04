@@ -1007,7 +1007,7 @@ class IrQweb(models.AbstractModel):
 
     @tools.conditional(
         'xml' not in tools.config['dev_mode'],
-        tools.ormcache('ref', 'tuple(self.env.context.get(k) or False for k in self._get_template_cache_keys())', cache='templates'),
+        api.ormcache('ref', 'tuple(self.env.context.get(k) or False for k in self._get_template_cache_keys())', cache='templates'),
     )
     def _generate_code_cached(self, ref: int):
         # The method preloads templates to put information into the transaction
@@ -1020,14 +1020,16 @@ class IrQweb(models.AbstractModel):
 
         view_hash = hash(document)
         cache_key = tuple(self.env.context.get(k) or False for k in self._get_template_cache_keys())
-        return self._generate_code_cached_memo(ref, memo_key=(view_hash, cache_key))
 
-    @tools.conditional(
-        'xml' not in tools.config['dev_mode'],
-        tools.ormcache('ref', 'memo_key', cache='template_code'),
-    )
-    def _generate_code_cached_memo(self, ref: int, memo_key):
-        return self._generate_code_uncached(ref)
+        if 'xml' in tools.config['dev_mode']:
+            return self._generate_code_uncached(ref)
+        memo_key = (ref, view_hash, cache_key)
+        cache = self.env.registry._template_code__
+        code = cache.get(memo_key)
+        if code is None:
+            code = self._generate_code_uncached(ref)
+            cache[memo_key] = code
+        return code
 
     def _generate_code_uncached(self, template: int | str | etree._Element):
         assert isinstance(self, IrQweb)
@@ -2889,7 +2891,7 @@ class IrQweb(models.AbstractModel):
         # in non-xml-debug mode we want assets to be cached forever, and the admin can force a cache clear
         # by restarting the server after updating the source code (or using the "Clear server cache" in debug tools)
         'xml' not in tools.config['dev_mode'],
-        tools.ormcache('bundle', 'css', 'js', 'binary', 'tuple(sorted(assets_params.items()))', 'rtl', 'autoprefix', cache='assets'),
+        api.ormcache('bundle', 'css', 'js', 'binary', 'tuple(sorted(assets_params.items()))', 'rtl', 'autoprefix', cache='assets'),
     )
     def _generate_asset_links_cache(self, bundle, css=True, js=True, binary=False, assets_params=None, rtl=False, autoprefix=False):
         return self._generate_asset_links(bundle, css, js, binary, False, assets_params, rtl, autoprefix=autoprefix)
@@ -3077,10 +3079,10 @@ def render(template_name, values, load, **options):
     """
     class MockPool:
         db_name = None
-        _Registry__caches = {cache_name: LRU(cache_size) for cache_name, cache_size in _REGISTRY_CACHES.items()}
-        _Registry__caches_groups = {}
-        for cache_name, cache in _Registry__caches.items():
-            _Registry__caches_groups.setdefault(cache_name.split('.')[0], []).append(cache)
+        registry_caches__ = {
+            cache_name: (0, LRU(cache_size))
+            for cache_name, cache_size in _REGISTRY_CACHES.items()
+        }
 
     class MockIrQWeb(IrQweb):
         _register = False               # not visible in real registry
