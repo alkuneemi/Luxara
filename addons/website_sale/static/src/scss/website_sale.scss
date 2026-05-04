@@ -77,6 +77,7 @@
         container-name: o-wsale-grid;
         grid-template-rows: minmax(auto, auto);
 
+        /*rtl:ignore*/
         border-left: var(--o-wsale-sidebar-border);
     }
 
@@ -639,6 +640,7 @@
                     --o-wsale-topbar-border-width: 0 #{$border-width} #{$border-width} 0;
 
                     #o_wsale_pager {
+                        /*rtl:ignore*/
                         border-left: 0;
                     }
                     #category_footer {
@@ -648,7 +650,8 @@
             }
 
             #o_wsale_products_grid {
-                box-shadow: inset -1px -1px 0 0px var(--o-border-color);
+                /*rtl:ignore*/
+                box-shadow: inset -1px -1px 0 0px var(--border-color);
             }
 
             &:where(:not(.o_wsale_has_sidebar)) #o_wsale_products_grid {
@@ -668,6 +671,7 @@
             }
             @include media-breakpoint-up(lg) {
                 #products_grid {
+                    /*rtl:ignore*/
                     padding-left: 0;
                 }
             }
