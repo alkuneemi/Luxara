@@ -666,8 +666,8 @@ class ProjectProject(models.Model):
                 vals['favorite_user_ids'] = [self.env.uid]
         projects = super().create(vals_list)
         for project in projects:
-            if project.privacy_visibility == 'portal':
-                project.message_subscribe(partner_ids=[project.partner_id.id])
+            if project.privacy_visibility in ['invited_users', 'portal'] and project.partner_id:
+                project.message_subscribe(partner_ids=project.partner_id.ids)
         return projects
 
     def write(self, vals):
@@ -711,7 +711,11 @@ class ProjectProject(models.Model):
                 })
             vals.pop('last_update_status')
         if vals.get('privacy_visibility'):
-            self._change_privacy_visibility(vals['privacy_visibility'])
+            self._change_privacy_visibility(vals['privacy_visibility'], [vals['partner_id']] if vals.get('partner_id') else [])
+
+        if vals.get('partner_id'):
+            projects = self.filtered(lambda p: (vals.get('privacy_visibility') or p.privacy_visibility) in ['invited_users', 'portal'])
+            projects.message_subscribe(partner_ids=[vals.get('partner_id')])
 
         date_start = vals.get('date_start', True)
         date_end = vals.get('date', True)
@@ -1112,7 +1116,7 @@ class ProjectProject(models.Model):
     # Privacy
     # ---------------------------------------------------
 
-    def _change_privacy_visibility(self, new_visibility):
+    def _change_privacy_visibility(self, new_visibility, partner_ids=[]):
         """
         Unsubscribe non-internal users from the project and tasks if the project privacy visibility
         goes from 'portal' to a different value.
@@ -1122,7 +1126,7 @@ class ProjectProject(models.Model):
             if project.privacy_visibility == new_visibility:
                 continue
             if new_visibility in ['invited_users', 'portal']:
-                project.message_subscribe(partner_ids=project.partner_id.ids)
+                project.message_subscribe(partner_ids=partner_ids or project.partner_id.ids)
                 for task in project.task_ids.filtered('partner_id'):
                     task.message_subscribe(partner_ids=task.partner_id.ids)
             elif project.privacy_visibility in ['invited_users', 'portal']:
