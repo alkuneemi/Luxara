@@ -12,7 +12,7 @@ import { htmlEscape, markup } from "@odoo/owl";
 
 import { router } from "@web/core/browser/router";
 import { emojiLoader } from "@web/core/emoji_picker/emoji_loader";
-import { formatList, normalize } from "@web/core/l10n/utils";
+import { formatList } from "@web/core/l10n/utils";
 import {
     createDocumentFragmentFromContent,
     createElementWithContent,
@@ -475,10 +475,6 @@ export function trimEmptyBlocksAround(content) {
     trimBoundaryParagraph("start");
     trimBoundaryParagraph("end");
     return changed ? getInnerHtml(body) : content;
-}
-
-export function cleanTerm(term) {
-    return typeof term === "string" ? normalize(term) : "";
 }
 
 /**
