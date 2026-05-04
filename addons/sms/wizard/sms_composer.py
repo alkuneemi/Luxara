@@ -72,6 +72,10 @@ class SmsComposer(models.TransientModel):
     body = fields.Text(
         'Message', compute='_compute_body',
         precompute=True, readonly=False, store=True, required=True)
+    sms_char_count = fields.Integer(compute='_compute_sms_stats')
+    sms_count = fields.Integer(compute='_compute_sms_stats')
+    sms_max_char = fields.Integer(compute='_compute_sms_stats')
+    sms_encoding = fields.Char(compute='_compute_sms_stats')
 
     @api.depends('res_ids_count')
     @api.depends_context('sms_composition_mode')
@@ -178,6 +182,16 @@ class SmsComposer(models.TransientModel):
                 record.body = record.template_id._render_field('body', [record.res_id], compute_lang=True, add_context=additional_context)[record.res_id]
             elif record.template_id:
                 record.body = record.template_id.body
+
+    @api.depends('body')
+    def _compute_sms_stats(self):
+        for composer in self:
+            text = composer.body or ""
+            char_count = len(text) + text.count('\n')
+            composer.sms_char_count = char_count
+            composer.sms_max_char = 160 * ((char_count - 1) // 160 + 1) if char_count > 0 else 160
+            composer.sms_count = (char_count - 1) // 160 + 1 if char_count > 0 else 0
+            composer.sms_encoding = 'GSM7'
 
     # ------------------------------------------------------------
     # Actions

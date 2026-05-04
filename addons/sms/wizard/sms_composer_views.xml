@@ -53,7 +53,7 @@
                             options="{'dynamic_placeholder': true, 'dynamic_placeholder_model_reference_field': 'res_model'}"
                             placeholder="Write a message..."/>
                         <field name="body" widget="sms_widget" invisible="not comment_single_recipient"
-                        placeholder="Write a message..."/>
+                            placeholder="Write a message..."/>
                         <field name="mass_keep_log" invisible="1"/>
                         <field name="use_exclusion_list" invisible="1"/>
                 </sheet>
@@ -68,6 +68,15 @@
                     <button string="Send now" type="object" name="action_send_sms_mass_now" data-hotkey="w"
                         invisible="composition_mode != 'mass'"/>
                     <button class="btn btn-secondary" special="cancel" data-hotkey="x"/>
+                    <div class="ms-auto text-muted d-flex align-items-center" invisible="not sms_char_count">
+                        <field name="sms_char_count" nolabel="1"/>/
+                        <field name="sms_max_char" nolabel="1"/>
+                        <span class="mx-2">|</span>
+                        <field name="sms_count" nolabel="1"/>
+                        <span class="ms-1">SMS</span>
+                        <span class="ms-1" invisible="not sms_encoding">(<field name="sms_encoding" nolabel="1"/>)</span>
+                        <a href="https://iap-services.odoo.com/iap/sms/pricing" target="_blank" title="SMS Pricing" aria-label="SMS Pricing" class="fa fa-lg fa-info-circle text-info ms-2"/>
+                    </div>
                 </footer>
             </form>
         </field>
