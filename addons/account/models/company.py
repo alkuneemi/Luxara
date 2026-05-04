@@ -267,7 +267,7 @@ class ResCompany(models.Model):
     force_restrictive_audit_trail = fields.Boolean(
         string='Force Audit Trail',
         compute='_compute_force_restrictive_audit_trail',
-    )  # Force the restrictive audit trail mode, and hide the corresponding setting.",
+    )  # Force the restrictive audit trail mode if required by any localization
 
     # Autopost Wizard
     autopost_bills = fields.Boolean(string='Auto-validate bills', default=True)
