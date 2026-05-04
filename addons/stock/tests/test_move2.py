@@ -13,6 +13,7 @@ from odoo.tools import float_is_zero, float_compare
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+
 class TestPickShip(TestStockCommon):
     def create_pick_ship(self):
         picking_client = self.env['stock.picking'].create({
@@ -2598,6 +2599,125 @@ class TestSinglePicking(TestStockCommon):
             { 'location_id': new_location.id, 'location_dest_id': new_destination.id }
         ])
 
+    def test_onchange_lot_ids_for_lot_tracked_product(self):
+        """
+        Check that updating the lot_ids field of the moves accurately adapts
+        the quantity and updates the existing move lines following these rules:
+        1. Removing a lot should remove its reference from sml but not the reserved quantity.
+        2. New lots should in priority be assigned one at a time in order to existing move lines.
+        3. New lots that can not be assigned to an existing sml should be added with a quantity of 1.
+        """
+        sublocations = self.env['stock.location'].create([
+            {'name': f'Super location{i + 1}', 'location_id': self.stock_location.id} for i in range(2)
+        ])
+        product_serial, product_lot = self.product, self.productA
+        product_serial.write({'is_storable': True, 'tracking': 'serial'})
+        product_lot.write({'is_storable': True, 'tracking': 'lot'})
+        serials = self.env['stock.lot'].create([
+            {'name': f'SuperSerial {i + 1}', 'product_id': product_serial.id} for i in range(9)
+        ])
+        lots = self.env['stock.lot'].create([
+            {'name': f'Superlot {i + 1}', 'product_id': product_lot.id} for i in range(10)
+        ])
+        # Put serials and lots in stock
+        self.env['stock.quant']._update_available_quantity(product_serial, sublocations[0], 1.0, lot_id=serials[0])
+        self.env['stock.quant']._update_available_quantity(product_serial, sublocations[1], 1.0, lot_id=serials[1])
+        self.env['stock.quant']._update_available_quantity(product_serial, sublocations[0], 1.0, lot_id=False)
+        self.env['stock.quant']._update_available_quantity(product_lot, sublocations[1], 3.0, lot_id=lots[0])
+        self.env['stock.quant']._update_available_quantity(product_lot, sublocations[0], 1.0, lot_id=lots[1])
+        self.env['stock.quant']._update_available_quantity(product_lot, sublocations[1], 2.0, lot_id=lots[1])
+        self.env['stock.quant']._update_available_quantity(product_lot, sublocations[0], 1.0, lot_id=False)
+        self.env['stock.quant']._update_available_quantity(product_lot, sublocations[1], 1.0, lot_id=False)
+        delivery = self.env['stock.picking'].create({
+            'name': 'Lovely Delivery',
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'picking_type_id': self.picking_type_out.id,
+            'move_ids': [
+                Command.create({
+                    'product_id': product_serial.id,
+                    'product_uom_qty': 5,
+                    'location_id': self.stock_location.id,
+                    'location_dest_id': self.customer_location.id,
+                }),
+                Command.create({
+                    'product_id': product_lot.id,
+                    'product_uom_qty': 10,
+                    'location_id': self.stock_location.id,
+                    'location_dest_id': self.customer_location.id,
+                }),
+            ]
+        })
+        self.picking_type_out.reservation_method = 'at_confirm'
+        delivery.action_confirm()
+        with Form(delivery) as delivery_form:
+            with delivery_form.move_ids.edit(0) as move_form:
+                move_form.quantity = 5.0
+            with delivery_form.move_ids.edit(1) as move_form:
+                move_form.quantity = 10.0
+        self.assertRecordValues(delivery.move_ids, [{'quantity': 5.0}, {'quantity': 10.0}])
+        self.assertRecordValues(delivery.move_ids[0].move_line_ids, [
+            {'quantity': 1.0, 'lot_id': serials[0].id, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': serials[1].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': False, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': False, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': False, 'location_id': self.stock_location.id},
+        ])
+        self.assertRecordValues(delivery.move_ids[1].move_line_ids, [
+            {'quantity': 3.0, 'lot_id': lots[0].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': lots[1].id, 'location_id': sublocations[0].id},
+            {'quantity': 2.0, 'lot_id': lots[1].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': False, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': False, 'location_id': sublocations[1].id},
+            {'quantity': 2.0, 'lot_id': False, 'location_id': self.stock_location.id},
+        ])
+
+        with Form(delivery) as delivery_form:
+            with delivery_form.move_ids.edit(0) as move_form:
+                # Remove S1 and S2 > frees 2 smls
+                # Adds S3 and S4 > uses 2 smls
+                move_form.lot_ids = serials[2:3]
+                self.assertEqual(move_form.quantity, 5)
+                # Add S5, S6, S7, S8, S9 > one additional sml required
+                move_form.lot_ids = serials[2:]
+                self.assertEqual(move_form.quantity, 7)
+                # Add back S2 > one additional sml required
+                move_form.lot_ids = serials[1:]
+                self.assertEqual(move_form.quantity, 8)
+            with delivery_form.move_ids.edit(1) as move_form:
+                # Remove lot1 and lot2 > frees 3 smls
+                move_form.lot_ids = lots[2:3]
+                self.assertEqual(move_form.quantity, 10)
+                # Adds lot5, lot6, lot7, lot8, lot9, lot10 > two additional smls required
+                move_form.lot_ids = lots[2:]
+                self.assertEqual(move_form.quantity, 12)
+                # Add back lot2 > two additional smls required
+                move_form.lot_ids = lots[1:]
+                self.assertEqual(move_form.quantity, 14)
+        self.assertRecordValues(delivery.move_ids, [{'quantity': 8.0}, {'quantity': 14.0}])
+        self.assertRecordValues(delivery.move_ids[0].move_line_ids, [
+            {'quantity': 1.0, 'lot_id': serials[2].id, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': serials[1].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': serials[3].id, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': serials[4].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': serials[5].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': serials[6].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': serials[7].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': serials[8].id, 'location_id': self.stock_location.id},
+        ])
+        self.assertRecordValues(delivery.move_ids[1].move_line_ids, [
+            {'quantity': 3.0, 'lot_id': lots[2].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': lots[1].id, 'location_id': sublocations[0].id},
+            {'quantity': 2.0, 'lot_id': lots[1].id, 'location_id': sublocations[1].id},
+            {'quantity': 1.0, 'lot_id': lots[3].id, 'location_id': sublocations[0].id},
+            {'quantity': 1.0, 'lot_id': lots[4].id, 'location_id': sublocations[1].id},
+            {'quantity': 2.0, 'lot_id': lots[5].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': lots[6].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': lots[7].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': lots[8].id, 'location_id': self.stock_location.id},
+            {'quantity': 1.0, 'lot_id': lots[9].id, 'location_id': self.stock_location.id},
+        ])
+
     def test_validate_picking_twice(self):
         """
         Check that validating an already validated picking bypasses the call.
@@ -3288,52 +3408,6 @@ class TestAutoAssign(TestStockCommon):
         customer_picking5.action_confirm()
         self.assertEqual(customer_picking4.move_ids.quantity, 10, "Reservation Method: 'by_date' should auto-assign when within reservation date range at confirmation")
         self.assertEqual(customer_picking5.move_ids.quantity, 10, "Reservation Method: 'at_confirm' should auto-assign at confirmation")
-
-    def test_serial_lot_ids(self):
-        self.product_serial = self.env['product.product'].create({
-            'name': 'PSerial',
-            'is_storable': True,
-            'tracking': 'serial',
-        })
-
-        move = self.env['stock.move'].create({
-            'location_id': self.supplier_location.id,
-            'location_dest_id': self.stock_location.id,
-            'product_id': self.product_serial.id,
-            'product_uom': self.uom_unit.id,
-            'picking_type_id': self.picking_type_in.id,
-        })
-        self.assertEqual(move.state, 'draft')
-        lot1 = self.env['stock.lot'].create({
-            'name': 'serial1',
-            'product_id': self.product_serial.id,
-        })
-        lot2 = self.env['stock.lot'].create({
-            'name': 'serial2',
-            'product_id': self.product_serial.id,
-        })
-        lot3 = self.env['stock.lot'].create({
-            'name': 'serial3',
-            'product_id': self.product_serial.id,
-        })
-        move.lot_ids = [Command.link(lot1.id)]
-        move.lot_ids = [Command.link(lot2.id)]
-        move.lot_ids = [Command.link(lot3.id)]
-        self.assertEqual(move.quantity, 3.0)
-        move.lot_ids = [Command.unlink(lot2.id)]
-        self.assertEqual(move.quantity, 2.0)
-
-        move = self.env['stock.move'].create({
-            'location_id': self.supplier_location.id,
-            'location_dest_id': self.stock_location.id,
-            'product_id': self.product_serial.id,
-            'product_uom': self.uom_dozen.id,
-            'picking_type_id': self.picking_type_in.id,
-        })
-        move.lot_ids = [Command.link(lot1.id)]
-        move.lot_ids = [Command.link(lot2.id)]
-        move.lot_ids = [Command.link(lot3.id)]
-        self.assertEqual(move.quantity, 3.0/12.0)
 
     def test_do_not_merge_deliveries_with_different_partner(self):
         """

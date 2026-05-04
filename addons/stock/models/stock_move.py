@@ -437,6 +437,9 @@ class StockMove(models.Model):
                 move.quantity = sum_qty[move.id]
 
     def _set_quantity(self):
+        if self.env.context.get('set_qty_after_lots'):
+            return
+
         def _process_decrease(move, quantity):
             mls_to_unlink = set()
             # Since the move lines might have been created in a certain order to respect
@@ -609,41 +612,68 @@ Please change the quantity done or the rounding precision in your settings.""",
             move.lot_ids = lots_by_move_id.get(move._origin.id, [])
 
     def _set_lot_ids(self):
+        """
+        Setting the lot_ids fo a stock move shoudl adapt the reservation following these rules:
+
+        1. Removing a lot should remove its reference from sml but not the reserved quantity.
+        2. Additional lots should be handled sequentially and, if possible, be assigned to existing
+           smls without changing their location, destination nor quantity.
+        3. Additional lots that cannot be assigned following previous rules should trigger the creation
+           of a new sml with a quantity of 1.
+        """
         for move in self:
+            if move.product_id.tracking == 'none':
+                continue
             if move.state == 'assigned' and all(ml.lot_id in move.lot_ids for ml in move.move_line_ids):
                 continue
             move_lines_commands = []
-            mls = move.move_line_ids
-            mls_with_lots = mls.filtered(lambda ml: ml.lot_id)
-            mls_without_lots = (mls - mls_with_lots)
-            for ml in mls_with_lots:
-                if ml.quantity and ml.lot_id not in move.lot_ids:
-                    move_lines_commands.append((2, ml.id))
-            ls = move.move_line_ids.lot_id
-            for lot in move.lot_ids:
-                if lot not in ls:
-                    if mls_without_lots[:1]:  # Updates an existing line without serial number.
-                        move_line = mls_without_lots[:1]
-                        move_lines_commands.append(Command.update(move_line.id, {
-                            'lot_id': lot.id,
-                            'product_uom_id': move.product_id.uom_id.id if move.product_id.tracking == 'serial' else move.product_uom.id,
-                            'quantity': 1 if move.product_id.tracking == 'serial' else move.quantity,
-                        }))
-                        mls_without_lots -= move_line
-                    else:  # No line without serial number, creates a new one.
-                        reserved_quants = self.env['stock.quant'].with_context(packaging_uom_id=move.packaging_uom_id)._get_reserve_quantity(move.product_id, move.location_id, 1.0, lot_id=lot)
-                        if reserved_quants and reserved_quants[0][0].lot_id:
-                            move_line_vals = self._prepare_move_line_vals(quantity=0, reserved_quant=reserved_quants[0][0])
-                        else:
-                            move_line_vals = self._prepare_move_line_vals(quantity=0)
-                            move_line_vals['lot_id'] = lot.id
-                        move_line_vals['product_uom_id'] = move.product_id.uom_id.id
-                        move_line_vals['quantity'] = 1
-                        move_lines_commands.append((0, 0, move_line_vals))
+            lot_id_by_name = {lot.name: lot.id for lot in move.lot_ids}
+            ml_ids_without_lot = OrderedSet()
+            assigned_lot_ids = set()
+            for ml in move.move_line_ids:
+                lot_name = ml.lot_id.name or ml.lot_name
+                if ml.product_uom_id.is_zero(ml.quantity):
+                    continue
+                elif not ml.lot_id and not ml.lot_name:
+                    ml_ids_without_lot.add(ml.id)
+                elif lot_name in lot_id_by_name:
+                    lot_id = lot_id_by_name[lot_name]
+                    assigned_lot_ids.add(lot_id)
+                    move_lines_commands.append(Command.update(ml.id, {'lot_id': lot_id}))
                 else:
-                    move_line = move.move_line_ids.filtered(lambda line: line.lot_id.id == lot.id)
-                    move_line.quantity = 1
+                    ml_ids_without_lot.add(ml.id)
+                    move_lines_commands.append(Command.update(ml.id, {'lot_id': False, 'lot_name': False}))
+            mls_without_lots = self.env['stock.move.line'].browse(ml_ids_without_lot)
+
+            for lot in move.lot_ids:
+                if lot.id in assigned_lot_ids:
+                    continue
+                if mls_without_lots:
+                    # Updates an existing line without lot.
+                    move_line = mls_without_lots[0]
+                    new_vals = {
+                        'lot_id': lot.id,
+                        'lot_name': lot.name,
+                        'product_uom_id': move.product_id.uom_id.id if move.product_id.tracking == 'serial' else move.product_uom.id,
+                        'quantity': 1.0 if move.product_id.tracking == 'serial' else move_line.quantity
+                    }
+                    move_lines_commands.append(Command.update(move_line.id, new_vals))
+                    mls_without_lots -= move_line
+                else:
+                    # No line to update creates a new one.
+                    reserved_quants = self.env['stock.quant'].with_context(packaging_uom_id=move.packaging_uom_id)._get_reserve_quantity(move.product_id, move.location_id, 1.0, lot_id=lot)
+                    if reserved_quants and reserved_quants[0][0].lot_id:
+                        move_line_vals = self._prepare_move_line_vals(quantity=1.0, reserved_quant=reserved_quants[0][0])
+                    else:
+                        move_line_vals = self._prepare_move_line_vals(quantity=1.0)
+                        move_line_vals['lot_id'] = lot.id
+                    move_line_vals['product_uom_id'] = move.product_id.uom_id.id
+                    move_lines_commands.append(Command.create(move_line_vals))
             move.write({'move_line_ids': move_lines_commands})
+        if self.env.get('set_qty_after_lots'):
+            # Trigger the inverse method of the quantity field that was delayed
+            # to accurately match the new reservation
+            self.with_context(set_qty_after_lots=False)._set_quantity()
 
     @api.depends('picking_type_id', 'date', 'priority', 'state')
     def _compute_reservation_date(self):
@@ -759,9 +789,15 @@ Please change the quantity done or the rounding precision in your settings.""",
         receipt_moves_to_reassign = self.env['stock.move']
         move_to_recompute_state = self.env['stock.move']
         move_to_check_location = self.env['stock.move']
+        set_qty_after_lots = False
         if 'quantity' in vals:
             if any(move.state == 'cancel' for move in self):
                 raise UserError(_('You cannot change a cancelled stock move, create a new line instead.'))
+            # If both the quantity and lot_ids are set, we need to _set_lot_ids prior to _set_quantity to properly adapt reservation.
+            if vals.get('lot_ids'):
+                # Since the lot_ids is set uniformly on self, we expect all moves to use the same product.
+                product = self.env['product.product'].browse(vals['product_id']) if vals.get('product_id') else self[:-1].product_id
+                set_qty_after_lots = product.tracking != 'none'
         if 'product_uom' in vals and any(move.state == 'done' for move in self) and not self.env.context.get('skip_uom_conversion'):
             raise UserError(_('You cannot change the UoM for a stock move that has been set to \'Done\'.'))
         if 'product_uom_qty' in vals:
@@ -790,7 +826,7 @@ Please change the quantity done or the rounding precision in your settings.""",
             move_to_check_location = self.filtered(lambda m: m.location_id.id != vals.get('location_id'))
         if 'product_id' in vals or 'location_id' in vals or 'location_dest_id' in vals:
             self._update_orderpoints()
-        res = super().write(vals)
+        res = super(StockMove, self.with_context(set_qty_after_lots=set_qty_after_lots)).write(vals)
         moves_done = self.filtered(lambda m: m.state == 'done')
         if 'date' in vals and moves_done:
             moves_done.move_line_ids.date = vals['date']
@@ -1360,8 +1396,26 @@ Please change the quantity done or the rounding precision in your settings.""",
 
     @api.onchange('lot_ids')
     def _onchange_lot_ids(self):
-        quantity = sum(ml.quantity_product_uom for ml in self.move_line_ids.filtered(lambda ml: not ml.lot_id and ml.lot_name))
-        quantity += self.product_id.uom_id._compute_quantity(len(self.lot_ids), self.product_uom)
+        """
+        Updates the quantity of the move to match the quantity resulting from the `_set_lot_ids`.
+        """
+        if self.product_id.tracking == 'none':
+            return
+
+        move_line_quantity = 0
+        nb_of_free_sml = 0
+        new_lot_names = {lot.name for lot in self.lot_ids if lot.name}
+        for sml in self.move_line_ids:
+            move_line_quantity += sml.quantity
+            if (sml.lot_id.name or sml.lot_name) in new_lot_names:
+                continue
+            if sml.product_uom_id.is_zero(sml.quantity):
+                continue
+            nb_of_free_sml += 1
+
+        old_lot_names = {lot.name for lot in self._origin.lot_ids if lot.name} if self._origin else set()
+        # New lots that can not be assigned to an existing line will be added with a quantity of 1
+        quantity = move_line_quantity + max(len(new_lot_names - old_lot_names) - nb_of_free_sml, 0)
         self.update({'quantity': quantity})
 
         base_location = self.picking_id.location_id or self.location_id
