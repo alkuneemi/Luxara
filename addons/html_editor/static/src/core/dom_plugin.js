@@ -667,7 +667,7 @@ export class DomPlugin extends Plugin {
                     continue;
                 }
                 this.dispatchTo("before_set_tag_handlers", block, tagName, cursors);
-                if (this.delegateTo("set_block_overrides", newEl, block)) {
+                if (this.delegateTo("set_block_overrides", newEl, block, tagName)) {
                     continue;
                 }
                 newEl = this.setTagName(block, tagName);
