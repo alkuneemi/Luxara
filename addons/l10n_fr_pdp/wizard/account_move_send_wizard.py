@@ -22,8 +22,11 @@ class AccountMoveSendWizard(models.TransientModel):
             return super()._get_peppol_checkbox_addendum_disable_reason()
         partner_is_valid = pdp_partner.peppol_verification_state == 'valid'
         verification_display_state_map = dict(pdp_partner._fields['pdp_verification_display_state']._description_selection(self.env))
+        reason = None
         if not partner_is_valid:
-            return f" ({verification_display_state_map[pdp_partner.pdp_verification_display_state]})"
+            reason = verification_display_state_map[pdp_partner.pdp_verification_display_state]
         if self.move_id.peppol_is_sent:
-            return f" ({self.env._("Previously sent")})"
+            reason = self.env._("Previously sent")
+        if reason:
+            return f" ({reason})"
         return ""

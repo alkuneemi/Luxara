@@ -12,7 +12,6 @@
             <xpath expr="//block[@id='peppol']" position="after">
                 <block title="French Electronic Invoicing" id="pdp" invisible="country_code != 'FR'">
                     <div id="l10n_fr_pdp" class="col-12 o_setting_box">
-                        <field name="peppol_use_parent_company" invisible="1"/>
                         <div class="o_setting_right_pane border-0">
                             <div invisible="account_peppol_eas == '0225' or peppol_use_parent_company or account_peppol_proxy_state not in ('sender', 'receiver', 'smp_registration')">
                                 Your Peppol ID <field name="account_peppol_edi_identification" class="oe_inline o_form_label" readonly="1"/>

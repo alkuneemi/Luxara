@@ -185,9 +185,6 @@ class TestL10nFrPdpCommon(TestUblCiiCommon, TestAccountMoveSendCommon):
             ],
         })
 
-    def _create_belgian_invoice(self, move_type='out_invoice'):
-        raise NotImplementedError
-
     @classmethod
     def _send_patched(cls, invoice):
         valid_peppol_verification_state = mock.patch('odoo.addons.l10n_fr_pdp.models.res_partner.ResPartner._get_peppol_verification_state', return_value='valid')
