@@ -242,9 +242,8 @@ export class SuggestionService {
         for (const partner of partners) {
             const name = thread?.getPersonaName(partner) ?? partner.displayName;
             if (
-                name &&
-                (normalize(name).includes(cleanedSearchTerm) ||
-                    (partner.email && normalize(partner.email).includes(cleanedSearchTerm)))
+                (name && normalize(name).includes(cleanedSearchTerm)) ||
+                (partner.email && normalize(partner.email).includes(cleanedSearchTerm))
             ) {
                 suggestions.push(partner);
             }
