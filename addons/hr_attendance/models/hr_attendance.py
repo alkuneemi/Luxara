@@ -302,7 +302,7 @@ class HrAttendance(models.Model):
             return Domain.FALSE
         return Domain.OR(domain_list) if len(domain_list) > 1 else domain_list[0]
 
-    def _update_overtime(self, attendance_domain=None):
+    def _update_overtime(self, attendance_domain=None, target_ruleset=None):
         if not attendance_domain:
             attendance_domain = self._get_overtimes_to_update_domain()
         all_overtime_lines = self.env['hr.attendance.overtime.line'].search(attendance_domain)
@@ -346,7 +346,7 @@ class HrAttendance(models.Model):
                     continue
                 version = inter._items[0][2]
                 ruleset = version.ruleset_id
-                if ruleset:
+                if ruleset and (not target_ruleset or ruleset == target_ruleset):
                     attendances_by_ruleset[ruleset] += attendance
         employees = all_attendances.employee_id
         schedules_intervals_by_employee = employees._get_schedules_by_employee_by_work_type(min_check_in, max_check_out, version_periods_by_employee)

@@ -48,4 +48,5 @@ class HrAttendanceOvertimeRuleset(models.Model):
         return elligible_attendances
 
     def action_regenerate_overtimes(self):
-        self._attendances_to_regenerate_for()._update_overtime()
+        self.ensure_one()
+        self._attendances_to_regenerate_for()._update_overtime(target_ruleset=self)
