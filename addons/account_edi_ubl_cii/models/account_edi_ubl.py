@@ -3035,8 +3035,8 @@ class AccountEdiUBL(models.AbstractModel):
         # Fix 'price_unit' if some price-included taxes are involved.
         for base_line in base_lines:
             for tax_data in base_line['tax_details']['taxes_data']:
-                if tax_data['tax'].price_include:
-                    base_line['price_unit'] += tax_data['raw_tax_amount_currency']
+                if tax_data['tax'].price_include and base_line['quantity']:
+                    base_line['price_unit'] += tax_data['raw_tax_amount_currency'] / base_line['quantity']
 
         # Remove lines having a zero amount.
         collected_values['base_lines'] = [
