@@ -285,7 +285,7 @@ class AccountMove(models.Model):
     @api.model
     def _l10n_gr_edi_generate_xml_content(self, xml_template, xml_vals):
         xml_content = self.env['ir.qweb']._render(xml_template, xml_vals)
-        return etree.tostring(element_or_tree=cleanup_xml_node(xml_content), encoding='ISO-8859-7', standalone='yes')
+        return etree.tostring(element_or_tree=cleanup_xml_node(xml_content), encoding='UTF-8', standalone='yes')
 
     def _l10n_gr_edi_eligible_for_mydata(self):
         """Shorthand for getting the eligibility of the current move to send to myDATA."""
@@ -368,9 +368,9 @@ class AccountMove(models.Model):
 
         if issuer_not_from_greece:
             values.update({
-                'issuer_name': self.company_id.name.encode('ISO-8859-7'),
+                'issuer_name': self.company_id.name,
                 'issuer_postal_code': self.company_id.zip,
-                'issuer_city': (self.company_id.city or "").encode('ISO-8859-7') or None,
+                'issuer_city': (self.company_id.city or "") or None,
             })
 
         if inv_type_allows_counterpart:
@@ -380,12 +380,12 @@ class AccountMove(models.Model):
                 'counterpart_branch': (self.commercial_partner_id.l10n_gr_edi_branch_number or 0),
             })
             if partner_not_from_greece:
-                values['counterpart_name'] = self.commercial_partner_id.name.encode('ISO-8859-7')
+                values['counterpart_name'] = self.commercial_partner_id.name
 
         if inv_type_require_counterpart or (inv_type_allows_counterpart and partner_not_from_greece):
             values.update({
                 'counterpart_postal_code': self.commercial_partner_id.zip,
-                'counterpart_city': (self.commercial_partner_id.city or "").encode('ISO-8859-7') or None,
+                'counterpart_city': (self.commercial_partner_id.city or "") or None,
             })
 
     def _l10n_gr_edi_add_payment_method_vals(self, values):
