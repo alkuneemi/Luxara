@@ -112,7 +112,7 @@ const parseLimitDate = (value, defaultValue) =>
  */
 const toDateItem = ({ isOutOfRange = false, isValid = true, label, range, extraClass }) => ({
     id: range[0].toISODate(),
-    includesToday: isInRange(today(), range),
+    includesToday: isInRange(DateTime.now().setZone(range[0].zone).startOf("day"), range),
     isOutOfRange,
     isValid,
     label: String(range[0][label]),
