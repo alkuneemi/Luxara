@@ -756,12 +756,8 @@
     <template id="theme_promotion_template">
         <style id="design-element">
             .o_layout .o_mail_wrapper .o_mail_wrapper_td {
-                --h1-font-weight: bolder;
-
-                --h2-font-weight: bolder;
 
                 --h3-font-size: 18px;
-                --h3-font-weight: bolder;
 
                 --link-color: #000000;
 
@@ -769,96 +765,219 @@
                 --btn-primary-border-color: #000000;
 
                 --separator-width: 75%;
+                --wrapper-background-color: var(--o-color-4);
             }
         </style>
         <t t-set="now" t-value="datetime.datetime.now()"/>
         <t t-set="website_url_or_none" t-value="(company_id.website) or '#'"/>
-        <section class="s_header_text_social o_mail_block_header_text_social o_mail_snippet_general pt16 pb16" data-vxml="001" data-snippet="s_mail_block_header_text_social" data-name="Left Text">
+        <section class="o_mail_snippet_general pt32 pb32" data-vxml="001" data-snippet="s_mail_block_header_logo_and_stacked_menu" data-name="Logo + Stacked Menu">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-4 pt16 pb16">
-                        <h1>
-                            <a t-att-href="website_url_or_none" target="_blank">
-                                <span style="color: rgb(255, 187, 0) !important; font-size: 32px" class="fa fa-1x fa-sun-o" />
-                            </a><span style="font-size: 32px;"><font style="font-weight: bolder; color: rgb(255, 255, 255); background-color: rgb(255, 187, 0);">SOLAR</font></span>
-                        </h1>
+                    <div class="col-md-12 col-12">
+                        <div class="o_not_editable">
+                            <a style="text-decoration:none;" href="http://www.example.com">
+                                <img src="/mass_mailing_themes/static/src/img/theme_promotion/company_logo.png" style="height:auto;max-width:100%; width: 25% !important;" class="img img-fluid o_editable_media mx-auto py-4 o_we_custom_image"/>
+                            </a>
+                        </div>
                     </div>
-                    <div class="col-md-8 o_mail_header_social" style="text-align:right;">
-                        <a href="/view">
-                            <span style="font-weight: bolder;">View in Browser</span>&amp;nbsp;<span class="fa fa-external-link" />
-                        </a>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <p class="m-0" style="text-align: center;"><a href="#" class="btn btn-link">News</a><a href="#" class="btn btn-link">Shop</a><a href="#" class="btn btn-link">Contact Us</a></p>
                     </div>
                 </div>
             </div>
         </section>
-        <section class="s_title o_mail_snippet_general pt72 pb80" data-snippet="s_title" data-name="Title" style="background-color: rgb(255, 187, 0) !important;">
+        <section class="s_picture o_mail_snippet_general pt0 pb24 o_cc o_cc2" style="padding-left: 15px; padding-right: 15px;" data-vxml="001" data-snippet="s_picture" data-name="Picture">
             <div class="container s_allow_columns">
-                <h1 style="text-align:center">
-                    <font style="font-size: 62px; background-color: rgb(255, 255, 255);">&amp;nbsp;10% OFF&amp;nbsp;</font>
-                    <br/>
-                    <font style="font-size: 62px; background-color: rgb(255, 255, 255);">&amp;nbsp;SALES&amp;nbsp;</font>
+                <h1 style="text-align: center;">
+                    <span style="" class="display-4-fs">Get up to</span><span class="display-1-fs"><br/></span><span class="o_rfs" style="font-size: clamp(8px, 1em + 7.3753vw, 400px);">10% OFF</span>
                 </h1>
-            </div>
-        </section>
-        <section class="s_discount2 o_mail_block_discount2 o_mail_snippet_general pt32 pb32" data-name="Promo Code" style="padding-left: 15px; padding-right: 15px;">
-            <h2 style="text-align: center;">GET 10%&amp;nbsp;OFF</h2>
-            <p style="text-align: center;">
-                Valid on all sales prices in our webshop.
-            </p>
-            <table cellpadding="0" cellspacing="0" align="center" class="border" style="border-collapse: collapse; border-color: rgb(255, 187, 0) !important; border-width: 3px !important; mso-table-lspace:0pt; mso-table-rspace:0pt;">
-                <tr>
-                    <td width="50" height="50" align="center" class="o_mail_no_options o_cc" style="width:50px!important; min-width: 50px; max-width:5.6rem; text-align: center"><i class="fa fa-2x fa-ticket" style="color: rgb(255, 187, 0) !important;"></i></td>
-                    <td width="200" height="50" align="center" class="o_cc" style="min-width: 150px; width: 200px; text-align: center;"><p class="mb0">ENDOFSUMMER20</p></td>
-                </tr>
-            </table>
-            <br/>
-            <p style="text-align:center;">
-                <a role="button" class="btn btn-primary btn-lg" t-att-href="website_url_or_none">Visit the website</a>
-            </p>
-        </section>
-        <div class="s_hr pt16 pb16" data-vxml="001" data-snippet="s_hr" data-name="Separator">
-            <hr class="s_hr_1px s_hr_solid"/>
-        </div>
-        <section class="s_features o_mail_snippet_general" data-vxml="001" data-snippet="s_features" data-name="Features">
-            <div class="container">
+                <p style="text-align: center;">
+                    <a href="#" class="btn btn-lg btn-primary">Shop Now</a>
+                </p>
                 <div class="row">
-                    <div class="col-md-4 pt16 pb16" style="text-align:center;">
-                        <p class="md-0"><img alt="Customer Service" src="/mass_mailing_themes/static/src/img/theme_promotion/s_default_image_product_1.jpg" class="img-fluid o_we_custom_image mx-auto d-block" style="width: 100px;"/></p>
-                        <h3>24/7 <br/>Customer Service</h3>
-                    </div>
-                    <div class="col-md-4 pt16 pb16" style="text-align:center;">
-                        <p class="md-0"><img alt="Free Delivery" src="/mass_mailing_themes/static/src/img/theme_promotion/s_default_image_product_2.jpg" class="img-fluid o_we_custom_image mx-auto d-block" style="width: 100px;"/></p>
-                        <h3 style="text-align:center;">Free delivery*</h3>
-                        <p style="text-align:center;">*For orders over $39.</p>
-                    </div>
-                    <div class="col-md-4 pt16 pb16" style="text-align:center;">
-                        <p class="md-0"><img alt="Easy Returns" src="/mass_mailing_themes/static/src/img/theme_promotion/s_default_image_product_3.jpg" class="img-fluid o_we_custom_image mx-auto d-block" style="width: 100px;"/></p>
-                        <h3 style="text-align:center;">Easy Returns</h3>
+                    <div class="col-md-10 offset-md-1 pt16 col-12" style="text-align: center;">
+                        <div class="o_not_editable">
+                            <img src="/web/image/mass_mailing_themes.s_picture_default_image" style="border-radius: 16px !important; width: 100% !important;" class="img img-fluid o_editable_media mx-auto d-block mw-100" alt=""/>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
-        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_left o_mail_snippet_general pt16 pb16" data-vxml="001" data-snippet="s_mail_block_footer_social_left" data-name="Footer Left" style="background-color: rgb(255, 187, 0) !important;">
+        <section class="s_products_grid o_mail_snippet_general o_cc o_cc2 pt48 pb48" data-snippet="s_products_grid" data-name="Products Grid">
             <div class="container">
+                <h2 style="text-align: center;"><span class="display-1-fs">Our products</span></h2>
+                <p style="text-align: center;">Our products are carefully selected to meet your needs.<br/>We offer a wide range of products to choose from.</p>
+                <p style="text-align: center;"><br/></p>
                 <div class="row">
-                    <div class="col-md-6">
-                        <p>
-                            <span style="font-weight: bolder;">
-                                <font style="background-color: rgb(255, 255, 255); color: rgb(255, 187, 0);">SOLAR</font>
-                            </span>
-                        </p>
-                        <div class="o_mail_footer_links">
-                            <a role="button" href="/unsubscribe_from_list" class="btn btn-link">Unsubscribe</a>
+                    <div class="col-12 col-md-6 pb24">
+                        <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.set_catalog_square_md_1" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                        </div>
+                        <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                            <h3 class="s_rating_title">Nordic Chair</h3>
+                            <div class="s_rating_icons o_not_editable">
+                                <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                                <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="pb16" style="text-align: right;" t-translation="off">
-                            <t t-call="mass_mailing.s_social_media_template" optionalTextPosition.f="text-end"
-                                optionalTextStyle.f="color: rgb(137, 101, 1);"
-                                optionalSnippetClass.f="no_icon_color"/>
+                    <div class="col-12 col-md-6 pb24">
+                        <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.set_catalog_square_md_2" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
                         </div>
-                        <p style="text-align: right">
-                            <font style="color: rgb(137, 101, 1);">© <t t-out="now.strftime('%Y')" /> All Rights Reserved</font>
+                        <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                            <h3 class="s_rating_title">Linen Sofa</h3>
+                            <div class="s_rating_icons o_not_editable">
+                                <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                                <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pb24">
+                        <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.set_catalog_square_md_3" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                        </div>
+                        <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                            <h3 class="s_rating_title">Oak Drawer</h3>
+                            <div class="s_rating_icons o_not_editable">
+                                <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                                <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pb24">
+                        <div class="mb-3 o_not_editable">
+                            <img src="/web/image/mass_mailing.set_catalog_square_md_4" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                        </div>
+                        <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                            <h3 class="s_rating_title">Loft Table</h3>
+                            <div class="s_rating_icons o_not_editable">
+                                <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                    <i class="fa fa-star" role="presentation"></i>
+                                </span>
+                                <span class="s_rating_inactive_icons" style="color: var(--border-color);"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="s_attributes_horizontal pt24 pb24 o_mail_snippet_general bg-o-color-5" data-vxml="001" data-snippet="s_attributes_horizontal" data-name="Attributes Horizontal">
+            <div class="container">
+                <div class="row">
+                    <div class="s_attributes_horizontal_col col-md-4 pt24 pb24 col-12" data-name="Column">
+                        <div class="row align-items-center h-100 mx-0 s_col_no_resize o_mail_no_colorpicker">
+                            <div class="col-2 col-md-3 px-0">
+                                <div class="o_not_editable">
+                                    <img
+                                        src="/html_editor/shape/mass_mailing/s_attributes_1.svg?c1=rgba(0,0,0,.25)&amp;c4=o-color-4&amp;c5=o-color-5"
+                                        data-original-src="/mass_mailing/static/shapes/s_attributes_1.svg"
+                                        class="s_attributes_horizontal_img img img-fluid o_editable_media"
+                                        alt=""
+                                        style="width: 100% !important;"
+                                        />
+                                </div>
+                            </div>
+                            <div class="col-10 col-md-9 pe-0">
+                                <p><strong><font style="color: rgb(255, 255, 255);">Easy returns</font></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="s_attributes_horizontal_col col-md-4 pt24 pb24 col-12" data-name="Column">
+                        <div class="row align-items-center h-100 mx-0 s_col_no_resize o_mail_no_colorpicker">
+                            <div class="col-2 col-md-3 px-0">
+                                <div class="o_not_editable">
+                                    <img
+                                        src="/html_editor/shape/mass_mailing/s_attributes_2.svg?c1=rgba(0,0,0,.25)&amp;c2=rgba(0,0,0,.5)&amp;c4=o-color-4&amp;c5=o-color-5"
+                                        data-original-src="/mass_mailing/static/shapes/s_attributes_2.svg"
+                                        class="s_attributes_horizontal_img img img-fluid o_editable_media"
+                                        alt=""
+                                        style="width: 100% !important;"
+                                        />
+                                </div>
+                            </div>
+                            <div class="col-10 col-md-9 pe-0">
+                                <p><strong><font style="color: rgb(255, 255, 255);">Free shipping</font></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="s_attributes_horizontal_col col-md-4 pt24 pb24 col-12" data-name="Column">
+                        <div class="row align-items-center h-100 mx-0 s_col_no_resize o_mail_no_colorpicker">
+                            <div class="col-2 col-md-3 px-0">
+                                <div class="o_not_editable">
+                                    <img
+                                        src="/html_editor/shape/mass_mailing/s_attributes_3.svg?c1=rgba(0,0,0,.25)&amp;c4=o-color-4&amp;c5=o-color-5"
+                                        data-original-src="/mass_mailing/static/shapes/s_attributes_3.svg"
+                                        class="s_attributes_horizontal_img img img-fluid o_editable_media"
+                                        alt=""
+                                        style="width: 100% !important;"
+                                        />
+                                </div>
+                            </div>
+                            <div class="col-10 col-md-9 pe-0">
+                                <p><strong><font style="color: rgb(255, 255, 255);">Secure payment</font></strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="o_mail_snippet_general pt48 pb16 o_colored_level bg-o-color-5" data-vxml="001" data-snippet="s_mail_block_footer_logo_and_social_media" data-name="Footer Logo + Social Media">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4 col-12">
+                        <div class="o_not_editable">
+                            <a t-att-href="company_id.website or '#'" target="_blank">
+                                <img t-if="company_id.logo or user_id.company_id.logo"
+                                    class="img img-fluid o_editable_media"
+                                    style="width: 80% !important"
+                                    src="/mass_mailing_themes/static/src/img/theme_promotion/company_logo_dark.png"/>
+                            </a>
+                        </div>
+                    </div>
+                    <t t-call="mass_mailing.s_social_media_template" optionalTextStyle.f="color: rgb(255, 255, 255) !important;" optionalTextPosition.f="text-end" optionalSnippetClass.f="o_mail_footer_social pb16 col-md-8 col-12"/>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <p>
+                            <font style="color: rgb(255, 255, 255);">
+                                <t t-if="company_id"><strong>© <t t-out="company_id.partner_id.name"/></strong></t>
+                            </font>
+                            <br/>
+                            <font style="color: rgb(255, 255, 255);">
+                                <t t-out="company_id.partner_id.contact_address"/><br/>
+                            </font>
+                            <br/>
+                            <font style="color: rgb(255, 255, 255);">You're seeing this because you've shopped with us or joined our mailing list.</font>
+                            <a class="btn btn-link" role="button" href="/unsubscribe_from_list"><font style="color: rgb(255, 255, 255);">Unsubscribe</font></a>
                         </p>
                     </div>
                 </div>
