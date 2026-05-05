@@ -276,13 +276,18 @@ class TestProductVideoUpload(HttpCase):
         })
         cls.video_data = {
             "src": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",  # A placeholder video URL
+            "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg",  # A placeholder thumbnail URL
             "name": "Test Video",
         }
 
     def _upload_video(self):
         with MockRequest(self.product.env, website=self.website):
             self.WebsiteSaleController.add_product_media(
-                [{"src": self.video_data["src"], "name": self.video_data["name"]}],
+                [{
+                    "src": self.video_data["src"],
+                    "thumbnailUrl": self.video_data["thumbnailUrl"],
+                    "name": self.video_data["name"]
+                }],
                 "video",
                 self.product.id,
                 self.product.product_tmpl_id.id,
@@ -310,6 +315,21 @@ class TestProductVideoUpload(HttpCase):
                 self.WebsiteSaleController.add_product_media(
                     [{"src": "", "name": "Invalid Video"}],
                     "video",
+                    self.product.id,
+                    self.product.product_tmpl_id.id,
+                )
+
+    def test_video_upload_thumbnail_invalid(self):
+        # Try to upload a video with invalid thumbnailUrl data
+        with MockRequest(self.product.env, website=self.website):
+            with self.assertRaises(ValidationError):
+                self.WebsiteSaleController.add_product_media(
+                    [{
+                        'src': self.video_data['src'],
+                        'thumbnailUrl': 'not-a-valid-url',
+                        'name': 'Invalid Video'
+                    }],
+                    'video',
                     self.product.id,
                     self.product.product_tmpl_id.id,
                 )
