@@ -2,6 +2,7 @@
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
+from odoo.tools import Query, SQL
 
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
@@ -43,6 +44,14 @@ class AccountAnalyticLine(models.Model):
     code = fields.Char(size=8)
     ref = fields.Char(string='Ref.')
     category = fields.Selection(selection_add=[('invoice', 'Customer Invoice'), ('vendor_bill', 'Vendor Bill')])
+    analytic_profitability = fields.Selection(
+        string='Profitability',
+        selection=[
+            ('revenue', 'Revenue'),
+            ('loss', 'Loss'),
+        ],
+        compute='_compute_analytic_profitability',
+    )
 
     @api.depends('move_line_id')
     def _compute_general_account_id(self):
@@ -59,6 +68,26 @@ class AccountAnalyticLine(models.Model):
     def _compute_partner_id(self):
         for line in self:
             line.partner_id = line.move_line_id.partner_id or line.partner_id
+
+    @api.depends('general_account_id', 'category', 'amount')
+    def _compute_analytic_profitability(self):
+        for line in self:
+            account_type = line.general_account_id.account_type or ''
+            if (
+                account_type.split('_')[0] == 'expense'
+                or account_type in ['asset_current', 'asset_non_current', 'asset_fixed']
+                or (not account_type and line.category not in ['invoice', 'other'])
+                or (not account_type and line.category == 'other' and line.amount < 0)
+            ):
+                line.analytic_profitablity = 'loss'
+            elif (
+                account_type.split('_')[0] == 'income'
+                or not account_type and line.category == 'invoice'
+                or (not account_type and line.category == 'other' and line.amount > 0)
+            ):
+                line.analytic_profitability = 'revenue'
+            else:
+                line.analytic_profitability = False
 
     @api.onchange('product_id', 'product_uom_id', 'unit_amount', 'currency_id')
     def on_change_unit_amount(self):
@@ -87,6 +116,32 @@ class AccountAnalyticLine(models.Model):
                 account=self.env['account.analytic.account'].browse(self.env.context['account_id']).name
             )
         return super().view_header_get(view_id, view_type)
+
+    def _field_to_sql(self, alias: str, fname: str, query: (Query | None) = None, flush: bool = True) -> SQL:
+        if fname != 'analytic_profitability':
+            return super()._field_to_sql(alias, fname, query, flush)
+
+        if 'account_account' not in query._joins:
+            account_alias = query.left_join('account_analytic_line', 'general_account_id', 'account_account', 'id', 'general_account_id')
+
+        return SQL("""
+            CASE
+                WHEN (
+                    SPLIT_PART(%(account_type)s, '_', 1) = 'expense'
+                    OR %(account_type)s IN ('asset_current', 'asset_non_current', 'asset_fixed')
+                    OR (%(account_type)s IS NULL AND account_analytic_line.category NOT IN ('invoice', 'other'))
+                    OR (%(account_type)s IS NULL AND account_analytic_line.category = 'other' AND account_analytic_line.amount < 0)
+                ) THEN 'loss'
+                WHEN (
+                    SPLIT_PART(%(account_type)s, '_', 1) = 'income'
+                    OR %(account_type)s IN ('liability_current', 'liability_non_current')
+                    OR (%(account_type)s IS NULL AND account_analytic_line.category = 'invoice')
+                    OR (%(account_type)s IS NULL AND account_analytic_line.category = 'other' AND account_analytic_line.amount > 0)
+                ) THEN 'revenue'
+                ELSE NULL
+            END
+        """,
+        account_type=SQL.identifier(account_alias, 'account_type'))
 
     def create(self, vals):
         analytic_lines = super().create(vals)
