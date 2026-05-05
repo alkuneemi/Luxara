@@ -1001,7 +1001,39 @@ class TestFrontend(TestFrontendCommon):
         self.assertEqual(present_order.state, 'cancel')
         self.assertEqual(future_order.state, 'draft')
         self.assertEqual(future_order.session_id.id, False)
+<<<<<<< 41100a20a71444beee200ccfa6fea60ca9ee9821
 
     def test_add_new_table_number_with_multi_floor(self):
         self.pos_config.with_user(self.pos_user).open_ui()
         self.start_pos_tour('test_add_new_table_number_with_multi_floor', login="pos_admin")
+||||||| fe1e4040c269abbbe573e67745fc65a7cc680abe
+=======
+
+    def test_floating_order_name_change_partner(self):
+        # Create partners
+        self.env['res.partner'].create([
+            {'name': 'Abigael', 'street': '123 Fake St'},
+            {'name': 'Deco Addict', 'street': '456 Real St'},
+        ])
+
+        # Create presets
+        self.preset_eat_in = self.env['pos.preset'].create({
+            'name': 'Eat in',
+        })
+        self.preset_delivery = self.env['pos.preset'].create({
+            'name': 'Delivery',
+            'identification': 'address',
+        })
+
+        self.main_pos_config.write({
+            'use_presets': True,
+            'default_preset_id': self.preset_eat_in.id,
+            'available_preset_ids': [(6, 0, [
+                self.preset_eat_in.id,
+                self.preset_delivery.id,
+            ])],
+        })
+
+        self.main_pos_config.with_user(self.pos_user).open_ui()
+        self.start_pos_tour('test_floating_order_name_change_partner', login="pos_user")
+>>>>>>> 72a6c01483c69dca7b7650aab6eb37e641cc5f89
