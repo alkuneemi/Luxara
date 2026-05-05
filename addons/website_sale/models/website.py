@@ -274,6 +274,14 @@ class Website(models.Model):
     )
     restricted_uom_ids = fields.Many2many(string="Restrict Packagings", comodel_name="uom.uom")
 
+    extra_step_category_ids = fields.Many2many(
+        "product.public.category",
+        relation="website_extra_step_category_rel",
+        string="Extra Step Categories",
+        help="If set, the extra step is only shown when the cart contains "
+        "products from these eCommerce categories.",
+    )
+
     # === COMPUTE METHODS ===#
 
     def _compute_pricelist_ids(self):
@@ -914,7 +922,9 @@ class Website(models.Model):
         if not self.has_ecommerce_access():
             return result
         if search_type in ["products", "product_public_category", "all"]:
-            result.append(self.env["product.public.category"]._search_get_detail(self, order, options))
+            result.append(
+                self.env["product.public.category"]._search_get_detail(self, order, options)
+            )
         if search_type in ["products", "product_template", "all"]:
             result.append(self.env["product.template"]._search_get_detail(self, order, options))
         return result
@@ -1005,9 +1015,21 @@ class Website(models.Model):
         )
 
     def _get_allowed_steps_domain(self):
-        return [("website_id", "=", self.id), ("is_published", "=", True)]
+        domain = [("website_id", "=", self.id), ("is_published", "=", True)]
+        restricted_categories = self.extra_step_category_ids
+        order_sudo = request.cart if request else None
+        if restricted_categories and order_sudo:
+            order_categories = order_sudo.order_line.product_id.public_categ_ids
+            if not (order_categories & restricted_categories):
+                domain += [("step_href", "!=", "/shop/extra_info")]
+        return domain
 
     def _get_checkout_steps(self):
+        """Return the steps displayed in the checkout breadcrumb wizard.
+
+        Distinct from :meth:`_get_checkout_step_values`, which resolves the
+        currently active step for the request being served.
+        """
         return (
             self
             .env["website.checkout.step"]

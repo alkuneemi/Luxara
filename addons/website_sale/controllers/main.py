@@ -1620,6 +1620,13 @@ class WebsiteSale(payment_portal.PaymentPortal):
         if not extra_step.active:
             return request.redirect("/shop/payment")
 
+        # Check category restriction
+        restricted_categories = request.website.extra_step_category_ids
+        if restricted_categories:
+            order_categories = request.cart.order_line.product_id.public_categ_ids
+            if not (order_categories & restricted_categories):
+                return request.redirect("/shop/payment")
+
         # check that cart is valid
         order_sudo = request.cart
         if redirection := self._check_cart(order_sudo):
@@ -2021,6 +2028,12 @@ class WebsiteSale(payment_portal.PaymentPortal):
             extra_step_view = current_website.viewref("website_sale.extra_info")
             extra_step = current_website._get_checkout_step("/shop/extra_info")
             extra_step_view.active = extra_step.is_published = options.get("extra_step") == "true"
+
+        if "extra_step_category_ids" in options:
+            category_ids = options["extra_step_category_ids"]
+            current_website.extra_step_category_ids = (
+                request.env["product.public.category"].browse(category_ids).exists()
+            )
 
         write_vals = {k: v for k, v in options.items() if k in writable_fields}
         if write_vals:

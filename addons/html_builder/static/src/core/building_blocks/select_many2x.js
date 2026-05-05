@@ -43,6 +43,8 @@ export class SelectMany2X extends Component {
         message: { type: String, optional: true },
         create: { type: Function, optional: true },
         nullText: { type: String, optional: true },
+        displayField: { type: String, optional: true },
+        order: { type: String, optional: true },
     };
     static defaultProps = {
         fields: [],
@@ -50,6 +52,7 @@ export class SelectMany2X extends Component {
         limit: 5,
         closeOnEnterKey: true,
         message: _t("Choose a record..."),
+        displayField: "display_name",
     };
     static components = { SelectMenu, SelectMany2XCreate };
 
@@ -93,7 +96,7 @@ export class SelectMany2X extends Component {
         this.onNavigatedAway();
     }
     searchInvalidationKey(props) {
-        return JSON.stringify([props.model, props.fields, props.domain]);
+        return JSON.stringify([props.model, props.fields, props.domain, props.displayField, props.order]);
     }
     searchMore(searchValue) {
         this.state.limit += this.props.limit;
@@ -106,6 +109,20 @@ export class SelectMany2X extends Component {
             .filter((value) => typeof value === "number");
         if (selectedIds.length) {
             domain.push(["id", "not in", selectedIds]);
+        }
+        if (this.props.order) {
+            if (searchValue) {
+                domain.push([this.props.displayField, "ilike", searchValue]);
+            }
+            const results = await this.orm.searchRead(
+                this.props.model,
+                domain,
+                [...new Set(this.props.fields).add(this.props.displayField)],
+                { limit: this.state.limit + 1, order: this.props.order },
+            );
+            this.state.hasMore = results.length > this.state.limit;
+            this.state.searchResults = results.slice(0, this.state.limit);
+            return;
         }
         const tuples = await this.orm.call(this.props.model, "name_search", [], {
             name: searchValue,
