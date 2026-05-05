@@ -63,11 +63,14 @@
                             invisible="composition_mode not in ('comment', 'numbers') or not recipient_single_valid"/>
                     <button string="Send" type="object" class="oe_highlight" name="action_send_sms" data-hotkey="q"
                             invisible="composition_mode not in ('comment', 'numbers') or recipient_single_valid" disabled='1'/>
+                    <button string="Schedule" type="object" class="btn-primary" name="action_schedule_message" data-hotkey="q"
+                            invisible="not scheduled_date or not recipient_single_valid"/>
                     <button string="Put in queue" type="object" class="oe_highlight" name="action_send_sms" data-hotkey="q"
                         invisible="composition_mode != 'mass'"/>
                     <button string="Send now" type="object" name="action_send_sms_mass_now" data-hotkey="w"
                         invisible="composition_mode != 'mass'"/>
                     <button class="btn btn-secondary" special="cancel" data-hotkey="x"/>
+                    <field name="scheduled_date" widget="text_scheduled_date" invisible="composition_mode != 'comment'"/>
                     <div class="ms-auto text-muted d-flex align-items-center" invisible="not sms_char_count">
                         <field name="sms_char_count" nolabel="1"/>/
                         <field name="sms_max_char" nolabel="1"/>
