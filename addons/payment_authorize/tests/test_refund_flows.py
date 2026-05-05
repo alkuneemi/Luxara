@@ -98,4 +98,5 @@ class TestRefundFlows(AuthorizeCommon):
             ),
         ):
             refund_tx = source_tx._refund(amount_to_refund=source_tx.amount)
+            self._run_processing()
         self.assertEqual(refund_tx.state, "done")

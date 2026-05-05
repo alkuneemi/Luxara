@@ -288,9 +288,11 @@ class PaymentTransaction(models.Model):
             _logger.warning(
                 "Payment transactions should not be updated directly. Either use _record() to queue"
                 " payment data for processing, or pass payment_trusted_write=True to the context"
-                " after ensuring that the update can tolerate conflicts with other requests.",
-                stack_info=True,  # TODO ANV remove
+                " after ensuring that the update can tolerate conflicts with other requests."
             )
+            raise Exception(  # noqa: TRY002
+                "NON TRUSTED WRITE ON PAYMENT TRANSACTION"  # noqa: EM101
+            )  # TODO ANV remove
         return super().write(vals)
 
     # === ACTION METHODS === #

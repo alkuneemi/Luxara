@@ -73,7 +73,9 @@ class AuthorizeTest(AuthorizeCommon):
             ".get_transaction_details",
             return_value={"transaction": {"authAmount": self.amount}},
         ):
-            source_tx._process({"response": {"x_response_code": "1", "x_type": "void"}})
+            source_tx.with_context(payment_trusted_write=True)._apply_updates({
+                "response": {"x_response_code": "1", "x_type": "void"}
+            })
         self.assertEqual(source_tx.state, "cancel")
 
     @mute_logger("odoo.addons.payment_authorize.models.payment_transaction")

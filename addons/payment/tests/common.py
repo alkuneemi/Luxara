@@ -238,7 +238,7 @@ class PaymentCommon(BaseCommon):
         """
         IrCron = self.registry["ir.cron"]  # Use registry[] to patch the class
         with patch.object(IrCron, "_commit_progress"), patch.object(IrCron, "_rollback_progress"):
-            self.env["ir.cron"]._run_payment_processing()  # Use env[] to call a model method
+            self.env["payment.data"]._cron_process()  # Use env[] to call a model method
 
     def _run_post_processing(self, transaction):
         """Run the post-processing of the given transaction while bypassing the write guard.

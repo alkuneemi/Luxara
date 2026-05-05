@@ -209,7 +209,7 @@ class TestPaymentTransaction(PaymentCommon):
             "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
             "._update_source_transaction_state"
         ) as patched:
-            child_tx_1._set_done()
+            child_tx_1.with_context(payment_trusted_write=True)._set_done()
             patched.assert_called_once()
 
     def test_voiding_child_tx_triggers_source_tx_state_update(self):
@@ -217,13 +217,13 @@ class TestPaymentTransaction(PaymentCommon):
         self.provider.capture_manually = True
         source_tx = self._create_transaction(flow="direct", state="authorized")
         child_tx_1 = source_tx._create_child_transaction(100)
-        child_tx_1._set_done()
+        self._update_transaction(child_tx_1, state="done")
         child_tx_2 = source_tx._create_child_transaction(source_tx.amount - 100)
         with patch(
             "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
             "._update_source_transaction_state"
         ) as patched:
-            child_tx_2._set_canceled()
+            child_tx_2.with_context(payment_trusted_write=True)._set_canceled()
             patched.assert_called_once()
 
     def test_capturing_partial_amount_leaves_source_tx_authorized(self):
@@ -231,7 +231,7 @@ class TestPaymentTransaction(PaymentCommon):
         self.provider.capture_manually = True
         source_tx = self._create_transaction(flow="direct", state="authorized")
         child_tx_1 = source_tx._create_child_transaction(100)
-        child_tx_1._set_done()
+        child_tx_1.with_context(payment_trusted_write=True)._set_done()
         self.assertEqual(
             source_tx.state,
             "authorized",
@@ -244,9 +244,9 @@ class TestPaymentTransaction(PaymentCommon):
         self.provider.capture_manually = True
         source_tx = self._create_transaction(flow="direct", state="authorized")
         child_tx_1 = source_tx._create_child_transaction(100)
-        child_tx_1._set_done()
+        child_tx_1.with_context(payment_trusted_write=True)._set_done()
         child_tx_2 = source_tx._create_child_transaction(source_tx.amount - 100)
-        child_tx_2._set_canceled()
+        child_tx_2.with_context(payment_trusted_write=True)._set_canceled()
         self.assertEqual(
             source_tx.state,
             "done",
@@ -284,22 +284,19 @@ class TestPaymentTransaction(PaymentCommon):
             tx = self._create_transaction(
                 "redirect", reference=f"Test {state}", state=state, amount=100
             )
-            with (
-                patch(
-                    "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
-                    "._extract_amount_data",
-                    return_value={"amount": 10, "currency_code": "USD"},
-                ),
+            with patch(
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
+                "._extract_amount_data",
+                return_value={"amount": 10, "currency_code": "USD"},
             ):
-                tx._process({})
+                tx.with_context(payment_trusted_write=True)._process({})
             self.assertEqual(tx.state, "error")
 
     def test_processing_skips_amount_validation_for_non_authorized_and_done_states(self):
         for state in ["draft", "pending", "error", "cancel"]:
             tx = self._create_transaction("redirect", reference=f"Test {state}", state=state)
             with patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction"
-                "._validate_amount",
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._validate_amount"
             ) as validate_amount_mock:
                 tx._process({})
             self.assertEqual(validate_amount_mock.call_count, 0)
@@ -324,7 +321,7 @@ class TestPaymentTransaction(PaymentCommon):
                     return_value={"provider_ref": "test"},
                 ),
             ):
-                tx._process({})
+                tx.with_context(payment_trusted_write=True)._process({})
             self.assertTrue(tx.token_id)
 
     def test_processing_only_tokenizes_when_requested(self):
@@ -346,12 +343,16 @@ class TestPaymentTransaction(PaymentCommon):
     @mute_logger("odoo.addons.payment.models.payment_transaction")
     def test_update_state_to_illegal_target_state(self):
         tx = self._create_transaction("redirect", state="done")
-        tx._update_state(["draft", "pending", "authorized"], "cancel", None)
+        tx.with_context(payment_trusted_write=True)._update_state(
+            ["draft", "pending", "authorized"], "cancel", None
+        )
         self.assertEqual(tx.state, "done")
 
     def test_update_state_to_extra_allowed_state(self):
         tx = self._create_transaction("redirect", state="done")
-        tx._update_state(["draft", "pending", "authorized", "done"], "cancel", None)
+        tx.with_context(payment_trusted_write=True)._update_state(
+            ["draft", "pending", "authorized", "done"], "cancel", None
+        )
         self.assertEqual(tx.state, "cancel")
 
     def test_updating_state_resets_post_processing_status(self):
@@ -359,12 +360,12 @@ class TestPaymentTransaction(PaymentCommon):
             self.skipTest("This test should not be run after account_payment is installed.")
 
         tx = self._create_transaction("redirect", state="draft")
-        tx._set_pending()
+        tx.with_context(payment_trusted_write=True)._set_pending()
         self.assertFalse(tx.is_post_processed)
         tx._post_process()
         self.assertTrue(tx.is_post_processed)
 
-        tx._set_done()
+        tx.with_context(payment_trusted_write=True)._set_done()
         self.assertFalse(tx.is_post_processed)
 
     def test_validate_amount_uses_payment_minor_unit(self):
