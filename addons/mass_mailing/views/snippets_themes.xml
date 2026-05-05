@@ -93,7 +93,7 @@
             <t t-snippet="mass_mailing.s_features_column" string="Features Column" group="columns"/>
             <t t-snippet="mass_mailing.s_membership_advertisement" string="Membership" group="columns"/>
             <t t-snippet="mass_mailing.s_comparisons" string="Comparisons" group="columns"/>
-
+            <t t-snippet="mass_mailing.s_products_grid" string="Products Grid" group="columns"/>
 
             <t t-snippet="mass_mailing.s_text_block" string="Paragraph" group="text"/>
             <t t-snippet="mass_mailing.s_link_list" string="Links List" group="text"/>

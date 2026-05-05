@@ -415,6 +415,94 @@
     </section>
 </template>
 
+<template id="s_products_grid" name="Products Grid">
+    <section class="s_products_grid o_mail_snippet_general o_cc o_cc2 pt48 pb48">
+        <div class="container">
+            <h2 style="text-align: center;"><span class="display-1-fs">Our products</span></h2>
+            <p style="text-align: center;">Our products are carefully selected to meet your needs.<br/>We offer a wide range of products to choose from.</p>
+            <p style="text-align: center;"><br/></p>
+            <div class="row">
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_1" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Nordic Chair</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_2" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Linen Sofa</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_3" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Oak Drawer</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_4" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Loft Table</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
 <record id="mass_mailing.s_features_grid_000_scss" model="ir.asset">
     <field name="name">Features grid 000 SCSS</field>
     <field name="bundle">mass_mailing.assets_iframe_style</field>
