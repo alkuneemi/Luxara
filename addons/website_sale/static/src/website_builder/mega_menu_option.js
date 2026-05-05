@@ -15,7 +15,9 @@ patch(MegaMenuOption.prototype, {
                 "|",
                 ["website_id", "=", false],
                 ["website_id", "=", this.website.currentWebsiteId],
-            ]]);
+            ]],
+            {...this.website.currentWebsiteContext},
+            );
         });
     },
 });
