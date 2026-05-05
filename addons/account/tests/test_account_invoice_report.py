@@ -343,5 +343,17 @@ class TestAccountInvoiceReport(AccountTestInvoicingCommon):
         report = self.env['account.invoice.report'].search(
             [('move_id', '=', invoice.id)],
         )
-        self.assertEqual(report.inventory_value, -1600)
-        self.assertEqual(report.price_margin, -100)
+        converted_inventory = orig_company.currency_id._convert(
+            report.inventory_value,
+            egy_company.currency_id,
+            egy_company,
+            fields.Date.from_string('2017-11-03'),
+        )
+        converted_margin = orig_company.currency_id._convert(
+            report.price_margin,
+            egy_company.currency_id,
+            egy_company,
+            fields.Date.from_string('2017-11-03'),
+        )
+        self.assertEqual(converted_inventory, -1600)
+        self.assertEqual(converted_margin, -100)

@@ -217,6 +217,19 @@ class ProductProduct(models.Model):
     _inherit = "product.product"
 
     tax_string = fields.Char(compute='_compute_tax_string')
+    report_categ_id = fields.Many2one(
+        'product.category',
+        string='Report Product Category',
+        related='product_tmpl_id.categ_id',
+        store=True,
+        readonly=False,
+    )
+    template_uom_id = fields.Many2one(
+        'uom.uom',
+        string='Template Unit of Measure',
+        related='product_tmpl_id.uom_id',
+        store=True,
+    )
 
     def _get_product_accounts(self):
         return self.product_tmpl_id._get_product_accounts()
