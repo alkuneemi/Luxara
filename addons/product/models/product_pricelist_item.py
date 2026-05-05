@@ -590,7 +590,7 @@ class ProductPricelistItem(models.Model):
 
         return res
 
-    def _compute_price(self, product, quantity, uom, date, currency=None, **kwargs):
+    def _compute_price(self, product, quantity, uom, date=False, currency=None, **kwargs):
         """Compute the unit price of a product in the context of a pricelist application.
 
         Note: self and self.ensure_one()
@@ -624,10 +624,10 @@ class ProductPricelistItem(models.Model):
         if self.compute_price == 'fixed':
             price = convert(self.fixed_price)
         elif self.compute_price == 'percentage':
-            base_price = self._compute_base_price(product, quantity, uom, date, currency, **kwargs)
+            base_price = self._compute_base_price(product, quantity, uom, currency, date=date, **kwargs)
             price = (base_price - (base_price * (self.percent_price / 100))) or 0.0
         elif self.compute_price == 'formula':
-            base_price = self._compute_base_price(product, quantity, uom, date, currency, **kwargs)
+            base_price = self._compute_base_price(product, quantity, uom, currency, date=date, **kwargs)
             # complete formula
             price_limit = base_price
             discount = self.price_discount if self.base != 'standard_price' else -self.price_markup
@@ -644,11 +644,11 @@ class ProductPricelistItem(models.Model):
             if self.price_max_margin:
                 price = min(price, price_limit + convert(self.price_max_margin))
         else:  # empty self, or extended pricelist price computation logic
-            price = self._compute_base_price(product, quantity, uom, date, currency, **kwargs)
+            price = self._compute_base_price(product, quantity, uom, currency, date=date, **kwargs)
 
         return price
 
-    def _compute_base_price(self, product, quantity, uom, date, currency, **kwargs):
+    def _compute_base_price(self, product, quantity, uom, currency, date=False, **kwargs):
         """Compute the base price for a given rule.
 
         :param product: recordset of product (product.product/product.template)
