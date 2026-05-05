@@ -154,6 +154,30 @@
     </section>
 </template>
 
+<template id="s_image_hero_title" name="Hero Image + Title">
+    <section class="s_image_hero_title o_mail_snippet_general pt16 pb16" data-vxml="001">
+        <div class="container pt16">
+            <p style="text-align: center;"><span class="o_small-fs">PREORDER ONLINE</span></p>
+            <h1 class="display-1" style="text-align: center;">Collection launch</h1>
+            <p style="text-align: center;">Add a short intro to set the context before the visuals.</p>
+            <div class="row">
+                <div class="col-md-12 col-12">
+                    <div class="o_not_editable">
+                        <img class="img img-fluid o_editable_media mx-auto"
+                            style="padding-bottom: 16px; width: 100% !important"
+                            src="/mass_mailing/static/src/img/snippets_demo/s_bento_grid_default_image_4.jpg"
+                            data-original-src="/mass_mailing/static/src/img/snippets_demo/s_bento_grid_default_image_4.jpg"
+                            data-original-mimetype="image/jpeg"
+                            data-mimetype="image/jpeg"/>
+                    </div>
+                    <p style="text-align: center;">Add a caption or a short message to reinforce the visual.</p>
+                    <p style="text-align: center"><a href="#" class="btn btn-lg btn-primary">Learn more</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
 <template id="mass_mailing.s_content_card_3" name="Content card">
     <section class="o_mail_snippet_general pt16 pb16" data-vxml="001">
         <div class="container">
@@ -296,4 +320,50 @@
         </div>
     </section>
 </template>
+
+<template id="s_images_grid" name="Image Grid">
+    <section class="s_images_grid o_mail_snippet_general pt32 pb32">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    <img class="img img-fluid"
+                        src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp"
+                            style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">CABINETS</span></p>
+                </div>
+                <div class="col-12 col-md-6">
+                    <img class="img img-fluid"
+                        src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_2.webp"
+                            style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">CHAIRS</span></p>
+                </div>
+                <div class="col-12 col-md-6 pt32">
+                    <img class="img img-fluid"
+                        src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_3.webp"
+                            style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">CONSOLE</span></p>
+                </div>
+                <div class="col-12 col-md-6 pt32">
+                    <img class="img img-fluid"
+                        src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_4.webp"
+                            style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">BOOKCASES</span></p>
+                </div>
+                <div class="col-12 col-md-6 pt32">
+                    <img class="img img-fluid"
+                        src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_5.webp"
+                            style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">SOFAS</span></p>
+                </div>
+                <div class="col-12 col-md-6 pt32">
+                    <img class="img img-fluid"
+                    src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_6.webp"
+                        style="padding-bottom: 10px;"/>
+                    <p style="text-align: center;"><span class="o_small-fs">TABLES</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
 </odoo>

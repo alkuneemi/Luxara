@@ -59,6 +59,7 @@
             <t t-snippet="mass_mailing.s_mail_block_footer_social_left" string="Social + Footer" group="footers"/>
             <t t-snippet="mass_mailing.s_mail_block_footer_one_liner" string="Social + Footer + Separator" group="footers"/>
             <t t-snippet="mass_mailing.s_mail_block_footer_social_and_logo" string="Social + Logo" group="footers"/>
+            <t t-snippet="mass_mailing.s_mail_block_footer_links_social" string="Links + Social" group="footers"/>
 
             <t t-snippet="mass_mailing.s_cover" string="Cover" group="images"/>
             <t t-snippet="mass_mailing.s_image_text" group="images" string="Image - Text"/>
@@ -73,6 +74,8 @@
             <t t-snippet="mass_mailing.s_content_card_5" string="Content Card" group="images"/>
             <t t-snippet="mass_mailing.s_content_card_6" string="Content Card" group="images"/>
             <t t-snippet="mass_mailing.s_content_card_7" string="Content Card" group="images"/>
+            <t t-snippet="mass_mailing.s_images_grid" string="Image Grid" group="images"/>
+            <t t-snippet="mass_mailing.s_image_hero_title" string="Hero Image + Title" group="images"/>
 
             <t t-snippet="mass_mailing.s_company_team_shapes" string="Team shapes" group="people"/>
             <t t-snippet="mass_mailing.s_company_team" string="Team" group="people"/>
@@ -94,6 +97,7 @@
             <t t-snippet="mass_mailing.s_membership_advertisement" string="Membership" group="columns"/>
             <t t-snippet="mass_mailing.s_comparisons" string="Comparisons" group="columns"/>
             <t t-snippet="mass_mailing.s_products_grid" string="Products Grid" group="columns"/>
+            <t t-snippet="mass_mailing.s_bento_blocks" string="Bento Blocks" group="columns"/>
 
             <t t-snippet="mass_mailing.s_text_block" string="Paragraph" group="text"/>
             <t t-snippet="mass_mailing.s_link_list" string="Links List" group="text"/>
@@ -106,6 +110,7 @@
             <t t-snippet="mass_mailing.s_text_product_showcase" string="Product Showcase" group="text"/>
             <t t-snippet="mass_mailing.s_text_contact" string="Contact" group="text"/>
             <t t-snippet="mass_mailing.s_text_signature" string="Signature" group="text"/>
+            <t t-snippet="mass_mailing.s_centered_block" string="Centered Block" group="text"/>
             <t t-snippet="mass_mailing.s_text_left_cta" string="Call To Action Text (left)" group="text"/>
             <t t-snippet="mass_mailing.s_text_center_cta" string="Call To Action Text (center)" group="text"/>
             <t t-snippet="mass_mailing.s_text_cta_card" string="Call To Action Card" group="text"/>

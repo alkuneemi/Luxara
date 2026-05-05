@@ -8,6 +8,30 @@
     </section>
 </template>
 
+<template id="s_centered_block" name="Centered Block">
+    <section class="s_centered_block o_mail_snippet_general pt32 pb32">
+        <div class="container s_allow_columns">
+            <div class="row">
+                <div class="col-12">
+                    <p><span class="o_small-fs">INTRODUCING</span></p>
+                    <h2>Studio Notes: Spring Update</h2>
+                    <p>
+                        A short message that reads like a letter: calm, centered, and designed to keep attention on what matters.
+                    </p>
+                    <p>
+                        Use this space for a couple of paragraphs. Keep sentences short and add line breaks so it's easy to read on mobile.
+                    </p>
+                    <p>Best regards,</p>
+                    <p><strong>The team</strong></p>
+                    <p>
+                        <a class="btn btn-lg btn-primary" href="#">Read more</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
 <template id="s_link_list" name="Link List">
     <section class="s_link_list o_mail_snippet_general pt16 pb16" data-vxml="001">
         <div class="container">

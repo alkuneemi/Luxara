@@ -503,6 +503,46 @@
     </section>
 </template>
 
+<template id="s_bento_blocks" name="Bento Blocks">
+    <section class="s_bento_blocks o_mail_snippet_general pt32 pb32 o_colored_level bg-o-color-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento card">
+                        <p style="text-align: center;">
+                            <img class="img-fluid o_editable_media" src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                        </p>
+                        <h3 style="text-align: center;">Feature One</h3>
+                        <p style="text-align: center;">Highlight one key benefit in a single sentence.</p>
+                        <p class="mb-3" style="text-align: center;">Add a second line for details or pricing.</p>
+                        <p class="mb-2" style="text-align: center;"><a class="btn btn-lg btn-primary" href="#">Get started</a></p>
+                        <p class="mb-0" style="text-align: center;"><a href="#">Discover more</a></p>
+                    </div>
+                </div>
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento card">
+                        <p style="text-align: center;">
+                            <img class="img-fluid o_editable_media" src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                        </p>
+                        <h3 style="text-align: center;">Feature Two</h3>
+                        <p style="text-align: center;">Use this block for an offer, update, or new release.</p>
+                        <p style="text-align: center;">Keep it short so it reads well on mobile.</p>
+                        <p style="text-align: center;"><a class="btn btn-lg btn-primary" href="#">Learn more</a></p>
+                        <p style="text-align: center;"><a href="#">See all options</a></p>
+                    </div>
+                </div>
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento callout">
+                        <h3 style="text-align: center;">Need a quick summary?</h3>
+                        <p style="text-align: center;">Use this call-out to reinforce the main message and drive one clear action.</p>
+                        <p style="text-align: center;"><a class="btn btn-lg btn-secondary" href="#">Explore everything</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
 <record id="mass_mailing.s_features_grid_000_scss" model="ir.asset">
     <field name="name">Features grid 000 SCSS</field>
     <field name="bundle">mass_mailing.assets_iframe_style</field>

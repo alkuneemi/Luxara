@@ -36,6 +36,15 @@
             <div data-name="roadshow2" title="Roadshow Follow-up" data-layout-styles="background-color: rgb(255, 255, 255) !important;" data-img="/mass_mailing_themes/static/src/img/theme_imgs/roadshow_followup_thumb" data-images-info='{"logo": {"format": "png"}, "all": {"module": "mass_mailing_themes"}}'>
                 <t t-call="mass_mailing_themes.theme_roadshow2_template"/>
             </div>
+            <div data-name="image_heavy" title="Catalog" data-layout-styles="background-color: rgb(255, 255, 255) !important;" data-img="/mass_mailing/static/src/img/theme_imgs/default_thumb" data-images-info='{"logo": {"format": "png"}}'>
+                <t t-call="mass_mailing_themes.theme_image_heavy_template"/>
+            </div>
+            <div data-name="text_centric" title="Text Centric" data-layout-styles="background-color: rgb(255, 255, 255) !important;" data-img="/mass_mailing/static/src/img/theme_imgs/basic_thumb" data-images-info='{"logo": {"format": "png"}}'>
+                <t t-call="mass_mailing_themes.theme_text_centric_template"/>
+            </div>
+            <div data-name="cta_centric" title="Event updates" data-layout-styles="background-color: rgb(10, 10, 10) !important;" data-img="/mass_mailing_themes/static/src/img/theme_imgs/promotion_thumb" data-images-info='{"logo": {"format": "png"}}'>
+                <t t-call="mass_mailing_themes.theme_cta_centric_template"/>
+            </div>
         </xpath>
     </template>
 
@@ -1679,6 +1688,398 @@
                         <p><span style="font-size: 10px;">
                             © 2022 All Rights Reserved
                         </span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Image Heavy -->
+    <template id="theme_image_heavy_template">
+        <style id="design-element">
+            .o_layout .o_mail_wrapper .o_mail_wrapper_td {
+                --h1-color: #111827;
+                --h3-color: #111827;
+                --text-color: #374151;
+                --link-color: #111827;
+                --btn-primary-background-color: #111827;
+                --btn-primary-border-color: #111827;
+                --btn-primary-color: #ffffff;
+                --separator-border-color: #e5e7eb !important;
+            }
+        </style>
+        <t t-set="now" t-value="datetime.datetime.now()"/>
+        <t t-set="website_url_or_none" t-value="(company_id.website) or '#'"/>
+        <section class="s_header_logo o_mail_block_header_logo o_mail_snippet_general pt24 pb8" data-vxml="001" data-snippet="s_mail_block_header_logo" data-name="Centered Logo" style="background-color: rgb(255, 255, 255);">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12" style="text-align: center;">
+                        <a t-att-href="website_url_or_none" style="text-decoration:none;" target="_blank">
+                            <img src="/mass_mailing_themes/static/src/img/theme_promotion/company_logo.png" style="width: 25% !important;" alt="Your Logo" class="img img-fluid py-4"/>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_image_hero_title o_mail_snippet_general pt16 pb16" data-vxml="001">
+            <div class="container pt16">
+                <p style="text-align: center;"><span class="o_small-fs">PREORDER ONLINE</span></p>
+                <h1 class="display-1" style="text-align: center;">Collection launch</h1>
+                <p style="text-align: center;">Add a short intro to set the context before the visuals.</p>
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid o_editable_media mx-auto"
+                                style="padding-bottom: 16px; width: 100% !important"
+                                src="/mass_mailing/static/src/img/snippets_demo/s_bento_grid_default_image_4.jpg"
+                                data-original-src="/mass_mailing/static/src/img/snippets_demo/s_bento_grid_default_image_4.jpg"
+                                data-original-mimetype="image/jpeg"
+                                data-mimetype="image/jpeg"/>
+                        </div>
+                        <p style="text-align: center;">Add a caption or a short message to reinforce the visual.</p>
+                        <p style="text-align: center"><a href="#" class="btn btn-lg btn-primary">Learn more</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_images_grid o_mail_snippet_general pt32 pb32" data-snippet="s_images_grid" data-name="Image Grid">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">CABINETS</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_2.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">CHAIRS</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pt32">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_3.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">CONSOLE</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pt32">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_4.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">BOOKCASES</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pt32">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_5.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">SOFAS</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pt32">
+                        <div class="o_not_editable">
+                                <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_6.webp"
+                                style="padding-bottom: 10px;"/>
+                            <p style="text-align: center;"><span class="o_small-fs">TABLES</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_picture o_mail_snippet_general bg-white pt24 pb0 px-3" data-vxml="001" data-snippet="s_picture" data-name="Large Image">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12" style="padding-left: 0px; padding-right: 0px;">
+                        <img class="img-fluid o_we_custom_image" style="padding-bottom: 16px; width: 100% !important;" src="/mass_mailing/static/src/img/snippets_demo/s_showcase.jpg" alt=""/>
+                        <p style="text-align: center;"><span class="o_small-fs">DISCOVER THE FULL CATALOG</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_center o_mail_snippet_general pt80 pb16" data-name="Links + Social" data-snippet="s_mail_block_footer_links_social">
+            <t t-set="now" t-value="datetime.datetime.now()"/>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <h3 style="text-align: center">YOUR COMPANY</h3>
+                        <p style="text-align: center">
+                            <span class="o_small-fs">
+                                <a href="#">Visit</a>&#160;&#160;|&#160;&#160;
+                                <a href="#">New</a>&#160;&#160;|&#160;&#160;
+                                <a href="#">Women</a>&#160;&#160;|&#160;&#160;
+                                <a href="#">Men</a>&#160;&#160;|&#160;&#160;
+                                <a href="#">Gifts</a>
+                            </span>
+                        </p>
+                        <t t-call="mass_mailing.s_social_media_template"
+                            optionalTextPosition.f="text-center"
+                            optionalSnippetClass.f="o_mail_footer_social pb16 no_icon_color"
+                            optionalTextStyle.f="color: #111827 !important;"
+                            optionalIconLayout.f="fa-stack"/>
+                        <p style="text-align: center">
+                            <a class="btn btn-link" role="button" href="/unsubscribe_from_list">Unsubscribe</a>
+                            <span class="o_small-fs"><br/>© <t t-out="now.strftime('%Y')"/> All Rights Reserved</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- Text Centric -->
+    <template id="theme_text_centric_template">
+        <style id="design-element">
+            .o_layout .o_mail_wrapper .o_mail_wrapper_td {
+                --h1-color: #111827;
+                --h2-color: #111827;
+                --h3-color: #111827;
+                --text-color: #111827;
+                --text-font-size: 15px;
+                --link-color: #111827;
+                --btn-primary-background-color: #111827;
+                --btn-primary-border-color: #111827;
+                --btn-primary-color: #ffffff;
+                --separator-border-color: #e5e7eb !important;
+            }
+        </style>
+        <t t-set="now" t-value="datetime.datetime.now()"/>
+        <t t-set="website_url_or_none" t-value="(company_id.website) or '#'"/>
+
+        <section class="s_header_logo o_mail_block_header_logo o_mail_snippet_general" data-name="Centered Logo" data-vxml="001" data-snippet="s_mail_block_header_logo">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3"/>
+                    <div class="col-md-6" style="text-align: center;">
+                        <div class="o_not_editable">
+                            <a t-att-href="(company_id.website) or '#'" style="text-decoration:none;" target="_blank">
+                                <img src="/mass_mailing_themes/static/src/img/theme_promotion/company_logo.png" style="height:auto; width: 50% !important;" alt="Your Logo" class="img-fluid o_editable_media py-4"/>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="text-align: right;"/>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_picture o_mail_snippet_general pt8 pb0" data-vxml="001" data-snippet="s_picture" data-name="Picture" style="background-color: rgb(255, 255, 255); padding-left: 16px; padding-right: 16px;">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12" style="padding-left: 0px; padding-right: 0px;">
+                        <img class="img img-fluid o_editable_media" style="width: 100% !important;" src="/web/image/mass_mailing.s_cover_default_image" alt=""/>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_centered_block o_mail_snippet_general pt32 pb32" data-snippet="s_centered_block" data-name="Centered Block">
+            <div class="container s_allow_columns">
+                <div class="row">
+                    <div class="col-12">
+                        <p><span class="o_small-fs">INTRODUCING</span></p>
+                        <h2>Studio Notes: Spring Update</h2>
+                        <p>
+                            A short message that reads like a letter: calm, centered, and designed to keep attention on what matters.
+                        </p>
+                        <p>
+                            Use this space for a couple of paragraphs. Keep sentences short and add line breaks so it's easy to read on mobile.
+                        </p>
+                        <p>Best regards,</p>
+                        <p><strong>The team</strong></p>
+                        <p>
+                            <a class="btn btn-lg btn-primary" href="#">Read more</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_images_grid o_mail_snippet_general pt32 pb32" data-snippet="s_images_grid" data-name="Image Grid">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-md-6 pt16">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp"/>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 pt16">
+                        <div class="o_not_editable">
+                            <img class="img img-fluid"
+                                src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_2.webp"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="o_mail_snippet_general pt16 pb16" data-vxml="001" data-snippet="s_text_need_help" data-name="Need Help?">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-12 pb24">
+                        <h2>Need help?</h2>
+                        <p>In this section, you can address common questions efficiently.</p>
+                    </div>
+                    <div class="col-md-6 col-12 pb16">
+                        <h3>What sets us apart?</h3>
+                        <p>We deliver personalized solutions, ensuring that every customer receives top-tier service tailored to their needs.</p>
+                    </div>
+                    <div class="col-md-6 col-12 pb16">
+                        <h3>Is the website user-friendly?</h3>
+                        <p>Our website is designed for easy navigation, allowing you to find the information you need quickly and efficiently.</p>
+                    </div>
+                    <div class="col-md-6 col-12 pb16">
+                        <h3>What support do we offer?</h3>
+                        <p>We provide 24/7 support through various channels, including live chat, email, and phone, to assist with any queries.</p>
+                    </div>
+                    <div class="col-md-6 col-12 pb16">
+                        <h3>How is your data secured?</h3>
+                        <p>Your data is protected by advanced encryption and security protocols, keeping your personal information safe.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_center o_mail_snippet_general pt16 pb16" data-snippet="s_mail_block_footer_social" data-name="Footer Center" data-vxml="001">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <div class="o_not_editable">
+                            <a t-att-href="company_id.website or '#'" target="_blank">
+                                <img
+                                    class="img img-fluid o_editable_media mx-auto py-4"
+                                    style="width: 25% !important;"
+                                    src="/mass_mailing_themes/static/src/img/theme_promotion/company_logo.png"/>
+                            </a>
+                        </div>
+                        <t t-call="mass_mailing.s_social_media_template"
+                            optionalTextPosition.f="text-center"
+                            optionalSnippetClass.f="o_mail_footer_social pb16 no_icon_color"
+                            optionalTextStyle.f="color: #111827 !important;"/>
+                        <p style="text-align: center"><t t-if="company_id"><strong>© <t t-out="company_id.partner_id.name"/></strong><br/><t t-out="company_id.partner_id._display_address()"/><br/></t>You're seeing this because you've shopped with us or joined our mailing list.</p>
+                        <p style="text-align: center"><a class="btn btn-link" role="button" href="/unsubscribe_from_list">Unsubscribe</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- CTA Centric -->
+    <template id="theme_cta_centric_template">
+        <style id="design-element">
+            .o_layout .o_mail_wrapper .o_mail_wrapper_td {
+                --h1-color: #ffffff;
+                --h3-color: #ffffff;
+                --text-color: rgba(255, 255, 255, 0.78);
+                --text-font-size: 14px;
+                --link-color: rgba(255, 255, 255, 0.78);
+                --btn-primary-background-color: #6214d9;
+                --btn-primary-border-color: #6214d9;
+                --btn-primary-color: #ffffff;
+                --btn-secondary-background-color: #252525;
+                --btn-secondary-border-color: #252525;
+                --btn-secondary-color: #ffffff;
+                --separator-border-color: #e5e7eb !important;
+                --wrapper-background-color: #0a0a0a;
+            }
+        </style>
+        <t t-set="now" t-value="datetime.datetime.now()"/>
+        <t t-set="website_url_or_none" t-value="(company_id.website) or '#'"/>
+
+        <section class="s_header_logo o_mail_block_header_logo o_mail_snippet_general" data-name="Centered Logo" data-vxml="001" data-snippet="s_mail_block_header_logo">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3"/>
+                    <div class="col-md-6" style="text-align: center;">
+                        <div class="o_not_editable">
+                            <a t-att-href="(company_id.website) or '#'" style="text-decoration:none;" target="_blank">
+                                <img src="/mass_mailing_themes/static/src/img/theme_cta_centric/company_logo_dark.png" style="height:auto; width: 50% !important;" alt="Your Logo" class="img-fluid o_editable_media py-4"/>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="text-align: right;"/>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_text_block o_mail_snippet_general px-3 pt32 pb16" data-vxml="001" data-snippet="s_text_block" data-name="Paragraph">
+            <div class="container s_allow_columns">
+                <p style="text-align: center; color: rgba(255, 255, 255, 0.78);" class="mb-0">
+                    There are new events for artists you follow. Don't miss out.
+                </p>
+            </div>
+        </section>
+
+        <section class="s_bento_blocks o_mail_snippet_general pb32" data-snippet="s_bento_blocks" data-name="Bento Blocks">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-12 pb24">
+                        <div class="o_colored_level bg-o-color-4" style="padding: 24px; border-radius: 16px !important; background-color: #121212; text-align: center;" data-name="Bento card">
+                            <p style="text-align: center;">
+                                <img class="img-fluid o_we_custom_image" src="/mass_mailing_themes/static/src/img/theme_cta_centric/s_bento_block_default_image_1.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                            </p>
+                            <h3 style="text-align: center; color: #ffffff;">The Neon Comets</h3>
+                            <p style="text-align: center;">Friday 12 September 2026</p>
+                            <p style="text-align: center;">Starlight Hall, Brussels</p>
+                            <p style="text-align: center;"><a class="btn btn-primary btn-lg" href="#">Buy tickets</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 col-12 pb24">
+                        <div class="o_colored_level bg-o-color-4" style="padding: 24px; border-radius: 16px !important; background-color: #121212; text-align: center;" data-name="Bento card">
+                            <p style="text-align: center;">
+                                <img class="img-fluid o_we_custom_image" src="/mass_mailing_themes/static/src/img/theme_cta_centric/s_bento_block_default_image_2.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                            </p>
+                            <h3 style="text-align: center; color: #ffffff;">Luna &amp; The Satellites</h3>
+                            <p style="text-align: center;">Saturday 24 October 2026</p>
+                            <p style="text-align: center;">Riverside Arena, Brussels</p>
+                            <p style="text-align: center;"><a class="btn btn-primary btn-lg" href="#">Buy tickets</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 col-12 pb24">
+                        <div class="o_colored_level bg-o-color-4" style="padding: 24px; border-radius: 16px !important; background-color: #121212; text-align: center;" data-name="Bento callout">
+                            <h3 class="mb-2" style="text-align: center; color: #ffffff;">Your event recommendations</h3>
+                            <p class="mb-3" style="text-align: center;">We selected the best upcoming concerts based on the artists you like.</p>
+                            <p style="text-align: center;"><a class="btn btn-lg btn-secondary" t-att-href="website_url_or_none">Discover more</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="s_footer_social o_mail_block_footer_social o_mail_footer_social_center o_mail_snippet_general pt16 pb16" data-name="Footer Center" data-vxml="001" data-snippet="s_mail_block_footer_social">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 col-12">
+                        <div class="o_not_editable">
+                            <a t-att-href="company_id.website or '#'" target="_blank">
+                                <img src="/mass_mailing_themes/static/src/img/theme_cta_centric/company_logo_dark.png" style="width: 25% !important; padding-bottom: 16px;" alt="Your Logo" class="img img-fluid o_editable_media mx-auto"/>
+                            </a>
+                        </div>
+                        <t t-call="mass_mailing.s_social_media_template"
+                            optionalTextPosition.f="text-center"
+                            optionalSnippetClass.f="o_mail_footer_social pb16 no_icon_color"
+                            optionalTextStyle.f="color: #ffffff !important;"/>
+                        <p style="text-align: center"><t t-if="company_id"><strong>© <t t-out="company_id.partner_id.name"/></strong><br/><t t-out="company_id.partner_id._display_address()"/><br/></t>You're seeing this because you've shopped with us or joined our mailing list.</p>
+                        <p style="text-align: center"><a class="btn btn-link" role="button" href="/unsubscribe_from_list">Unsubscribe</a></p>
                     </div>
                 </div>
             </div>
