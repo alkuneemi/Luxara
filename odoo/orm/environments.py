@@ -10,6 +10,7 @@ import typing
 from collections import defaultdict, deque
 from collections.abc import Mapping
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import UTC
 from pprint import pformat
 from weakref import ref as weakref
@@ -762,6 +763,8 @@ class Transaction:
         self._registry_sequence = self.registry.registry_sequence
         self._state_stack = [
             TransactionState(
+                cr_cache=state.cr_cache,
+                cr_callbacks=state.cr_callbacks,
                 default_env=state.default_env,
                 registry_sequence=self._registry_sequence,
             ) for state in self._state_stack]
@@ -785,7 +788,17 @@ class Transaction:
     def save_state(self):
         """ Save the current state of the transaction for future restore. """
         self.flush()
+        cr_cache = cr_callbacks = None
+        if self.default_env is not None:
+            cr = self.default_env.cr
+            cr_cache = deepcopy(cr.cache)
+            cr_callbacks = [
+                (deque(callback._funcs), deepcopy(callback.data))
+                for callback in [cr.precommit, cr.postcommit, cr.prerollback, cr.postrollback]
+            ]
         self._state_stack.append(TransactionState(
+            cr_cache=cr_cache,
+            cr_callbacks=cr_callbacks,
             default_env=self.default_env,
             registry_sequence=self._registry_sequence,
         ))
@@ -801,6 +814,11 @@ class Transaction:
         if self._state_stack:
             state = self._state_stack[-1]
             self.default_env = state.default_env
+            if cr := self.default_env.cr:
+                cr.cache = deepcopy(state.cr_cache or {})
+                for callback, (funcs, data) in zip((cr.precommit, cr.postcommit, cr.prerollback, cr.postrollback), state.cr_callbacks or ()):
+                    callback._funcs = deque(funcs)
+                    callback.data = deepcopy(data)
         if self.registry.registry_sequence != self._registry_sequence:
             # registry changed, reset the transaction
             self.reset()
@@ -813,6 +831,8 @@ class TransactionState(typing.NamedTuple):
     """ The state of the transaction that can be stacked for savepoint operations. """
     default_env: Environment | None
     registry_sequence: int
+    cr_callbacks: list | None
+    cr_cache: dict | None
 
 
 # sentinel value for optional parameters
