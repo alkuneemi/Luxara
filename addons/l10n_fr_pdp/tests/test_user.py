@@ -22,7 +22,7 @@ class TestPdpUser(TestL10nFrPdpCommon):
             },
             '/api/pdp/1/register_receiver': {'result': {}},
             '/api/pdp/1/update_user': {'result': {}},
-            '/api/pdp/1/participant_status': {
+            '/api/pdp/2/participant_status': {
                 'result': {
                     'peppol_state': participant_state,
                 }

@@ -4,6 +4,8 @@ from odoo.addons.account_edi_ubl_cii.models.account_edi_common import FloatFmt
 
 PDP_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017'  # Not accepted by SuperPDP due to missing validator
 
+PAID_STATES = {'in_payment', 'paid'}
+
 
 class AccountEdiXmlUbl21Fr(models.AbstractModel):
     _name = "account.edi.xml.ubl_21_fr"
@@ -22,7 +24,7 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         return self._export_invoice_new(invoice)
 
     def _export_invoice_constraints_new(self, invoice, vals):
-        # EXTENDS account.edi.xml.ubl_21
+        # EXTENDS account.edi.xml.ubl_bis3
         constraints = super()._export_invoice_constraints_new(invoice, vals)
 
         for partner_type in ('supplier', 'customer'):
@@ -36,13 +38,13 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
             if not commercial_partner.vat or commercial_partner.vat == '/':
                 constraints[f"ubl_21_fr_{partner_type}_vat_required"] = self.env._("The following partner's VAT is missing: %s", commercial_partner.display_name)
 
-        if 'refund' in vals['invoice'].move_type and not (invoice.reversed_entry_id.name or invoice.reversed_entry_id.invoice_date):
+        if vals['document_type'] == 'credit_note' and not (invoice.reversed_entry_id.name or invoice.reversed_entry_id.invoice_date):
             constraints[f"ubl_21_fr_{partner_type}_refund_invoice_reference"] = self.env._("The original move's name or issue date are missing: %s", vals['invoice'].name)
 
         return constraints
 
     def _add_invoice_header_nodes(self, document_node, vals):
-        # EXTENDS account.edi.xml.ubl_21
+        # EXTENDS account.edi.xml.ubl_bis3
         invoice = vals['invoice']
         super()._add_invoice_header_nodes(document_node, vals)
 
@@ -62,14 +64,14 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         # S7 : Dépôt d'une facture de prestation de service ayant fait l'objet d'un e-reporting (TVA déjà collectée)
 
         tax_scopes = set(invoice.invoice_line_ids.tax_ids.mapped('tax_scope'))
-        profile_scope = "S"
-        if tax_scopes == {'service', 'consu'}:
+        profile_scope = "B"
+        if {'service', 'consu'}.issubset(tax_scopes):
             profile_scope = "M"
-        elif 'consu' in tax_scopes:
-            profile_scope = "G"
+        elif 'service' in tax_scopes:
+            profile_scope = "S"
 
         profile_number = "1"
-        if invoice.payment_state == 'paid':
+        if invoice.payment_state in PAID_STATES:
             # Already paid
             profile_number = "2"
         elif not invoice._is_downpayment() and invoice.invoice_line_ids._get_downpayment_lines():
@@ -94,30 +96,13 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
             })
 
         # Règles de gestion G1.52
-        if 'refund' in invoice.move_type:
+        if vals['document_type'] == 'credit_note':
             document_node['cac:BillingReference'] = {
                 'cac:InvoiceDocumentReference': {
                     'cbc:ID': {'_text': invoice.reversed_entry_id.name},
                     'cbc:IssueDate': {'_text': invoice.reversed_entry_id.invoice_date},
                 }
             }
-
-    def _ubl_add_payment_means_nodes(self, vals):
-        super()._ubl_add_payment_means_nodes(vals)
-        nodes = vals['document_node']['cac:PaymentMeans']
-        for node in nodes:
-            # [UBL-CR-412]-A UBL invoice should not include the PaymentMeans PaymentDueDate
-            node.pop('cbc:PaymentDueDate', None)
-            # [UBL-CR-414]-A UBL invoice should not include the PaymentMeans InstructionID
-            node.pop('cbc:InstructionID', None)
-
-    def _ubl_get_partner_address_node(self, vals, partner):
-        # schematron/openpeppol/3.13.0/xslt/CEN-EN16931-UBL.xslt
-        # [UBL-CR-225]-A UBL invoice should not include the AccountingCustomerParty Party PostalAddress CountrySubentityCode
-        node = super()._ubl_get_partner_address_node(vals, partner)
-        node['cbc:CountrySubentityCode'] = None
-        node['cac:Country']['cbc:Name'] = None
-        return node
 
     def _ubl_add_party_identification_nodes(self, vals):
         super()._ubl_add_party_identification_nodes(vals)
@@ -134,23 +119,8 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
             'cbc:ID': {'_text': party_id, 'schemeID': party_id_scheme},
         }
 
-    def _ubl_add_party_tax_scheme_nodes(self, vals):
-        # EXTENDS account.edi.ubl
-        super()._ubl_add_party_tax_scheme_nodes(vals)
-        partner = vals['party_vals']['partner']
-        commercial_partner = partner.commercial_partner_id
-
-        vals['party_node']['cac:PartyTaxScheme'] = [
-            {
-                'cbc:CompanyID': {'_text': commercial_partner.vat},
-                'cac:TaxScheme': {
-                    'cbc:ID': {'_text': 'VAT'},
-                },
-            },
-        ]
-
     def _ubl_add_party_legal_entity_nodes(self, vals):
-        # EXTENDS account.edi.ubl
+        # EXTENDS account.edi.xml.ubl_bis3
         super()._ubl_add_party_legal_entity_nodes(vals)
         partner = vals['party_vals']['partner']
         commercial_partner = partner.commercial_partner_id

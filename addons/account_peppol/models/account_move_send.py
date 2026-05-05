@@ -232,7 +232,7 @@ class AccountMoveSend(models.AbstractModel):
 
         try:
             response = edi_user._call_peppol_proxy(
-                endpoint=edi_user._get_peppol_proxy_endpoint('send_document'),
+                endpoint=edi_user._get_peppol_proxy_endpoint('1/send_document'),
                 params=params,
             )
         except AccountEdiProxyError as e:

@@ -4,24 +4,20 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import html2plaintext
 
-from odoo.addons.l10n_fr_pdp.models.account_edi_proxy_user import STATUS_TO_PROCESS_CONDITION_CODE
+from odoo.addons.l10n_fr_pdp.models.account_edi_proxy_user import STATUS_TO_PROCESS_CONDITION_CODE_PDP
 from odoo.addons.l10n_fr_pdp.models.account_edi_xml_ubl_21_fr import PDP_CUSTOMIZATION_ID
+from odoo.addons.l10n_fr_pdp.models.account_peppol_response import NEW_STATUSES
 
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
     peppol_move_state = fields.Selection(
+        string="E-Invoicing Status",
         selection_add=[
-            ('submitted', 'Submitted'),
-            ('received', 'Received'),
-            ('made_available', 'Made Available'),
-            ('approved', 'Approved'),
-            ('refused', 'Refused'),
-            ('partially_paid', 'Partially Paid'),
-            ('paid', 'Paid'),
-            ('rejected', 'Rejected'),
-            ('cancelled', 'Cancelled'),
+            ('partially_paid', "Partially Paid"),
+            ('PD', "Paid"),  # We do not have it in `account_peppol_response`
+            *[(status, lt._source) for status, lt in NEW_STATUSES.items()],
         ],
     )
     pdp_ppf_move_state = fields.Selection(
@@ -50,36 +46,6 @@ class AccountMove(models.Model):
     )
     pdp_can_send_response = fields.Boolean(compute='_compute_pdp_can_send_response')
 
-    @api.model
-    def fields_get(self, allfields=None, attributes=None):
-        # Extend to rename the `peppol_move_state` field for French companies (to not say "Peppol")
-        fields = super().fields_get(allfields, attributes)
-        company = self.env.company
-        if not self._context.get("studio") and (company.country_code == 'FR' or company.pdp_identifier) and 'peppol_move_state' in fields:
-            fields['peppol_move_state']['string'] = self.env._("E-Invoicing Status")
-        return fields
-
-    def _get_view(self, view_id=None, view_type='form', **options):
-        # Extend to rename the `peppol_ready` and `peppol_move_state` filters for French companies (to not say "Peppol")
-        arch, view = super()._get_view(view_id, view_type, **options)
-        company = self.env.company
-        if (
-            self._context.get("studio")
-            or view_type != 'search'
-            or not self.env['account.move'].has_access('read')
-            or (company.country_code != 'FR' and not company.pdp_identifier)
-        ):
-            return arch, view
-
-        peppol_move_state_filter_node = arch.find('.//filter[@name="peppol_move_state"]')
-        if peppol_move_state_filter_node is not None:
-            peppol_move_state_filter_node.set('string', "E-Invoicing Status")
-
-        peppol_ready_filter_node = arch.find('.//filter[@name="peppol_ready"]')
-        if peppol_ready_filter_node is not None:
-            peppol_ready_filter_node.set('string', "E-Invoicing Ready")
-        return arch, view
-
     @api.depends('peppol_is_sent')
     def _compute_show_reset_to_draft_button(self):
         # EXTEND 'account' to hide the reset to draft button for sent PDP moves
@@ -97,14 +63,14 @@ class AccountMove(models.Model):
     @api.depends('peppol_response_ids', 'peppol_response_ids.peppol_state', 'peppol_response_ids.response_code')
     def _compute_ppf_state(self):
         for move in self:
-            processed = move.peppol_move_state not in ('ready', 'to_send', 'processing', 'error')
+            processed = move.peppol_move_state and move.peppol_move_state not in ('ready', 'to_send', 'processing', 'error')
             move.pdp_ppf_move_state = move._pdp_get_tax_extract_state() if processed and move.is_sale_document(include_receipts=False) else False
             move.pdp_ppf_lifecycle_state = move._pdp_get_lifecycle_state() if processed else False
 
     @api.depends('peppol_move_state', 'peppol_message_uuid')
     def _compute_pdp_can_send_response(self):
         for move in self:
-            move.pdp_can_send_response = bool(move.peppol_message_uuid) and move.peppol_is_sent
+            move.pdp_can_send_response = bool(move.peppol_message_uuid) and move.peppol_is_sent and move.company_id._get_peppol_proxy_type() == 'pdp'
 
     def _pdp_get_response_status(self):
         """Return the PDP response status of the message"""
@@ -116,10 +82,10 @@ class AccountMove(models.Model):
         # Take the latest response status if we have any
         response_message = self.peppol_response_ids.filtered(lambda l: l.pdp_flow_number == '2' and l.peppol_state == 'done')
         latest_response = response_message.sorted(
-            lambda l: (STATUS_TO_PROCESS_CONDITION_CODE.get(l.response_code, '0'), l.pdp_issue_date or datetime.min, l.id), reverse=True
+            lambda l: (STATUS_TO_PROCESS_CONDITION_CODE_PDP.get(l.response_code, '0'), l.pdp_issue_date or datetime.min, l.id), reverse=True
         )[:1]
         if latest_response:
-            return latest_response.response_code if latest_response.response_code != 'paid' or latest_response.pdp_fully_paid else 'partially_paid'
+            return latest_response.response_code if latest_response.response_code != 'PD' or latest_response.pdp_fully_paid else 'partially_paid'
 
         return None
 
@@ -131,9 +97,9 @@ class AccountMove(models.Model):
         if not tax_extract_responses:
             return 'in_progress'
         states = tax_extract_responses.mapped('response_code')
-        if ('refused', 'rejected') in states:
+        if ('refused', 'RE') in states:
             state = 'error'
-        elif 'approved' not in states:
+        elif 'AP' not in states:
             state = 'sent'
         else:
             state = 'done'
@@ -147,7 +113,7 @@ class AccountMove(models.Model):
         if not current_status_responses:
             return 'in_progress' if self.is_sale_document(include_receipts=False) else False
         states = current_status_responses.mapped('response_code')
-        if ('refused', 'rejected') in states:
+        if ('refused', 'RE') in states:
             return 'error'
         return 'sent'
 

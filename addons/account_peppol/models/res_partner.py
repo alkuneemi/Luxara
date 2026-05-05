@@ -10,7 +10,6 @@ from urllib import parse
 
 from odoo import api, fields, models
 from odoo.addons.account.models.company import PEPPOL_LIST
-from odoo.addons.account_peppol.models.account_edi_proxy_user import IAP_ENDPOINT_MAP
 from odoo.addons.account_peppol.tools.demo_utils import handle_demo
 
 
@@ -172,7 +171,8 @@ class ResPartner(models.Model):
         proxy_type = company._get_peppol_proxy_type()
         origin = self.env['account_edi_proxy_client.user']._get_proxy_urls()[proxy_type][edi_mode]
         query = parse.urlencode({'peppol_identifier': edi_identification.lower()})
-        endpoint = f'{origin}{IAP_ENDPOINT_MAP[proxy_type]["lookup"]}?{query}'
+        api_endpoint = self.env['account_edi_proxy_client.user']._get_peppol_proxy_endpoint('1/lookup', proxy_type=proxy_type)
+        endpoint = f'{origin}{api_endpoint}?{query}'
 
         try:
             response = requests.get(endpoint, timeout=TIMEOUT)

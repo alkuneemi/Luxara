@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 from odoo.tools.translate import LazyTranslate
 
 from odoo.addons.account_edi_proxy_client.models.account_edi_proxy_user import AccountEdiProxyError
-from odoo.addons.account_peppol.models.account_edi_proxy_user import IAP_ENDPOINT_MAP
+from odoo.addons.l10n_fr_pdp.models.account_peppol_response import PEPPOL_TO_PDP_STATUS, PDP_STATUSES
 from odoo.addons.l10n_fr_pdp.tools.demo_utils import handle_demo
 from odoo.addons.l10n_fr_pdp.utils.cdar import _parse_datetime_node as _parse_cdar_datetime_node
 
@@ -23,32 +23,38 @@ CDAR_NSMAP = {
     'xsi': "http://www.w3.org/2001/XMLSchema-instance",
 }
 
-PROCESS_CONDITION_CODE_TO_RESPONSE_CODE = {
-    # PDP
+PROCESS_CONDITION_CODE_TO_RESPONSE_CODE_PDP = {
     '200': 'submitted',  # PA-S (sending platform)
-    '202': 'received',  # PA-R (receiving platform)
+    '202': 'AB',  # PA-R (receiving platform)
     '203': 'made_available',  # PA-R
     '204': 'in_hand',  # R (receiver)
-    '205': 'approved',  # R
+    '205': 'AP',  # R
     '207': 'contested',  # R
     '210': 'refused',  # R
     '211': 'payment_sent',  # R
-    '212': 'paid',  # S (sender)
-    '213': 'rejected',  # PA-R
+    '212': 'PD',  # S (sender)
+    '213': 'RE',  # PA-R
     '220': 'cancelled',  # S
-    # PPF
-    '500': 'received',
-    '501': 'rejected',
-    '250': 'approved',
+}
+
+PROCESS_CONDITION_CODE_TO_RESPONSE_CODE_PPF = {
+    '500': 'AB',
+    '501': 'RE',
+    '250': 'AP',
     '251': 'refused',
-    '300': 'approved',
+    '300': 'AP',
     '301': 'refused',
-    '400': 'approved',
+    '400': 'AP',
     '401': 'refused',
     '601': 'refused',
 }
 
-STATUS_TO_PROCESS_CONDITION_CODE = {status: code for code, status in PROCESS_CONDITION_CODE_TO_RESPONSE_CODE.items()}
+PROCESS_CONDITION_CODE_TO_RESPONSE_CODE = {
+    **PROCESS_CONDITION_CODE_TO_RESPONSE_CODE_PDP,
+    **PROCESS_CONDITION_CODE_TO_RESPONSE_CODE_PPF,
+}
+
+STATUS_TO_PROCESS_CONDITION_CODE_PDP = {status: code for code, status in PROCESS_CONDITION_CODE_TO_RESPONSE_CODE_PDP.items()}
 
 PAYMENT_TYPE_CODES = {
     'RAP': _lt("Amount remaining due"),  # Reste à payer
@@ -114,7 +120,7 @@ class AccountEdiProxyClientUser(models.Model):
         else:
             try:
                 # b64encode returns a bytestring, we need it as a string
-                response = self._make_request(self._get_server_url(proxy_type, edi_mode) + IAP_ENDPOINT_MAP['pdp']["connect"], params={
+                response = self._make_request(self._get_server_url(proxy_type, edi_mode) + self._get_peppol_proxy_endpoint("1/connect", proxy_type='pdp'), params={
                     'dbuuid': company.env['ir.config_parameter'].get_param('database.uuid'),
                     'company_id': company.id,
                     'peppol_identifier': peppol_identifier,
@@ -153,17 +159,15 @@ class AccountEdiProxyClientUser(models.Model):
         datetime_in_1_hour = fields.Datetime.add(fields.Datetime.now(), hours=1)
         self.env.ref('account_peppol.ir_cron_peppol_get_participant_status')._trigger(at=datetime_in_1_hour)
 
-    def _pdp_get_new_regulatory_documents(self):
-        job_count = BATCH_SIZE
+    def _pdp_get_new_regulatory_documents(self, batch_size=None):
+        job_count = batch_size or BATCH_SIZE
         need_retrigger = False
         for edi_user in self:
             edi_user = edi_user.with_company(edi_user.company_id)
-            if edi_user.proxy_type != 'pdp':
-                continue
             try:
                 # request all messages that haven't been acknowledged
                 messages = edi_user._call_peppol_proxy(
-                    endpoint=edi_user._get_peppol_proxy_endpoint('get_all_regulatory_documents'),
+                    endpoint=edi_user._get_peppol_proxy_endpoint('1/get_all_ppf_documents'),
                 )
             except AccountEdiProxyError as e:
                 _logger.error('Error while receiving the document from Peppol Proxy: %s', e.message)
@@ -181,7 +185,7 @@ class AccountEdiProxyClientUser(models.Model):
 
             # retrieve attachments for filtered messages
             all_messages = edi_user._call_peppol_proxy(
-                endpoint=edi_user._get_peppol_proxy_endpoint('get_regulatory_document'),
+                endpoint=edi_user._get_peppol_proxy_endpoint('1/get_ppf_document'),
                 params={'ppf_message_uuids': message_uuids},
             )
             processed_uuid_to_record = edi_user._pdp_process_new_regulatory_messages(all_messages)
@@ -190,7 +194,7 @@ class AccountEdiProxyClientUser(models.Model):
                 self.env.cr.commit()
             if processed_uuid_to_record:
                 edi_user._call_peppol_proxy(
-                    endpoint=edi_user._get_peppol_proxy_endpoint('ack_regulatory'),
+                    endpoint=edi_user._get_peppol_proxy_endpoint('1/ack_ppf'),
                     params={'message_uuids': list(processed_uuid_to_record)},
                 )
         if need_retrigger:
@@ -201,13 +205,13 @@ class AccountEdiProxyClientUser(models.Model):
         processed_message_uuids = []
         other_messages = {}
         for uuid, content in messages.items():
-
-            peppol_response = uuid_to_record[uuid]
-            # In case of error we do not have a 'document_type'
-            if peppol_response._name != 'account.peppol.response' or content['document_type'] != 'CrossDomainAcknowledgementAndResponse':
+            record = uuid_to_record[uuid]
+            # In case of an error there is no 'document_type' in the content.
+            if record._name != 'account.peppol.response' or 'document_type' in content and content['document_type'] != 'CrossDomainAcknowledgementAndResponse':
                 other_messages[uuid] = content
                 continue
 
+            peppol_response = record
             if content.get('error'):
                 if content['error'].get('code') == 702:
                     # "Peppol request not ready" error:
@@ -239,8 +243,7 @@ class AccountEdiProxyClientUser(models.Model):
                     "res_model": 'account.move',
                 }
             )
-            response_code_to_description_map = dict(peppol_response._fields['response_code']._description_selection(self.env))
-            response_code_description = response_code_to_description_map.get(peppol_response.response_code, peppol_response.response_code)
+            response_code_description = PDP_STATUSES.get(peppol_response.response_code) or peppol_response.response_code
             origin_move._message_log(
                 body=self.env._(
                     "The Response issued on %(issue_date)s with Response Code '%(response_code)s' was sent by the access point.",
@@ -258,10 +261,9 @@ class AccountEdiProxyClientUser(models.Model):
             return
         additional_info = additional_info or {}
 
-        response_code_to_description_map = dict(self.env['account.peppol.response']._fields['response_code']._description_selection(self.env))
-        if status not in response_code_to_description_map:
+        status_string = PDP_STATUSES.get(status)
+        if not status_string:
             raise UserError(self.env._("Unsupported response status: '%s'.", status))
-        status_string = response_code_to_description_map[status]
 
         try:
             issue_time = fields.Datetime.now()
@@ -270,7 +272,7 @@ class AccountEdiProxyClientUser(models.Model):
                 "/api/pdp/1/send_response",
                 params={
                     'reference_uuids': reference_moves.mapped('peppol_message_uuid'),
-                    'status': status,
+                    'status': PEPPOL_TO_PDP_STATUS.get(status) or status,
                     'additional_info': additional_info,
                 },
             )
@@ -302,7 +304,7 @@ class AccountEdiProxyClientUser(models.Model):
                 'response_code': status,
                 'peppol_state': 'processing',
                 'move_id': move.id,
-                'pdp_status_info': "\n\n".join([self._format_status_info(status) for status in status_infos]),
+                'pdp_status_info': "\n\n".join([self._format_status_info(status_info) for status_info in status_infos]),
                 'pdp_issue_date': issue_time,
                 'pdp_flow_number': '2',
             }
@@ -354,19 +356,12 @@ class AccountEdiProxyClientUser(models.Model):
             if content['document_type'] != 'CrossDomainAcknowledgementAndResponse':
                 continue
             flow_number = content['flow_number']
-            if flow_number == '1':
+            if flow_number in ('1', '6'):
                 origin_uuid = content['origin_peppol_message_uuid']
                 origin_move = original_moves.get(origin_uuid)
                 if not origin_uuid or not origin_move:
-                    _logger.warning('[Flow 1] The tax extract response from the PPF with UUID %s could not be imported: Original journal entry (UUID %s) not found.', uuid, origin_uuid)
-                    continue
-                if response := self._pdp_import_response(uuid, content, origin_move[:1]):
-                    processed_messages[uuid] = response
-            elif flow_number == '6':
-                origin_uuid = content['origin_peppol_message_uuid']
-                origin_move = original_moves.get(origin_uuid)
-                if not origin_uuid or not origin_move:
-                    _logger.warning('[Flow 6] The status response from the PPF with UUID %s could not be imported: Original journal entry (UUID %s) not found.', uuid, origin_uuid)
+                    flow_description = "tax extract" if flow_number == '1' else "status"
+                    _logger.warning('[Flow %s] The %s response from the PPF with UUID %s could not be imported: Original journal entry (UUID %s) not found.', flow_number, flow_description, uuid, origin_uuid)
                     continue
                 if response := self._pdp_import_response(uuid, content, origin_move[:1]):
                     processed_messages[uuid] = response
@@ -378,6 +373,8 @@ class AccountEdiProxyClientUser(models.Model):
         if not origin_move:
             return response
 
+        # The endpoint for PDP / Peppol does not return the 'flow_number'; they are always flow 2.
+        # The PPF endpoint always puts the 'flow_number'.
         flow_number = content.get('flow_number') or '2'
         decoded_document = self._peppol_get_decoded_document(content)
         info = self._pdp_extract_response_info(decoded_document)
@@ -387,11 +384,10 @@ class AccountEdiProxyClientUser(models.Model):
         origin_ref_status_code = content.get("origin_ref_status_code")
         origin_ref_status = PROCESS_CONDITION_CODE_TO_RESPONSE_CODE.get(origin_ref_status_code)
         markup_status_info = Markup('<br/><br/>').join([self._format_status_info(status, separator=Markup('<br/>')) for status in status_infos])
-        response_code_to_description_map = dict(response._fields['response_code']._description_selection(self.env))
-        ref_status_code_to_description_map = dict(response._fields['pdp_ref_response_code']._description_selection(self.env))
-        ref_status_code_description = ref_status_code_to_description_map.get(origin_ref_status)
+        response_code_description = PDP_STATUSES.get(response_code)
+        ref_status_code_description = PDP_STATUSES.get(origin_ref_status)
 
-        if response_code not in response_code_to_description_map or not issue_date or (flow_number == '6' and not ref_status_code_description):
+        if not response_code_description or not issue_date or (flow_number == '6' and not ref_status_code_description):
             origin_move._message_log(
                 body=self.env._(
                     "[Flow %(flow_number)s] Failed to process incoming response%(ref_status_info)s (Response Code = %(response_code)s; Issue Date = %(issue_date)s).%(br)s%(status_info)s",
@@ -417,7 +413,6 @@ class AccountEdiProxyClientUser(models.Model):
             }
         )
 
-        response_code_description = response_code_to_description_map[response_code]
         response = self.env['account.peppol.response'].create({
             'peppol_message_uuid': uuid,
             'response_code': response_code,
@@ -427,7 +422,7 @@ class AccountEdiProxyClientUser(models.Model):
             'pdp_status_info': '\n\n'.join([self._format_status_info(status, separator=Markup('\n')) for status in status_infos]),
             'pdp_issue_date': issue_date,
             'pdp_flow_number': flow_number,
-            'pdp_fully_paid': any(payment.get('type_code') in FULLY_PAID_CODES for status in status_infos for payment in status.get('payments', []))
+            'pdp_fully_paid': any(payment_info.get('type_code') in FULLY_PAID_CODES for status in status_infos for payment_info in status.get('payment_infos', []))
         })
         if content['state'] == 'done':
             origin_move._message_log(
@@ -460,7 +455,7 @@ class AccountEdiProxyClientUser(models.Model):
               'index': node.findtext("./ram:SequenceNumeric", namespaces=CDAR_NSMAP),
               'reason_code': node.findtext("./ram:ReasonCode", namespaces=CDAR_NSMAP),
               'reason': node.findtext("./ram:Reason", namespaces=CDAR_NSMAP),
-              'payments': [
+              'payment_infos': [
                   {
                       'type_code': pay_node.findtext("./ram:TypeCode", namespaces=CDAR_NSMAP),
                       'value_amount': pay_node.findtext("./ram:ValueAmount", namespaces=CDAR_NSMAP),
@@ -522,12 +517,11 @@ class AccountEdiProxyClientUser(models.Model):
         # Note
         if note:
             infos.append(note)
-        # Payments
-        payments = status.get('payments')
-        if payments:
+        # Payment Infos
+        if payment_infos := status.get('payment_infos'):
             infos.append(self.env._("Payment Info:"))
-            for payment in payments:
-                infos.append(self._format_payment_info(payment, separator=separator))
+            for payment_info in payment_infos:
+                infos.append(self._format_payment_info(payment_info, separator=separator))
 
         return separator.join(infos)
 

@@ -77,7 +77,7 @@ class ResPartner(models.Model):
                 and partner.invoice_edi_format != "ubl_21_fr"
             )
         ):
-            ubl_21_fr_string = dict(self._fields['invoice_edi_format']._description_selection(self.env))['ubl_21_fr']
+            ubl_21_fr_string = self.env._("France E-Invoicing (UBL 2.1)")
             raise ValidationError(self.env._('For French regulated invoices, only %(format_name)s is supported.', format_name=ubl_21_fr_string))
 
     # -------------------------------------------------------------------------

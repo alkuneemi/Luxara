@@ -24,7 +24,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
             'invoice_edi_format': 'ubl_21_fr',
         })
         self.assertRecordValues(partner, [{
-            'peppol_endpoint': '968515759_96851575905877',
+            'peppol_endpoint': '968515759',
             'peppol_eas': '0225',
         }])
 
@@ -40,7 +40,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
             'invoice_edi_format': 'ubl_21_fr',
         })
         self.assertRecordValues(partner, [{
-            'peppol_endpoint': '968515759_96851575905877',
+            'peppol_endpoint': '968515759',
             'peppol_eas': '0225',
         }])
 
@@ -102,7 +102,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
         def _request_handler(s: requests.Session, r: requests.PreparedRequest, /, **kwargs):
             self.assertEqual(r.method, "GET")
             origin = self.env['account_edi_proxy_client.user']._get_proxy_urls()['pdp']['test']
-            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/peppol_lookup?peppol_identifier="))
+            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/lookup?peppol_identifier="))
             peppol_identifier = parse_qs(r.path_url.rsplit('?')[1])['peppol_identifier'][0]
             return self._get_peppol_lookup_response(peppol_identifier, "0208:0239843188")
         with (
@@ -131,7 +131,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
         def _request_handler(s: requests.Session, r: requests.PreparedRequest, /, **kwargs):
             self.assertEqual(r.method, "GET")
             origin = self.env['account_edi_proxy_client.user']._get_proxy_urls()['pdp']['test']
-            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/peppol_lookup?peppol_identifier="))
+            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/lookup?peppol_identifier="))
             peppol_identifier = parse_qs(r.path_url.rsplit('?')[1])['peppol_identifier'][0]
             return self._get_peppol_lookup_response(peppol_identifier, "0208:0239843188", ubl3_services=False)
 
@@ -149,7 +149,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
         def _request_handler(s: requests.Session, r: requests.PreparedRequest, /, **kwargs):
             self.assertEqual(r.method, "GET")
             origin = self.env['account_edi_proxy_client.user']._get_proxy_urls()['pdp']['test']
-            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/peppol_lookup?peppol_identifier="))
+            self.assertTrue(r.url.startswith(f"{origin}/api/pdp/1/lookup?peppol_identifier="))
             peppol_identifier = parse_qs(r.path_url.rsplit('?')[1])['peppol_identifier'][0]
             return self._get_peppol_lookup_response(peppol_identifier, "0208:0239843188")
 
@@ -184,7 +184,7 @@ class TestL10nFrPdpPartner(TestL10nFrPdpCommon):
             if r.url.startswith(f"{origin}/api/pdp/1/annuaire_lookup?pdp_identifier="):
                 pdp_identifier = parse_qs(r.path_url.rsplit('?')[1])['pdp_identifier'][0]
                 return self._get_annuaire_lookup_response(pdp_identifier, "968515759_96851575905823")
-            elif r.url.startswith(f"{origin}/api/pdp/1/peppol_lookup?peppol_identifier=0225%3A968515759_96851575905823"):
+            elif r.url.startswith(f"{origin}/api/pdp/1/lookup?peppol_identifier=0225%3A968515759_96851575905823"):
                 peppol_identifier = parse_qs(r.path_url.rsplit('?')[1])['peppol_identifier'][0]
                 return self._get_peppol_lookup_response(peppol_identifier, "0225:968515759_96851575905823")
 

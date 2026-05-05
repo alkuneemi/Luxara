@@ -3,9 +3,6 @@ from odoo.exceptions import UserError
 from odoo.tools import float_repr, float_round, format_list
 
 
-SALE_STATUSES = {'paid', 'cancelled'}
-
-
 class PdpResponseWizard(models.TransientModel):
     _name = 'pdp.response.wizard'
     _description = "PDP Response wizard"
@@ -17,11 +14,11 @@ class PdpResponseWizard(models.TransientModel):
     status = fields.Selection(
         selection=[
             # For outgoing messages
-            ("paid", "Paid"),
+            ("PD", "Paid"),
             ("cancelled", "Cancelled"),
             # For incoming messages
             ("refused", "Refused"),
-            ("approved", "Approved"),
+            ("AP", "Approved"),
             ("in_hand", "In Hand"),
         ],
     )
@@ -65,9 +62,9 @@ class PdpResponseWizard(models.TransientModel):
                 raise UserError("All journal entries must either be purchase or sale documents.")
             category = next(iter(categories))
             if category == 'sale':
-                statuses = ['paid', 'cancelled']
+                statuses = ['PD', 'cancelled']
             else:
-                statuses = ['refused', 'approved', 'contested', 'payment_sent']
+                statuses = ['refused', 'AP', 'contested', 'payment_sent']
             wizard.available_statuses = ','.join(statuses)
 
     @api.model
@@ -120,11 +117,11 @@ class PdpResponseWizard(models.TransientModel):
             raise UserError(self.env._("To refuse an invoice please select a Reason Code."))
         if self.status == 'refused' and not self.note:
             raise UserError(self.env._("To refuse an invoice please enter a Note."))
-        if self.status == 'paid' and (not_paid_moves := self.move_ids.filtered(lambda m: m.payment_state != 'paid')):
+        if self.status == 'PD' and (not_paid_moves := self.move_ids.filtered(lambda m: m.payment_state != 'paid')):
             raise UserError(self.env._("Some of the moves are not (fully) paid: %s", format_list(self.env, not_paid_moves.mapped('display_name'))))
         if self.status in ('cancelled', 'refused') and (not_cancelled_moves := self.move_ids.filtered(lambda m: m.state != 'cancel')):
             raise UserError(self.env._("Some of the moves are not cancelled: %s", format_list(self.env, not_cancelled_moves.mapped('display_name'))))
-        if self.status == 'approved' and (not_approved_moves := self.move_ids.filtered(lambda m: m.state != 'posted')):
+        if self.status == 'AP' and (not_approved_moves := self.move_ids.filtered(lambda m: m.state != 'posted')):
             raise UserError(self.env._("Some of the moves are not posted: %s", format_list(self.env, not_approved_moves.mapped('display_name'))))
 
         additional_info = {
@@ -133,7 +130,7 @@ class PdpResponseWizard(models.TransientModel):
 
         moves_by_company = self.move_ids.grouped('company_id')
         for company, moves in moves_by_company.items():
-            if self.status == 'paid':
+            if self.status == 'PD':
                 for move in moves:
                     payments = [
                         {
@@ -144,7 +141,7 @@ class PdpResponseWizard(models.TransientModel):
                             "tax_percent": self._round_format_number_2(key['amount']),
                         } for key, tax_details in self._get_tax_details(move).items() if key
                     ]
-                    company.account_peppol_edi_user._pdp_send_response(moves, 'paid', additional_info={**additional_info, 'payments': payments})
+                    company.account_peppol_edi_user._pdp_send_response(moves, 'PD', additional_info={**additional_info, 'payments': payments})
             else:
                 company.account_peppol_edi_user._pdp_send_response(moves, self.status, additional_info=additional_info)
         return self.env.context.get('cancel_res', True)
