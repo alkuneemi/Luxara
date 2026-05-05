@@ -264,6 +264,19 @@ export const websiteService = {
             set invalidateSnippetCache(value) {
                 invalidateSnippetCache = value;
             },
+            get currentWebsiteContext() {
+                return {
+                    context: {
+                        lang: this.currentWebsite.default_lang_id.code,
+                    }
+                }
+            },
+            get currentWebsiteRegistry() {
+                const iFrameEl = document
+                    .querySelector(".o_website_preview .o_iframe_container")
+                    .querySelector('iframe:not([src="/website/iframefallback"])');
+                return iFrameEl.contentWindow.odoo?.loader.require("@web/core/registry").registry;
+            },
 
             async goToWebsite({ websiteId, path, edition, translation, lang } = {}) {
                 this.websiteRootInstance = undefined;

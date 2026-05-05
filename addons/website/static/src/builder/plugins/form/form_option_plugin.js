@@ -231,6 +231,8 @@ export class FormOptionPlugin extends Plugin {
         return this.modelsCache.preload();
     }
     async _fetchModels() {
+        // This doesn't need the website language
+        // return await this.services.orm.call("ir.model", "get_compatible_form_models", [], this.services.website.currentWebsiteContext);
         return await this.services.orm.call("ir.model", "get_compatible_form_models");
     }
     async fetchFieldRecords(field, formEl) {
@@ -284,7 +286,8 @@ export class FormOptionPlugin extends Plugin {
             field.records = await this.services.orm.searchRead(
                 field.relation,
                 field.domain || [],
-                fieldNames
+                fieldNames,
+                this.services.website.currentWebsiteContext,
             );
             if (field.fieldName) {
                 field.records.forEach((r) => (r["display_name"] = r[field.fieldName]));
@@ -295,17 +298,31 @@ export class FormOptionPlugin extends Plugin {
     async prepareFormModel(el, activeForm) {
         const formEl = el.closest("form");
         const formKey = activeForm?.website_form_key;
-        const formInfo = registry.category("website.form_editor_actions").get(formKey, null);
-        if (formInfo) {
-            const formatInfo = getDefaultFormat(el);
-            await Promise.all(
-                formInfo.formFields.map((field) => {
-                    field.formatInfo = formatInfo;
-                    return this.fetchFieldRecords(field, formEl);
-                })
-            );
-            await this.fetchFormInfoFields(formInfo);
-        }
+        // const formInfoOld = registry.category("website.form_editor_actions").get(formKey, null);
+        // const iFrameEl = document.querySelector(".o_website_preview .o_iframe_container").querySelector(
+        //                      'iframe:not([src="/website/iframefallback"])'
+        //                  );
+        // const iFrameRegistry = iFrameEl.contentWindow.odoo.loader.require("@web/core/registry").registry;
+        // let formInfo = iFrameRegistry.category("website.form_editor_actions").get(formKey, null);
+        let formInfo = this.services.website.currentWebsiteRegistry?.category("website.form_editor_actions").get(formKey, null);
+        const builderFormInfo = registry.category("website.form_editor_actions").get(formKey, {});
+        formInfo = {
+            ...(formInfo || {
+                fields: [],
+                formFields: [],
+                successPage: undefined,
+            }),
+            ...builderFormInfo,
+        };
+
+        const formatInfo = getDefaultFormat(el);
+        await Promise.all(
+            formInfo.formFields?.map((field) => {
+                field.formatInfo = formatInfo;
+                return this.fetchFieldRecords(field, formEl);
+            })
+        );
+        await this.fetchFormInfoFields(formInfo);
         return formInfo;
     }
     /**
@@ -423,7 +440,11 @@ export class FormOptionPlugin extends Plugin {
         return this.services.orm.call("ir.model", "get_authorized_fields", [
             model,
             propertyOrigins,
-        ]);
+        ], {
+            context: {
+                additional_lang: this.services.website.currentWebsite.default_lang_id.code,
+            }
+        });
     }
     async _getVisibilityConditionCachedRecords(model, domain, fields, kwargs = {}) {
         return this.services.orm.searchRead(model, domain, fields, {
