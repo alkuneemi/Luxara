@@ -636,7 +636,7 @@ class AccountMove(models.Model):
                 'message': _("Partner must be filled to be able to send to myDATA."),
             }
         if self.commercial_partner_id:
-            if not self.commercial_partner_id.vat:
+            if not self.commercial_partner_id.vat and self.l10n_gr_edi_inv_type not in TYPES_WITH_FORBIDDEN_COUNTERPART:
                 errors['l10n_gr_edi_partner_no_vat'] = {
                     'message': _("Missing VAT on partner %s.", self.commercial_partner_id.name),
                     **error_action_partner,
