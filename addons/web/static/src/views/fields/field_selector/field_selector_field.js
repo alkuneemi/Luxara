@@ -13,6 +13,7 @@ export class FieldSelectorField extends Component {
         resModel: { type: String, optional: true },
         allowProperties: { type: Boolean, optional: true },
         followRelations: { type: Boolean, optional: true },
+        placeholder: { type: String, optional: true },
     };
 
     filter(fieldDef) {
@@ -49,6 +50,7 @@ export class FieldSelectorField extends Component {
             isDebugMode: !!this.env.debug,
             filter: this.filter.bind(this),
             followRelations: this.props.followRelations,
+            placeholder: this.props.placeholder,
         };
     }
 }
@@ -70,11 +72,12 @@ export const fieldSelectorField = {
             type: "string",
         },
     ],
-    extractProps({ options }) {
+    extractProps({ options, placeholder }) {
         return {
             allowProperties: options.allow_properties ?? true,
             followRelations: options.follow_relations ?? true,
             resModel: options.model,
+            placeholder,
         };
     },
 };
