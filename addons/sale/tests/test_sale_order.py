@@ -920,10 +920,10 @@ class TestSaleOrderInvoicing(AccountTestInvoicingCommon, SaleCommon):
         product_line, productless_line = sale_order.order_line
         sale_order.action_confirm()
 
-        self.assertEqual(product_line.invoice_policy, "order")
+        self.assertEqual(product_line._get_invoice_policy(), "order")
         self.assertEqual(product_line.qty_to_invoice, 4)
 
-        self.assertEqual(productless_line.invoice_policy, "delivery")
+        self.assertEqual(productless_line._get_invoice_policy(), "delivery")
         self.assertEqual(productless_line.qty_to_invoice, 0)
 
         productless_line.qty_delivered = 3

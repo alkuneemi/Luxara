@@ -71,10 +71,10 @@ class SaleOrderTemplateLine(models.Model):
 
     # Technical fields which stores values for product SO line without product_id
     discount = fields.Float(string="Discount (%)", digits="Discount")
-    unit_price = fields.Float(
+    price_unit = fields.Float(
         string="Unit Price", digits="Product Price", min_display_digits="Product Price"
     )
-    tax_ids = fields.Many2many(string="Taxes", comodel_name="account.tax")
+    tax_ids = fields.Many2many(string="Taxes", comodel_name="account.tax", check_company=True)
 
     mandatory_product = fields.Boolean(
         string="Is Product Mandatory", related="company_id.sale_order_mandatory_product"
@@ -168,7 +168,7 @@ class SaleOrderTemplateLine(models.Model):
             vals.update({
                 "tax_ids": [Command.set(self.tax_ids.ids)],
                 "discount": self.discount,
-                "price_unit": self.unit_price,
+                "price_unit": self.price_unit,
             })
 
         return vals

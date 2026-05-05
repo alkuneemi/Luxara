@@ -291,8 +291,8 @@ class SaleOrderLine(models.Model):
     invoice_policy = fields.Selection(
         string="Invoicing Policy",
         selection=[("order", "Ordered quantities"), ("delivery", "Delivered quantities")],
-        compute="_compute_invoice_policy",
         search="_search_invoice_policy",
+        store=False,
     )
     qty_invoiced = fields.Float(
         string="Invoiced Quantity",
@@ -606,9 +606,7 @@ class SaleOrderLine(models.Model):
                 line.product_id.sale_line_warn_msg if has_warning_group else ""
             )
 
-    @api.depends(
-        "product_id", "product_id.uom_id", "product_id.uom_ids", "product_id.extra_uom_ids"
-    )
+    @api.depends("product_id")
     def _compute_allowed_uom_ids(self):
         lines_without_product = self.filtered(lambda l: not l.product_id)
         all_uoms = self.env['uom.uom'].search([]) if lines_without_product else self.env['uom.uom']
@@ -1126,21 +1124,6 @@ class SaleOrderLine(models.Model):
 
         return result
 
-    @api.depends("product_id", "product_id.invoice_policy")
-    def _compute_invoice_policy(self):
-        """
-        Compute the invoicing policy for each SOL.
-
-        - If a product is set, use the product's invoicing policy.
-        - If no product is set (e.g., product-less lines), use the
-        company's default invoicing policy (`company_id.sale_invoice_policy`).
-        """
-        for line in self:
-            if line.product_id:
-                line.invoice_policy = line.product_id.invoice_policy
-            else:
-                line.invoice_policy = line.company_id.sale_invoice_policy
-
     def _search_invoice_policy(self, operator, value):  # noqa: PLR6301
         product_sol_domain = Domain("product_id", "!=", False) & Domain(
             "product_id.invoice_policy", operator, value
@@ -1242,7 +1225,7 @@ class SaleOrderLine(models.Model):
             if line.state == "sale" and not line.display_type:
                 if line.product_id.type == "combo":
                     combo_lines.add(line)
-                elif line.invoice_policy == "order":
+                elif line._get_invoice_policy() == "order":
                     line.qty_to_invoice = line.product_uom_qty - line.qty_invoiced
                 else:
                     line.qty_to_invoice = line.qty_delivered - line.qty_invoiced
@@ -1257,6 +1240,17 @@ class SaleOrderLine(models.Model):
                 combo_line.qty_to_invoice = combo_line.product_uom_qty - combo_line.qty_invoiced
             else:
                 combo_line.qty_to_invoice = 0
+
+    def _get_invoice_policy(self):
+        """Return the invoice policy used to compute the line's invoicing status.
+
+        Product lines follow the invoice policy configured on their product. Lines
+        without a product fall back on the company's default sale invoice policy.
+        """
+        self.ensure_one()
+        if self.product_id:
+            return self.product_id.invoice_policy
+        return self.company_id.sale_invoice_policy
 
     @api.depends("state", "product_uom_qty", "qty_delivered", "qty_to_invoice", "qty_invoiced")
     def _compute_invoice_status(self):

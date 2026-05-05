@@ -84,7 +84,7 @@ registry.category("web_tour.tours").add('purchase_matrix_tour', {
     trigger: ".o_form_status_indicator_buttons:not(:visible)",
 },
 {
-    trigger: 'button:contains("Add a Product")',
+    trigger: 'button:contains("Add a product")',
     run: "click",
 }, {
     trigger: 'div[name="product_template_id"] input',

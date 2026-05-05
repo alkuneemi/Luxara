@@ -194,11 +194,6 @@ class TestAngloSaxonValuation(TestStockValuationCommon, TestSaleStockCommon):
         # Create and confirm a sale order for 2@12
         sale_order = self._so_deliver(self.product_standard_auto, 2, 12, picking=False)
 
-        # Flush to clear the ORM cache so _get_invoiceable_lines recomputes qty_to_invoice
-        # fresh. Without it, qty_to_invoice may be read from a stale cache entry computed
-        # before the SOL's invoice_policy was correctly resolved from the product.
-        self.env.flush_all()
-
         # Invoice the sale order.
         # Nothing delivered = nothing to invoice.
         with self.assertRaises(UserError):
@@ -408,11 +403,6 @@ class TestAngloSaxonValuation(TestStockValuationCommon, TestSaleStockCommon):
 
         # Create and confirm a sale order for 2@12
         sale_order = self._so_deliver(self.product_avco_auto, 2, 12, picking=False)
-
-        # Flush to clear the ORM cache so _get_invoiceable_lines recomputes qty_to_invoice
-        # fresh. Without it, qty_to_invoice may be read from a stale cache entry computed
-        # before the SOL's invoice_policy was correctly resolved from the product.
-        self.env.flush_all()
 
         # Invoice the sale order.
         # Nothing delivered = nothing to invoice.
@@ -762,11 +752,6 @@ class TestAngloSaxonValuation(TestStockValuationCommon, TestSaleStockCommon):
 
         # Create and confirm a sale order for 2@12
         sale_order = self._so_deliver(self.product_fifo_auto, 2, 12, picking=False)
-
-        # Flush to clear the ORM cache so _get_invoiceable_lines recomputes qty_to_invoice
-        # fresh. Without it, qty_to_invoice may be read from a stale cache entry computed
-        # before the SOL's invoice_policy was correctly resolved from the product.
-        self.env.flush_all()
 
         # Invoice the sale order.
         # Nothing delivered = nothing to invoice.

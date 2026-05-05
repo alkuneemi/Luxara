@@ -66,7 +66,7 @@ class ProductTemplate(models.Model):
         default=0,
         company_dependent=True,
         help="Delivery lead time, in days. It's the number of days, promised to the customer,"
-        "between the confirmation of the sales order and the delivery.",
+        " between the confirmation of the sales order and the delivery.",
     )
 
     @api.depends("invoice_policy", "sale_ok", "service_tracking")
@@ -204,14 +204,11 @@ class ProductTemplate(models.Model):
     def _compute_service_type(self):
         self.filtered(lambda t: t.type == "consu" or not t.service_type).service_type = "manual"
 
-    @api.depends_context("company")
-    @api.depends("company_id", "type")
+    @api.depends("type")
     def _compute_invoice_policy(self):
         for template in self:
             if not template.invoice_policy:
-                template.invoice_policy = (
-                    template.company_id.sale_invoice_policy or self.env.company.sale_invoice_policy
-                )
+                template.invoice_policy = self.env.company.sale_invoice_policy
             elif template.type == "consu":
                 template.invoice_policy = "order"
 

@@ -105,7 +105,7 @@ class TestSaleSectionTemplates(SaleCommon):
             "Template should reflect updated lines",
         )
 
-    def test_productless_sol_values_saved_in_section_template(self):
+    def test_productless_sotl_in_section_template(self):
         order = self.sections_sale_order
 
         section_line = order.order_line.filtered(
@@ -121,7 +121,7 @@ class TestSaleSectionTemplates(SaleCommon):
         )
 
         self.assertEqual(
-            productless_template_line.unit_price,
+            productless_template_line.price_unit,
             420,
             "Unit price should be copied from Productless SOL",
         )

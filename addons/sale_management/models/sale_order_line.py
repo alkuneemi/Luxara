@@ -137,10 +137,15 @@ class SaleOrderLine(models.Model):
         }
 
         if not self.product_id:
+            taxes = self.tax_ids._filter_taxes_by_company(self.company_id)
+
+            if self.order_id.fiscal_position_id:
+                taxes = self.order_id.fiscal_position_id.map_tax(taxes)
+
             vals.update({
-                "tax_ids": [Command.set(self.tax_ids.ids)],
+                "tax_ids": [Command.set(taxes.ids)],
                 "discount": self.discount,
-                "unit_price": self.price_unit,
+                "price_unit": self.price_unit,
             })
 
         return vals
