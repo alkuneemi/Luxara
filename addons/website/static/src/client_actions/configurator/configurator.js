@@ -989,7 +989,7 @@ export class ApplyConfiguratorScreen extends Component {
                     redirect(
                         `/odoo/action-website.website_preview?website_id=${encodeURIComponent(
                             resp.website_id
-                        )}`
+                        )}&enable_editor=1`
                     );
                 },
             });
