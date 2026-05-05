@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import fields, models, api, _
+from odoo import Command, _, api, fields, models
 from odoo.tools import plaintext2html
 
 
@@ -12,6 +12,24 @@ class PosSession(models.Model):
         help="The employee who currently uses the cash register",
         tracking=True,
     )
+    logged_employee_ids = fields.Many2many(
+        'hr.employee',
+        string="Logged In Cashiers",
+        store=True,
+        compute='_compute_logged_employee_ids',
+        help="All employees who have logged into this session",
+    )
+
+    @api.depends('employee_id')
+    def _compute_logged_employee_ids(self):
+        for session in self:
+            employee = session.employee_id
+            if employee and employee.id not in session.logged_employee_ids.ids:
+                session.logged_employee_ids |= employee
+
+            config = session.config_id
+            if employee and employee.id not in config.logged_employee_ids.ids:
+                config.logged_employee_ids |= employee
 
     @api.model
     def _load_pos_data_models(self, config):
@@ -100,3 +118,11 @@ class PosSession(models.Model):
                 if cash_move.employee_id:
                     cash_in_out['cashier_name'] = cash_move.partner_id.name
         return cash_in_out_list
+
+    def close_session_from_ui(self, bank_payment_method_diff_pairs=None):
+        result = super().close_session_from_ui(bank_payment_method_diff_pairs)
+
+        if self.config_id.module_pos_hr and self.state == 'closed':
+            self.config_id.logged_employee_ids = [Command.clear()]
+
+        return result
