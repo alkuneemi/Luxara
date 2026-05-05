@@ -381,7 +381,8 @@
                                 </div>
                             </button>
                         </div>
-                        <h1 class="oe_title">
+                        <h1 class="oe_title o_outlined">
+                            <label for="name" class="d-md-none"/>
                             <field name="automated_name" invisible="1"/> <!-- needed for name compute -->
                             <field name="name" placeholder="Set an explicit name"/>
                         </h1>
@@ -405,10 +406,16 @@
                             <div class="alert alert-warning" role="alert" invisible="not warning">
                                 <i class="fa fa-warning pe-2" title="Warning"/><field class="d-inline" name="warning" nolabel="1"/>
                             </div>
-                            <div class="d-flex flex-row flex-wrap gap-2" invisible="state != 'object_write'">
+                            <label for="evaluation_type" class="d-md-none" invisible="state != 'object_write'" string="Update method"/>
+                            <div class="d-flex flex-row flex-wrap gap-2 o_outlined" invisible="state != 'object_write'">
                                 <field name="evaluation_type" class="oe_inline"/>
-                                <label for="update_path" string="Select Field:" class="fw-bold ps-2"/>
-                                <field name="update_path" widget="field_selector" class="oe_inline" options="{'model': 'model_name', 'allow_properties': False}" required="state == 'object_write'"/>
+                                <field
+                                    name="update_path"
+                                    placeholder="Select a field..."
+                                    widget="field_selector"
+                                    class="oe_inline"
+                                    options="{'model': 'model_name', 'allow_properties': False}"
+                                    required="state == 'object_write'"/>
                                 <field name="update_field_id" invisible="True"/>  <!-- The field is store=True and readonly=False, in this view we want to save the value from compute/onchange -->
                                 <field name="update_related_model_id" invisible="True"/> <!-- This field is required for 'resource_ref' to compute possible m2m and m2o values -->
                                 <span invisible="evaluation_type != 'value' or update_field_type not in ['one2many', 'many2many']">by</span>
@@ -426,18 +433,7 @@
                                     to this Python expression:
                                 </span>
                                 <div class="w-100 d-flex flex-row gap-3" invisible="evaluation_type != 'equation'">
-                                    <field name="value" class="w-50" widget="code" options="{'mode': 'python'}" string="Expression"/>
-                                    <div class="w-50 opacity-75">
-                                        <span colspan="2" class="text-muted"> Available variables: </span>
-                                            <ul colspan="2" class="text-muted">
-                                                <li><code>env</code>: environment on which the action is triggered</li>
-                                                <li><code>model</code>: model of the record on which the action is triggered; is a void recordset</li>
-                                                <li><code>record</code>: record on which the action is triggered</li>
-                                                <li><code>records</code>: recordset of all records on which the action is triggered in multi mode</li>
-                                                <li><code>time</code>, <code>datetime</code>, <code>dateutil</code>, <code>timezone</code>: useful Python libraries</li>
-                                                <li><code>float_compare()</code>: utility function to compare floats based on a specific precision</li>
-                                            </ul>
-                                    </div>
+                                    <field name="value" class="w-100" widget="code" options="{'mode': 'python'}" string="Expression"/>
                                 </div>
                             </div>
                             <group invisible="state not in ['object_create', 'object_copy']">
@@ -505,6 +501,19 @@ env['res.partner'].create({'name': partner_name})
     </pre>
                                     </div>
                                 </page>
+
+                                <page string="Help" invisible="state != 'object_write' or evaluation_type != 'equation'" name="ir_actions_server_compute_field_help">
+                                    <span> Available variables: </span>
+                                    <ul>
+                                        <li><code>env</code>: environment on which the action is triggered</li>
+                                        <li><code>model</code>: model of the record on which the action is triggered; is a void recordset</li>
+                                        <li><code>record</code>: record on which the action is triggered</li>
+                                        <li><code>records</code>: recordset of all records on which the action is triggered in multi mode</li>
+                                        <li><code>time</code>, <code>datetime</code>, <code>dateutil</code>, <code>timezone</code>: useful Python libraries</li>
+                                        <li><code>float_compare()</code>: utility function to compare floats based on a specific precision</li>
+                                    </ul>
+                                </page>
+
                                 <page string="Explanation" name="explanation">
                                     <field name="explanation" nolabel="1" class="oe-bordered-editor"/>
                                 </page>
