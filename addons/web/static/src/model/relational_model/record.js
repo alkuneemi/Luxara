@@ -90,7 +90,7 @@ export class Record extends DataPoint {
         this._textValues = markRaw({});
         this._setData(data);
 
-        makeReactive(this, "data", signal.Object);
+        // makeReactive(this, "data", signal.Object);
         makeReactive(this, "dirty");
         makeReactive(this, "evalContext", signal.Object);
         makeReactive(this, "evalContextWithVirtualIds", signal.Object);
