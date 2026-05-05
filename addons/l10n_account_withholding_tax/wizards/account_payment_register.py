@@ -121,35 +121,21 @@ class AccountPaymentRegister(models.TransientModel):
                 wizard_withholding_taxes = withholding_taxes.filtered_domain(wizard_domain)
 
                 will_create_multiple_entry = not wizard.can_edit_wizard or (wizard.can_group_payments and not wizard.group_payment)
-                wizard.display_withholding = bool(wizard_withholding_taxes) and not will_create_multiple_entry
+                wizard.display_withholding = bool(wizard_withholding_taxes) and not will_create_multiple_entry and company.withhold_applicable_on == 'payment'
 
     @api.depends(
         'can_edit_wizard',
         'display_withholding',
     )
     def _compute_withholding_line_ids(self):
-        """
-        When opening the wizard, we want to compute the default withholding lines by looking at the invoice lines to see
-        if they have withholding taxes set on them.
-        """
         for wizard in self:
-            # Disable the withholding lines.
             if not wizard.display_withholding or not wizard.can_edit_wizard:
                 wizard.withholding_line_ids = [Command.clear()]
                 continue
-
-            # Compute the lines themselves once; when opening the wizard.
             if not wizard.withholding_line_ids:
-                batch = wizard._get_batches()[0]
-                base_lines = []
-                for move in batch['lines'].move_id:
-                    move_base_lines, _move_tax_lines = move._get_rounded_base_and_tax_lines()
-                    base_lines += move_base_lines
-
-                wizard.withholding_line_ids = wizard.withholding_line_ids._prepare_withholding_lines_commands(
-                    base_lines=base_lines,
-                    company=wizard.company_id or self.env.company,
-                )
+                move = wizard.line_ids.move_id
+                commands = move.get_withholding_lines()
+                wizard.withholding_line_ids = commands
 
     @api.depends('withholding_line_ids')
     def _compute_should_withhold_tax(self):
