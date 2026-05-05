@@ -372,6 +372,9 @@ class MrpBom(models.Model):
             return bom_by_product
         domain = self._bom_find_domain(products, picking_type=picking_type, company_id=company_id, bom_type=bom_type)
 
+        company_filter = ['&', ('company_id', 'in', [company_id or self.env.company.id, False])]
+        domain = company_filter + domain
+
         # Performance optimization, allow usage of limit and avoid the for loop `bom.product_tmpl_id.product_variant_ids`
         if len(products) == 1:
             bom = self.search(domain, order='sequence, product_id, id', limit=1)
