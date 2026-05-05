@@ -322,3 +322,61 @@ class TestCarrierPropagation(TransactionCase):
         pack.button_validate()
         ship = pack.move_ids.move_dest_ids.picking_id
         self.assertEqual(ship.carrier_tracking_ref, "123")
+
+    def test_carrier_propagation_two_step_incoming_multi_so(self):
+        """Test that validating a receipt whose move references two SOs with
+        different carriers does not crash when the push rule (Input → Stock)
+        has propagate_carrier enabled, and that no carrier is set on the
+        resulting internal transfer."""
+        self.warehouse.reception_steps = 'two_steps'
+        push_rule = self.warehouse.reception_route_id.rule_ids.filtered(lambda r: r.action == 'push')
+        push_rule.propagate_carrier = True
+
+        express_delivery_product = self.env['product.product'].create({
+            'name': 'Express Delivery Charges',
+            'invoice_policy': 'order',
+            'type': 'service',
+            'categ_id': self.env.ref('delivery.product_category_deliveries').id,
+        })
+        express_delivery = self.env['delivery.carrier'].create({
+            'name': 'Express Delivery',
+            'fixed_price': 20,
+            'delivery_type': 'fixed',
+            'product_id': express_delivery_product.id,
+        })
+
+        so1, so2 = self.env['sale.order'].create([
+            {
+                'partner_id': self.partner_propagation.id,
+                'carrier_id': self.normal_delivery.id,
+                'order_line': [Command.create({'product_id': self.super_product.id, 'product_uom_qty': 1})],
+            },
+            {
+                'partner_id': self.partner_propagation.id,
+                'carrier_id': express_delivery.id,
+                'order_line': [Command.create({'product_id': self.super_product.id, 'product_uom_qty': 1})],
+            },
+        ])
+        (so1 + so2).action_confirm()
+
+        receipt = self.env['stock.picking'].create({
+            'picking_type_id': self.warehouse.in_type_id.id,
+            'location_id': self.env.ref('stock.stock_location_suppliers').id,
+            'location_dest_id': self.warehouse.wh_input_stock_loc_id.id,
+        })
+        self.env['stock.move'].create({
+            'product_id': self.super_product.id,
+            'product_uom_qty': 2,
+            'product_uom': self.super_product.uom_id.id,
+            'picking_id': receipt.id,
+            'location_id': self.env.ref('stock.stock_location_suppliers').id,
+            'location_dest_id': self.warehouse.wh_input_stock_loc_id.id,
+            'reference_ids': [Command.set((so1 + so2).stock_reference_ids.ids)],
+        })
+        receipt.action_confirm()
+        receipt.move_ids.quantity = receipt.move_ids.product_uom_qty
+        receipt.button_validate()
+
+        internal = receipt.move_ids.move_dest_ids.picking_id
+        self.assertTrue(internal)
+        self.assertFalse(internal.carrier_id)
