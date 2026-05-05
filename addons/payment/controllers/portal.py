@@ -440,7 +440,8 @@ class PaymentPortal(portal.CustomerPortal):
                 tx_sudo.partner_id.id, tx_sudo.amount, tx_sudo.currency_id.id
             )
         tx_sudo.with_context(
-            payment_trusted_write=True  # The transaction has just been created; writes are safe
+            # The transaction has just been created; no concurrent write is possible
+            payment_trusted_write=True
         ).landing_route = f"{tx_sudo.landing_route}?tx_id={tx_sudo.id}&access_token={access_token}"
 
     @http.route("/payment/confirmation", type="http", methods=["GET"], auth="public", website=True)

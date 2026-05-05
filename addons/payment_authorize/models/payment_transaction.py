@@ -82,8 +82,7 @@ class PaymentTransaction(models.Model):
         )
         if "err_code" in tx_details:  # Could not retrieve the transaction details.
             self.with_context(
-                # get_transaction_details is read-only; no funds-moving API call was made
-                payment_trusted_write=True
+                payment_trusted_write=True  # No API call was made
             )._set_error(
                 _(
                     "Could not retrieve the transaction details. (error code: %(error_code)s;"
@@ -98,15 +97,13 @@ class PaymentTransaction(models.Model):
         if tx_status in const.TRANSACTION_STATUS_MAPPING["voided"]:
             # The payment has been voided from Authorize.net side before we could refund it.
             self.with_context(
-                # No refund API call was made; the transaction was already voided on provider side
-                payment_trusted_write=True
+                payment_trusted_write=True  # No refund API call was made
             )._set_canceled(extra_allowed_states=("done",))
         elif tx_status in const.TRANSACTION_STATUS_MAPPING["refunded"]:
             # The payment has been refunded from Authorize.net side before we could refund it. We
             # create a refund tx on Odoo to reflect the move of the funds.
             self.with_context(
-                # No refund API call was made; the transaction was already refunded on provider side
-                payment_trusted_write=True
+                payment_trusted_write=True  # No refund API call was made
             )._set_done()
             # Immediately post-process the transaction as the post-processing will not be
             # triggered by a customer browsing the transaction from the portal.
@@ -140,8 +137,7 @@ class PaymentTransaction(models.Model):
             )
             _logger.warning(err_msg)
             self.with_context(
-                # No refund API call was made; the transaction status is unrecognized
-                payment_trusted_write=True
+                payment_trusted_write=True  # No refund API call was made
             )._set_error(err_msg)
 
     def _send_capture_request(self):

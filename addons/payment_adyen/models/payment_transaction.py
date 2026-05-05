@@ -190,7 +190,7 @@ class PaymentTransaction(models.Model):
         )
         self._record(response_content)
 
-    # === BUSINESS METHODS - PROCESSING === #
+    # === BUSINESS METHODS - PAYLOAD RECEPTION === #
 
     @api.model
     def _search_by_reference(self, provider_code, payment_data):
@@ -234,8 +234,7 @@ class PaymentTransaction(models.Model):
                     # others captures that Odoo was unaware of were done, the amount voided will
                     # be different from the amount of the existing transaction.
                     tx.with_context(
-                        # Idempotent error flagging while processing an incoming notification
-                        payment_trusted_write=True
+                        payment_trusted_write=True  # No API call was made
                     )._set_error(
                         _(
                             "The amount processed by Adyen for the transaction %s is different than"
@@ -300,6 +299,8 @@ class PaymentTransaction(models.Model):
         return source_tx._create_child_transaction(
             converted_amount, is_refund=is_refund, provider_reference=provider_reference
         )
+
+    # === BUSINESS METHODS - PROCESSING === #
 
     def _apply_updates(self, payment_data):
         """Override of payment to update the transaction based on the payment data."""
