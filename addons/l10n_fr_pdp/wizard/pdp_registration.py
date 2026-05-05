@@ -79,11 +79,13 @@ class PdpRegistration(models.TransientModel):
                 and participant_info.get('platform_id')
                 and not participant_info.get('receiver_on_odoo')
                ):
+                platform_name = participant_info.get("platform_name")
                 warnings["company_pdp_annuaire_warning"] = {
                     "level": "warning",
                     "message": self.env._(
-                        "There is already another platform assigned to this identifier on the annuaire (Platform ID %(platform_id)s). "
+                        "There is already another platform assigned to this identifier on the annuaire (Platform%(platform_name)s with ID %(platform_id)s). "
                         "If you have previously registered to an Approved Platform, please deregister.",
+                        platform_name=f" '{platform_name}'" if platform_name else "",
                         platform_id=participant_info.get("platform_id"),
                     ),
                 }

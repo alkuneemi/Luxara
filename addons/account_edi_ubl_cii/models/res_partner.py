@@ -225,7 +225,7 @@ class ResPartner(models.Model):
 
     def _get_peppol_endpoint_value(self, country_code, field):
         self.ensure_one()
-        # field `peppo_endpoint` can be used as placeholer for custom logic (by extending this function)
+        # Field `peppol_endpoint` can be used as placeholer for custom logic (by extending this function)
         if field == 'peppol_endpoint':
             return None
 

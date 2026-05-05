@@ -100,12 +100,13 @@ class ResPartner(models.Model):
 
     def _get_suggested_pdp_identifier(self):
         self.ensure_one()
+        # We suggest the SIREN (even if the SIRET is filled in).
+        # "Everyone" will probably have registered the SIREN on annuaire. (Even if they have a SIRET.)
         id_type, id_value = self._l10n_fr_pdp_get_base_identifier()
         if id_type == 'siren':
             return id_value
         elif id_type == 'siret':
-            siren = id_value[:9]
-            return f"{siren}_{id_value}"
+            return id_value[:9]  # SIREN
         return False
 
     def _get_peppol_endpoint_value(self, country_code, field):

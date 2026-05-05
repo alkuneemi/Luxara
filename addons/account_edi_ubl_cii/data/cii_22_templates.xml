@@ -125,10 +125,6 @@
 
                 <!-- Address. -->
                 <t t-call="account_edi_ubl_cii.account_invoice_address_facturx_export_22"/>
-
-                <ram:URIUniversalCommunication t-if="partner.peppol_eas and partner.peppol_endpoint">
-                    <ram:URIID t-att-schemeID="partner.peppol_eas" t-out="partner.peppol_endpoint"/>
-                </ram:URIUniversalCommunication>
             </t>
         </template>
 
@@ -202,6 +198,10 @@
                                 <t t-set="specified_legal_organization_val" t-value="seller_specified_legal_organization"/>
                             </t>
 
+                            <ram:URIUniversalCommunication t-if="record.company_id.partner_id.peppol_eas and record.company_id.partner_id.peppol_endpoint">
+                                <ram:URIID t-att-schemeID="record.company_id.partner_id.peppol_eas" t-out="record.company_id.partner_id.peppol_endpoint"/>
+                            </ram:URIUniversalCommunication>
+
                             <!-- VAT. -->
                             <ram:SpecifiedTaxRegistration t-if="record.fiscal_position_id.foreign_vat">
                                 <ram:ID schemeID="VA" t-out="record.fiscal_position_id.foreign_vat"/>
@@ -219,6 +219,10 @@
                                 <t t-set="partner" t-value="record.partner_id"/>
                                 <t t-set="specified_legal_organization_val" t-value="buyer_specified_legal_organization"/>
                             </t>
+
+                            <ram:URIUniversalCommunication t-if="record.partner_id.peppol_eas and record.partner_id.peppol_endpoint">
+                                <ram:URIID t-att-schemeID="record.partner_id.peppol_eas" t-out="record.partner_id.peppol_endpoint"/>
+                            </ram:URIUniversalCommunication>
 
                             <!-- VAT. -->
                             <ram:SpecifiedTaxRegistration t-if="record.commercial_partner_id.vat">
