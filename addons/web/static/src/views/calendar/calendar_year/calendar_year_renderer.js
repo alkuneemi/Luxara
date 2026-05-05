@@ -237,7 +237,8 @@ export class CalendarYearRenderer extends Component {
         const original = info.event;
         const date = DateTime.fromJSDate(original.start);
         const resId = Number(original.id);
-        await this.props.model.scheduleEvent(resId, date);
+        const model = this.props.model;
+        await model.scheduleEvent(resId, date, model.onScheduleEventCallback.bind(model));
         original.remove();
     }
     async onSelect(info) {

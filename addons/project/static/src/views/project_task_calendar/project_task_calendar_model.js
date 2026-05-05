@@ -29,7 +29,7 @@ export class ProjectTaskCalendarModel extends ProjectTaskModelMixin(CalendarMode
         };
     }
 
-    async scheduleEvent(taskId, date) {
+    async scheduleEvent(taskId, date, callback) {
         const taskToPlanIndex = this.data.eventsToSchedule.records.findIndex(
             (task) => task.id === taskId
         );

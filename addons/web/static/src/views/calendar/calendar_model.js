@@ -749,13 +749,26 @@ export class CalendarModel extends Model {
     }
     /**
      * @protected
+     */
+    onScheduleEventCallback() {}
+    /**
+     * @protected
      * @param {Number} eventId
      * @param {DateTime} rawRecord
+     * @param {(result: any) => any} [callback]
      */
-    async scheduleEvent(eventId, date) {
-        await this.orm.write(this.meta.resModel, [eventId], this._getScheduleData(date), {
-            context: this._getScheduleContext(),
-        });
+    async scheduleEvent(eventId, date, callback) {
+        const result = await this.orm.write(
+            this.meta.resModel,
+            [eventId],
+            this._getScheduleData(date),
+            {
+                context: this._getScheduleContext(),
+            }
+        );
+        if (callback) {
+            await callback(result);
+        }
         await this.load();
     }
     /**
