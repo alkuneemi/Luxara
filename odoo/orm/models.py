@@ -3751,17 +3751,23 @@ class BaseModel(metaclass=MetaModel):
 
         return result
 
+    def prefetch_needed(self, field_names: Collection[str] | None = None):
+        return self.with_context(needed_fields = field_names or set())
+
     def _fetch_field(self, field: Field) -> None:
         """ Read from the database in order to fetch ``field`` (:class:`Field`
             instance) for ``self`` in cache.
         """
         # determine which fields can be prefetched
+        needed_fields = self.env.context.get("needed_fields")
         if self.env.context.get('prefetch_fields', True) and field.prefetch:
             fnames = [
                 name
                 for name, f in self._fields.items()
                 # select fields with the same prefetch group
                 if f.prefetch == field.prefetch
+                # if needed_fields is set, restrict to the allowed names
+                if needed_fields is None or name in needed_fields
                 # discard fields with groups that the user may not access
                 if self._has_field_access(f, 'read')
             ]
@@ -3769,6 +3775,8 @@ class BaseModel(metaclass=MetaModel):
                 fnames.append(field.name)
         else:
             fnames = [field.name]
+        if needed_fields is not None:
+            needed_fields.update(fnames)
         self.fetch(fnames)
 
     @api.private
