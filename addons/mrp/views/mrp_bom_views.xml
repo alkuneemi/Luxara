@@ -293,12 +293,13 @@
             <field name="model">mrp.bom.line</field>
             <field name="arch" type="xml">
                 <list create="0" multi_edit="1" action="action_open_parent_bom" type="object">
-                    <field name="bom_id" readonly="1" string="Bill of Material"/>
+                    <field name="bom_id" readonly="1" string="Bill of Material" optional="hide"/>
+                    <field name="bom_product_tmpl_id" readonly="1" string="Final Product"/> 
                     <field name="product_id" string="Component" context="{'default_is_storable': True}"/>
                     <field name="product_qty"/>
                     <field name="uom_id" options="{'no_open': True, 'no_create': True}" groups="uom.group_uom" widget="many2one_uom"/>
-                    <field name="operation_id" readonly="1" optional="hide" groups="mrp.group_mrp_routings"/>
-                    <field name="bom_product_template_attribute_value_ids" readonly="1" optional="hide" groups="product.group_product_variant" widget="many2many_tags"/>
+                    <field name="operation_id" optional="hide" groups="mrp.group_mrp_routings"/>
+                    <field name="bom_product_template_attribute_value_ids" optional="hide" groups="product.group_product_variant" widget="many2many_tags"/>
                 </list>
             </field>
         </record>
@@ -310,6 +311,8 @@
                 <search string="Search BoM Line">
                     <field name="bom_code" string="Bill of Materials" filter_domain="['|', ('bom_code', 'ilike', self), ('bom_product_tmpl_id', 'ilike', self)]"/>
                     <field name="product_id" string="Product"/>
+                    <field name="operation_id"/>
+                    <field name="bom_product_template_attribute_value_ids"/>
                     <filter string="Manufacturing" name="normal" domain="[('bom_type', '=', 'normal')]"/>
                     <filter string="Kit" name="phantom" domain="[('bom_type', '=', 'phantom')]"/>
                     <separator/>
