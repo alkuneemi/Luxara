@@ -18,8 +18,10 @@ class ResUsers(models.Model):
         - add a welcome message
         - add suggestion preference
     """
-    _inherit = 'res.users'
+    _name = 'res.users'
+    _inherit = ['mail.thread', 'res.users']
 
+    group_ids = fields.Many2many(tracking=True)
     role_ids = fields.Many2many(
         "res.role",
         relation="res_role_res_users_rel",

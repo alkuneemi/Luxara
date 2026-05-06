@@ -600,6 +600,9 @@ class ResUsers(models.Model):
             # reset before the call to super to ensure `_check_company` sees the right company
             self._reset_cached_properties()
 
+        if 'group_ids' in vals:
+            old_group_ids = {user.id: user.group_ids.ids for user in self.sudo()}
+
         res = super().write(vals)
 
         if 'company_id' in vals:

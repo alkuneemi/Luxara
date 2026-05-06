@@ -507,12 +507,12 @@ class TestPartner(MailCommon):
             'name': 'Micheline Employee',
         })
         self.assertEqual(len(new_user.message_ids), 1, 'Should contain Contact created log message')
-        new_msg = new_user.message_ids
+        new_msg = new_user.partner_id.message_ids
         self.assertNotIn('Portal Access Granted', new_msg.body)
         self.assertIn('Contact created', new_msg.body)
 
         new_user.write({'group_ids': [(4, group_portal.id), (3, group_user.id)]})
-        new_msg = new_user.message_ids[0]
+        new_msg = new_user.partner_id.message_ids[0]
         self.assertIn('Portal Access Granted', new_msg.body)
         self.assertEqual(new_msg.subtype_id, subtype_note)
 
@@ -523,8 +523,8 @@ class TestPartner(MailCommon):
             'login': 'michmich.2',
             'name': 'Micheline Portal',
         })
-        self.assertEqual(len(new_user.message_ids), 2, 'Should contain Contact created + Portal access log messages')
-        new_msg = new_user.message_ids[0]
+        self.assertEqual(len(new_user.partner_id.message_ids), 2, 'Should contain Contact created + Portal access log messages')
+        new_msg = new_user.partner_id.message_ids[0]
         self.assertIn('Portal Access Granted', new_msg.body)
         self.assertEqual(new_msg.subtype_id, subtype_note)
 

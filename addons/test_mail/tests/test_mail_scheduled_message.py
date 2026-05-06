@@ -120,9 +120,9 @@ class TestScheduledMessageBusiness(TestScheduledMessage, CronMixinCase):
         with self.assertRaises(ValidationError):
             self.schedule_message(self.test_record, scheduled_date='2022-12-24 10:00:00')
         # cannot schedule a message on a model without thread
-        # with admin as employee does not have write access on res.users)
+        # (with admin to ensure write access on model)
         with self.with_user("admin"), self.assertRaises(ValidationError):
-            self.schedule_message(self.user_employee)
+            self.schedule_message(self.env['res.country'].search([], limit=1))
         scheduled_message = self.schedule_message(self.test_record)
         # cannot reschedule a message in the past
         with self.assertRaises(ValidationError):

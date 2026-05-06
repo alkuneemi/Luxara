@@ -569,6 +569,7 @@ class MailTrackMixin(models.AbstractModel):
                     )
                     for value in initial_value
                 )
+                field_info['added'] = new_value - initial_value
             else:
                 old_value_char = ', '.join(value[1] for value in initial_value)
             if not new_value:
@@ -581,6 +582,7 @@ class MailTrackMixin(models.AbstractModel):
                     )
                     for value in new_value
                 )
+                field_info['removed'] = initial_value - new_value
             else:
                 new_value_char = ', '.join(value[1] for value in new_value)
 

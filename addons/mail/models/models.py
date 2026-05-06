@@ -8,7 +8,7 @@ from lxml.builder import E
 from markupsafe import Markup
 
 from odoo import _, api, exceptions, models, tools
-from odoo.fields import Domain
+from odoo.fields import Command, Domain
 from odoo.tools import parse_contact_from_email
 from odoo.tools.mail import email_normalize, email_split_and_format
 
@@ -37,6 +37,38 @@ class Base(models.AbstractModel):
         """Override to ensure the guest context is removed as the target user in a with_user should
         never be considered as being the guest of the outside env."""
         return super().with_user(user).with_context(guest=None)
+
+    def _compute_command_linking(self, commands):
+        to_add = set()
+        to_remove = set()
+        current = self._ids
+        for command in commands:
+            if command[0] == Command.LINK:
+                to_add.add(command[1])
+                to_remove.discard(command[1])
+            if command[0] == Command.UNLINK:
+                to_remove.add(command[1])
+                to_add.discard(command[1])
+            if command[0] == Command.CLEAR:
+                to_remove = current.copy()
+                to_add.clear()
+            if command[0] == Command.SET:
+                new = set(command[2])
+                to_add = new - current
+                to_remove = current - new
+        return to_add, to_remove
+
+    def write(self, vals):
+        for field_name in vals: # field_name = user_ids & self = res.groups
+            field = self.env.registry[self._name]._fields[field_name] # res.groups.user_ids
+            if field.type in ('one2many', 'many2many'):
+                inverse_fields = self.env.registry.field_inverses[field]
+                to_track = filter(lambda field: getattr(field, 'tracking', False), inverse_fields)
+                for field_tracking in to_track: # res.users.group_ids
+                    to_add, to_remove = getattr(self, field_name)._compute_command_linking(vals[field_name])
+                    co_model = self.env[field_tracking.model_name].browse(to_add | to_remove)
+                    co_model._track_prepare([field_tracking.name])
+        return super().write(vals)
 
     # ------------------------------------------------------------
     # CRUD
