@@ -837,6 +837,23 @@ font[class*='bg-'] {
     }
 }
 
+// Input group
+.input-group {
+    button.btn {
+        border-radius: $input-border-radius;
+    }
+    &-sm {
+        button.btn {
+            border-radius: $input-border-radius-sm;
+        }
+    }
+    &-lg {
+        button.btn {
+            border-radius: $input-border-radius-lg;
+        }
+    }
+}
+
 // Badges
 .badge, .o_filter_tag {
     --badge-color: var(--color);
