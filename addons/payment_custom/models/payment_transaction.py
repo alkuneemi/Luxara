@@ -51,8 +51,6 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "custom":
             return super()._apply_updates(payment_data)
 
-        self.provider_reference = f"{self.provider_id.name} - {self.reference}"
-
         _logger.info("Validated custom payment for transaction %s: set as pending.", self.reference)
         self._set_pending()
 
