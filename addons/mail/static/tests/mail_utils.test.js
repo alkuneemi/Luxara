@@ -1,4 +1,4 @@
-import { addLink, parseAndTransform } from "@mail/utils/common/format";
+import { addLink, htmlToHtmlInline, parseAndTransform } from "@mail/utils/common/format";
 import { useSequential } from "@mail/utils/common/hooks";
 import {
     contains,
@@ -238,4 +238,30 @@ test("isSequential doesn't execute intermediate call.", async () => {
     const result = await Promise.all([sequence(), sequence(), sequence(), sequence(), sequence()]);
     expect(result).toEqual([1, undefined, undefined, undefined, 5]);
     expect.verifySteps(["1", "5"]);
+});
+
+test("htmlToHtmlInline replaces br with spaces", () => {
+    expect(htmlToHtmlInline(markup`a<br/>b`).toString()).toBe("a\u00a0b");
+});
+
+test("htmlToHtmlInline inserts spaces between adjacent block elements", () => {
+    expect(htmlToHtmlInline(markup`<div>Before</div><p>After</p>`).toString()).toBe(
+        "Before\u00a0After"
+    );
+});
+
+test("htmlToHtmlInline keeps links but only displays href", () => {
+    expect(
+        htmlToHtmlInline(
+            markup`<p>Hello <a href="/odoo">world</a></p>`
+        ).toString()
+    ).toBe('Hello <a href="/odoo">/odoo</a>');
+});
+
+test("htmlToHtmlInline drops link classes and text content in preview", () => {
+    expect(
+        htmlToHtmlInline(
+            markup`<a href="/odoo" class="btn btn-primary o_mail_redirect">Approve</a>`
+        ).toString()
+    ).toBe('<a href="/odoo">/odoo</a>');
 });

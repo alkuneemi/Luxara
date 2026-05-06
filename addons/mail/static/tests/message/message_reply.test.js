@@ -319,3 +319,27 @@ test("click on message in reply in inbox navigates to the parent message", async
         ".o-mail-DiscussContent:has(.o-mail-DiscussContent-threadName[title='General']) .o-mail-Message.o-highlighted .o-mail-Message-content:has(:text('Parent message'))"
     );
 });
+
+test("preserve the link formatting for message in reply", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({ name: "General" });
+    const messageId = pyEnv["mail.message"].create({
+        body: `<p>Test Message <a href="https://odoo.com/">https://odoo.com/</a></p>`,
+        message_type: "comment",
+        model: "discuss.channel",
+        res_id: channelId,
+    });
+    pyEnv["mail.message"].create({
+        body: "Message in Reply",
+        message_type: "comment",
+        model: "discuss.channel",
+        author_id: serverState.partnerId,
+        parent_id: messageId,
+        res_id: channelId,
+    });
+    await start();
+    await openDiscuss(channelId);
+    await contains(".o-mail-Message", { count: 2 });
+    await contains(`.o-mail-Message-richBody a[href="https://odoo.com/"]`);
+    await contains(`.o-mail-MessageInReply-message a[href="https://odoo.com/"]`);
+});

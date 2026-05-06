@@ -473,6 +473,66 @@ export function trimEmptyBlocksAround(content) {
     return changed ? getInnerHtml(body) : content;
 }
 
+/*
+ * Converts rich HTML into a sanitized inline-only fragment.
+ *
+ * @param {string|ReturnType<markup>} richbody
+ * @returns {ReturnType<markup>}
+ */
+export function htmlToHtmlInline(richbody) {
+    const doc = createDocumentFragmentFromContent(richbody || "");
+    const body = doc.body;
+    const previewBody = body.ownerDocument.createElement("body");
+
+    const isBlock = (node) =>
+        node?.nodeType === Node.ELEMENT_NODE && ["DIV", "P"].includes(node?.tagName);
+
+    const appendText = (parent, text) => {
+        if (text) {
+            parent.append(body.ownerDocument.createTextNode(text));
+        }
+    };
+
+    const appendInlinePreviewChildren = (parent, nodes) => {
+        for (let index = 0; index < nodes.length; index++) {
+            const node = nodes[index];
+            appendInlinePreview(parent, node);
+            if (isBlock(node) && isBlock(nodes[index + 1])) {
+                appendText(parent, "\u00A0");
+            }
+        }
+    };
+
+    const appendInlinePreview = (parent, node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            appendText(parent, node.textContent);
+            return;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+        }
+        if (node.tagName === "BR") {
+            appendText(parent, "\u00A0");
+            return;
+        }
+        if (node.tagName === "A") {
+            const href = node.getAttribute("href");
+            if (href) {
+                const link = body.ownerDocument.createElement("a");
+                link.setAttribute("href", href);
+                link.append(body.ownerDocument.createTextNode(href));
+                parent.append(link);
+            }
+            return;
+        }
+        appendInlinePreviewChildren(parent, [...node.childNodes]);
+    };
+
+    appendInlinePreviewChildren(previewBody, [...body.childNodes]);
+
+    return htmlTrim(getInnerHtml(previewBody)) ?? "";
+}
+
 export function cleanTerm(term) {
     return typeof term === "string" ? normalize(term) : "";
 }
