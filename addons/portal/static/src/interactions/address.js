@@ -8,10 +8,9 @@ export class CustomerAddress extends Interaction {
     // /my/address & /my/account
     static selector = '.o_customer_address_fill';
     dynamicContent = {
-        // TODO VFE debounce other selection changes ?
-        'select[name="state_id"]': { 't-on-change': this.onChangeState },
+        'select[name="city_id"]': { 't-on-change': this.debounced(this.onChangeCity, 500) },
+        'select[name="state_id"]': { 't-on-change': this.debounced(this.onChangeState, 500) },
         'select[name="country_id"]': { 't-on-change': this.debounced(this.onChangeCountry, 500) },
-        'select[name="city_id"]': { 't-on-change': this.onChangeCity },
         'input[name="zip"]': { 't-on-input': this.onChangeZip.bind(this) },
         '#save_address': { 't-on-click.prevent': this.locked(this.saveAddress, true) },
     };
@@ -31,8 +30,6 @@ export class CustomerAddress extends Interaction {
         // Support for customizations and additional required fields
         this.alwaysRequiredFields = this.addressForm.required_fields.value.split(',');
         this.alwaysRequiredFields.forEach((fieldName) => this._markRequired(fieldName, true));
-
-        this.elementCities = this.addressForm.city_id;
     }
 
     async willStart() {
@@ -60,58 +57,41 @@ export class CustomerAddress extends Interaction {
 
         this.addressForm.phone.placeholder = data.phone_code !== 0 ? `+${data.phone_code}` : '';
 
+        // add requirement on new required fields
+        data.required_fields.forEach((fieldName) => {
+            this._markRequired(fieldName, true);
+        })
+        this.requiredFields.forEach((fieldName) => {
+            // remove requirement on previously required fields
+            if (
+                !data.required_fields.includes(fieldName)
+                && !this.alwaysRequiredFields.includes(fieldName)
+            ) {
+                this._markRequired(fieldName, false);
+            }
+        });
+
         // manage fields order / visibility
         if (data.address_fields) {
-            // FIXME VFE, should support city_id too
             if (data.zip_before_city) {
-                this._getInputDiv('zip').after(this._getInputDiv('city'));
+                this._getInputDiv('zip').after(this._getInputDiv(this._getCityField(data)));
             } else {
-                this._getInputDiv('zip').before(this._getInputDiv('city'));
+                this._getInputDiv('zip').before(this._getInputDiv(this._getCityField(data)));
             }
 
             this.addressFields.forEach((fname) => {
                 if (data.address_fields.includes(fname)) {
                     this._showInput(fname);
-                    if (data.selection && fname in data.selection) {
+                    // dont reload state at first loading (done in qweb)
+                    if (!init && data.selection && fname in data.selection) {
                         // Configure the options for relational fields
-                        this._setFieldChoices(
-                            fname,
-                            data.selection[fname],
-                            data.required_fields.includes(fname),
-                        );
+                        this._setFieldChoices(fname, data.selection[fname].data);
                     }
                 } else {
                     this._hideInput(fname);
                 }
             });
         }
-
-        let choices = [];
-        if (this._getSelectedCountryEnforceCities()) {
-            const cityInput = this.addressForm.city;
-            cityInput.value = '';
-            this._hideInput('city');
-            this._showInput('city_id');
-            choices = data.cities || [];
-        } else {
-            this._hideInput('city_id');
-            this._showInput('city');
-        }
-        this._changeOption(this.elementCities, choices);
-
-        // add requirement on now required fields
-        data.required_fields.forEach((fieldName) => {
-            // remove requirement on previously required fields
-            if (
-                !this.requiredFields.includes(fieldName)
-                && !this.alwaysRequiredFields.includes(fieldName)
-            ) {
-                this._markRequired(fieldName, true);
-            }
-        });
-        data.required_fields.forEach((fieldName) => {
-            this._markRequired(fieldName, true);
-        })
 
         return data;
     }
@@ -120,17 +100,26 @@ export class CustomerAddress extends Interaction {
         let data = {
             'cities': [],
         }
-        // TODO check if shown or hidden
         const stateId = parseInt(this.addressForm.state_id.value);
         if (stateId)  {
             data = await this.waitFor(rpc(`/my/address/state_info/${stateId}`, {}));
         }
-        this._setFieldChoices('city_id', data.cities);
+        else {
+            const countryId = parseInt(this.addressForm.country_id.value);
+            data = await this.waitFor(rpc(
+            `/my/address/country_info/${countryId}`,
+            {
+                address_type: this.addressType,
+                from_state_update: true
+            },
+        ));
+        }
+        if (data.cities) {
+            this._setFieldChoices('city_id', data.cities);
+        }
 
         return data;
     }
-
-    //TODO VFE search city/cities based on provided zipcode ?
 
     /*
      * Auto-fill zip code according to chosen city
@@ -141,6 +130,10 @@ export class CustomerAddress extends Interaction {
         if (cityZipCode) {
             this.addressForm.zip.value = cityZipCode;
         }
+    }
+
+    _getCityField(data) {
+        return data.required_fields.includes('city_id') ? 'city_id' : 'city';
     }
 
     _getInputDiv(name) {
@@ -158,29 +151,9 @@ export class CustomerAddress extends Interaction {
     }
 
     _hideInput(name) {
-        // show parent div, containing label and input
+        // hide parent div, containing label and input
         this.addressForm[name].parentElement.style.display = 'none';
-        // TODO reset field value or handle during form submission ?
-    }
-
-    _changeOption(selectElement, choices) {
-        selectElement.options.length = 1;
-        if (choices.length) {
-            choices.forEach((choice) => {
-                const option = new Option(choice.name, choice.id);
-                Object.keys(choice).forEach((key) => {
-                    if (!['name', 'id'].includes(key) && choice[key]) {
-                        option.dataset[key] = choice[key];
-                    }
-                });
-                selectElement.appendChild(option);
-            });
-        }
-    }
-
-    _getSelectedCountryEnforceCities() {
-        const country = this.addressForm.country_id;
-        return country.value ? country.selectedOptions[0].getAttribute('enforce-cities') : false;
+        this.addressForm[name].value = ''
     }
 
     _markRequired(name, required) {
@@ -197,7 +170,7 @@ export class CustomerAddress extends Interaction {
         selection.options.length = 1;
 
         if (!data_list.length) {
-            // this._hideInput(name);
+            this._hideInput(name);
             return
         }
         // create new options and append them to the select element

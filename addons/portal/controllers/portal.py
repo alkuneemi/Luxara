@@ -406,7 +406,7 @@ class CustomerPortal(Controller):
         # TODO address fields matching done in country_info but still needed here.
 
         cities = request.env['res.city']
-        if country_sudo.enforce_cities:
+        if country_sudo._enforce_city_choice():
             cities = state_sudo.city_ids
             if not cities and not country_sudo.state_required:
                 cities = country_sudo.city_ids
@@ -452,7 +452,6 @@ class CustomerPortal(Controller):
             'states': country_sudo.state_ids,
             'city': city_sudo,
             'cities': cities,
-            # TODO ask BOJE if we want the name to be the same by default on new addresses ?
         }
 
     def _is_used_as_billing(self, address_type, **kwargs):
@@ -630,7 +629,7 @@ class CustomerPortal(Controller):
         country_id = address_values.get('country_id')
         country_sudo = request.env['res.country'].browse(country_id)
         if country_sudo.enforce_cities and form_data.get('city_id'):
-            if city := request.env['res.city'].sudo().browse(int(form_data['city_id'])):
+            if city := request.env['res.city'].browse(int(form_data['city_id'])):
                 address_values['city'] = city.name
 
         return address_values, extra_form_data
@@ -863,8 +862,7 @@ class CustomerPortal(Controller):
         website=True,
         readonly=True,
     )
-    def portal_address_country_info(self, country, address_type, **kw):
-        address_fields = country.get_address_fields()
+    def portal_address_country_info(self, country, address_type, from_state_update=False, **kw):
         required_fields = self._get_required_address_fields(address_type, country)
 
         cities_data = []
@@ -873,10 +871,18 @@ class CustomerPortal(Controller):
             # depending on the chosen state.
             cities_data = request.env['res.city'].search_read(
                 [('country_id', '=', country.id)],
-                ['id', 'name'],
+                ['id', 'name', 'zipcode'],
             )
 
+            # Fetch all the cities when state reset to False
+            if from_state_update:
+                return {'cities': cities_data}
+
         address_fields = self._get_address_fields(country)
+        states_data = request.env['res.country.state'].search_read(
+                [('country_id', '=', country.id)],
+                ['id', 'name', 'code'],
+            )
 
         country_info = {
             'address_fields': address_fields,
@@ -888,9 +894,8 @@ class CustomerPortal(Controller):
                 )
             ),
             'selection': {
-                'cities': cities_data,
-                # TODO VFE perf check, maybe use search_read here
-                'states': country.sudo().state_ids.read(['id', 'name', 'code']),
+                'city_id': {'data': cities_data},
+                'state_id': {'data': states_data},
             },
             'phone_code': country.phone_code,
             'vat_label': country.vat_label or request.env._("VAT"),
@@ -909,12 +914,15 @@ class CustomerPortal(Controller):
     def portal_address_state_info(self, state, **kw):
         # l10n_pe_code was read before for peru but unused.
         # l10n_co_edi_code was read before for columbia but unused.
-        return {
-            'cities': request.env['res.city'].sudo().search_read(
-                [('state_id', '=', state.id)],
-                ['id', 'name', 'zipcode'],
-            )
-        }
+        if state.country_id._enforce_city_choice():
+            return {
+                'cities': request.env['res.city'].sudo().search_read(
+                    [('state_id', '=', state.id)],
+                    ['id', 'name', 'zipcode'],
+                )
+            }
+
+        return {}
 
     @route('/my/address/archive', type='jsonrpc', auth='user', website=True, methods=['POST'])
     def address_archive(self, partner_id):
@@ -1115,7 +1123,7 @@ class CustomerPortal(Controller):
         # Maps `res.country` 'address_format' fields to `res.partner` fields that have to be set on
         # the address page.
         mapping = self._get_address_format_fields_mapping()
-        if country.enforce_cities and country._has_cities():
+        if country._enforce_city_choice():
             mapping['city'] = 'city_id'
 
         return [mapping.get(fname, fname) for fname in address_format_fields]

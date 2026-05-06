@@ -14,10 +14,21 @@ class ResCountry(models.Model):
     )
 
     def _get_partner_city_field(self):
-        if self.enforce_cities and self._has_cities():
+        if self._enforce_city_choice():
             return "city_id"
         return "city"
 
-    def _has_cities(self):
+    def _enforce_city_choice(self):
+        if not self:
+            return False
+
+        # Only enabled on frontend for those countries for now
+        # Feature has to be adapted to be more generic and less blocking
+        # before being enabled for other countries
+        if self.code not in ['BR', 'CL', 'PE', 'CO', 'TW']:
+            return False
+
         self.ensure_one()
-        return bool(self.env["res.city"].search_count([("country_id", "=", self.id)], limit=1))
+        return self.enforce_cities and bool(
+            self.env['res.city'].sudo().search_count([('country_id', '=', self.id)], limit=1)
+        )
