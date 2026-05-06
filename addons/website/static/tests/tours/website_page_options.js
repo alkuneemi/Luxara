@@ -158,6 +158,10 @@ registerWebsitePreviewTour(
             run: "click",
         },
         {
+            content: "Verify loading state is shown while checking dependencies",
+            trigger: ".modal-body .fa-spinner",
+        },
+        {
             content: "Verify and close delete confirmation dialog",
             trigger: ".modal-header:has(.modal-title:contains('Delete Page')) button.btn-close",
             run: "click",
