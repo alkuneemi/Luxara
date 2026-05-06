@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_self_order.DeliveryButton" t-inherit="point_of_sale.DeliveryButton" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('order-widget-dropdown-container')]" position="inside">
+            <DropdownItem t-if="['mobile', 'kiosk'].includes(this.pos.config.self_ordering_mode)">
+                <div class="d-flex self-orders justify-content-center align-items-center px-1">
+                    <img class="me-1 provider-image rounded-3" height="50" width="50" t-att-src="'/web/image?model=res.company&amp;field=logo&amp;id=' + this.pos.company.id"/>
+                    <div class="state-container text-center d-grid p-1 gap-1">
+                        <div class="button-hover p-1 rounded text-muted" style="cursor:not-allowed;" disabled="True">
+                            <div class="fw-semibold fs-3 text-info" t-out="'0'"/>
+                            <div class="text-muted fw-bold small">New</div>
+                        </div>
+                        <div class="button-hover p-1 rounded" t-on-click="() => this.goToOrders('SELF', 'ACTIVE_ORDERS')">
+                            <div class="fw-semibold fs-3" t-out="this.ongoingOrders"/>
+                            <div class="text-muted fw-bold small">Ongoing</div>
+                        </div>
+                        <div class="button-hover p-1 rounded" t-on-click="() => this.goToOrders('SELF', 'SYNCED')">
+                            <div class="fw-semibold fs-3" t-out="this.pos.selfOrderCount"/>
+                            <div class="text-muted fw-bold small">Done</div>
+                        </div>
+                    </div>
+                    <div t-if="this.state.countdown" class="px-1 py-1 bg-secondary rounded fw-bold text-sm text-danger" t-on-click="() => this.snoozeSelfOrdering()">
+                        <t t-esc="this.state.countdown"/>
+                    </div>
+                    <div t-else="" class="form-switch ms-4" onclick="event.stopPropagation()">
+                        <input type="checkbox" class="form-check-input fs-4" t-att-checked="!this.state.activeSelfSnoozed?.id" t-on-click="() => this.snoozeSelfOrdering()"/>
+                    </div>
+                </div>
+            </DropdownItem>
+        </xpath>
+    </t>
+</templates>

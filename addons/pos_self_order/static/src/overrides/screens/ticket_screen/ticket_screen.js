@@ -26,15 +26,18 @@ patch(TicketScreen.prototype, {
     //  Todo: remove in master -->
     getFilteredOrderList() {
         const orders = super.getFilteredOrderList();
-        orders.forEach((order) => {
+        const selfOrders = orders.filter((o) => ["kiosk", "mobile"].includes(o.source));
+        selfOrders.forEach((order) => {
             if (
-                ["kiosk", "mobile"].includes(order.source) &&
                 !order.online_payment_method_id &&
                 !Object.keys(order.last_order_preparation_change.lines).length
             ) {
                 order.updateLastOrderChange();
             }
         });
+        if (this.state.search.fieldName == "SELF") {
+            return selfOrders;
+        }
         return orders;
     },
 });

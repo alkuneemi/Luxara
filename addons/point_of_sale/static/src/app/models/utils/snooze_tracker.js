@@ -5,7 +5,7 @@ const REFRESH_DELAY = 1000;
 
 export class SnoozedProductTracker {
     constructor(snoozes) {
-        this.state = reactive({ activeSnoozes: new Set(), snoozedProductIds: new Set() });
+        this.state = reactive({ activeSnoozes: new Array(), snoozedProductIds: new Set() });
         if (snoozes) {
             this.setSnoozes(snoozes);
         }

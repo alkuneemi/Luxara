@@ -1,7 +1,7 @@
 import { reactive } from "@web/owl2/utils";
 import { Mutex } from "@web/core/utils/concurrency";
 import { registry } from "@web/core/registry";
-import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { AlertDialog, ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import {
     random5Chars,
     uuidv4,
@@ -33,7 +33,7 @@ import { normalize } from "@web/core/l10n/utils";
 import { WithLazyGetterTrap } from "@point_of_sale/lazy_getter";
 import { debounce } from "@web/core/utils/timing";
 import DevicesSynchronisation from "../utils/devices_synchronisation";
-import { formatDate } from "@web/core/l10n/dates";
+import { formatDate, serializeDateTime } from "@web/core/l10n/dates";
 import { ProductInfoPopup } from "@point_of_sale/app/components/popups/product_info_popup/product_info_popup";
 import { PresetSlotsPopup } from "@point_of_sale/app/components/popups/preset_slots_popup/preset_slots_popup";
 import { DebugWidget } from "../utils/debug/debug_widget";
@@ -2929,11 +2929,11 @@ export class PosStore extends WithLazyGetterTrap {
         });
         if (this.data.isDataLoadedFromCache()) {
             try {
-                const snoozes = await this.data.searchRead("pos.product.template.snooze", [
+                const snoozes = await this.data.searchRead("pos.snooze", [
                     ["pos_config_id", "=", this.config.id],
                 ]);
                 const snoozedIds = new Set(snoozes.map((s) => s.id));
-                const snoozeModel = this.models["pos.product.template.snooze"];
+                const snoozeModel = this.models["pos.snooze"];
                 const snoozetoDelete = snoozeModel
                     .getAll()
                     .filter((snooze) => !snoozedIds.has(snooze.id));
@@ -2956,6 +2956,49 @@ export class PosStore extends WithLazyGetterTrap {
 
     isProductSnoozed(product) {
         return this.snoozedProductTracker.isProductSnoozed(product);
+    }
+    updateCountdown(activeSnooze) {
+        // This function will calculate and return [countdown, activeSoozeRecord]
+        const now = DateTime.now();
+        const endTime = activeSnooze.end_time;
+        if (!endTime) {
+            return [_t("Next session"), activeSnooze];
+        }
+        const diff = endTime.diff(now, ["hours", "minutes", "seconds"]);
+        if (diff.as("seconds") <= 0) {
+            return ["", undefined];
+        }
+        return [diff.toFormat("hh:mm:ss"), activeSnooze];
+    }
+    prepareSnoozePayload(productTmplId, hours, opts = {}) {
+        const start_time = DateTime.now();
+        const end_time = hours ? serializeDateTime(start_time.plus({ hours: hours })) : null;
+        const payload = {
+            start_time: serializeDateTime(start_time),
+            end_time: end_time,
+            pos_config_id: this.config.id,
+            product_template_id: productTmplId,
+        };
+        return payload;
+    }
+    openSnoozeDialog({ snoozedItem, onReset }) {
+        const snoozingItem = snoozedItem.product_template_id ? _t("product") : _t("self ordering");
+        this.dialog.add(ConfirmationDialog, {
+            title: _t("Stop Snooze"),
+            body: _t(
+                "Do you want to stop the snooze early and make the %s available again immediately?",
+                snoozingItem
+            ),
+            confirmLabel: _t("Yes"),
+            confirm: async () => {
+                this.data.delete("pos.snooze", [snoozedItem.id]);
+                onReset();
+                await this.data.call("pos.config", "update_self_order", [this.config.id]);
+            },
+            confirmClass: "btn-primary flex-grow-1 flex-sm-grow-0",
+            cancelLabel: _t("Cancel"),
+            cancel: () => {},
+        });
     }
 }
 
