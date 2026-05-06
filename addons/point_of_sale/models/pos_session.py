@@ -932,6 +932,24 @@ class PosSession(models.Model):
         """ Inherited in pos_stock """
         return []
 
+    def _prepare_session_move_vals(self, orders):
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+
+        move_type = 'out_refund' if orders[0].is_refund else 'out_invoice'
+
+        return {
+            'move_type': move_type,
+            'company_id': self.company_id.id,
+            'journal_id': self.config_id.journal_id.id,
+            'ref': _("Closing entry for session %s", self.name),
+            'partner_id': self.config_id.default_partner_id.id,
+            'date': today,
+            'invoice_date_due': today,
+            'pos_session_ids': [(4, self.id)],
+            'always_tax_exigible': True,
+        }
+
     def _create_session_account_move(self, orders, check_validity=True):
         """
         This method creates the receipt of the session closing, with all
@@ -965,7 +983,6 @@ class PosSession(models.Model):
         if self.config_id.journal_id != journal and config_journal.type != 'sale':
             self.config_id.journal_id = journal
 
-        move_type = 'out_refund' if refund else 'out_invoice'
         payment_methods = orders.payment_ids.payment_method_id
         cash_payment_method = payment_methods.filtered(
             lambda pm: pm.type == 'cash',
@@ -1000,22 +1017,16 @@ class PosSession(models.Model):
         if self.config_id.cash_rounding and use_rounding:
             rounding_method = self.config_id.rounding_method
 
-        move = self.env['account.move'].sudo().with_context(
-            check_move_validity=False,
-            always_tax_exigible=True,
-            linked_to_pos=True,
-        ).create({
-            'invoice_cash_rounding_id': rounding_method.id,
-            'move_type': move_type,
-            'company_id': self.company_id.id,
-            'journal_id': self.config_id.journal_id.id,
-            'ref':  _("Closing entry for session %s", self.name),
-            'partner_id': self.config_id.default_partner_id.id,
+        move_vals = self._prepare_session_move_vals(orders)
+        move_vals.update({
             'invoice_line_ids': lines_commands,
             'line_ids': payment_commands,
-            'date': fields.Date.context_today(self),
-            'invoice_date_due': fields.Date.context_today(self),
+            'invoice_cash_rounding_id': rounding_method.id,
         })
+        move = self.env['account.move'].sudo().with_context(
+            check_move_validity=False,
+            linked_to_pos=True,
+        ).create(move_vals)
 
         move_ctx = move.with_context(
             linked_to_pos=True,
@@ -1073,7 +1084,10 @@ class PosSession(models.Model):
         # sometime it create weird reconciliation with multiple payments
         for idx, term in enumerate(payment_term_lines):
             payment_line = payment_lines[idx]
-            (payment_line + term).with_context(skip_invoice_sync=True).reconcile()
+            (payment_line + term).with_context(
+                skip_invoice_sync=True,
+                no_cash_basis=True,
+            ).reconcile()
 
         return move
 
@@ -1128,34 +1142,10 @@ class PosSession(models.Model):
         reverse_move_lines = []
         invoice_to_reverse = order.account_move
         original_move = self.refunds_move_id if order.is_refund else self.sales_move_id
-
         reverse_move_lines += self._prepare_account_move_line_commands_for_reversal(
             order,
             invoice_to_reverse,
         )
-
-        tax_lines = invoice_to_reverse.line_ids.filtered(
-            lambda line: line.tax_line_id,
-        )
-        used_tax_lines = self.env['account.move.line']
-        for tax_line in tax_lines:
-            matching_lines = original_move.line_ids.filtered_domain([
-                ('tax_line_id', '=', tax_line.tax_line_id.id),
-                ('display_type', '=', 'tax'),
-                ('id', 'not in', used_tax_lines.ids),
-            ])
-            matching_line = matching_lines[0]
-            used_tax_lines |= matching_line
-            reverse_move_lines.append(Command.create({
-                'name': _("Partial reversal of %s", matching_line.name),
-                'account_id': matching_line.account_id.id,
-                'partner_id': matching_line.partner_id.id,
-                'currency_id': order.company_id.currency_id.id,
-                'amount_currency': -tax_line.amount_currency,
-                'balance': -tax_line.balance,
-                'display_type': matching_line.display_type,
-                'tax_ids': [(6, 0, tax_line.tax_ids.ids)],
-            }))
 
         rounding_line = invoice_to_reverse.line_ids.filtered(
             lambda line: line.display_type == 'rounding',
@@ -1195,7 +1185,6 @@ class PosSession(models.Model):
         Move = self.env['account.move'].sudo().with_company(order.company_id)
         move_ctx = Move.with_context(
             linked_to_pos=True,
-            skip_invoice_sync=True,
         )
 
         return move_ctx.create({
@@ -1206,4 +1195,6 @@ class PosSession(models.Model):
             'line_ids': reverse_move_lines,
             'journal_id': original_move.journal_id.id,
             'reversed_entry_id': original_move.id,
+            'pos_session_ids': [(4, self.id)],
+            'always_tax_exigible': True,
         })
