@@ -13,10 +13,13 @@ class StockQuantityHistory(models.TransientModel):
         help="Choose a date to get the inventory at that date",
         default=fields.Datetime.now)
 
+    def _get_products_domain(self):
+        return Domain('is_storable', '=', True)
+
     def open_at_date(self):
         tree_view_id = self.env.ref('stock.view_stock_product_tree').id
         form_view_id = self.env.ref('stock.product_form_view_procurement_button').id
-        domain = Domain('is_storable', '=', True)
+        domain = self._get_products_domain()
         product_id = self.env.context.get('product_id', False)
         product_tmpl_id = self.env.context.get('product_tmpl_id', False)
         if product_id:

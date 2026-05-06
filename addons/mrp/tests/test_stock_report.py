@@ -739,3 +739,22 @@ class TestMrpStockReports(TestReportsCommon):
         overview_values_no_bom = self.env['report.mrp.report_mo_overview'].get_report_values(mo_no_bom.id)
         self.assertEqual(overview_values_no_bom['data']['components'][0]['summary']['bom_cost'], 120)
         self.assertEqual(overview_values_no_bom['data']['components'][0]['summary']['mo_cost'], 120)
+
+    def test_kit_product_in_quantity_history_report(self):
+        """ Verify that kit products do not appear on quantity history report. """
+        kit = self.env['product.product'].create({'name': 'kit', 'is_storable': True})
+        self.env['mrp.bom'].create([{
+            'product_tmpl_id': kit.product_tmpl_id.id,
+            'product_qty': 1,
+            'type': 'phantom',
+            'bom_line_ids': [
+                Command.create({'product_id': self.product1.id, 'product_qty': 1}),
+                Command.create({'product_id': self.serial_product.id, 'product_qty': 1}),
+            ],
+        }])
+        action = self.env['stock.quantity.history'].create({}).open_at_date()
+        products = self.env[action['res_model']].with_context(action['context']).search(action['domain'])
+        self.assertRecordValues(
+            products & (self.product1 | self.serial_product | kit),
+            [{"id": self.product1.id}, {"id": self.serial_product.id}],
+        )
