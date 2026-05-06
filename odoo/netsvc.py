@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import contextlib
 import json
@@ -11,8 +10,6 @@ import sys
 import threading
 import traceback
 import warnings
-
-import werkzeug.serving
 
 from . import release
 from . import sql_db
@@ -117,9 +114,6 @@ PID_COLORS = (
     GREEN, BLUE, MAGENTA, CYAN,
     HI_RED, HI_GREEN, HI_YELLOW, HI_BLUE, HI_MAGENTA, HI_CYAN, HI_WHITE,
 )
-if os.environ.get('ODOO_PY_COLORS_NOPID'):
-    TRUE_COLOR_PATTERN = f"\033[%dm%s{RESET_SEQ}"
-    PID_COLORS = [0]
 
 class PerfFilter(logging.Filter):
 
@@ -155,13 +149,16 @@ class ColoredPerfFilter(PerfFilter):
                 return COLOR_PATTERN % (30 + YELLOW, 40 + DEFAULT, format % time)
             return format % time
         return (
-            colorize_time(query_count, "%d", 100, 1000),
-            colorize_time(query_time, "%.3f", 0.1, 3),
-            colorize_time(remaining_time, "%.3f", 1, 5),
-            )
+            colorize_time(query_count, "%d", 100, 1000) if tools.color_config['query_count'] else str(query_count),
+            colorize_time(query_time, "%.3f", 0.1, 3) if tools.color_config['query_time'] else f'{query_time:.3f}',
+            colorize_time(remaining_time, "%.3f", 1, 5) if tools.color_config['remaining_time'] else f'{remaining_time:.3f}',
+        )
 
     def format_cursor_mode(self, cursor_mode):
         cursor_mode = super().format_cursor_mode(cursor_mode)
+        if not tools.color_config['cursor_mode']:
+            return cursor_mode
+
         cursor_mode_color = (
             RED if cursor_mode == 'ro->rw'
             else YELLOW if cursor_mode == 'rw'
@@ -173,8 +170,10 @@ class ColoredPerfFilter(PerfFilter):
 class ColoredFormatter(logging.Formatter):
     def format(self, record):
         fg_color, bg_color = LEVEL_COLOR_MAPPING.get(record.levelno, (GREEN, DEFAULT))
-        record.levelname = COLOR_PATTERN % (30 + fg_color, 40 + bg_color, record.levelname)
-        record.process = TRUE_COLOR_PATTERN % (PID_COLORS[record.thread_native % len(PID_COLORS)], record.thread_native)
+        if tools.color_config['loglevel']:
+            record.levelname = COLOR_PATTERN % (30 + fg_color, 40 + bg_color, record.levelname)
+        if tools.color_config['pid']:
+            record.process = TRUE_COLOR_PATTERN % (PID_COLORS[record.thread_native % len(PID_COLORS)], record.thread_native)
         return super().format(record)
 
 
@@ -269,23 +268,12 @@ def init_logger():
         except Exception:
             sys.stderr.write("ERROR: couldn't create the logfile directory. Logging to the standard output.\n")
 
-    # Check that handler.stream has a fileno() method: when running OpenERP
-    # behind Apache with mod_wsgi, handler.stream will have type mod_wsgi.Log,
-    # which has no fileno() method. (mod_wsgi.Log is what is being bound to
-    # sys.stderr when the logging.StreamHandler is being constructed above.)
-    def is_a_tty(stream):
-        return hasattr(stream, 'fileno') and os.isatty(stream.fileno())
-
-    if isinstance(handler, logging.StreamHandler) and (is_a_tty(handler.stream) or os.environ.get("ODOO_PY_COLORS")):
-        formatter = ColoredFormatter(format)
-        perf_filter = ColoredPerfFilter()
-    else:
-        formatter = logging.Formatter(format)
-        perf_filter = PerfFilter()
-        werkzeug.serving._log_add_style = False
+    formatter = ColoredFormatter(format)
+    perf_filter = ColoredPerfFilter()
     handler.setFormatter(formatter)
     logging.getLogger().addHandler(handler)
     logging.getLogger('werkzeug').addFilter(perf_filter)
+    tools.color_config.reload()
 
     if tools.config['log_db']:
         db_levels = {
