@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import timedelta
 from operator import itemgetter
 from re import findall as regex_findall
+from collections import OrderedDict
 
 from odoo import _, api, Command, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -722,6 +723,12 @@ Please change the quantity done or the rounding precision of your unit of measur
         if 'quantity' in vals:
             if any(move.state == 'cancel' for move in self):
                 raise UserError(_('You cannot change a cancelled stock move, create a new line instead.'))
+            ordered_dict = OrderedDict(vals)
+            if 'lot_ids' in ordered_dict:
+                keys = list(ordered_dict.keys())
+                keys.remove('lot_ids')
+                keys.insert(keys.index('quantity'), 'lot_ids')
+                vals = {k: ordered_dict[k] for k in keys}
         if 'product_uom' in vals and any(move.state == 'done' for move in self):
             raise UserError(_('You cannot change the UoM for a stock move that has been set to \'Done\'.'))
         if 'product_uom_qty' in vals:
