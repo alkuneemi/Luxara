@@ -2,12 +2,25 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+import operator as py_operator
 from collections import defaultdict
 
 from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError
 from odoo.fields import Domain
+from odoo.tools import OrderedSet
 from odoo.tools.float_utils import float_round
+
+PY_OPERATORS = {
+    '>': py_operator.gt,
+    '<': py_operator.lt,
+    '>=': py_operator.ge,
+    '<=': py_operator.le,
+    '=': py_operator.eq,
+    '!=': py_operator.ne,
+    'in': lambda elem, container: elem in container,
+    'not in': lambda elem, container: elem not in container,
+}
 
 
 class MailingContact(models.Model):
@@ -53,9 +66,71 @@ class MailingContact(models.Model):
              'This field should not be used in a view without a unique and active mailing list context.')
     mailing_count = fields.Integer(string="Number of Mailing", compute="_compute_mailing_count")
     received_ratio = fields.Float(compute="_compute_statistics", string='Received Ratio')
-    opened_ratio = fields.Float(compute="_compute_statistics", string='Opened Ratio')
+    opened_ratio = fields.Float(compute="_compute_statistics", string='Opened Ratio', search='_search_opened_ratio')
     replied_ratio = fields.Float(compute="_compute_statistics", string='Replied Ratio')
     clicks_ratio = fields.Float(compute="_compute_clicks_ratio", string="Number of Clicks")
+    trace_ids = fields.Many2many('mailing.trace', compute='_compute_trace_ids', search='_search_trace_ids', string='Traces')
+
+    def _search_opened_ratio(self, operator, value):
+        if operator in ('=', '!=', '<=', '<', '>', '>=') and not isinstance(value, (int, float)):
+            return NotImplemented
+        if operator in ('in', 'not in') and not isinstance(value, OrderedSet):
+            return NotImplemented
+        if operator not in ('in', 'not in', '=', '!=', '<=', '<', '>', '>='):
+            return NotImplemented
+        op = PY_OPERATORS[operator]
+
+        result = self.env["mailing.trace"].sudo()._read_group(
+            [],
+            ['email', 'trace_status'],
+            ['__count', 'links_click_datetime:count', 'sent_datetime:count'])
+
+        result_per_contact = defaultdict(lambda: defaultdict(int))
+        for email, trace_status, count, links_click_datetime, sent_datetime in result:
+            result_per_contact[email][trace_status] = count
+            result_per_contact[email]['links_click_datetime'] += links_click_datetime
+            result_per_contact[email]['sent_datetime'] += sent_datetime
+
+        emails = []
+        self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_contact")
+        all_emails = [r[0] for r in self.env.cr.fetchall()]
+        for email in all_emails:
+            line = result_per_contact[email]
+            expected = sum(v for k, v in line.items() if k not in ('links_click_datetime', 'sent_datetime'))
+            opened = line['open'] + line['reply']
+            failed = line['error'] + line['bounce']
+            total_no_error = (expected - line['cancel'] - failed) or 1
+            opened_ratio = float_round(100.0 * opened / total_no_error, precision_digits=2)
+            if op(opened_ratio, value):
+                emails.append(email)
+
+        return [('email', 'in', emails)]
+
+    def _search_trace_ids(self, operator, value):
+        # Checking on sub domains on the traces
+        if isinstance(value, Domain):
+            traces = self.env['mailing.trace'].search(value)
+            op = 'not in' if operator == 'not any' else 'in'
+            return [('email', op, traces.mapped('email'))]
+
+        # Checking on the trace_ids (is set, is not set)
+        if value == OrderedSet([False]):
+            if operator in ('!=', 'not in'):
+                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace")
+                emails_with_traces = [r[0] for r in self.env.cr.fetchall()]
+                return [('email', 'in', emails_with_traces)]
+            elif operator in ('=', 'in'):
+                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace")
+                emails_with_traces = [r[0] for r in self.env.cr.fetchall()]
+                return [('email', 'not in', emails_with_traces)]
+
+        if isinstance(value, (int, list)):
+            ids = value if isinstance(value, list) else [value]
+            self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace WHERE id IN %s", [ids])
+            emails = [r[0] for r in self.env.cr.fetchall()]
+            return [('email', 'in', emails)]
+
+        return NotImplemented
 
     @api.model
     def fields_get(self, allfields=None, attributes=None):
@@ -99,6 +174,10 @@ class MailingContact(models.Model):
         else:
             for record in self:
                 record.opt_out = False
+
+    def _compute_trace_ids(self):
+        for contact in self:
+            contact.trace_ids = self.env['mailing.trace'].search([('model', '=', 'mailing.contact'), ('email', '=', contact.email)])
 
     def _compute_mailing_count(self):
         self.env.cr.execute("""
@@ -237,7 +316,7 @@ class MailingContact(models.Model):
         return action
 
     def action_open_base_import(self):
-        """Open the base import wizard to import mailing list contacts with a xlsx file."""
+        """Open the base import wizard to import mailing contacts with a xlsx file."""
 
         return {
             'type': 'ir.actions.client',
@@ -278,7 +357,7 @@ class MailingContact(models.Model):
     @api.model
     def get_import_templates(self):
         return [{
-            'label': _('Template for Mailing List Contacts'),
+            'label': _('Template for Mailing Contacts'),
             'template': '/mass_mailing/static/xls/mailing_contact.xls'
         }]
 

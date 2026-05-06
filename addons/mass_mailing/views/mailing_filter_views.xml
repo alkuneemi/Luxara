@@ -115,6 +115,10 @@
                         <field name="color" widget="color_picker"/>
                     </group>
                 </sheet>
+                <footer>
+                    <button string="Save" type="object" name="action_view_recipients" class="btn-primary"/>
+                    <button class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
             </form>
         </field>
     </record>

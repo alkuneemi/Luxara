@@ -2,8 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from ast import literal_eval
+from datetime import timedelta
 
 from odoo import api, fields, models, _
+from odoo.fields import Datetime
 from odoo.exceptions import AccessError, ValidationError
 
 
@@ -61,7 +63,7 @@ class MailingFilter(models.Model):
             'type': 'ir.actions.act_window',
             'name': target_model.name,
             'res_model': target_model.model,
-            'views': [(False, 'list')],
+            'views': [(False, 'list'), (False, 'form')],
             'target': 'current',
             'domain': literal_eval(self.mailing_domain),
             'context': {**self.env.context, 'create': False},
@@ -94,7 +96,9 @@ class MailingFilter(models.Model):
 
     @api.model
     def get_dynamic_list_templates_info(self):
-        # TODO: add more templates
+        today = Datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        date_from = (today - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+        date_to = (today + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
         return {
             'start_from_scratch': {
                 'title': _('Start from Scratch'),
@@ -108,15 +112,67 @@ class MailingFilter(models.Model):
                 'description': _('Mailing Contacts added during the last 30 days'),
                 'icon': '/mass_mailing/static/img/wifi.svg',
                 'function': 'get_mailing_list_template_values',
-                'domain': repr([("create_date", ">=", "today -30d"), ("create_date", "<", "today")])
+                'domain': repr([("create_date", ">=", "today -30d"), ("create_date", "<", "today +1d")])
             },
-            'local_contacts': {
-                'title': _('Local Contacts'),
-                'description': _('Contacts that are located in your city'),
-                'icon': '/mass_mailing/static/img/location.svg',
+            'super_fans': {
+                'title': _('Super Fans'),
+                'description': _('Mailing Contacts with a 100%% open rate over the last 30 days '),
+                'icon': '/mass_mailing/static/img/rocket.svg',
                 'function': 'get_mailing_list_template_values',
-                'domain': f'[("country_id", "=", {self.env.company.country_id.id})]'
-            }
+                'domain': repr(["&", ("opened_ratio", "=", 100),
+                    ("trace_ids", "any", ["&", ("open_datetime", ">=", date_from), ("open_datetime", "<", date_to)])
+                ])
+            },
+            'recent_visitors': {
+                'title': _('Recent Visitors'),
+                'description': _('Mailing Contacts that have clicked in a mailing in the last 7 days'),
+                'icon': '/mass_mailing/static/img/magnifying_glass.svg',
+                'function': 'get_mailing_list_template_values',
+                'domain': repr([("trace_ids", "any", ["&",
+                    ("links_click_datetime", ">=", (today - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")),
+                    ("links_click_datetime", "<", today.strftime("%Y-%m-%d %H:%M:%S"))])
+                ])
+            },
+            'engaged_mailing_contacts': {
+                'title': _('Engaged Mailing Contacts'),
+                'description': _('Mailing Contacts who have replied, clicked or opened a mailing the last 30 days'),
+                'icon': '/mass_mailing/static/img/sales.svg',
+                'function': 'get_mailing_list_template_values',
+                'domain': repr(["|", "|",
+                    ("trace_ids", "any", ["&",
+                        ("links_click_datetime", ">=", date_from),
+                        ("links_click_datetime", "<", date_to)
+                    ]),
+                    ("trace_ids", "any", ["&",
+                        ("open_datetime", ">=", date_from),
+                        ("open_datetime", "<", date_to)
+                    ]),
+                    ("trace_ids", "any", ["&",
+                        ("reply_datetime", ">=", date_from),
+                        ("reply_datetime", "<", date_to)
+                    ]),
+                ])
+            },
+            'disengaged_mailing_contacts': {
+                'title': _('Disengaged Mailing Contacts'),
+                'description': _('Mailing Contacts who have NOT replied, clicked or opened a mailing the last 30 days'),
+                'icon': '/mass_mailing/static/img/sales_down.svg',
+                'function': 'get_mailing_list_template_values',
+                'domain': repr(["!", "|", "|",
+                    ("trace_ids", "any", ["&",
+                        ("links_click_datetime", ">=", date_from),
+                        ("links_click_datetime", "<", date_to)
+                    ]),
+                    ("trace_ids", "any", ["&",
+                        ("open_datetime", ">=", date_from),
+                        ("open_datetime", "<", date_to)
+                    ]),
+                    ("trace_ids", "any", ["&",
+                        ("reply_datetime", ">=", date_from),
+                        ("reply_datetime", "<", date_to)
+                    ]),
+                ])
+            },
         }
 
     def get_mailing_list_template_values(self, domain, title):
