@@ -76,7 +76,7 @@ class SmsComposer(models.TransientModel):
     sms_count = fields.Integer(compute='_compute_sms_stats')
     sms_max_char = fields.Integer(compute='_compute_sms_stats')
     sms_encoding = fields.Char(compute='_compute_sms_stats')
-    scheduled_date = fields.Char('Scheduled Date')
+    scheduled_date = fields.Char('Scheduled Date', compute='_compute_scheduled_date', readonly=False, store=True, compute_sudo=False)
 
     @api.depends('res_ids_count')
     @api.depends_context('sms_composition_mode')
@@ -194,6 +194,14 @@ class SmsComposer(models.TransientModel):
             composer.sms_count = (char_count - 1) // 160 + 1 if char_count > 0 else 0
             composer.sms_encoding = 'GSM7'
 
+    @api.depends('composition_mode', 'template_id')
+    def _compute_scheduled_date(self):
+        for composer in self:
+            if composer.template_id and 'scheduled_date' in composer.template_id._fields:
+                composer.scheduled_date = composer.template_id.scheduled_date
+            else:
+                composer.scheduled_date = False
+
     # ------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------
@@ -218,13 +226,17 @@ class SmsComposer(models.TransientModel):
 
     def _prepare_sms_scheduled_values(self, res_id):
         self.ensure_one()
-        return {
+        vals = {
             'body': self.body,
             'number': self.recipient_single_number_itf or self.recipient_single_number,
             'scheduled_date': self.scheduled_date,
             'state': 'outgoing',
-            'partner_id': self._get_records()._mail_get_partners()[res_id].id if self.res_model == 'res.partner' else False,
         }
+
+        if self.res_model == 'res.partner':
+            vals['partner_id'] = res_id
+
+        return vals
 
     def _action_schedule_message(self):
         if any(wizard.composition_mode != 'comment' for wizard in self):
