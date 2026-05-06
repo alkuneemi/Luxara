@@ -284,7 +284,7 @@
             }
 
             .o_theme_selection_col {
-                flex: 0 1 calc((100% - 8rem) / 3);
+                flex: 0 1 calc((100% - 4rem) / 3);
                 min-width: 300px;
 
                 @include media-breakpoint-down(sm) {
