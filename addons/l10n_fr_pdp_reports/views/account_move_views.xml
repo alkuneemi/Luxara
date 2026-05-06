@@ -11,7 +11,6 @@
                         optional="hide"
                         decoration-danger="l10n_fr_pdp_status == 'error'"
                         decoration-success="l10n_fr_pdp_status == 'sent'"
-                        decoration-warning="l10n_fr_pdp_status == 'cancelled'"
                         decoration-info="l10n_fr_pdp_status == 'ready'"
                         decoration-muted="l10n_fr_pdp_status in ('pending', 'out_of_scope')"
                         invisible="not l10n_fr_pdp_status"/>
@@ -29,7 +28,6 @@
                         optional="hide"
                         decoration-danger="l10n_fr_pdp_status == 'error'"
                         decoration-success="l10n_fr_pdp_status == 'sent'"
-                        decoration-warning="l10n_fr_pdp_status == 'cancelled'"
                         decoration-info="l10n_fr_pdp_status == 'ready'"
                         decoration-muted="l10n_fr_pdp_status in ('pending', 'out_of_scope')"
                         invisible="not l10n_fr_pdp_status"/>
@@ -74,7 +72,6 @@
                         optional="hide"
                         decoration-danger="l10n_fr_pdp_status == 'error'"
                         decoration-success="l10n_fr_pdp_status == 'sent'"
-                        decoration-warning="l10n_fr_pdp_status == 'cancelled'"
                         decoration-info="l10n_fr_pdp_status == 'ready'"
                         decoration-muted="l10n_fr_pdp_status in ('pending', 'out_of_scope')"
                         invisible="not l10n_fr_pdp_status"/>
@@ -92,7 +89,6 @@
                         widget="badge"
                         decoration-danger="l10n_fr_pdp_status == 'error'"
                         decoration-success="l10n_fr_pdp_status == 'sent'"
-                        decoration-warning="l10n_fr_pdp_status == 'cancelled'"
                         decoration-info="l10n_fr_pdp_status == 'ready'"
                         decoration-muted="l10n_fr_pdp_status in ('pending', 'out_of_scope')"
                         invisible="not l10n_fr_pdp_status"/>
@@ -119,9 +115,6 @@
                 <filter name="l10n_fr_pdp_status_sent"
                         string="PDP Sent"
                         domain="[('l10n_fr_pdp_status', '=', 'sent')]"/>
-                <filter name="l10n_fr_pdp_status_cancelled"
-                        string="PDP Cancelled"
-                        domain="[('l10n_fr_pdp_status', '=', 'cancelled')]"/>
                 <filter name="l10n_fr_pdp_status_out_of_scope"
                         string="PDP Out Of Scope"
                         domain="[('l10n_fr_pdp_status', '=', 'out_of_scope')]"/>
@@ -133,8 +126,8 @@
                         string="Group By Invoice Month"
                         context="{'group_by': 'invoice_date:month'}"/>
                 <filter name="l10n_fr_pdp_group_by_flow"
-                        string="Group By PDP Flow"
-                        context="{'group_by': 'l10n_fr_pdp_flow_ids'}"/>
+                        string="Group By Initial PDP Flow"
+                        context="{'group_by': 'l10n_fr_pdp_initial_flow_id'}"/>
             </xpath>
         </field>
     </record>

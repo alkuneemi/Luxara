@@ -153,7 +153,7 @@ def get_specific_identifier_scheme(country_code):
 def get_transaction_flow_type(company_country, partner_country, partner_vat):
     """Determine the type of transaction flow for reporting purposes."""
     # No VAT = B2C domestic
-    if not partner_vat or partner_vat == '/':
+    if not partner_vat or len(partner_vat) == 1:
         return 'b2c'
 
     # If no country info, cannot determine

@@ -11,15 +11,15 @@
                 <field name="due_date" optional="hide"/>
                 <field name="state" string="Status" widget="badge"
                        decoration-info="state == 'ready'"
-                       decoration-muted="state in ('pending', 'sent', 'cancelled')"
+                       decoration-muted="state in ('pending', 'sent')"
                        decoration-success="state == 'completed'"
                        decoration-danger="state == 'error'"/>
                 <field name="report_type" string="Type"/>
                 <field name="company_id" string="Company" optional="hide"/>
                 <field name="last_send_datetime" string="Send on" optional="hide"/>
                 <field name="transmission_type" string="Transmission type" widget="badge" optional="hide"
-                       decoration-info="transmission_type == 'IN'"
-                       decoration-warning="transmission_type == 'RE'"/>
+                       decoration-info="transmission_type == 'initial'"
+                       decoration-warning="transmission_type == 'rectificative'"/>
                 <field name="acknowledgement_status" optional="hide" groups="base.group_no_one"/>
                 <field name="transport_identifier" optional="hide" groups="base.group_no_one"/>
                 <field name="tracking_id" optional="hide" groups="base.group_no_one"/>
@@ -34,7 +34,7 @@
             <form string="E-Reporting">
                 <header>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="pending,ready,error,cancelled,sent,completed"/>
+                           statusbar_visible="pending,ready,error,sent,completed"/>
                     <button name="action_build_payload_manual"
                             type="object"
                             class="btn-secondary"
@@ -83,7 +83,7 @@
                             <field name="name" string="Reference" readonly="1"/>
                             <field name="report_type" string="Type" readonly="1"/>
                             <field name="state" string="Status" readonly="1"/>
-                            <field name="transmission_type" string="Transmission type" readonly="1"
+                            <field name="transmission_type" string="Transmission type"
                                    help="Type of transmission per Flux 10 v1.2: IN (Initial) or RE (Rectificative). No references to previous flows in v1.2."/>
                         </group>
                         <group>
@@ -107,7 +107,6 @@
                             <field name="transport_message" readonly="1"/>
                             <field name="last_send_datetime" readonly="1"/>
                             <field name="send_datetime" readonly="1"/>
-                            <field name="reporting_date"/>
                         </group>
                     </group>
                     <group invisible="not transport_identifier">
@@ -136,13 +135,12 @@
                 <filter name="filter_state_ready" string="Ready" domain="[('state', '=', 'ready')]"/>
                 <filter name="filter_state_sent" string="Sent" domain="[('state', 'in', ('sent', 'completed'))]"/>
                 <filter name="filter_state_error" string="Error" domain="[('state', '=', 'error')]"/>
-                <filter name="filter_state_cancelled" string="Cancelled" domain="[('state', '=', 'cancelled')]"/>
                 <separator/>
                 <filter name="filter_kind_transaction" string="Transactions" domain="[('report_type', '=', 'transaction')]"/>
                 <filter name="filter_kind_payment" string="Payments" domain="[('report_type', '=', 'payment')]"/>
                 <separator/>
-                <filter name="filter_transmission_in" string="Initial" domain="[('transmission_type', '=', 'initial')]"/>
-                <filter name="filter_transmission_re" string="Rectificative" domain="[('transmission_type', '=', 'rectificative')]"/>
+                <filter name="filter_transmission_in" string="Initial" domain="[('initial_flow_id', '=', None)]"/>
+                <filter name="filter_transmission_re" string="Rectificative" domain="[('initial_flow_id', '!=', None)]"/>
             </search>
         </field>
     </record>
@@ -169,7 +167,7 @@
         <field name="res_model">account.move</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('l10n_fr_pdp_status', '=', 'error')]</field>
-        <field name="context">{'search_default_group_by_move_type': 1, 'group_by': ['l10n_fr_pdp_flow_ids']}</field>
+        <field name="context">{'search_default_group_by_move_type': 1, 'group_by': ['l10n_fr_pdp_initial_flow_id']}</field>
     </record>
 
     <!-- Menu structure: Reporting > France > E-reporting -->

@@ -1,5 +1,6 @@
 from odoo import _, fields, models
 from odoo.tools.misc import format_date
+from odoo.addons.l10n_fr_pdp_reports.models.pdp_flow import FLOW_OPEN_STATES
 
 
 class AccountJournal(models.Model):
@@ -20,7 +21,7 @@ class AccountJournal(models.Model):
                 [
                     ('company_id', '=', company.id),
                     ('report_type', '=', report_type),
-                    ('state', 'in', ('pending', 'building', 'ready', 'error')),
+                    ('state', 'in', FLOW_OPEN_STATES),
                 ],
                 limit=1,
                 order='due_date asc',
@@ -77,7 +78,7 @@ class AccountJournal(models.Model):
             [
                 ('company_id', '=', self.company_id.id),
                 ('report_type', '=', report_type),
-                ('state', 'in', ('pending', 'building', 'ready', 'error')),
+                ('state', 'in', FLOW_OPEN_STATES),
             ],
             limit=1,
             order='due_date asc',

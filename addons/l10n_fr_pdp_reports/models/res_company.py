@@ -1,6 +1,7 @@
 from odoo import api, fields, models
 
 
+
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
@@ -39,13 +40,14 @@ class ResCompany(models.Model):
         readonly=True,
     )
 
-    @api.depends('l10n_fr_pdp_send_to_ppf', 'country_code', 'account_edi_proxy_client_ids')
+
+    @api.depends('l10n_fr_pdp_send_to_ppf', 'country_code', 'account_peppol_edi_user')
     def _compute_l10n_fr_f10_enable_reporting(self):
         for company in self:
             enable_reporting = (
                 company.l10n_fr_pdp_send_to_ppf
-                and company.country_code == 'FR'
                 and company.account_peppol_edi_user
+                and company.country_code == 'FR'
             )
             company.l10n_fr_f10_enable_reporting = enable_reporting
             if enable_reporting:
@@ -68,11 +70,3 @@ class ResCompany(models.Model):
                 'show_on_dashboard': True,
                 'company_id': company.id,
             })
-
-    @api.model_create_multi  # TODO needed, or onchange enough ?
-    def create(self, vals_list):
-        companies = super().create(vals_list)
-        for company in companies:
-            if company.l10n_fr_f10_enable_reporting:
-                company._l10n_fr_pdp_ensure_journal()
-        return companies

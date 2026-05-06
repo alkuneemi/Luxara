@@ -30,7 +30,7 @@ MOVE_ERRORS = {
 }
 
 
-class PdpFlow10Builder(models.AbstractModel):
+class PdpFlow10XMLBuilder(models.AbstractModel):
     '''Build Flow 10 XML for a flow'''
     _name = 'pdp.flow.10.xml.builder'
     _inherit = 'account.edi.common'
@@ -98,7 +98,7 @@ class PdpFlow10Builder(models.AbstractModel):
     @api.model
     def _split_moves_by_transaction_type(self, flow, moves):
         if flow.operation_type == 'purchase':
-            return self.env['account.move'], moves
+            return self.env['account.move'], moves  # no VAT to report on b2c purchases
         b2c_moves = self.env['account.move']
         b2bi_moves = self.env['account.move']
         for move in moves:
@@ -113,7 +113,7 @@ class PdpFlow10Builder(models.AbstractModel):
     def _add_payments(self, document, flow, moves, summaries):
         b2c_moves, b2bi_moves = self._split_moves_by_transaction_type(flow, moves)
 
-        def get_payment_node_and_partials(move, summary, is_b2bi):
+        def get_payment_node(move, summary, is_b2bi):
             for payment_aml, subtotals in summary:
                 node = {
                     **({
@@ -134,17 +134,17 @@ class PdpFlow10Builder(models.AbstractModel):
             return node
 
         invoices = [
-            get_payment_node_and_partials(move, summaries[move], is_b2bi=True) for move in b2bi_moves
+            get_payment_node(move, summaries[move], is_b2bi=True) for move in b2bi_moves
         ]
         transactions = [
-            get_payment_node_and_partials(move, summaries[move], is_b2bi=False) for move in b2c_moves
+            get_payment_node(move, summaries[move], is_b2bi=False) for move in b2c_moves
         ]
 
         if invoices or transactions:
             document['PaymentsReport'] = {
                 'ReportPeriod': {
-                    'StartDate': {'_text': self._format_date(flow.period_start or flow.reporting_date)},
-                    'EndDate': {'_text': self._format_date(flow.period_end or flow.reporting_date)},
+                    'StartDate': {'_text': self._format_date(flow.period_start)},
+                    'EndDate': {'_text': self._format_date(flow.period_end)},
                     'Invoice': invoices,
                     'Transactions': transactions,
                 },
@@ -156,7 +156,7 @@ class PdpFlow10Builder(models.AbstractModel):
             move.line_ids,
             line_validation_function=(
                 None if move._is_downpayment()
-                else lambda line: any(tax.tax_exigibility == 'on_payment' for tax in line.tax_ids)
+                else lambda line: any(tax.tax_exigibility == 'on_payment' for tax in line.tax_ids)  # TODO change to is linked to caba move ?
             ),
         )
         move_amount_total = move.amount_total_signed
@@ -252,8 +252,8 @@ class PdpFlow10Builder(models.AbstractModel):
         if b2bi_invoices or b2c_agregates:
             document['TransactionsReport'] = {
                 'ReportPeriod': {
-                    'StartDate': {'_text': self._format_date(flow.period_start or flow.reporting_date)},
-                    'EndDate': {'_text': self._format_date(flow.period_end or flow.reporting_date)},
+                    'StartDate': {'_text': self._format_date(flow.period_start)},
+                    'EndDate': {'_text': self._format_date(flow.period_end)},
                 },
                 'Invoice': b2bi_invoices,
                 'Transactions': b2c_agregates,
@@ -575,10 +575,10 @@ class PdpFlow10Builder(models.AbstractModel):
     def _get_tax_codes_and_exemption(self, buyer, seller, tax):
         res = self._get_tax_unece_codes(buyer, seller, tax or self.env['account.tax'])
         tax_code = res.get('tax_category_code')
+        if tax_code not in VALID_TAX_CODES:
+            return 'S', None, None  # default to standard rate if tax code is not valid
         exemption_reason_code = res.get('tax_exemption_reason_code')
         exemption_reason = res.get('tax_exemption_reason')
-        if tax_code not in VALID_TAX_CODES:
-            tax_code = 'S'
         return tax_code, exemption_reason_code, exemption_reason
 
 
@@ -624,8 +624,8 @@ class PdpFlow10Builder(models.AbstractModel):
     def _get_report_period(self, flow):
         return {
             'ReportPeriod': {
-                'StartDate': self._format_date(flow.period_start or flow.reporting_date),
-                'EndDate': self._format_date(flow.period_end or flow.reporting_date),
+                'StartDate': self._format_date(flow.period_start),
+                'EndDate': self._format_date(flow.period_end),
             }
         }
 

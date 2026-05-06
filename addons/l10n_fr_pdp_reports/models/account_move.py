@@ -1,9 +1,9 @@
 import logging
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
 from odoo.addons.l10n_fr_pdp_reports.utils import drom_com_territories
 from odoo.addons.l10n_fr_pdp_reports.models.pdp_flow import FLOW_OPEN_STATES, FLOW_SENT_STATES
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -13,14 +13,20 @@ class AccountMove(models.Model):
 
     l10n_fr_pdp_flow_ids = fields.Many2many(
         comodel_name='l10n.fr.pdp.reports.flow',
-        relation='l10n_fr_pdp_reports_flow_move_rel',
-        column1='move_id',
-        column2='flow_id',
         string="PDP Flows",
-        readonly=True,
-        copy=False,
+        compute='_compute_l10n_fr_pdp_flow_ids'
     )
-
+    l10n_fr_pdp_original_flow_id = fields.Many2one(  # first flow for this move (can be a rectificative flow)
+        comodel_name='l10n.fr.pdp.reports.flow',
+        readonly=True,
+        stored=True,
+        compute='_l10n_fr_pdp_original_flow_id',
+        string="Initial PDP Flow",
+    )
+    # l10n_fr_pdp_current_flow_id = fields.Many2one(  # last flow relevant for this move
+    #     comodel_name='l10n.fr.pdp.reports.flow',
+    #     compute='_l10n_fr_pdp_initial_flow_id',
+    # )
     l10n_fr_pdp_status = fields.Selection(
         selection=[
             ('out_of_scope', "Out of scope"),
@@ -28,7 +34,6 @@ class AccountMove(models.Model):
             ('ready', "Ready to send"),
             ('error', "Error"),
             ('sent', "Sent"),
-            ('cancelled', "Cancelled"),
         ],
         string="E-Reporting Status",
         compute='_compute_l10n_fr_pdp_status',
@@ -37,10 +42,106 @@ class AccountMove(models.Model):
         help="Lifecycle of the invoice within the French PDP reporting process.",
     )
     l10n_fr_pdp_display_info = fields.Boolean(related='company_id.l10n_fr_f10_enable_reporting')
+    l10n_fr_pdp_is_flow_10_scope = fields.Boolean(
+        string="Is in Flow 10 scope",
+        compute='_compute_l10n_fr_pdp_flow_10_status',
+    )
+    l10n_fr_pdp_error_message = fields.Text(
+        string="Flow 10 blocking errors",
+        compute='_compute_l10n_fr_pdp_flow_10_status',
+    )
+    l10n_fr_pdp_has_error = fields.Boolean(
+        compute='_compute_l10n_fr_pdp_flow_10_status',
+        store=True,
+        readonly=True,
+    )
 
     # -------------------------------------------------------------------------
     # Compute Methods
     # -------------------------------------------------------------------------
+
+    @api.depends(
+        'move_type',
+        'company_id.account_fiscal_country_id',
+        'commercial_partner_id.country_id',
+        'commercial_partner_id.vat'
+    )
+    def _compute_l10n_fr_pdp_flow_10_status(self):
+        for move in self:
+            if move.is_sale_document(include_receipts=True):
+                move.l10n_fr_pdp_is_flow_10_scope = bool(move._get_l10n_fr_pdp_transaction_type())
+            elif move.is_purchase_document(include_receipts=False):
+                move.l10n_fr_pdp_is_flow_10_scope = move._is_b2bi_partner_for_purchase()
+            else:
+                move.l10n_fr_pdp_is_flow_10_scope = False
+
+            if move.state != 'posted' or not move.l10n_fr_pdp_is_flow_10_scope:
+                move.l10n_fr_pdp_error_message = None
+                move.l10n_fr_pdp_has_error = False
+                continue
+
+            error_messages = move._get_l10n_fr_pdp_errors()
+            if error_messages:
+                move.l10n_fr_pdp_error_message = '\n-'.join([''] + error_messages)
+                move.l10n_fr_pdp_has_error = True
+            else:
+                move.l10n_fr_pdp_error_message = None
+                move.l10n_fr_pdp_has_error = False
+
+
+    # @api.depends('l10n_fr_pdp_original_flow_id')
+    # def _compute_l10n_fr_pdp_flow_ids(self):
+    #     flows_map = {
+    #         initial: rectificative for initial, rectificative
+    #         in self.env['l10n.fr.pdp.reports.flow']._read_group(
+    #             domain=['initial_flow_id', 'in', self.l10n_fr_pdp_initial_flow_id],
+    #             aggregates=['id:recordset'],
+    #             groupby=['initial_flow_id'],
+    #             order='id',
+    #         )
+    #     }
+    #     for move in self:
+    #         # original flow is initial
+    #         if move.l10n_fr_pdp_original_flow_id in flows_map:
+    #             move.l10n_fr_pdp_flow_ids = (
+    #                 move.l10n_fr_pdp_original_flow_id +
+    #                 flows_map[move.l10n_fr_pdp_original_flow_id]
+    #             )
+    #         # original flow is rectificative (get itself and later rectificative flows)
+    #         elif move.l10n_fr_pdp_original_flow_id:
+    #             move.l10n_fr_pdp_flow_ids = flows_map[
+    #                 move.l10n_fr_pdp_original_flow_id.l10n_fr_pdp_initial_flow_id
+    #             ].filtered(lambda flow: flow.id >= move.l10n_fr_pdp_original_flow_id.id)
+
+    @api.depends('l10n_fr_pdp_original_flow_id')
+    def _compute_l10n_fr_pdp_flow_ids(self):
+        for move in self:
+            # original flow is rectificative : get itf and later rectificative flows
+            if move.l10n_fr_pdp_original_flow_id.initial_flow_id:
+                rectificative_flows = move.l10n_fr_pdp_original_flow_id.initial_flow_id.rectificative_flow_ids
+                move.l10n_fr_pdp_flow_ids = rectificative_flows.filtered(
+                    lambda flow: flow.id >= move.l10n_fr_pdp_original_flow_id.id
+                )
+            # original flow is initial
+            elif move.l10n_fr_pdp_original_flow_id:
+                move.l10n_fr_pdp_flow_ids = move.l10n_fr_pdp_original_flow_id + move.l10n_fr_pdp_original_flow_id.rectificative_flow_ids
+
+    @api.depends(
+        'date',
+        'move_type',
+        'company_id.account_fiscal_country_id',
+        'commercial_partner_id.country_id',
+        'commercial_partner_id.vat',
+    )
+    def _l10n_fr_pdp_original_flow_id(self):
+        for move in self:
+            if move.l10n_fr_pdp_original_flow_id.state in FLOW_SENT_STATES:
+                # once a move has been sent in a flow, do not change it's original flow !
+                continue
+            if not move.l10n_fr_pdp_is_flow_10_scope:
+                move.l10n_fr_pdp_original_flow_id = False
+            else:
+                move.l10n_fr_pdp_original_flow_id = self.env['l10n.fr.pdp.reports.flow']._get_open_flow_and_create_if_needed(move)
 
     @api.depends(
         'state',
@@ -66,13 +167,7 @@ class AccountMove(models.Model):
                 move.l10n_fr_pdp_status = False
                 continue
 
-            # Check if move is out of scope.
-            in_scope = (
-                bool(move._get_l10n_fr_pdp_transaction_type())
-                if is_sale
-                else move._is_b2bi_partner_for_purchase()
-            )
-            if not in_scope:
+            if not move.l10n_fr_pdp_is_flow_10_scope:
                 move.l10n_fr_pdp_status = 'out_of_scope'
                 continue
 
@@ -109,8 +204,6 @@ class AccountMove(models.Model):
                     move.l10n_fr_pdp_status = 'error'
                 else:
                     move.l10n_fr_pdp_status = 'sent'
-            elif state == 'cancelled':
-                move.l10n_fr_pdp_status = 'cancelled'
             # Open period: users have time to fix errors, stay pending.
             elif relevant_flow.period_status == 'open':
                 move.l10n_fr_pdp_status = 'pending'
@@ -127,20 +220,37 @@ class AccountMove(models.Model):
     # Business Methods
     # -------------------------------------------------------------------------
 
-    @api.model
-    def _get_l10n_fr_pdp_flow_domain(self, company, reporting_date):
-        """Return domain for invoices eligible for PDP flow on given date."""
-        reporting_date = fields.Date.to_date(reporting_date)
-        return [
-            ('company_id', '=', company.id),
-            ('state', '=', 'posted'),
-            ('move_type', 'in', self.get_sale_types(include_receipts=True)),
-            '|',
-            ('invoice_date', '=', reporting_date),
-            '&',
-            ('invoice_date', '=', False),
-            ('date', '=', reporting_date),
-        ]
+    def _get_l10n_fr_pdp_errors(self):
+        """Return the list of validation errors for this move in the context of PDP reporting."""
+        self.ensure_one()
+        errors = []
+        company_partner = self.company_id.partner_id.commercial_partner_id
+        company_vat = company_partner.vat
+        company_country = company_partner.country_id.code
+        transaction_type = self._get_l10n_fr_pdp_transaction_type()
+        if transaction_type == 'b2bi':
+            if self.is_sale_document(include_receipts=True) and not self.is_move_sent:
+                errors.append(_("Invoice/credit note has not been sent to the customer."))
+
+            try:
+                self.commercial_partner_id.check_vat()
+            except ValidationError:
+                errors.append(_("Invalid partner VAT (%(vat)s).", vat=self.commercial_partner_id.vat))
+            # if not company_vat:
+            #     requires_tt122 = any(tax.amount == 0 for tax in self.invoice_line_ids.tax_ids)
+            #     representative_vat = (self.company_id.l10n_fr_pdp_fiscal_representative_vat or '').strip()  # TODO remove this
+            #     if requires_tt122:
+            #         if not representative_vat:
+            #             errors.append(_("Missing seller fiscal representative VAT (TT-122)."))
+            #         elif not is_valid_vat(representative_vat, company_country):
+            #             errors.append(_("Invalid seller fiscal representative VAT (%(vat)s).", vat=representative_vat))
+            #     else:
+            #         errors.append(_("Missing seller VAT."))
+            # elif not is_valid_vat(company_vat, company_country):
+            #     errors.append(_("Invalid seller VAT (%(vat)s).", vat=company_vat))
+
+        return errors
+
 
     def _get_l10n_fr_pdp_transaction_type(self):
         """Classify invoice for PDP reporting: b2c, b2bi, or False (domestic B2B)."""
@@ -240,6 +350,9 @@ class AccountMove(models.Model):
         for move in self:
             if not move.is_sale_document(include_receipts=True):
                 continue
-            if move.l10n_fr_pdp_status == 'sent':
-                raise UserError(_("You cannot reset to draft an invoice already sent to PDP. Create a credit note and issue a new invoice instead."))
+            if move.l10n_fr_pdp_original_flow_id.state in FLOW_SENT_STATES:
+                raise UserError(_("You cannot reset to draft an invoice already sent to PDP. Create a credit note and issue a new invoice instead or cancel this invoice."))
         return super().button_draft()
+
+    def button_cancel(self):
+        pass
