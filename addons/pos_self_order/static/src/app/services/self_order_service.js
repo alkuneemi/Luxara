@@ -101,13 +101,13 @@ export class SelfOrder extends Reactive {
         this.data.connectWebSocket("SNOOZE_CHANGED", async (payload) => {
             const { deleted_ids, records } = payload;
             if (deleted_ids) {
-                const snoozeModel = this.models["pos.product.template.snooze"];
+                const snoozeModel = this.models["pos.snooze"];
                 snoozeModel.deleteMany(
                     deleted_ids.map((id) => snoozeModel.get(id)).filter(Boolean)
                 );
             }
             if (records.length > 0) {
-                await this.models.connectNewData({ "pos.product.template.snooze": records });
+                await this.models.connectNewData({ "pos.snooze": records });
             }
             this.snoozedProductTracker.setSnoozes(this.config.pos_snooze_ids);
         });
@@ -663,8 +663,12 @@ export class SelfOrder extends Reactive {
         return this.snoozedProductTracker.isProductSnoozed(product);
     }
 
+    get isSelfSnoozed() {
+        return this.snoozedProductTracker.state.activeSnoozes.find((s) => s.is_self_snoozed);
+    }
+
     async initKioskData() {
-        if (this.session && this.access_token) {
+        if (this.session && this.access_token && !this.isSelfSnoozed) {
             this.ordering = true;
         }
 
@@ -689,6 +693,7 @@ export class SelfOrder extends Reactive {
             if (
                 this.session &&
                 this.access_token &&
+                !this.isSelfSnoozed &&
                 this.config.self_ordering_mode !== "consultation"
             ) {
                 await this.getUserDataFromServer();

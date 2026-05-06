@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="point_of_sale.DeliveryButton">
+        <Dropdown>
+            <button class="delivery-icon-container btn btn-light btn-lg lh-lg" t-attf-class="{{ this.ui.isSmall ? 'me-2' : ''}}">
+                <span class="new-order-badge badge position-absolute top-0 end-0 m-1 rounded-3 text-bg-danger smaller fw-bolder">
+                    <t t-out="this.pos.total_new_order"/>
+                </span>
+                <i class="oi oi-food-delivery fa-fw"/>
+            </button>
+            <t t-set-slot="content">
+                <div class="order-widget-dropdown-container"/>
+            </t>
+        </Dropdown>
+    </t>
+</templates>
