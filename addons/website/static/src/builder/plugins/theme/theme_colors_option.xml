@@ -65,18 +65,30 @@
                                         </div>
                                         <div class="d-flex flex-column h-100">
                                             <div class="d-flex flex-column h-100 justify-content-center">
-                                                <BuilderSelect action="'changeColorPalette'" actionParam="'color-palettes-name'" dropdownContainerClass="'o-color-palette-dropdown'">
+                                                <BuilderSelect action="'changePaletteFontCombo'" dropdownContainerClass="'o-color-palette-dropdown p-3'">
                                                     <t t-set-slot="fixedButton">
                                                         <Image class="'h-100'" src="'/website/static/src/img/snippets_options/palette.svg'"/>
                                                     </t>
-                                                    <t t-foreach="this.palettes" t-as="palette" t-key="palette.name">
-                                                        <BuilderSelectItem actionValue="`'${palette.name}'`">
-                                                            <div class="o-color-palette-pill d-flex flex-row border rounded-pill overflow-hidden">
-                                                                <t t-foreach="palette.colors" t-as="color" t-key="color">
-                                                                    <span class="w-100" t-attf-style="background-color: {{color}};"></span>
-                                                                </t>
-                                                            </div>
-                                                        </BuilderSelectItem>
+                                                    <t t-foreach="this.paletteFontComboGroups" t-as="comboGroup" t-key="comboGroup.palette">
+                                                        <div class="pb-2">
+                                                            <t t-foreach="comboGroup.combos" t-as="combo" t-key="combo_index">
+                                                                <BuilderSelectItem
+                                                                    actionParam="{ mainParam: 'color-palettes-name', headingsFont: combo.headingsFont, bodyFont: combo.bodyFont }"
+                                                                    actionValue="`'${combo.palette}'`"
+                                                                    className="'p-0 pb-1'">
+                                                                    <div class="o-color-palette-combo d-flex flex-row align-items-center border rounded overflow-hidden p-1 py-2" t-attf-style="background-color: {{combo.bgColor}};">
+                                                                        <div class="flex-grow-1 text-start px-2 overflow-hidden">
+                                                                            <h5 class="fw-bold text-truncate mb-0" t-attf-style="font-family: '{{combo.headingsFont}}', sans-serif; color: {{combo.textColor}}; line-height: 1.2;" t-out="combo.label"/>
+                                                                            <!-- <div class="text-truncate" t-attf-style="font-family: '{{combo.bodyFont}}', sans-serif; color: {{combo.textColor}}; margin: 0; font-size: 10px; line-height: 1.3;" t-out="combo.description"/> -->
+                                                                        </div>
+                                                                        <div class="d-flex gap-1 flex-shrink-0 pe-2">
+                                                                            <div t-attf-style="background-color: {{combo.colors.color1}}; width: 20px; height: 20px; border-radius: 4px;"/>
+                                                                            <div t-attf-style="background-color: {{combo.colors.color2}}; width: 20px; height: 20px; border-radius: 4px;"/>
+                                                                        </div>
+                                                                    </div>
+                                                                </BuilderSelectItem>
+                                                            </t>
+                                                        </div>
                                                     </t>
                                                 </BuilderSelect>
                                             </div>
