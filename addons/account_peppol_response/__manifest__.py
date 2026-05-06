@@ -14,11 +14,11 @@ When receiving a document, you will be able to send a rejection or approval of t
     'data': [
         'data/cron.xml',
         'data/peppol_clarification_data.xml',
-        'security/ir.model.access.csv',
         'views/account_move_views.xml',
         'views/account_peppol_response_views.xml',
         'views/res_partner_views.xml',
         'wizard/peppol_rejection_wizard_view.xml',
+        'security/ir.access.csv',
     ],
     'post_init_hook': '_account_peppol_response_post_init',
     'uninstall_hook': '_account_peppol_response_uninstall',

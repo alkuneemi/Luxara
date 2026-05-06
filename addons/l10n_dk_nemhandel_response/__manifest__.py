@@ -12,11 +12,11 @@ When receiving a document, you will be able to send a rejection or approval of t
         'l10n_dk',
     ],
     'data': [
-        'security/ir.model.access.csv',
         'views/account_move_views.xml',
         'views/nemhandel_response_views.xml',
         'views/res_partner_views.xml',
         'wizard/nemhandel_rejection_wizard_view.xml',
+        'security/ir.access.csv',
     ],
     'author': 'Odoo S.A.',
     'license': 'LGPL-3',
