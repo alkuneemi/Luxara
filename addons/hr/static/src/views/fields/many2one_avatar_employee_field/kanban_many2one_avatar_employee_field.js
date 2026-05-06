@@ -77,4 +77,4 @@ const fieldDescr = {
 };
 
 registry.category("fields").add("activity.many2one_avatar_employee", fieldDescr);
-registry.category("fields").add("kanban.many2one_avatar_employee", fieldDescr);
+registry.category("fields").add("card.many2one_avatar_employee", fieldDescr);

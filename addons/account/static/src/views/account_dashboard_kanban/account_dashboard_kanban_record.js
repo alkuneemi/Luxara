@@ -2,13 +2,13 @@ import { useState } from "@web/owl2/utils";
 import { user } from "@web/core/user";
 import { AccountFileUploader } from "@account/components/account_file_uploader/account_file_uploader";
 import { UploadDropZone } from "@account/components/upload_drop_zone/upload_drop_zone";
-import { KanbanDropdownMenuWrapper } from "@web/views/kanban/kanban_dropdown_menu_wrapper";
+import { CardDropdownMenuWrapper } from "@web/views/card/card_dropdown_menu_wrapper";
 import { KanbanRecord } from "@web/views/kanban/kanban_record";
 
 import { onWillStart } from "@odoo/owl";
 
 // Accounting Dashboard
-export class DashboardKanbanDropdownMenuWrapper extends KanbanDropdownMenuWrapper {
+export class DashboardKanbanDropdownMenuWrapper extends CardDropdownMenuWrapper {
     onClick(ev) {
         // Keep the dropdown open as we need the fileupload to remain in the dom
         if (!ev.target.tagName === "INPUT" && !ev.target.closest('.file_upload_kanban_action_a')) {

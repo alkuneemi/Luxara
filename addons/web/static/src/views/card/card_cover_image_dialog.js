@@ -7,8 +7,8 @@ import { Component, onWillStart } from "@odoo/owl";
 
 let nextDialogId = 1;
 
-export class KanbanCoverImageDialog extends Component {
-    static template = "web.KanbanCoverImageDialog";
+export class CardCoverImageDialog extends Component {
+    static template = "web.CardCoverImageDialog";
     static components = { Dialog, FileInput };
     static props = ["*"];
     setup() {
@@ -64,7 +64,9 @@ export class KanbanCoverImageDialog extends Component {
     }
 
     async setCover() {
-        const value = this.state.selectedAttachmentId ? { id: this.state.selectedAttachmentId } : false;
+        const value = this.state.selectedAttachmentId
+            ? { id: this.state.selectedAttachmentId }
+            : false;
         await this.props.record.update({ [this.props.fieldName]: value }, { save: true });
         this.props.close();
     }

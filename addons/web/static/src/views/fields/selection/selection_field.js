@@ -146,12 +146,12 @@ export const selectionField = {
     isEmpty: (record, fieldName) => record.data[fieldName] === false,
     extractProps({ viewType, placeholder }, dynamicInfo) {
         const props = {
-            autosave: viewType === "kanban",
+            autosave: viewType === "card",
             placeholder,
             required: dynamicInfo.required,
             domain: dynamicInfo.domain,
         };
-        if (viewType === "kanban") {
+        if (viewType === "card") {
             props.readonly = dynamicInfo.readonly;
         }
         return props;

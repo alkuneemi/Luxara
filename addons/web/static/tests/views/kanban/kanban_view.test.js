@@ -85,7 +85,7 @@ import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { RelationalModel } from "@web/model/relational_model/relational_model";
 import { SampleServer } from "@web/model/sample_server";
-import { KanbanCompiler } from "@web/views/kanban/kanban_compiler";
+import { CardCompiler } from "@web/views/card/card_compiler";
 import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { KanbanRecord } from "@web/views/kanban/kanban_record";
 import { KanbanRenderer } from "@web/views/kanban/kanban_renderer";
@@ -6129,7 +6129,7 @@ test("set cover image", async () => {
     });
 
     // The image is immediately assigned on click
-    await contains(".modal .o_kanban_cover_image img").click();
+    await contains(".modal .o_card_cover_image img").click();
 
     expect('img[data-src*="/web/image/1"]').toHaveCount(1);
 
@@ -6138,11 +6138,11 @@ test("set cover image", async () => {
     expect(queryText(coverButton)).toBe("Set Cover Image");
     await contains(coverButton).click();
 
-    expect(".modal .o_kanban_cover_image").toHaveCount(1);
+    expect(".modal .o_card_cover_image").toHaveCount(1);
     expect(".modal .btn:contains(Discard)").toHaveCount(1);
     expect(".modal .btn:contains(Remove Cover)").toHaveCount(0);
 
-    await contains(".modal .o_kanban_cover_image img").click(); // Assign the image as cover in one click
+    await contains(".modal .o_card_cover_image img").click(); // Assign the image as cover in one click
     await animationFrame();
 
     expect('img[data-src*="/web/image/2"]').toHaveCount(1);
@@ -6269,7 +6269,7 @@ test("unset cover image", async () => {
         queryAll('img[data-src*="/web/image/2"]', { root: getKanbanRecord({ index: 1 }) })
     ).toHaveCount(1);
 
-    expect(".modal .o_kanban_cover_image").toHaveCount(1);
+    expect(".modal .o_card_cover_image").toHaveCount(1);
     expect(".modal .btn:contains(Discard)").toHaveCount(1);
     expect(".modal .btn:contains(Remove Cover)").toHaveCount(1);
 
@@ -6284,7 +6284,7 @@ test("unset cover image", async () => {
     expect(queryText(coverButton)).toBe("Set Cover Image");
     await contains(coverButton).click();
 
-    await contains(".modal .o_kanban_cover_image img").click(); // Assign the image as cover in one click
+    await contains(".modal .o_card_cover_image img").click(); // Assign the image as cover in one click
     await animationFrame();
 
     expect(queryAll("img", { root: getKanbanRecord({ index: 1 }) })).toHaveCount(0, {
@@ -7960,7 +7960,7 @@ test("kanbans with basic and custom compiler, same arch", async () => {
     // once with the basic one, and once with a custom renderer having a custom compiler. The
     // purpose of the test is to ensure that the template is compiled twice, once by each
     // compiler, even though the arch is the same.
-    class MyKanbanCompiler extends KanbanCompiler {
+    class MyKanbanCompiler extends CardCompiler {
         setup() {
             super.setup();
             this.compilers.push({ selector: "div", fn: this.compileDiv });

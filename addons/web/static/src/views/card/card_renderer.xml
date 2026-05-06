@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="web.CardRenderer">
+        <article
+            role="link"
+            t-att-class="this.getRecordClasses()"
+            t-att-data-id="this.props.record.id"
+            t-att-tabindex="this.props.record.model.useSampleModel ? -1 : 0"
+            t-ref="root">
+                <t t-call="{{ this.templates[this.constructor.CARD_ATTRIBUTE] }}" t-call-context="this.renderingContext"/>
+                <t t-call="{{ this.constructor.menuTemplate }}"/>
+        </article>
+    </t>
+
+    <t t-name="web.CardDropdownMenuWrapper">
+        <div t-on-click="this.onClick" style="display:contents" t-custom-ref="rootRef">
+            <t t-slot="default"/>
+        </div>
+    </t>
+
+    <t t-name="web.CardMenu">
+        <!-- TODO AAB: rename o_dropdown_kanban into o_card_menu -->
+        <div t-if="showMenu and !this.props.readonly" class="o_dropdown_kanban bg-transparent position-absolute end-0 top-0 w-auto">
+            <!-- TODO AAB: rename o-dropdown-kanban-record-menu into o-dropdown-card-record-menu -->
+            <Dropdown menuClass="'o-dropdown--kanban-record-menu'" position="'bottom-end'">
+                <button class="btn o-no-caret rounded-0 px-1" title="Dropdown menu">
+                    <span class="oi oi-ellipsis-v"/>
+                </button>
+                <t t-set-slot="content">
+                    <CardDropdownMenuWrapper>
+                        <t t-call="{{ this.templates[this.constructor.MENU_ATTRIBUTE] }}" t-call-context="renderingContext"/>
+                    </CardDropdownMenuWrapper>
+                </t>
+            </Dropdown>
+        </div>
+    </t>
+
+</templates>
