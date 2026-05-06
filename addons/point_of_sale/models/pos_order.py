@@ -1877,6 +1877,16 @@ class PosOrderLine(models.Model):
                                         or 0
 
     def _prepare_base_line_for_taxes_computation(self):
+        def get_product_full_name(product_name, display_name, full_product_name):
+            if not full_product_name:
+                return display_name
+            index = display_name.find(product_name)
+            if index == -1:
+                return full_product_name
+            prefix = display_name[:index + len(product_name)]
+            suffix = full_product_name[len(product_name):].strip()
+            return f"{prefix} {suffix}".strip()
+
         self.ensure_one()
         commercial_partner = self.order_id.partner_id.commercial_partner_id
         fiscal_position = self.order_id.fiscal_position_id
@@ -1895,7 +1905,11 @@ class PosOrderLine(models.Model):
         is_refund_line = line.qty * line.price_unit < 0
 
         lang = line.order_id.partner_id.lang or self.env.user.lang
-        product_name = line.with_context(lang=lang).full_product_name or line.product_id.with_context(lang=lang).display_name
+        product_full_name = line.with_context(lang=lang).full_product_name
+        display_name = line.product_id.with_context(lang=lang).display_name
+        name = line.product_id.with_context(lang=lang).name
+
+        product_name = get_product_full_name(name, display_name, product_full_name)
         if line.product_id.description_sale:
             product_name += '\n' + line.product_id.with_context(lang=lang).description_sale
         return {
