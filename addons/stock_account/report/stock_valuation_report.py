@@ -32,11 +32,18 @@ class StockValuationReport(models.AbstractModel):
             date = fields.Date.from_string(date)
         if date == fields.Date.context_today(self):
             date = False
+        # PERF: only load products that have quants in valued locations
+        valued_product_ids = company._get_valued_product_ids()
+        valued_products = self.env['product.product'].with_company(company).search([
+            ('is_storable', '=', True),
+            ('id', 'in', valued_product_ids),
+        ])
+        accounts_by_product = company._get_accounts_by_product(products=valued_products)
         if not date:
-            inventory_data = company.stock_value()
+            inventory_data = company.stock_value(accounts_by_product)
             accounting_data = company.stock_accounting_value()
         else:
-            inventory_data = company.stock_value(at_date=date)
+            inventory_data = company.stock_value(accounts_by_product, at_date=date)
             accounting_data = company.stock_accounting_value(at_date=date)
 
         accounts = inventory_data.keys() | accounting_data.keys()
@@ -70,7 +77,6 @@ class StockValuationReport(models.AbstractModel):
                 ending_stock['lines_by_account_id'][account.id]['value'] += ending_balance
 
         # Get accounting data.
-        accounts_by_product = company._get_accounts_by_product()
         location_valuation_vals = company._get_location_valuation_vals(
             date, location_domain=[('usage', '=', 'inventory')],
         )

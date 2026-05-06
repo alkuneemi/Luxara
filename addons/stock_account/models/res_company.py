@@ -95,12 +95,11 @@ class ResCompany(models.Model):
 
     def stock_accounting_value(self, accounts_by_product=None, at_date=None):
         self.ensure_one()
-        if not accounts_by_product:
-            accounts_by_product = self._get_accounts_by_product()
         account_data = defaultdict(float)
-        stock_valuation_accounts_ids = set()
-        for dummy, accounts in accounts_by_product.items():
-            stock_valuation_accounts_ids.add(accounts['valuation'].id)
+        if accounts_by_product:
+            stock_valuation_accounts_ids = {accounts['valuation'].id for accounts in accounts_by_product.values()}
+        else:
+            stock_valuation_accounts_ids = self._get_valuation_accounts()
         stock_valuation_accounts = self.env['account.account'].browse(stock_valuation_accounts_ids)
         domain = Domain([
             ('account_id', 'in', stock_valuation_accounts.ids),
@@ -157,6 +156,33 @@ class ResCompany(models.Model):
                 'expense': accounts['expense'],
             }
         return accounts_by_product
+
+    def _get_valued_product_ids(self):
+        """ Return product ids that have quants in valued internal locations.
+        Same location/owner criteria as product._with_valuation_context().
+        """
+        valued_locations = self.env['stock.location'].search([('is_valued_internal', '=', True)])
+        domain = [
+            ('location_id', 'in', valued_locations.ids),
+            ('owner_id', 'in', [False, self.partner_id.id]),
+        ]
+        return {
+            product.id
+            for product, in self.env['stock.quant']._read_group(domain, groupby=['product_id'])
+        }
+
+    def _get_valuation_accounts(self):
+        """ Return the set of stock valuation account IDs from product categories.
+        Lightweight alternative to _get_accounts_by_product() when only account IDs are needed.
+        """
+        categs = self.env['product.category'].with_company(self).search([
+            ('property_stock_valuation_account_id', '!=', False),
+        ])
+        valuation_account_ids = {categ.property_stock_valuation_account_id.id for categ in categs}
+        if self.account_stock_valuation_id:
+            valuation_account_ids.add(self.account_stock_valuation_id.id)
+        valuation_account_ids.discard(False)
+        return valuation_account_ids
 
     @api.model
     def _get_extra_balance(self, vals_list=None):
@@ -236,7 +262,7 @@ class ResCompany(models.Model):
             inventory_data = self.env.context.get('inventory_data')
         else:
             inventory_data = self.stock_value(accounts_by_product, at_date)
-        accounting_data = self.stock_accounting_value(accounts_by_product, at_date)
+        accounting_data = self.stock_accounting_value(at_date=at_date)
 
         accounts = inventory_data.keys() | accounting_data.keys()
         for account in accounts:
