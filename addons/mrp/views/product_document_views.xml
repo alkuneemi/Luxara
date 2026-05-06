@@ -5,11 +5,14 @@
         <field name="model">product.document</field>
         <field name="inherit_id" ref="product.product_document_form"/>
         <field name="arch" type="xml">
-            <sheet position="inside">
-                <group name="mrp" string="Manufacturing" groups="mrp.group_mrp_user">
-                    <field name="attached_on_mrp" class="oe_inline"/>
-                </group>
-            </sheet>
+            <notebook position="inside">
+                <page name="mrp" string="Manufacturing">
+                    <div class="d-flex mt-2">
+                        <span>MRP : Visible at</span>
+                        <field name="attached_on_mrp" class="oe_inline ms-2" widget="selection"/>
+                    </div>
+                </page>
+            </notebook>
         </field>
     </record>
 </odoo>

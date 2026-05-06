@@ -7,7 +7,7 @@ import { rpc } from '@web/core/network/rpc';
 import { url } from '@web/core/utils/urls';
 import { memoize, uniqueId } from '@web/core/utils/functions';
 import { KeepLast } from '@web/core/utils/concurrency';
-import { setElementContent } from '@web/core/utils/html';
+import { setElementContent, createElementWithContent } from '@web/core/utils/html';
 import { insertThousandsSep, formatFloat } from '@web/core/utils/numbers';
 import { renderToElement, renderToFragment } from '@web/core/utils/render';
 import { isEmail } from '@web/core/utils/strings';
@@ -340,6 +340,31 @@ export class ProductPage extends Interaction {
                 window.Carousel.getOrCreateInstance(images).to(0);
             }
             this._startZoom();
+        }
+    }
+
+    /**
+     * Update the documents section of the product page.
+     */
+    _updateDocumentsSection(productContainer, newDocumentsSection) {
+        const documentsSection = productContainer.querySelector('#product_documents');
+        const documentsMarkup = newDocumentsSection && markup(newDocumentsSection);
+        if (documentsSection && newDocumentsSection) {
+            const newDocumentsSectionEl = createElementWithContent('div', documentsMarkup);
+            documentsSection.before(...newDocumentsSectionEl.childNodes);
+            documentsSection.remove();
+            return;
+        }
+
+        if (documentsSection && !newDocumentsSection) {
+            documentsSection.remove();
+            return;
+        }
+
+        if (!documentsSection && newDocumentsSection) {
+            const productArticle = productContainer.querySelector('#product_details article');
+            const newDocumentsSectionEl = createElementWithContent('div', documentsMarkup);
+            productArticle?.append(...newDocumentsSectionEl.childNodes);
         }
     }
 
@@ -694,6 +719,7 @@ export class ProductPage extends Interaction {
         // Only update the images, tags and packaging selector if the product has changed.
         if (!combination.no_product_change) {
             this._updateProductImages(parent.closest('#product_detail_main'), combination.carousel);
+            this._updateDocumentsSection(parent.closest('#product_detail_main'), combination.documents);
             const productTags = parent.querySelector('.o_product_tags');
             productTags?.insertAdjacentHTML('beforebegin', htmlEscape(combination.product_tags));
             productTags?.remove();
