@@ -2,3 +2,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.o_field_CopyClipboardURL {
+    max-width: 100%;
+    .o_form_uri {
+        @include text-truncate();
+        width: calc(100% - 21px) !important;
+    }
+}
