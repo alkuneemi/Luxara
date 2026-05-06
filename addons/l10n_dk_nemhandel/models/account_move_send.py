@@ -133,3 +133,23 @@ class AccountMoveSend(models.AbstractModel):
 
         if self._can_commit():
             self._cr.commit()
+
+    # -------------------------------------------------------------------------
+    # ATTACHMENTS
+    # -------------------------------------------------------------------------
+
+    def _get_placeholder_mail_attachments_data(self, move, invoice_edi_format=None, extra_edis=None):
+        if invoice_edi_format == 'oioubl_21' and not move.partner_id.vat:
+            invoice_edi_format = None
+        results = super()._get_placeholder_mail_attachments_data(move, invoice_edi_format=invoice_edi_format, extra_edis=extra_edis)
+        return results
+
+    # -------------------------------------------------------------------------
+    # BUSINESS ACTIONS
+    # -------------------------------------------------------------------------
+
+    def _hook_invoice_document_before_pdf_report_render(self, invoice, invoice_data):
+        # EXTENDS 'account'
+        if invoice_data['invoice_edi_format'] == 'oioubl_21' and not invoice.partner_id.vat:
+            invoice_data['invoice_edi_format'] = None
+        super()._hook_invoice_document_before_pdf_report_render(invoice, invoice_data)

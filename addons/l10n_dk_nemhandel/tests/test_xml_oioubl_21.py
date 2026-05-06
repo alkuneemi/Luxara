@@ -264,6 +264,7 @@ class TestUBLDKOIOUBL21(TestUBLCommon, TestAccountMoveSendCommon):
         """
         self.partner_b.vat = None
         self.partner_b.invoice_edi_format = 'oioubl_21'  # default format recomputes when vat is changed
-        with self.assertRaises(UserError) as exception:
-            self.create_post_and_send_invoice(partner=self.partner_b)
-        self.assertIn(f"The field '{self.partner_b._fields['vat'].string}' is required", exception.exception.args[0])
+        invoice = self.create_post_and_send_invoice(partner=self.partner_b)
+        self.assertFalse(invoice.ubl_cii_xml_id)
+        self.assertEqual(len(invoice.attachment_ids), 1)
+        self.assertEqual(invoice.attachment_ids[0].res_name, 'INV/2017/00001 (ref_move)')
