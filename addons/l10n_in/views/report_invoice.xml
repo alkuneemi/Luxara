@@ -74,6 +74,12 @@
             </t>
         </t>
 
+        <t t-set="layout_document_title" position="inside">
+            <t t-if="document_type">
+                <span class="badge rounded-pill p-2 bg-primary-subtle text-primary text-center fw-bold" style="font-size: 0.8rem; vertical-align:middle;" t-out="document_type"/>
+            </t>
+        </t>
+
         <xpath expr="//div[@id='payment_term']" position="after">
             <t t-if="o.company_id.account_fiscal_country_id.code == 'IN' and o.company_id.l10n_in_is_gst_registered">
                 <t t-set="hsn_summary" t-value="o._l10n_in_get_hsn_summary_table()"/>
@@ -132,6 +138,7 @@
         <xpath expr='//t[@t-call="account.report_invoice_document"]' position="after">
             <t t-elif="o._get_name_invoice_report() == 'l10n_in.l10n_in_report_invoice_document_inherit'"
                t-call="l10n_in.l10n_in_report_invoice_document_inherit"
+               document_type="'Original'"
                t-lang="lang"/>
         </xpath>
     </template>
@@ -140,6 +147,24 @@
         <div t-if="o.company_id.l10n_in_is_gst_registered and o.l10n_in_state_id">
             Place of supply: <span t-out="o.l10n_in_state_id.name" />
         </div>
+    </template>
+
+    <template id="l10n_in_invoice_document_duplicate">
+        <t t-call="l10n_in.document_renderer" document_type="'Duplicate'"/>
+    </template>
+
+    <template id="l10n_in_invoice_document_triplicate">
+        <t t-call="l10n_in.document_renderer" document_type="'Triplicate'"/>
+    </template>
+
+    <template id="document_renderer">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang" t-value="o.partner_id.lang"/>
+                <t t-call="l10n_in.l10n_in_report_invoice_document_inherit" document_type="document_type"
+                   t-lang="lang"/>
+            </t>
+        </t>
     </template>
 
 </odoo>
