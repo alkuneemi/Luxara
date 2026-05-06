@@ -155,6 +155,7 @@
             # comparison
             "website_sale/static/src/js/product_row/*",
             "website_sale/static/src/js/product_comparison_bottom_bar/*",
+            "website_sale/static/src/scss/range_filter.scss",
         ],
         "web._assets_primary_variables": ["website_sale/static/src/scss/primary_variables.scss"],
         "web.assets_backend": [

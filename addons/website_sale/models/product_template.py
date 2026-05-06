@@ -1212,6 +1212,7 @@ class ProductTemplate(models.Model):
         attribute_value_dict = options.get("attribute_value_dict")
         if extra_domain := options.get("extra_domain"):
             domains.append(extra_domain)
+
         if category:
             domains.append([
                 ("public_categ_ids", "child_of", self.env["ir.http"]._unslug(category)[1])
