@@ -454,15 +454,24 @@ class HrAttendanceOvertimeRule(models.Model):
 
     def _get_all_overtime_intervals_for_timing_rule(self, min_check_in, max_check_out, attendances, schedules_intervals_by_employee):
 
-        def _fill_overtime(employees, rules, intervals, attendances_intervals):
+        def _fill_overtime(employees, rules, intervals, attendances_intervals, subtract_lunch=False, is_leave=False):
             if not intervals:
                 return
             for employee in employees:
                 intersetion_interval_for_attendance = attendances_intervals[employee] & intervals[employee]
+                if subtract_lunch:
+                    lunch_intervals = schedules_intervals_by_employee['schedule'][employee].get('lunch', Intervals())
+                    if not is_leave:
+                        lunch_intervals = lunch_intervals - schedules_intervals_by_employee['leave'][employee]
+                    intersetion_interval_for_attendance -= lunch_intervals
                 overtime_interval_list = defaultdict(list)
+                total_hours_by_attendance = defaultdict(float)
                 for (start, stop, attendance) in intersetion_interval_for_attendance:
                     overtime_interval_list[attendance].append((start, stop, rules))
+                    total_hours_by_attendance[attendance] += _time_delta_hours(stop - start)
                 for attendance, attendance_intervals_list in overtime_interval_list.items():
+                    if float_compare(total_hours_by_attendance[attendance], rules.employer_tolerance, precision_digits=5) != 1:
+                        continue
                     overtime_by_employee_by_attendance[employee][attendance] |= Intervals(attendance_intervals_list)
 
         def _build_day_rule_intervals(employees, rule, intervals):
@@ -501,7 +510,7 @@ class HrAttendanceOvertimeRule(models.Model):
 
         for timing_type, rules in self.grouped('timing_type').items():
             if timing_type == 'leave':
-                _fill_overtime(employees, rules, intervals_by_timing_type['leave'], attendances_intervals_by_employee)
+                _fill_overtime(employees, rules, intervals_by_timing_type['leave'], attendances_intervals_by_employee, subtract_lunch=True, is_leave=True)
 
             elif timing_type == 'schedule':
                 for calendar, rules in rules.grouped('resource_calendar_id').items():
@@ -510,7 +519,7 @@ class HrAttendanceOvertimeRule(models.Model):
             else:
                 for rule in rules:
                     timing_intervals_by_employee = _build_day_rule_intervals(employees, rule, intervals_by_timing_type[timing_type])
-                    _fill_overtime(employees, rule, timing_intervals_by_employee, attendances_intervals_by_employee)
+                    _fill_overtime(employees, rule, timing_intervals_by_employee, attendances_intervals_by_employee, subtract_lunch=True)
         return overtime_by_employee_by_attendance
 
     def _get_overtime_intervals_by_employee_by_attendance(self, min_check_in, max_check_out, attendances, schedules_intervals_by_employee):  # TODO: TO REMOVE IN MASTER
