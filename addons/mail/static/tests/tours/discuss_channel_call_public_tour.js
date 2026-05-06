@@ -36,5 +36,25 @@ registry.category("web_tour.tours").add("discuss_channel_call_public_tour.js", {
             content: "Check that current user is in call ('disconnect' button visible)",
             trigger: "button[title='Disconnect']",
         },
+        {
+            content: "Reload the page from the call",
+            trigger: ".o-discuss-Call",
+            expectUnloadPage: true,
+            run() {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("fullscreen");
+                window.history.replaceState({}, document.title, url);
+                window.location.reload();
+            },
+        },
+        {
+            content: "Guest name should stay prefilled after reload",
+            trigger: "input[name='guest_name']",
+            run() {
+                if (this.anchor.value !== "Guest") {
+                    console.error('Expected guest name input to be "Guest".');
+                }
+            },
+        },
     ],
 });

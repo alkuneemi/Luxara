@@ -20,7 +20,7 @@ export class WelcomePage extends Component {
         this.rtc = useService("discuss.rtc");
         useSubEnv({ inWelcomePage: true });
         this.state = useState({
-            userName: this.store.self_user?.name || "",
+            userName: this.store.self?.name || "",
             activateCamera: 0,
             activateMicrophone: 0,
             hasMicrophone: undefined,
