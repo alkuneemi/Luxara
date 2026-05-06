@@ -244,6 +244,10 @@
             border-style: none;
             display: table-cell;
             cursor: pointer;
+
+            &.fa-trash-o:hover, &.fa-trash:hover {
+                color: $o-danger;
+            }
         }
 
         .o_keyboard_navigation {
