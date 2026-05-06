@@ -810,6 +810,9 @@ class MailComposeMessage(models.TransientModel):
         result_mails_su, result_messages = self.env['mail.mail'].sudo(), self.env['mail.message']
 
         for wizard in self:
+            default_agent = self.env.ref("ai.ai_default_agent", raise_if_not_found=False) or self.env["ai.agent"]
+            if default_agent and wizard.body and 'o_editor_prompt' in wizard.body:
+                wizard.body = default_agent._eval_ai_prompts(wizard.body, skip_dynamic=True)
             if wizard.res_domain:
                 search_domain = wizard._evaluate_res_domain()
                 res_ids = self.env[wizard.model].search(search_domain).ids
