@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <!-- Outer template: renders 4 copies per picking with different languages -->
+        <template id="report_cmr">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="consignee_partner" t-value="o.sale_id.partner_id if 'sale_id' in o._fields and o.sale_id else o.partner_id"/>
+                <t t-set="carrier_partner" t-value="o.batch_id.driver_id if o.batch_id else False"/>
+
+                <!-- Copy 1: Sender language -->
+                <t t-set="copy_label" t-value="'copy_sender'"/>
+                <t t-set="copy_lang_code" t-value="o.company_id.partner_id.lang or 'en_US'"/>
+                <t t-call="stock_fleet.report_cmr_document"/>
+
+                <!-- Copy 2: Consignee language -->
+                <t t-set="copy_label" t-value="'copy_consignee'"/>
+                <t t-set="copy_lang_code" t-value="consignee_partner.lang if consignee_partner else 'en_US'"/>
+                <t t-call="stock_fleet.report_cmr_document"/>
+
+                <!-- Copy 3: Carrier language -->
+                <t t-set="copy_label" t-value="'copy_carrier'"/>
+                <t t-set="copy_lang_code" t-value="carrier_partner.lang if carrier_partner else 'en_US'"/>
+                <t t-call="stock_fleet.report_cmr_document"/>
+
+                <!-- Copy 4: English -->
+                <t t-set="copy_label" t-value="'copy_extra'"/>
+                <t t-set="copy_lang_code" t-value="'en_US'"/>
+                <t t-call="stock_fleet.report_cmr_document"/>
+            </t>
+        </template>
+
+        <!-- Helper: renders a translated label below the English one (only for non-English copies) -->
+        <template id="report_cmr_translated_label">
+            <span class="cmr-translated">
+                <t t-if="label_key == 'copy_sender'">Copy for the sender</t>
+                <t t-elif="label_key == 'copy_consignee'">Copy for the consignee</t>
+                <t t-elif="label_key == 'copy_carrier'">Copy for the carrier</t>
+                <t t-elif="label_key == 'box1'">Sender (name, address, country)</t>
+                <t t-elif="label_key == 'box2'">Consignee (name, address, country)</t>
+                <t t-elif="label_key == 'box3'">Place of delivery of the goods (place, country)</t>
+                <t t-elif="label_key == 'box4'">Place and date of taking over the goods (place, country, date)</t>
+                <t t-elif="label_key == 'box5'">Annexed documents</t>
+                <t t-elif="label_key == 'box6'">Marks and Nos.</t>
+                <t t-elif="label_key == 'box7'">Number of packages</t>
+                <t t-elif="label_key == 'box8'">Method of packing</t>
+                <t t-elif="label_key == 'box9'">Nature of the goods</t>
+                <t t-elif="label_key == 'box10'">Statistical No.</t>
+                <t t-elif="label_key == 'box11'">Gross weight kg</t>
+                <t t-elif="label_key == 'box12'">Volume m³</t>
+                <t t-elif="label_key == 'box13'">Sender's instructions (customs and other formalities)</t>
+                <t t-elif="label_key == 'box14'">Directions as to freight payment</t>
+                <t t-elif="label_key == 'box15'">Cash on delivery</t>
+                <t t-elif="label_key == 'box16'">Carrier (name, address, country)</t>
+                <t t-elif="label_key == 'box17'">Successive carriers (name, address, country)</t>
+                <t t-elif="label_key == 'box18'">Carrier's reservations and observations</t>
+                <t t-elif="label_key == 'box19'">Special agreements</t>
+                <t t-elif="label_key == 'box20'">To be paid by</t>
+                <t t-elif="label_key == 'box21'">Established in / on</t>
+                <t t-elif="label_key == 'box22'">Signature and stamp of the sender</t>
+                <t t-elif="label_key == 'box23'">Signature and stamp of the carrier</t>
+                <t t-elif="label_key == 'box24'">Signature and stamp of the consignee</t>
+                <t t-elif="label_key == 'name'">Name</t>
+                <t t-elif="label_key == 'address'">Address</t>
+                <t t-elif="label_key == 'cmr_title'">CMR INTERNATIONAL CONSIGNMENT NOTE</t>
+                <t t-elif="label_key == 'cmr_desc'">This carriage is subject notwithstanding any clause to the contrary, to the convention on the contact for the international carriage of goods by road (CMR)</t>
+                <t t-elif="label_key == 'freight_paid'">Freight paid</t>
+                <t t-elif="label_key == 'freight_to_be_paid'">Freight to be paid</t>
+                <t t-elif="label_key == 'tractor'">Tractor licence plate</t>
+                <t t-elif="label_key == 'trailer'">Trailer licence plate</t>
+                <t t-elif="label_key == 'class'">Class</t>
+                <t t-elif="label_key == 'number'">Number</t>
+                <t t-elif="label_key == 'letter'">Letter</t>
+                <t t-elif="label_key == 'sender'">Sender</t>
+                <t t-elif="label_key == 'consignee'">Consignee</t>
+                <t t-elif="label_key == 'carriage_charges'">Carriage charges</t>
+                <t t-elif="label_key == 'reductions'">Reductions</t>
+                <t t-elif="label_key == 'balance'">Balance</t>
+                <t t-elif="label_key == 'supplement_charges'">Supplement charges</t>
+                <t t-elif="label_key == 'miscellaneous'">Miscellaneous</t>
+                <t t-elif="label_key == 'total_to_be_paid'">Total to be paid</t>
+            </span>
+        </template>
+
+        <!-- Document template: always rendered in English, with translated subtitles via t-call -->
+        <template id="report_cmr_document">
+            <t t-call="web.report_layout">
+                <div class="o_report_cmr">
+                    <!-- Header line -->
+                    <table class="cmr-header-line">
+                        <colgroup>
+                            <col class="cmr-col-half"/>
+                            <col class="cmr-col-half"/>
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span t-if="copy_label == 'copy_sender'">Copy for the sender</span>
+                                    <span t-if="copy_label == 'copy_consignee'">Copy for the consignee</span>
+                                    <span t-if="copy_label == 'copy_carrier'">Copy for the carrier</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="copy_label"/>
+                                        <br/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                    (<span t-out="copy_lang_code"/>)
+                                </td>
+                                <td class="cmr-text-left">Reference No.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Top section: 2 columns, 4 rows -->
+                    <table class="cmr-top">
+                        <colgroup>
+                            <col class="cmr-col-left"/>
+                            <col class="cmr-col-right"/>
+                        </colgroup>
+                        <tbody>
+                            <tr class="cmr-row-1">
+                                <td>
+                                    <span class="cmr-label">1. Sender (name, address, country)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box1'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                    <div class="cmr-value">
+                                        <span class="cmr-field-label">Name: </span>
+                                        <span t-field="o.company_id.name"/>
+                                    </div>
+                                    <div class="cmr-value">
+                                        <span class="cmr-field-label">Address: </span>
+                                        <span t-field="o.company_id.street"/><br/>
+                                        <span class="cmr-field-label-spacer">Address: </span>
+                                        <span t-field="o.company_id.city"/>, <span t-field="o.company_id.zip"/>, <span t-field="o.company_id.country_id.name"/>
+                                    </div>
+                                </td>
+                                <td class="cmr-intl-box">
+                                    <span class="cmr-intl-subtitle">CMR INTERNATIONAL CONSIGNMENT NOTE</span>
+                                    <span class="cmr-intl-text">This carriage is subject notwithstanding any clause to the contrary, to the convention on the contact for the international carriage of goods by road (CMR)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'cmr_title'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                        <br/>
+                                        <t t-set="label_key" t-value="'cmr_desc'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+                            <tr class="cmr-row-2">
+                                <td>
+                                    <span class="cmr-label">2. Consignee (name, address, country)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box2'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                    <t t-set="consignee" t-value="o.sale_id.partner_id if 'sale_id' in o._fields and o.sale_id else o.partner_id"/>
+                                    <div class="cmr-value">
+                                        <span class="cmr-field-label">Name: </span>
+                                        <span t-out="consignee.name"/>
+                                    </div>
+                                    <div class="cmr-value">
+                                        <span class="cmr-field-label">Address: </span>
+                                        <span t-out="consignee.street"/><br/>
+                                        <span class="cmr-field-label-spacer">Address: </span>
+                                        <span t-out="consignee.city"/>, <span t-out="consignee.zip"/>, <span t-out="consignee.country_id.name"/>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="cmr-label">16. Carrier (name, address, country)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box16'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+                            <tr class="cmr-row-3">
+                                <td>
+                                    <span class="cmr-label">3. Place of delivery of the goods (place, country)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box3'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                    <div class="cmr-value"><span t-field="o.partner_id.street"/><br/><span t-field="o.partner_id.city"/>, <span t-field="o.partner_id.zip"/>, <span t-field="o.partner_id.country_id.name"/></div>
+                                </td>
+                                <td>
+                                    <span class="cmr-label">17. Successive carriers (name, address, country)</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box17'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+                            <tr class="cmr-row-4">
+                                <td class="cmr-stacked-cell">
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <span class="cmr-label">4. Place and date of taking over the goods (place, country, date)</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box4'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                    <div class="cmr-value"><span t-field="o.picking_type_id.warehouse_id.partner_id.street"/><br/><span t-field="o.picking_type_id.warehouse_id.partner_id.city"/>, <span t-field="o.picking_type_id.warehouse_id.partner_id.zip"/>, <span t-field="o.picking_type_id.warehouse_id.partner_id.country_id.name"/></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="cmr-label">5. Annexed documents</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box5'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <span class="cmr-label">18. Carrier's reservations and observations</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box18'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Goods table: boxes 6-12 -->
+                    <table class="cmr-goods">
+                        <colgroup>
+                            <col class="cmr-col-marks"/>
+                            <col class="cmr-col-packages"/>
+                            <col class="cmr-col-packing"/>
+                            <col class="cmr-col-nature"/>
+                            <col class="cmr-col-statno"/>
+                            <col class="cmr-col-weight"/>
+                            <col class="cmr-col-volume"/>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>6. Marks and Nos.<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box6'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>7. Number of packages<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box7'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>8. Method of packing<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box8'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>9. Nature of the goods<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box9'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>10. Statistical No.<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box10'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>11. Gross weight kg<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box11'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                <th>12. Volume m³<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box12'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                            </tr>
+                        </thead>
+                        <tbody class="cmr-goods-body">
+                            <t t-foreach="o.move_ids" t-as="move">
+                                <t t-set="packages" t-value="move.move_line_ids.result_package_id.outermost_package_id"/>
+                                <tr>
+                                    <td/>
+                                    <td><t t-if="packages" t-out="len(packages)"/></td>
+                                    <td/>
+                                    <td><t t-out="move.product_id.name"/></td>
+                                    <td/>
+                                    <td><t t-out="(sum(packages.mapped('shipping_weight')) or sum(packages.mapped('weight'))) if packages else move.product_id.weight * move.quantity"/></td>
+                                    <td><t t-out="(sum(packages.mapped('shipping_volume')) or sum(packages.mapped('volume'))) if packages else move.product_id.volume * move.quantity"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot class="cmr-goods-totals">
+                            <tr>
+                                <td>Class<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'class'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                <td>Number<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'number'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                <td>Letter<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'letter'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                <td>ADR</td>
+                                <td>&#8721;</td>
+                                <td/>
+                                <td/>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- Boxes 13/14/21 (left) + Boxes 19/20/15 (right) -->
+                    <table class="cmr-goods-footer">
+                        <colgroup>
+                            <col class="cmr-col-left"/>
+                            <col class="cmr-col-right"/>
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td class="cmr-left-stack">
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td class="cmr-box-13">
+                                                    <span class="cmr-label">13. Sender's instructions (customs and other formalities)</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box13'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                    <div class="cmr-value" t-field="o.note"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="cmr-box-14">
+                                                    <span class="cmr-label">14. Directions as to freight payment</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box14'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                    <span class="cmr-checkbox">
+                                                        <span class="cmr-checkbox-icon">&#9744;</span>Freight paid
+                                                        <t t-if="copy_lang_code != 'en_US'">
+                                                            <br/>
+                                                            <t t-set="label_key" t-value="'freight_paid'"/>
+                                                            <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                        </t>
+                                                    </span>
+                                                    <span class="cmr-checkbox">
+                                                        <span class="cmr-checkbox-icon">&#9744;</span>Freight to be paid
+                                                        <t t-if="copy_lang_code != 'en_US'">
+                                                            <br/><t t-set="label_key" t-value="'freight_to_be_paid'"/>
+                                                            <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                        </t>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="cmr-box-21">
+                                                    <span class="cmr-label">21. Established in / on</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box21'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                    <div class="cmr-value"><span t-field="o.picking_type_id.warehouse_id.partner_id.city"/>, <span t-field="o.picking_type_id.warehouse_id.partner_id.country_id.name"/></div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td class="cmr-right-stack">
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td class="cmr-box-19" colspan="3">
+                                                    <span class="cmr-label">19. Special agreements</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box19'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <table class="cmr-charges-table">
+                                        <colgroup>
+                                            <col class="cmr-col-charge-label"/>
+                                            <col class="cmr-col-sender"/>
+                                            <col class="cmr-col-consignee"/>
+                                        </colgroup>
+                                        <thead>
+                                            <tr>
+                                                <th>20. To be paid by<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'box20'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                                <th>Sender<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'sender'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                                <th>Consignee<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'consignee'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Carriage charges<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'carriage_charges'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                            <tr>
+                                                <td>Reductions<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'reductions'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                            <tr>
+                                                <td>Balance<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'balance'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                            <tr>
+                                                <td>Supplement charges<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'supplement_charges'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                            <tr>
+                                                <td>Miscellaneous<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'miscellaneous'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                            <tr>
+                                                <td>Total to be paid<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'total_to_be_paid'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td/>
+                                                <td/>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <span class="cmr-label">15. Cash on delivery</span>
+                                                    <t t-if="copy_lang_code != 'en_US'">
+                                                        <t t-set="label_key" t-value="'box15'"/>
+                                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                                    </t>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Signatures section: boxes 22-24 -->
+                    <table class="cmr-signatures">
+                        <colgroup>
+                            <col class="cmr-col-sig"/>
+                            <col class="cmr-col-sig"/>
+                            <col class="cmr-col-sig"/>
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="cmr-label">22. Signature and stamp of the sender</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box22'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                                <td class="cmr-box-23">
+                                    <span class="cmr-label">23. Signature and stamp of the carrier</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box23'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                    <table class="cmr-licence-table">
+                                        <tbody>
+                                            <tr>
+                                                <td>Tractor licence plate<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'tractor'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                                <td>Trailer licence plate<t t-if="copy_lang_code != 'en_US'"><br/><t t-set="label_key" t-value="'trailer'"/><t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/></t></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <span class="cmr-label">24. Signature and stamp of the consignee</span>
+                                    <t t-if="copy_lang_code != 'en_US'">
+                                        <t t-set="label_key" t-value="'box24'"/>
+                                        <t t-call="stock_fleet.report_cmr_translated_label" t-lang="copy_lang_code"/>
+                                    </t>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

@@ -332,7 +332,7 @@ msgstr ""
 #. module: stock_fleet
 #: model_terms:ir.ui.view,arch_db:stock_fleet.report_cmr_translated_label
 msgid "Consignee (name, address, country)"
-msgstr ""
+msgstr "Destinataire (nom, addresse, pays)"
 
 #. module: stock_fleet
 #: model:ir.actions.report,name:stock_fleet.action_report_cmr
@@ -571,7 +571,7 @@ msgstr "expéditeur"
 #. module: stock_fleet
 #: model_terms:ir.ui.view,arch_db:stock_fleet.report_cmr_translated_label
 msgid "Sender (name, address, country)"
-msgstr ""
+msgstr "expéditeur (nom, addresse, pays)"
 
 #. module: stock_fleet
 #: model_terms:ir.ui.view,arch_db:stock_fleet.report_cmr_translated_label
