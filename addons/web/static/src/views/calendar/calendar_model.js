@@ -774,7 +774,7 @@ export class CalendarModel extends Model {
     /**
      * @private
      */
-    _getUnscheduleData() {
+    _getUnscheduleData(eventId) {
         const { date_start, date_stop } = this.meta.fieldMapping;
         return {
             [date_stop]: false,
@@ -786,7 +786,7 @@ export class CalendarModel extends Model {
      * @param {Number} eventId
      */
     async unscheduleEvent(eventId) {
-        await this.orm.write(this.meta.resModel, [eventId], this._getUnscheduleData());
+        await this.orm.write(this.meta.resModel, [eventId], this._getUnscheduleData(eventId));
         await this.load();
     }
     /**
