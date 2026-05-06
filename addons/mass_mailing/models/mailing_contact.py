@@ -116,17 +116,17 @@ class MailingContact(models.Model):
         # Checking on the trace_ids (is set, is not set)
         if value == OrderedSet([False]):
             if operator in ('!=', 'not in'):
-                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace")
+                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace WHERE trace_type = 'mail'")
                 emails_with_traces = [r[0] for r in self.env.cr.fetchall()]
                 return [('email', 'in', emails_with_traces)]
             elif operator in ('=', 'in'):
-                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace")
+                self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace WHERE trace_type = 'mail'")
                 emails_with_traces = [r[0] for r in self.env.cr.fetchall()]
                 return [('email', 'not in', emails_with_traces)]
 
         if isinstance(value, (int, list)):
             ids = value if isinstance(value, list) else [value]
-            self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace WHERE id IN %s", [ids])
+            self.env.cr.execute("SELECT DISTINCT(email) FROM mailing_trace WHERE WHERE trace_type = 'mail' AND id IN %s", [ids])
             emails = [r[0] for r in self.env.cr.fetchall()]
             return [('email', 'in', emails)]
 
@@ -183,7 +183,7 @@ class MailingContact(models.Model):
         self.env.cr.execute("""
             SELECT COUNT(DISTINCT(mass_mailing_id)) nb_mails, email
             FROM mailing_trace
-            WHERE model = 'mailing.contact'
+            WHERE trace_type = 'mail' AND model = 'mailing.contact'
             GROUP BY email
             """)
         mass_mailing_data = self.env.cr.dictfetchall()
@@ -197,7 +197,7 @@ class MailingContact(models.Model):
             FROM mailing_trace stats
             LEFT JOIN link_tracker_click clicks
             ON clicks.mailing_trace_id = stats.id
-            WHERE model = 'mailing.contact' AND stats.trace_status NOT IN ('bounce', 'cancel', 'error')
+            WHERE trace_type = 'mail' AND model = 'mailing.contact' AND stats.trace_status NOT IN ('bounce', 'cancel', 'error')
             GROUP BY email
         """)
         mailing_contact_data = self.env.cr.dictfetchall()
@@ -333,7 +333,7 @@ class MailingContact(models.Model):
         self.env.cr.execute("""
             SELECT mass_mailing_id mailing_ids
             FROM mailing_trace
-            WHERE model = 'mailing.contact' AND email = %s
+            WHERE trace_type = 'mail' AND model = 'mailing.contact' AND email = %s
             """, (self.email,))
         mailing_ids = self.env.cr.fetchall()
         mailing_ids = [m_id[0] for m_id in mailing_ids]

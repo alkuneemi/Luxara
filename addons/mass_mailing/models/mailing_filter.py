@@ -97,8 +97,12 @@ class MailingFilter(models.Model):
     @api.model
     def get_dynamic_list_templates_info(self):
         today = Datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        date_from = (today - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-        date_to = (today + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+
+        def date_from(interval=1):
+            return (today - timedelta(days=interval)).strftime("%Y-%m-%d %H:%M:%S")
+
+        def date_to(interval):
+            return (today + timedelta(days=interval)).strftime("%Y-%m-%d %H:%M:%S")
         return {
             'start_from_scratch': {
                 'title': _('Start from Scratch'),
@@ -120,7 +124,8 @@ class MailingFilter(models.Model):
                 'icon': '/mass_mailing/static/img/rocket.svg',
                 'function': 'get_mailing_list_template_values',
                 'domain': repr(["&", ("opened_ratio", "=", 100),
-                    ("trace_ids", "any", ["&", ("open_datetime", ">=", date_from), ("open_datetime", "<", date_to)])
+                    ("trace_ids", "any", ["&", "&",
+                    ("trace_type", "=", "mail"), ("open_datetime", ">=", date_from(30)), ("open_datetime", "<", date_to(1))])
                 ])
             },
             'recent_visitors': {
@@ -128,9 +133,10 @@ class MailingFilter(models.Model):
                 'description': _('Mailing Contacts that have clicked in a mailing in the last 7 days'),
                 'icon': '/mass_mailing/static/img/magnifying_glass.svg',
                 'function': 'get_mailing_list_template_values',
-                'domain': repr([("trace_ids", "any", ["&",
-                    ("links_click_datetime", ">=", (today - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")),
-                    ("links_click_datetime", "<", today.strftime("%Y-%m-%d %H:%M:%S"))])
+                'domain': repr([("trace_ids", "any", ["&", "&",
+                    ("trace_type", "=", "mail"),
+                    ("links_click_datetime", ">=", date_from(7)),
+                    ("links_click_datetime", "<", date_to(1))])
                 ])
             },
             'engaged_mailing_contacts': {
@@ -139,17 +145,20 @@ class MailingFilter(models.Model):
                 'icon': '/mass_mailing/static/img/sales.svg',
                 'function': 'get_mailing_list_template_values',
                 'domain': repr(["|", "|",
-                    ("trace_ids", "any", ["&",
-                        ("links_click_datetime", ">=", date_from),
-                        ("links_click_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("links_click_datetime", ">=", date_from(30)),
+                        ("links_click_datetime", "<", date_to(1))
                     ]),
-                    ("trace_ids", "any", ["&",
-                        ("open_datetime", ">=", date_from),
-                        ("open_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("open_datetime", ">=", date_from(30)),
+                        ("open_datetime", "<", date_to(1))
                     ]),
-                    ("trace_ids", "any", ["&",
-                        ("reply_datetime", ">=", date_from),
-                        ("reply_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("reply_datetime", ">=", date_from(30)),
+                        ("reply_datetime", "<", date_to(1))
                     ]),
                 ])
             },
@@ -159,17 +168,20 @@ class MailingFilter(models.Model):
                 'icon': '/mass_mailing/static/img/sales_down.svg',
                 'function': 'get_mailing_list_template_values',
                 'domain': repr(["!", "|", "|",
-                    ("trace_ids", "any", ["&",
-                        ("links_click_datetime", ">=", date_from),
-                        ("links_click_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("links_click_datetime", ">=", date_from(30)),
+                        ("links_click_datetime", "<", date_to(1))
                     ]),
-                    ("trace_ids", "any", ["&",
-                        ("open_datetime", ">=", date_from),
-                        ("open_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("open_datetime", ">=", date_from(30)),
+                        ("open_datetime", "<", date_to(1))
                     ]),
-                    ("trace_ids", "any", ["&",
-                        ("reply_datetime", ">=", date_from),
-                        ("reply_datetime", "<", date_to)
+                    ("trace_ids", "any", ["&", "&",
+                        ("trace_type", "=", "mail"),
+                        ("reply_datetime", ">=", date_from(30)),
+                        ("reply_datetime", "<", date_to(1))
                     ]),
                 ])
             },
