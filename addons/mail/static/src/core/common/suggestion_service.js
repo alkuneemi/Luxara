@@ -1,9 +1,10 @@
 import { partnerCompareRegistry } from "@mail/core/common/partner_compare";
-import { cleanTerm } from "@mail/utils/common/format";
 import { toRaw } from "@odoo/owl";
 import { emojiLoader } from "@web/core/emoji_picker/emoji_loader";
 
+import { normalize } from "@web/core/l10n/utils";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { fuzzyLookup } from "@web/core/utils/search";
 
 export class SuggestionService {
@@ -38,7 +39,7 @@ export class SuggestionService {
     }
 
     async fetchSuggestions({ delimiter, term }, { thread, abortSignal } = {}) {
-        const cleanedSearchTerm = cleanTerm(term);
+        const cleanedSearchTerm = normalize(term);
         switch (delimiter) {
             case "@":
                 await this.fetchPartnersRoles(cleanedSearchTerm, thread, { abortSignal });
@@ -118,11 +119,12 @@ export class SuggestionService {
 
     searchCannedResponseSuggestions(cleanedSearchTerm) {
         const cannedResponses = Object.values(this.store["mail.canned.response"].records).filter(
-            (cannedResponse) => cleanTerm(cannedResponse.source).includes(cleanedSearchTerm)
+            (cannedResponse) => normalize(cannedResponse.source).includes(cleanedSearchTerm)
         );
+        const collator = new Intl.Collator(user.lang);
         const sortFunc = (c1, c2) => {
-            const cleanedName1 = cleanTerm(c1.source);
-            const cleanedName2 = cleanTerm(c2.source);
+            const cleanedName1 = normalize(c1.source);
+            const cleanedName2 = normalize(c2.source);
             if (
                 cleanedName1.startsWith(cleanedSearchTerm) &&
                 !cleanedName2.startsWith(cleanedSearchTerm)
@@ -135,13 +137,7 @@ export class SuggestionService {
             ) {
                 return 1;
             }
-            if (cleanedName1 < cleanedName2) {
-                return -1;
-            }
-            if (cleanedName1 > cleanedName2) {
-                return 1;
-            }
-            return c1.id - c2.id;
+            return collator.compare(c1.source, c2.source);
         };
         return {
             type: "mail.canned.response",
@@ -177,7 +173,7 @@ export class SuggestionService {
      */
     searchSuggestions({ delimiter, term }, { thread } = {}) {
         thread = toRaw(thread);
-        const cleanedSearchTerm = cleanTerm(term);
+        const cleanedSearchTerm = normalize(term);
         switch (delimiter) {
             case "@": {
                 const partners = this.searchPartnerSuggestions(cleanedSearchTerm, thread);
@@ -202,11 +198,12 @@ export class SuggestionService {
 
     searchRoleSuggestions(cleanedSearchTerm) {
         const roles = Object.values(this.store["res.role"].records).filter((role) =>
-            cleanTerm(role.name).includes(cleanedSearchTerm)
+            normalize(role.name).includes(cleanedSearchTerm)
         );
+        const collator = new Intl.Collator(user.lang);
         const sortFunc = (r1, r2) => {
-            const cleanedName1 = cleanTerm(r1.name);
-            const cleanedName2 = cleanTerm(r2.name);
+            const cleanedName1 = normalize(r1.name);
+            const cleanedName2 = normalize(r2.name);
             if (
                 cleanedName1.startsWith(cleanedSearchTerm) &&
                 !cleanedName2.startsWith(cleanedSearchTerm)
@@ -219,13 +216,7 @@ export class SuggestionService {
             ) {
                 return 1;
             }
-            if (cleanedName1 < cleanedName2) {
-                return -1;
-            }
-            if (cleanedName1 > cleanedName2) {
-                return 1;
-            }
-            return r1.id - r2.id;
+            return collator.compare(r1.name, r2.name);
         };
         return {
             suggestions: roles.sort(sortFunc),
@@ -249,12 +240,10 @@ export class SuggestionService {
         const partners = this.getPartnerSuggestions(thread);
         const suggestions = [];
         for (const partner of partners) {
-            if (!partner.name) {
-                continue;
-            }
+            const name = thread?.getPersonaName(partner) ?? partner.displayName;
             if (
-                cleanTerm(partner.name).includes(cleanedSearchTerm) ||
-                (partner.email && cleanTerm(partner.email).includes(cleanedSearchTerm))
+                (name && normalize(name).includes(cleanedSearchTerm)) ||
+                (partner.email && normalize(partner.email).includes(cleanedSearchTerm))
             ) {
                 suggestions.push(partner);
             }
@@ -266,7 +255,7 @@ export class SuggestionService {
                     special.channel_types.includes(thread.channel?.channel_type) &&
                     cleanedSearchTerm.length >= Math.min(4, special.label.length) &&
                     (special.label.startsWith(cleanedSearchTerm) ||
-                        cleanTerm(special.description.toString()).includes(cleanedSearchTerm))
+                        normalize(special.description.toString()).includes(cleanedSearchTerm))
             )
         );
         return {
@@ -282,7 +271,7 @@ export class SuggestionService {
      * @returns {[import("models").Persona]}
      */
     sortPartnerSuggestions(partners, searchTerm = "", thread = undefined) {
-        const cleanedSearchTerm = cleanTerm(searchTerm);
+        const cleanedSearchTerm = normalize(searchTerm);
         const compareFunctions = partnerCompareRegistry.getAll();
         const context = this.sortPartnerSuggestionsContext(thread);
         return partners.sort((p1, p2) => {
@@ -302,6 +291,7 @@ export class SuggestionService {
                     return result;
                 }
             }
+            return 0;
         });
     }
 
@@ -314,8 +304,9 @@ export class SuggestionService {
             (channel) =>
                 channel.channel_type === "channel" &&
                 channel.displayName &&
-                cleanTerm(channel.displayName).includes(cleanedSearchTerm)
+                normalize(channel.displayName).includes(cleanedSearchTerm)
         );
+        const collator = new Intl.Collator(user.lang);
         const sortFunc = (c1, c2) => {
             const isPublicChannel1 = c1.channel_type === "channel" && !c2.group_public_id;
             const isPublicChannel2 = c2.channel_type === "channel" && !c2.group_public_id;
@@ -331,8 +322,8 @@ export class SuggestionService {
             if (!c1.self_member_id && c2.self_member_id) {
                 return 1;
             }
-            const cleanedDisplayName1 = cleanTerm(c1.displayName);
-            const cleanedDisplayName2 = cleanTerm(c2.displayName);
+            const cleanedDisplayName1 = normalize(c1.displayName);
+            const cleanedDisplayName2 = normalize(c2.displayName);
             if (
                 cleanedDisplayName1.startsWith(cleanedSearchTerm) &&
                 !cleanedDisplayName2.startsWith(cleanedSearchTerm)
@@ -345,13 +336,7 @@ export class SuggestionService {
             ) {
                 return 1;
             }
-            if (cleanedDisplayName1 < cleanedDisplayName2) {
-                return -1;
-            }
-            if (cleanedDisplayName1 > cleanedDisplayName2) {
-                return 1;
-            }
-            return c1.id - c2.id;
+            return collator.compare(c1.displayName, c2.displayName);
         };
         return {
             type: "discuss.channel",

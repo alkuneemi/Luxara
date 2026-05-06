@@ -1,7 +1,8 @@
 import { SuggestionService } from "@mail/core/common/suggestion_service";
-import { cleanTerm } from "@mail/utils/common/format";
 
+import { normalize } from "@web/core/l10n/utils";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { patch } from "@web/core/utils/patch";
 
 const commandRegistry = registry.category("discuss.channel_commands");
@@ -73,7 +74,7 @@ const suggestionServicePatch = {
      */
     searchSuggestions({ delimiter, term }, { thread } = {}) {
         if (delimiter === "/") {
-            return this.searchChannelCommand(cleanTerm(term), thread.channel);
+            return this.searchChannelCommand(normalize(term), thread.channel);
         }
         return super.searchSuggestions(...arguments);
     },
@@ -83,11 +84,12 @@ const suggestionServicePatch = {
             return;
         }
         const commands = this.getChannelCommands(channel).filter(({ name }) =>
-            cleanTerm(name).includes(cleanedSearchTerm)
+            normalize(name).includes(cleanedSearchTerm)
         );
+        const collator = new Intl.Collator(user.lang);
         const sortFunc = (c1, c2) => {
-            const cleanedName1 = cleanTerm(c1.name);
-            const cleanedName2 = cleanTerm(c2.name);
+            const cleanedName1 = normalize(c1.name);
+            const cleanedName2 = normalize(c2.name);
             if (
                 cleanedName1.startsWith(cleanedSearchTerm) &&
                 !cleanedName2.startsWith(cleanedSearchTerm)
@@ -100,13 +102,7 @@ const suggestionServicePatch = {
             ) {
                 return 1;
             }
-            if (cleanedName1 < cleanedName2) {
-                return -1;
-            }
-            if (cleanedName1 > cleanedName2) {
-                return 1;
-            }
-            return c1.id - c2.id;
+            return collator.compare(c1.name, c2.name);
         };
         return {
             type: "ChannelCommand",
