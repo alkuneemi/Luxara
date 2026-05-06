@@ -34,6 +34,7 @@ export class BuilderSlidingPanel extends Component {
         this.openButtonRef = useRef("openButton");
         this.state = useState({
             optionContainerName: "",
+            contentRendered: this.props.openByDefault,
         });
         onMounted(() => {
             this.optionsContainerEls = document.querySelectorAll("div.options-container");
@@ -70,9 +71,27 @@ export class BuilderSlidingPanel extends Component {
         slidingPanelEl.classList.add(className);
     }
 
+    /**
+     * Opens the sliding panel with a slide-in animation.
+     *
+     * Uses Promise.resolve().then() to defer animation to the next microtask.
+     * This ensures OWL renders the slot content BEFORE the animation starts:
+     *
+     *   1. state.contentRendered = true  → OWL queues render (microtask #1)
+     *   2. Promise.resolve().then(...)   → animation queued (microtask #2)
+     *   3. Microtask #1 runs: content rendered to DOM
+     *   4. Microtask #2 runs: animation starts with content visible
+     *
+     * Without deferral, animation starts synchronously before OWL renders,
+     * causing an empty panel to slide in.
+     */
     showSlidingPanel() {
-        this.updateDisplay("hb-panel-slide-in");
-        this.updateDisplayTimeout = setTimeout(() => this.updateDisplay("d-block"), 200);
+        this.state.contentRendered = true;
+        clearTimeout(this.updateDisplayTimeout);
+        Promise.resolve().then(() => {
+            this.updateDisplay("hb-panel-slide-in");
+            this.updateDisplayTimeout = setTimeout(() => this.updateDisplay("d-block"), 200);
+        });
     }
 
     hideSlidingPanel() {

@@ -29,6 +29,26 @@ const svgCache = new Cache(async (src) => {
     return xmlDoc.getElementsByTagName("svg")[0];
 }, JSON.stringify);
 
+// Tracks which images have been loaded in this session.
+// Used to skip lazy loading on re-mount (e.g., panel re-open).
+const loadedImages = new Set();
+
+/**
+ * Image component with optional lazy loading support.
+ *
+ * @prop {String} src - Image source URL
+ * @prop {String} [class] - CSS class(es) to apply
+ * @prop {String} [style] - Inline styles
+ * @prop {String} [alt] - Alt text for accessibility
+ * @prop {Object} [attrs] - Additional HTML attributes
+ * @prop {Boolean} [svgCheck=true] - Parse .svg files as XML for full SVG
+ *  support
+ * @prop {Boolean} [lazyLoad=false] - Defer loading until image enters
+ * viewport.
+ *
+ * When true, renders a placeholder and uses IntersectionObserver to
+ * trigger loading. Useful for long lists (e.g., shape thumbnails).
+ */
 export class Image extends Component {
     static props = {
         src: String,
@@ -37,9 +57,11 @@ export class Image extends Component {
         alt: { type: String, optional: true },
         attrs: { type: Object, optional: true },
         svgCheck: { type: Boolean, optional: true },
+        lazyLoad: { type: Boolean, optional: true },
     };
     static defaultProps = {
         svgCheck: true,
+        lazyLoad: false,
     };
     static template = xml`
         <t t-if="state.loaded">
@@ -59,19 +81,67 @@ export class Image extends Component {
                 t-att-alt="props.alt"
                 t-att="props.attrs"/>
         </t>
+        <span t-elif="env.imgGroup &amp; !props.lazyLoad" t-ref="placeholder"
+            style="display:inline-block;width:100%;aspect-ratio:1;visibility:hidden;"/>
+        <span t-elif="props.lazyLoad" t-ref="placeholder"
+            style="display:inline-block;width:100%;aspect-ratio:1;"/>
         `;
 
     setup() {
         this.svgRef = useRef("svg");
+        this.placeholderRef = useRef("placeholder");
         this.svg = {};
         this.state = useState({ loaded: false });
 
-        onWillStart(async () => this.handleImgLoad(this.props.src));
+        onWillStart(async () => {
+            // If already loaded before, load immediately (from browser cache).
+            // This prevents placeholders from flashing on panel re-open.
+            if (loadedImages.has(this.props.src) || !this.props.lazyLoad) {
+                await this.handleImgLoad(this.props.src);
+            }
+        });
+
         onWillUpdateProps(async (nextProps) => {
             if (this.props.src !== nextProps.src) {
+                this.state.loaded = false;
                 await this.handleImgLoad(nextProps.src);
             }
         });
+        // Set up IntersectionObserver for lazy loading after the
+        // placeholder <span> is mounted in the DOM.
+        // useEffect's cleanup function handles disconnect on both:
+        //   - component destroy.
+        //   - state.loaded → true placeholder span removed.
+        useEffect(
+            (placeholderEl) => {
+                if (!placeholderEl) {
+                    return;
+                }
+                if ("IntersectionObserver" in window) {
+                    // Start loading slightly before the thumbnail scrolls
+                    // fully into view to reduce perceived latency.
+                    const PRELOAD_MARGIN = "500px";
+                    const observer = new IntersectionObserver(
+                        (entries) => {
+                            for (const entry of entries) {
+                                if (entry.isIntersecting) {
+                                    this.handleImgLoad(this.props.src);
+                                    observer.disconnect();
+                                }
+                            }
+                        },
+                        { rootMargin: PRELOAD_MARGIN }
+                    );
+                    observer.observe(placeholderEl);
+                    return () => observer.disconnect();
+                } else {
+                    // Fallback: load immediately if no IntersectionObserver.
+                    this.handleImgLoad(this.props.src);
+                }
+            },
+            () => [this.placeholderRef.el]
+        );
+
         useEffect(
             (imgLoaded) => {
                 if (imgLoaded && this.isSvg(this.props.src) && this.svg.children.length) {
@@ -95,19 +165,19 @@ export class Image extends Component {
                 this.svg = svg;
             });
         }
-        if (this.env.imgGroup) {
-            this.env.imgGroup.addImgProm(prom);
-            this.env.imgGroup.loaded.then(() => {
+        if (this.env.imgGroup && !this.props.lazyLoad) {
+            this.env.imgGroup.addImgProm(prom, () => {
                 this.state.loaded = true;
             });
         } else {
             await prom;
+            loadedImages.add(src);
             this.state.loaded = true;
         }
     }
 
     loadImage() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const img = new window.Image();
             img.onload = () => resolve({ status: "loaded" });
             img.onerror = () => resolve({ status: "error" });
