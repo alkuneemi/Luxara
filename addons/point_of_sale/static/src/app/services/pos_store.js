@@ -613,6 +613,7 @@ export class PosStore extends WithLazyGetterTrap {
                         order.pos_reference,
                         this.env.utils.formatCurrency(order.priceIncl)
                     ),
+                backdrop: true,
             });
         }
         return true;
@@ -1988,6 +1989,7 @@ export class PosStore extends WithLazyGetterTrap {
                           title: _t("Select preset"),
                           list: selectionList,
                           size: "md",
+                          bodyClass: "pb-4",
                       });
         }
 

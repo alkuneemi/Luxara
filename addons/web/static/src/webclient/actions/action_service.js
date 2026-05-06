@@ -1054,6 +1054,10 @@ export function makeActionManager(env, router = _router) {
             if (size) {
                 actionDialogProps.size = size;
             }
+            const backdrop = action.context.dialog_backdrop;
+            if( backdrop ) {
+                actionDialogProps.backdrop = backdrop;
+            }
             actionDialogProps.header = action.context.header ?? actionDialogProps.header;
             actionDialogProps.footer = action.context.footer ?? actionDialogProps.footer;
             const onClose = dialog?.onClose;
