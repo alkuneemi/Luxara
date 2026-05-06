@@ -47,6 +47,7 @@ class ResPartner(models.Model):
         else:
             # If search domain is not empty, we need to search inside all partners
             new_partners = self.search(domain, offset=offset, limit=100)
+
         fiscal_positions = new_partners.fiscal_position_id
         return {
             'res.partner': self._load_pos_data_read(new_partners, config),
