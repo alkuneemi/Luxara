@@ -208,7 +208,8 @@
                         {{opt_wsale_floating_bar and 'o_wsale_has_floating_bar'}}
                         {{hasLeftColumn and 'o_wsale_has_sidebar'}}
                         {{editionPreviews and 'o_wsale_edit_preview_enabled'}}
-                        {{opt_wsale_design_grid and 'o_wsale_uses_grid_design'}}"
+                        {{opt_wsale_design_grid and 'o_wsale_uses_grid_design'}}
+                        {{website.shop_border_color == 'default' and 'o_wsale_border_default' or 'o_wsale_custom_border o_wsale_border_' + website.shop_border_color}}"
                     t-att-data-ppg="ppg"
                     t-att-data-ppr="ppr"
                     t-att-data-default-sort="website.shop_default_sort"
@@ -220,7 +221,7 @@
                             class="d-none d-lg-block position-sticky align-self-start col clearfix pt-2"
                         >
                             <t t-call="website_sale.sidebar_dropzone_at_top"/>
-                            <div class="o_wsale_products_grid_before_rail vh-100 ms-n2 px-lg-2 ps-2 overflow-y-scroll">
+                            <div class="o_wsale_products_grid_before_rail ms-n2 px-lg-2 ps-2 overflow-y-scroll">
                                 <t
                                     t-set="is_sidebar_collapsible"
                                     t-value="is_view_active('website_sale.products_categories_list_collapsible')"
@@ -535,7 +536,7 @@
                                     the "<t t-out='category.name'/>" category
                                 </t>
                                 <div
-                                    class="mb16"
+                                    class="pb16"
                                     id="category_footer"
                                     t-att-data-editor-message="footer_editor_message"
                                     t-field="category.website_footer"

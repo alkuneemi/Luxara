@@ -116,6 +116,9 @@ class Website(models.Model):
     shop_page_container = fields.Selection(
         selection=[("regular", "Regular"), ("fluid", "Full-width")], default="regular"
     )
+    shop_border_color = fields.Selection(
+        selection=[("default", "Default"), ("strong", "Strong")], default="default"
+    )
     shop_ppg = fields.Integer(string="Number of products in the grid on the shop", default=21)
     shop_ppr = fields.Integer(string="Number of grid columns on the shop", default=3)
 
@@ -147,6 +150,10 @@ class Website(models.Model):
 
     product_page_container = fields.Selection(
         selection=[("unset", "Unset"), ("regular", "Regular"), ("fluid", "Full-width")],
+        default="unset",
+    )
+    product_page_border_color = fields.Selection(
+        selection=[("unset", "Unset"), ("default", "Default"), ("strong", "Strong")],
         default="unset",
     )
 
@@ -946,6 +953,13 @@ class Website(models.Model):
             self.shop_page_container
             if self.product_page_container == "unset"
             else self.product_page_container
+        )
+
+    def _get_product_page_border_color(self):
+        return (
+            self.shop_border_color
+            if self.product_page_border_color == "unset"
+            else self.product_page_border_color
         )
 
     @api.model

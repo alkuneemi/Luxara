@@ -22,7 +22,6 @@
         </BuilderButtonGroup>
     </BuilderRow>
 
-
     <BuilderContext applyTo="'#o_wsale_products_grid'">
         <ProductsDesignPanel
             recordName="'shop_opt_products_design_classes'"
@@ -42,6 +41,18 @@
                         classAction="'o_wsale_products_opt_layout_catalog'"
                     />
                     <BuilderButton classAction="'o_wsale_products_opt_layout_list'"/>
+                    <BuilderButton
+                        id="'list_thumbs_view_opt'"
+                        classAction="'o_wsale_products_opt_layout_catalog o_wsale_products_opt_design_thumbs'"
+                    />
+                    <BuilderButton
+                        id="'showcase_design_opt'"
+                        classAction="'o_wsale_products_opt_design_showcase'"
+                    />
+                    <BuilderButton
+                        id="'bento_design_opt'"
+                        classAction="'o_wsale_products_opt_design_bento'"
+                    />
                 </BuilderButtonGroup>
             </BuilderRow>
         </div>
@@ -97,6 +108,7 @@
         <BuilderSelect action="'websiteConfig'" t-if="this.isActiveItem('categories_opt_top')">
             <BuilderSelectItem actionParam="{views: []}" title.translate="Default">
                 <Image
+                    id="'filmstrip_default_opt'"
                     src="'/website_sale/static/src/img/filmstrips/default.svg'"
                     style="'width:120px;'"
                 />
@@ -129,6 +141,7 @@
                 />
             </BuilderSelectItem>
             <BuilderSelectItem
+                id="'filmstrip_images_opt'"
                 actionParam="{views: ['website_sale.filmstrip_categories_images']}"
                 title.translate="Images"
             >
@@ -147,6 +160,7 @@
                 />
             </BuilderSelectItem>
             <BuilderSelectItem
+                id="'filmstrip_large_images_opt'"
                 actionParam="{views: ['website_sale.filmstrip_categories_large_images']}"
                 title.translate="Large Images"
             >
@@ -156,6 +170,13 @@
                 />
             </BuilderSelectItem>
         </BuilderSelect>
+    </BuilderRow>
+
+    <BuilderRow t-if="this.isBordersOptionVisible" label.translate="Borders">
+        <BuilderButtonGroup action="'setBorderColor'">
+            <BuilderButton actionValue="'default'" actionParam="{ previewClass: 'o_wsale_border_default'}">Default</BuilderButton>
+            <BuilderButton actionValue="'strong'" actionParam="{ previewClass: 'o_wsale_custom_border o_wsale_border_strong'}">Strong</BuilderButton>
+        </BuilderButtonGroup>
     </BuilderRow>
 
     <BuilderRow t-if="this.isActiveItem('categories_opt')" label.translate="Collapse Category Recursive" level="1">

@@ -26,6 +26,7 @@ export class ProductPageOptionPlugin extends Plugin {
             ProductReplaceMainImageAction,
             ProductAddExtraImageAction,
             ProductRemoveAllExtraImagesAction,
+            SetProductPageBorderColor,
         },
         clean_for_save_processors: (el) => {
             // TODO the content of this clean_for_save_processors should probably
@@ -412,6 +413,18 @@ export class ProductRemoveAllExtraImagesAction extends BaseProductPageAction {
             product_template_id: this.productTemplateID,
             combination_ids: this.getSelectedVariantValues(el),
         })
+    }
+}
+
+export class SetProductPageBorderColor extends PreviewableWebsiteConfigAction {
+    static id = "setProductPageBorderColor";
+
+    async apply({ editingElement, isPreviewing, params, value }) {
+        await super.apply({ editingElement, isPreviewing, params, value });
+
+        if (!isPreviewing) {
+            await rpc("/shop/config/website", { product_page_border_color: value });
+        }
     }
 }
 

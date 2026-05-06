@@ -22,6 +22,12 @@
             />
         </BuilderButtonGroup>
     </BuilderRow>
+    <BuilderRow label.translate="Borders">
+        <BuilderButtonGroup action="'setProductPageBorderColor'" applyTo="'.o_wsale_product_page'">
+            <BuilderButton actionValue="'default'" actionParam="{ previewClass: 'o_wsale_border_default'}">Default</BuilderButton>
+            <BuilderButton actionValue="'strong'" actionParam="{ previewClass: 'o_wsale_custom_border o_wsale_product_border_strong'}">Strong</BuilderButton>
+        </BuilderButtonGroup>
+    </BuilderRow>
     <BuilderRow label.translate="Images Area">
         <BuilderSelect
             id="'o_wsale_image_width'"
