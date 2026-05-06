@@ -72,7 +72,7 @@ class AccountMove(models.Model):
     @api.depends("l10n_tr_gib_invoice_scenario", "l10n_tr_is_export_invoice")
     def _compute_l10n_tr_gib_invoice_type(self):
         for record in self:
-            record.l10n_tr_gib_invoice_type = False
+            record.l10n_tr_gib_invoice_type = 'ISTISNA' if record.l10n_tr_is_export_invoice else False
 
     @api.depends("l10n_tr_gib_invoice_scenario", "l10n_tr_gib_invoice_type", "partner_id")
     def _compute_l10n_tr_exemption_code_id(self):
