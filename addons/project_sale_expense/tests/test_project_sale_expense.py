@@ -59,7 +59,6 @@ class TestSaleExpense(TestExpenseCommon, TestSaleCommon):
             'product_id': self.product_c.id,
             'analytic_distribution': {str(self.analytic_account_1.id): 100}
         }])
-
         so_values = {
             'partner_id': self.partner_a.id,
             'order_line': [Command.create({
