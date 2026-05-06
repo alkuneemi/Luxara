@@ -671,8 +671,11 @@
             }
             @include media-breakpoint-up(lg) {
                 #products_grid {
-                    /*rtl:ignore*/
                     padding-left: 0;
+                    /* rtl:raw:
+                        margin-left: calc(var(--gutter-x) * .5);
+                        padding-left: 0;
+                    */
                 }
             }
 
