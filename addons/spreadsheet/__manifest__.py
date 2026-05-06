@@ -28,7 +28,7 @@
             'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml',
             'spreadsheet/static/src/**/*.xml',
             ('remove', 'spreadsheet/static/src/assets_backend/**/*'),
-            ('remove', 'spreadsheet/static/src/public_readonly_app/**/*'),
+            ('remove', 'spreadsheet/static/src/public_spreadsheet/**/*'),
         ],
         'spreadsheet.o_spreadsheet': [
             ('include', 'spreadsheet.o_spreadsheet_core'),
@@ -44,6 +44,7 @@
             ('remove', 'spreadsheet/static/src/ir_ui_menu/spreadsheet_link_service.js'),
             'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.css',
             'spreadsheet/static/src/**/*.scss',
+            'spreadsheet/static/src/public_spreadsheet/**/*',
         ],
         'web.assets_backend': [
             'spreadsheet/static/src/o_spreadsheet/o_spreadsheet.css',

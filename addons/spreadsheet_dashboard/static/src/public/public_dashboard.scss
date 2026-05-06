@@ -1,27 +1,7 @@
 $filter-panel-width: 300px;
 
-#spreadsheet-mount-anchor {
-  background-color: #DDDDDD;
-  overflow: hidden;
-  display: flex;
-  flex-direction: row-reverse;
-}
-.o-spreadsheet {
-  font-size: 12px;
-  height: 100%;
-  flex-grow: 1;
-
-  .o-topbar-toolbar .o-readonly-toolbar.text-muted {
-      color: $info !important;
-  }
-}
-
-header img {
-  height: 32px;
-}
-
 .o-public-spreadsheet-filters {
-  background-color: #E7E9ED;
+  background-color: #e7e9ed;
   gap: 20px 70px;
   width: $filter-panel-width;
 
@@ -38,29 +18,5 @@ header img {
 
   &:hover {
     background-color: #E7E9ED;
-  }
-}
-
-.o-public-spreadsheet:has(.o-spreadsheet-print) {
-  .o-public-spreadsheet-filter-button,
-  .o-public-spreadsheet-filters {
-    display: none !important;
-  }
-}
-
-
-@media print {
-  .o-public-spreadsheet {
-    height: 100% !important;
-  }
-  #spreadsheet-mount-anchor {
-    overflow: unset;
-  }
-}
-
-
-.o-spreadsheet {
-  .o-figure-menu {
-    display: none !important;
   }
 }

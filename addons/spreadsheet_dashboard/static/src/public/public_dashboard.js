@@ -57,6 +57,7 @@ export class PublicDashboard extends Component {
             spreadsheet.__DEBUG__.model = this.model;
         }
     }
+
     toggleGlobalFilters() {
         this.state.isFilterShown = !this.state.isFilterShown;
     }
