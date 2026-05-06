@@ -24,7 +24,7 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { mixCssColors } from "@web/core/utils/colors";
 import { router } from "@web/core/browser/router";
-import { Component, markup, onMounted, onWillStart } from "@odoo/owl";
+import { Component, markup, onMounted, onWillStart, onWillUnmount } from "@odoo/owl";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 import { fuzzyLevenshteinLookup } from "@web/core/utils/search";
 import { isBrowserSafari } from "@web/core/browser/feature_detection";
@@ -674,6 +674,11 @@ export class PaletteSelectionScreen extends Component {
         this.logoInputRef = useRef("logoSelectionInput");
         this.notification = useService("notification");
         this.orm = useService("orm");
+        this.isDestroyed = false;
+
+        onWillUnmount(() => {
+            this.isDestroyed = true;
+        });
 
         onMounted(async () => {
             loadGoogleFonts();
@@ -681,6 +686,9 @@ export class PaletteSelectionScreen extends Component {
                 this.updatePalettes();
             }
             await this.fetchStyleRecommendation();
+            if (this.isDestroyed) {
+                return;
+            }
             this.prefetchThemes();
         });
     }
@@ -709,6 +717,9 @@ export class PaletteSelectionScreen extends Component {
                 prompt,
                 conversation_history: [],
             });
+            if (this.isDestroyed) {
+                return;
+            }
             const match = response?.match(/\{[\s\S]*\}/);
             const parsed = match && JSON.parse(match[0]);
             if (parsed) {
@@ -726,6 +737,9 @@ export class PaletteSelectionScreen extends Component {
             }
         } catch {
             // Silently fail — the user can still pick manually
+        }
+        if (this.isDestroyed) {
+            return;
         }
         this.state.styleRecommendationLoading = false;
     }
