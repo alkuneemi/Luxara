@@ -1,4 +1,5 @@
 import { reactive } from "@web/owl2/utils";
+import { useDomState } from "@html_builder/core/utils";
 import { Plugin } from "@html_editor/plugin";
 import { getCSSVariableValue, getHtmlStyle } from "@html_editor/utils/formatting";
 import { withSequence } from "@html_editor/utils/resource";
@@ -36,6 +37,12 @@ import { ImageSize } from "@html_builder/plugins/image/image_size";
  * @typedef {import("@html_builder/core/builder_options_plugin").BuilderOptionContainer[]} theme_options
  */
 
+const BORDER_RADIUS_MULTIPLIERS = {
+    "border-radius": 1,
+    "border-radius-sm": 0.8,
+    "border-radius-lg": 1.12,
+};
+
 export const GRAY_PARAMS = {
     EXTRA_SATURATION: "gray-extra-saturation",
     HUE: "gray-hue",
@@ -66,6 +73,7 @@ export class ThemeTabPlugin extends Plugin {
             ChangeColorPaletteAction,
             EditCustomCodeAction,
             ConfigureApiKeyAction,
+            CustomizeBorderRadiusVariableAction,
         },
         theme_options: [
             withSequence(
@@ -78,6 +86,15 @@ export class ThemeTabPlugin extends Plugin {
                         class ThemeWebsiteSettingsOption extends BaseOptionComponent {
                             static template = "website.ThemeWebsiteSettingsOption";
                             static components = { ImageSize };
+
+                            setup() {
+                                super.setup();
+                                this.state = useDomState((el) => ({
+                                    isRangeDisabled: el.hasAttribute(
+                                        "data-border-radius-range-disabled"
+                                    ),
+                                }));
+                            }
                         },
                     ],
                     this.document.querySelector("#wrapwrap"),
@@ -350,6 +367,35 @@ export class ConfigureApiKeyAction extends BuilderAction {
     }
     apply() {
         this.dependencies.googleMapsOption.configureGMapsAPI("", true);
+    }
+}
+
+export class CustomizeBorderRadiusVariableAction extends CustomizeWebsiteVariableAction {
+    static id = "customizeBorderRadiusVariable";
+    getValue(context) {
+        const param =
+            context.params.mainParam === "border-radius-range"
+                ? "border-radius"
+                : context.params.mainParam;
+        return super.getValue({ ...context, params: { ...context.params, mainParam: param } });
+    }
+    async apply(context) {
+        if (context.params.mainParam === "border-radius-range") {
+            const value = parseFloat(context.value);
+            const unit = context.value.replace(value, "").trim();
+            const variables = {};
+            for (const [key, multiplier] of Object.entries(BORDER_RADIUS_MULTIPLIERS)) {
+                variables[key] = `${multiplier * value}${unit}`;
+            }
+            context.editingElement.removeAttribute("data-border-radius-range-disabled");
+            await this.dependencies.customizeWebsite.customizeWebsiteVariables(
+                variables,
+                context.params.nullValue ?? "null"
+            );
+        } else {
+            context.editingElement.setAttribute("data-border-radius-range-disabled", "");
+            await super.apply(context);
+        }
     }
 }
 
