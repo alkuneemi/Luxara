@@ -9,3 +9,4 @@ from . import resource_calendar_leaves
 from . import hr_employee
 from . import hr_version
 from . import res_config_settings
+from . import hr_export_work_entries
