@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <record id="calendar_event_multi_delete_wizard_view_form" model="ir.ui.view">
-        <field name="name">calendar_event_multi_delete_wizard_view_form</field>
-        <field name="model">calendar.event.multi.delete.wizard</field>
+    <record id="calendar_event_multi_cancel_wizard_view_form" model="ir.ui.view">
+        <field name="name">calendar_event_multi_cancel_wizard_view_form</field>
+        <field name="model">calendar.event.multi.cancel.wizard</field>
         <field name="arch" type="xml">
             <form string="Delete Events">
                 <p class="alert alert-warning" role="alert">Are you sure you want to delete those events?</p>
                 Send default cancellation emails to the attendees for the confirmed events<span invisible="is_user_admin"> you organized</span>?
-                <field name="delete_wizard_ids" invisible="1">
+                <field name="cancel_wizard_ids" invisible="1">
                     <list>
                         <field name="body"/>
                         <field name="calendar_event_id"/>

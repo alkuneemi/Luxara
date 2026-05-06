@@ -97,7 +97,7 @@ export class AttendeeCalendarController extends CalendarController {
             ) {
                 super.deleteRecord(...arguments);
             } else {
-                this.orm.call("calendar.event", "action_unlink", [
+                this.orm.call("calendar.event", "action_open_delete_wizard", [
                     record.id,
                     record.attendeeId,
                 ])

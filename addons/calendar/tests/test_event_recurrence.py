@@ -764,16 +764,16 @@ class TestUpdateRecurrentEvents(TestRecurrentEvents):
         event = self.events[1]
 
         # Step 1: Use the popover delete wizard to delete the next occurrence of the event.
-        wizard = self.env['calendar.event.delete.wizard'].with_context(
-            form_view_ref='calendar.recurring_calendar_event_delete_wizard_view_form').create({'calendar_event_id': event.id})
+        wizard = self.env['calendar.event.cancel.wizard'].with_context(
+            form_view_ref='calendar.recurring_calendar_event_cancel_wizard_view_form').create({'calendar_event_id': event.id})
         form = Form(wizard)
         form.delete = 'next'
         form.save()
         wizard.close()
 
         # Step 2: Use another delete wizard to handle the deletion of the next occurrence.
-        wizard_delete = self.env['calendar.event.delete.wizard'].with_context(
-            form_view_ref='calendar.calendar_event_delete_wizard_view_form',
+        wizard_delete = self.env['calendar.event.cancel.wizard'].with_context(
+            form_view_ref='calendar.calendar_event_cancel_wizard_view_form',
             default_recurrence='next'
         ).create({'calendar_event_id': event.id})
         form_delete = Form(wizard_delete)
@@ -791,16 +791,16 @@ class TestUpdateRecurrentEvents(TestRecurrentEvents):
         event = self.events[1]
 
         # Step 1: Use the popover delete wizard to delete all occurrences of the event.
-        wizard = self.env['calendar.event.delete.wizard'].with_context(
-            form_view_ref='calendar.recurring_calendar_event_delete_wizard_view_form').create({'calendar_event_id': event.id})
+        wizard = self.env['calendar.event.cancel.wizard'].with_context(
+            form_view_ref='calendar.recurring_calendar_event_cancel_wizard_view_form').create({'calendar_event_id': event.id})
         form = Form(wizard)
         form.delete = 'all'
         form.save()
         wizard.close()
 
         # Step 2: Use another delete wizard to handle the deletion of the event recurrence.
-        wizard_delete = self.env['calendar.event.delete.wizard'].with_context(
-            form_view_ref='calendar.calendar_event_delete_wizard_view_form',
+        wizard_delete = self.env['calendar.event.cancel.wizard'].with_context(
+            form_view_ref='calendar.calendar_event_cancel_wizard_view_form',
             default_recurrence='all'
         ).create({'calendar_event_id': event.id})
         form_delete = Form(wizard_delete)

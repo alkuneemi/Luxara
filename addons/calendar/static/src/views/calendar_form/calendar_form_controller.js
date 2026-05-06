@@ -34,7 +34,7 @@ export class CalendarFormController extends FormController {
             const partnerIds = record.data.partner_ids.resIds
             if (!record.data.is_draft && (record.data.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId))) {
                 this.orm
-                    .call("calendar.event", "action_unlink", [
+                    .call("calendar.event", "action_open_delete_wizard", [
                         record.resId,
                         record.data.current_attendee.id,
                         {type: "ir.actions.act_url", target: "self", url: "/odoo/calendar"},

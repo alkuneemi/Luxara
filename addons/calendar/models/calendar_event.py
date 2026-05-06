@@ -1110,13 +1110,25 @@ class CalendarEvent(models.Model):
             },
         }
 
-    def action_unlink(self, attendee_id=None, next_action=None, recurrence_choice=None):
-        """
-        Delete the event(s) after displaying a delete wizard if necessary.
+    def action_open_delete_wizard(self, attendee_id=None, next_action=None, recurrence_choice=None, send_email=True):
+        return self._action_open_cancel_wizard(
+            'delete',
+            attendee_id=attendee_id,
+            next_action=next_action,
+            recurrence_choice=recurrence_choice,
+            send_email=send_email
+        )
 
+    def _action_open_cancel_wizard(self, requested_action=None, attendee_id=None, next_action=None, recurrence_choice=None, send_email=True):
+        """
+        If needed, it displays a modal to edit the cancellation template email and send it to the attendees otherwise it preforms directly
+        the action requested from the interface as deletion.
+
+        :param requested_action: The action requested from the interface triggering the method.
         :param attendee_id: The ID of the attendee for the event
         :param next_action: The action to perform once the events are deleted
         :param recurrence_choice: The value specifying which events of a recurrence must be deleted
+        :param send_email: If false, the method performs directly the action requested from the interface and do not offer to send cancellation emails
         :return: Action to delete the event(s)
         """
         if not next_action:
@@ -1125,28 +1137,30 @@ class CalendarEvent(models.Model):
         if not self.ids:
             return next_action
 
+        template = self.env.ref('calendar.calendar_template_cancel_event', raise_if_not_found=False)
         if (
             self.user_id._has_any_active_synchronization()
             and not (len(self.ids) == 1 and self.recurrency and not recurrence_choice)  # To display the "Delete Recurring Events" form for recurring events.
+            or not template
+            or not send_email
         ):
-            self.unlink()
+            if not template:
+                _logger.warning('Template "calendar.calendar_template_cancel_event" was not found. Cannot send cancel notifications.')
+            if requested_action == 'delete':
+                self.unlink()
+            elif requested_action == 'cancel':
+                self.action_cancel_meeting(self.env.user.partner_id.ids)
             return next_action
 
-        template = self.env.ref('calendar.calendar_template_delete_event', raise_if_not_found=False)
-        if not template:
-            self.unlink()
-            _logger.warning('Template "calendar.calendar_template_delete_event" was not found. Cannot send delete notifications.')
-            return next_action
-
-        action_unlink = {
+        action_open_cancel_wizard = {
             'type': 'ir.actions.act_window',
             'views': [(False, 'form')],
             'target': 'new',
         }
         if len(self.ids) > 1:
-            action_unlink.update({
-                'name': _('Delete Events'),
-                'res_model': 'calendar.event.multi.delete.wizard',
+            action_open_cancel_wizard.update({
+                'name': _('Cancel Events'),
+                'res_model': 'calendar.event.multi.cancel.wizard',
                 'context': {
                     'active_ids': self.ids,
                     'active_model': 'calendar.event',
@@ -1157,32 +1171,34 @@ class CalendarEvent(models.Model):
             })
         else:
             if self.recurrency and not recurrence_choice:
-                action_unlink.update({
-                    'name': _('Delete Recurring Event'),
-                    'res_model': 'calendar.event.delete.wizard',
+                action_open_cancel_wizard.update({
+                    'name': _('Select Recurring Event'),
+                    'res_model': 'calendar.event.cancel.wizard',
                     'context': {
                         'default_attendee_id': attendee_id,
                         'default_calendar_event_id': self.id,
-                        'form_view_ref': 'calendar.recurring_calendar_event_delete_wizard_view_form',
+                        'default_requested_action': requested_action,
+                        'form_view_ref': 'calendar.recurring_calendar_event_cancel_wizard_view_form',
                         'next_action': next_action,
                     },
                 })
             else:
-                action_unlink.update({
-                    'name': _('Delete Event'),
-                    'res_model': 'calendar.event.delete.wizard',
+                action_open_cancel_wizard.update({
+                    'name': _('Cancel Event'),
+                    'res_model': 'calendar.event.cancel.wizard',
                     'context': {
                         'default_attendee_id': attendee_id,
                         'default_calendar_event_id': self.id,
-                        'default_delete': recurrence_choice,
+                        'default_recurrence_choice': recurrence_choice,
+                        'default_requested_action': requested_action,
                         'default_template_id': template.id,
                         'default_use_template': bool(template),
-                        'form_view_ref': 'calendar.calendar_event_delete_wizard_view_form',
+                        'form_view_ref': 'calendar.calendar_event_cancel_wizard_view_form',
                         'model_description': self.with_context(lang=template._render_lang(self.ids)[self.id]),
                         'next_action': next_action,
                     },
                 })
-        return action_unlink
+        return action_open_cancel_wizard
 
     def _mail_get_operation_for_mail_message_operation(self, message_operation):
         # reading messages on private events requires write access, not just read access

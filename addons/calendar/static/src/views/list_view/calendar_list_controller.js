@@ -42,7 +42,7 @@ export class CaledarListController extends ListController {
             await this.orm.call("calendar.attendee", "do_decline", [declinedAttendeeIds]);
         }
         if (isUnlinkActionRequired) {
-            await this.orm.call("calendar.event", "action_unlink", [unlinkActionEventIds])
+            await this.orm.call("calendar.event", "action_open_delete_wizard", [unlinkActionEventIds])
             .then((action) => {
                 this.actionService.doAction(action);
             });
