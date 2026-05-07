@@ -215,14 +215,19 @@ describe("toolbar dropdowns", () => {
         expect(p.firstChild).toHaveClass("test-font-size");
     });
 
-    test("Should not be able to change tag of `o_editable` element", async () => {
-        const { getEditor } = await setupHTMLBuilder(`<h1 class="o_editable">abcd</h1>`);
+    test("should preserve content when changing font style on OE directive elements", async () => {
+        const { getEditor } = await setupHTMLBuilder(
+            `<h1 data-oe-model="ir.ui.view" data-oe-id="2715" data-oe-field="arch" data-oe-xpath="//h1">Heading</h1>`
+        );
         const editor = getEditor();
         const h1 = editor.editable.querySelector("h1");
         setSelection({ anchorNode: h1, anchorOffset: 0, focusOffset: 1 });
         await waitFor(".o-we-toolbar");
-        await expandToolbar();
-        expect(".o-we-toolbar .btn[name='font']").toHaveCount(0);
+        click(".o-we-toolbar .btn[name='font']");
+        await focusAndClick(".dropdown-menu .dropdown-item[name='h2']");
+        await animationFrame();
+        expect(editor.editable.querySelector("h1")).toBe(null);
+        expect(editor.editable.querySelector("h2")).toHaveText("Heading");
     });
 
     test("should cleanup whitespace after last element removal", async () => {
