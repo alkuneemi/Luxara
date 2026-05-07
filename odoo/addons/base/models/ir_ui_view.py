@@ -1526,12 +1526,15 @@ actual arch.
         return name_manager
 
     def _get_access_groups(self, group_definitions, model_name):
-        group_list = self.env['ir.model.access']._get_all_access_groups()['read'].get(model_name, ())
-        if not group_list:
-            return group_definitions.empty
-        if False in group_list:  # there is some global access
-            return group_definitions.universe
-        return group_definitions.from_ids(group_list)
+        """ Return the group expression object that represents the users who
+        can perform ``operation`` on model ``model_name``.
+        """
+        accesses = self.env['ir.access']._get_all_access().get(model_name, ())
+        return group_definitions.from_ids(
+            access.group_id
+            for access in accesses
+            if access.group_id and 'r' in access.operation
+        )
 
     def _add_missing_fields(self, node, name_manager):
         """ Add the fields required for evaluating expressions in the view given by ``node``. """

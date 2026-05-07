@@ -1,0 +1,4 @@
+id,name,model_id,group_id/id,operation,domain
+account_peppol_rejection_wizard,account.peppol.rejection.wizard,account.peppol.rejection.wizard,account.group_account_invoice,rwcd,
+account_peppol_clarification,account.peppol.clarification,account.peppol.clarification,account.group_account_invoice,rwcd,
+account_peppol_response,account.peppol.response,account.peppol.response,account.group_account_invoice,rwcd,
