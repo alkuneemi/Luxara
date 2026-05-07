@@ -1501,7 +1501,7 @@ export class PosStore extends WithLazyGetterTrap {
         for (const order of orders) {
             const context = this.getSyncAllOrdersContext([order], options);
             await this.preSyncAllOrders([order]);
-            this.syncingOrders.add(order.id);
+            this.syncingOrders.add(order.uuid);
 
             try {
                 const serialized = order.serializeForORM();
@@ -1854,28 +1854,34 @@ export class PosStore extends WithLazyGetterTrap {
             return this.sendOrderInPreparation(order, opts);
         }
 
-        const data = await this.data.call("pos.order", "get_preparation_change", [order.id]);
-        const rawchange = data.last_order_preparation_change || "{}";
-        const lastChanges = JSON.parse(rawchange);
-        const lastServerDate = DateTime.fromSQL(lastChanges.metadata?.serverDate).toUTC();
-        const lastLocalDate = DateTime.fromSQL(
-            order.last_order_preparation_change?.metadata?.serverDate
-        ).toUTC();
+        try {
+            this.syncingOrders.add(order.uuid);
+            const data = await this.data.call("pos.order", "get_preparation_change", [order.id]);
+            const rawchange = data.last_order_preparation_change || "{}";
+            const lastChanges = JSON.parse(rawchange);
+            const lastServerDate = DateTime.fromSQL(lastChanges.metadata?.serverDate).toUTC();
+            const lastLocalDate = DateTime.fromSQL(
+                order.last_order_preparation_change?.metadata?.serverDate
+            ).toUTC();
 
-        if (lastServerDate.isValid && lastServerDate.ts != lastLocalDate.ts) {
-            this.dialog.add(AlertDialog, {
-                title: _t("Order Outdated"),
-                body: _t(
-                    "The order has been modified on another device. If you have modified existing " +
-                        "order lines, check that your changes have not been overwritten.\n\n" +
-                        "The order will be sent to the server with the last changes made on this device."
-                ),
-            });
+            if (lastServerDate.isValid && lastServerDate.ts != lastLocalDate.ts) {
+                this.dialog.add(AlertDialog, {
+                    title: _t("Order Outdated"),
+                    body: _t(
+                        "The order has been modified on another device. If you have modified existing " +
+                            "order lines, check that your changes have not been overwritten.\n\n" +
+                            "The order will be sent to the server with the last changes made on this device."
+                    ),
+                });
 
-            // Update before syncing otherwise it will overwrite the last change
-            order.last_order_preparation_change = lastChanges;
-            await this.syncAllOrders({ orders: [order] });
-            return;
+                // Update before syncing otherwise it will overwrite the last change
+                order.last_order_preparation_change = lastChanges;
+                this.syncingOrders.delete(order.uuid);
+                await this.syncAllOrders({ orders: [order] });
+                return;
+            }
+        } finally {
+            this.syncingOrders.delete(order.uuid);
         }
 
         return this.sendOrderInPreparation(order, opts);
@@ -1883,7 +1889,7 @@ export class PosStore extends WithLazyGetterTrap {
     // Now the printer should work in PoS without restaurant
     async sendOrderInPreparation(order, opts = {}) {
         let isPrinted = false;
-
+        this.syncingOrders.add(order.uuid);
         if (this.config.printerCategories.size && !opts.byPassPrint) {
             try {
                 let reprint = false;
@@ -1931,6 +1937,7 @@ export class PosStore extends WithLazyGetterTrap {
             }
         }
         order.updateLastOrderChange();
+        this.syncingOrders.delete(order.uuid);
         // Ensure that other devices are aware of the changes
         // Otherwise several devices can print the same changes
         // We need to check if a preparation display is configured to avoid unnecessary sync
@@ -2963,6 +2970,16 @@ export class PosStore extends WithLazyGetterTrap {
     }
     canEditPayment(order) {
         return order.nb_print === 0;
+    }
+
+    isOrderSyncing(order, notify = true) {
+        const isSyncing = !!order && this.syncingOrders.has(order?.uuid);
+        if (isSyncing && notify) {
+            this.notification.add(
+                _t("This order is currently syncing, please wait a moment before loading it.")
+            );
+        }
+        return isSyncing;
     }
 }
 

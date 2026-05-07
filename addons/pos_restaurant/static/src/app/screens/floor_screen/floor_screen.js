@@ -688,7 +688,7 @@ export class FloorScreen extends Component {
             this.onClickTable(table.parent_id, ev);
             return;
         }
-        if (!this.pos.isOrderTransferMode) {
+        if (!this.pos.isOrderTransferMode && !this.pos.isOrderSyncing(table.getOrder())) {
             await this.pos.setTableFromUi(table);
         }
     }
