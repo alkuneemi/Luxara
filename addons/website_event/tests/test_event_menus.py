@@ -25,7 +25,7 @@ class TestEventMenus(OnlineEventCase, HttpCase):
         self.assertTrue(event.website_menu)
         self.assertTrue(event.introduction_menu)
         self.env['ir.ui.view'].create({
-            'arch_db': '<xpath expr="//div[@id=\'oe_structure_website_event_intro_2\']" position="replace"><p>This is an intro</p></xpath>',
+            'arch_db': '<xpath expr="//div[@id=\'oe_structure_website_event_intro\']" position="replace"><p>This is an intro</p></xpath>',
             'inherit_id': event.introduction_menu_ids.view_id.id,
             'key': 'website_event.intro-test-child',
         })
