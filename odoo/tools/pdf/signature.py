@@ -192,7 +192,7 @@ class PdfSigner:
 
         # 3. Write the Incremental Updated PDF, the placeholders record their own offsets while serializing
         pdf_merger = IncrementalPdfMerge(self.pdf_raw)
-        pdf_merger._write_incremented_pdf(self.pdf_reader, incremented_objects)
+        pdf_merger.write_incremented_pdf(self.pdf_reader, incremented_objects)
 
         # 4. Sign the Document (fill the signature placeholders)
         final_output = pdf_merger.get_output_stream_value()
