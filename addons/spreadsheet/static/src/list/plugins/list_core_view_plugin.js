@@ -26,7 +26,7 @@ export class ListCoreViewPlugin extends OdooCoreViewPlugin {
         "getAsyncListDataSource",
         "isListUnused",
         "getListValuesAndFormats",
-        "invalidateListsCache",
+        "getListPresentation",
     ]);
     constructor(config) {
         super(config);
@@ -244,6 +244,10 @@ export class ListCoreViewPlugin extends OdooCoreViewPlugin {
         return this.getters.getListDataSource(listId).getComputedDomain();
     }
 
+    getListPresentation(listId) {
+        return this.lists[listId];
+    }
+
     /**
      * Get the id of the list at the given position. Returns undefined if there
      * is no list at this position
@@ -400,11 +404,5 @@ export class ListCoreViewPlugin extends OdooCoreViewPlugin {
 
     getListValuesAndFormats(listId, rowCount) {
         return this.lists[listId].getListValuesAndFormats(rowCount);
-    }
-
-    invalidateListsCache() {
-        for (const listId of this.getters.getListIds()) {
-            this.lists[listId].invalidateCache();
-        }
     }
 }

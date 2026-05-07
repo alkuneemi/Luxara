@@ -60,7 +60,9 @@ inverseCommandRegistry
     .add("DUPLICATE_ODOO_LIST", identity);
 
 onIterationEndEvaluationRegistry.add("list", (getters) => {
-    getters.invalidateListsCache();
+    for (const listId of getters.getListIds()) {
+        getters.getListPresentation(listId).invalidateCache();
+    }
 });
 
 export { ListCorePlugin, ListCoreViewPlugin, ListUIPlugin };

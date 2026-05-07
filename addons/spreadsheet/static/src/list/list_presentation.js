@@ -1,6 +1,6 @@
 import * as spreadsheet from "@odoo/o-spreadsheet";
 
-const { isEvaluationError, isMatrix } = spreadsheet.helpers;
+const { isEvaluationError, isMatrix, unquote } = spreadsheet.helpers;
 const { NotAvailableError, CircularDependencyError } = spreadsheet;
 
 export class ListPresentationLayer {
@@ -94,7 +94,8 @@ export class ListPresentationLayer {
         }
         const formula = this.getters.getListCompiledColumnFormula(this.id, column.name);
         const getSymbolValue = (symbol) => {
-            const symbolColumn = this.definition.columns.find((col) => col.string === symbol);
+            symbol = unquote(symbol, "'");
+            const symbolColumn = this.definition.columns.find((col) => col.name === symbol);
             if (!symbolColumn) {
                 return new NotAvailableError();
             } else if (symbolColumn.string === column.string) {

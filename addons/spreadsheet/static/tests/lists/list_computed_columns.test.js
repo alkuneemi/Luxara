@@ -54,7 +54,7 @@ test("computed column with a constant formula", async () => {
 
 test("computed column referencing another column by its string name", async () => {
     // Partner.foo values: [12, 1, 17, 2]
-    // Formula: =Foo*2  →  [24, 2, 34, 4]
+    // Formula: =foo*2  →  [24, 2, 34, 4]
     const { model } = await createSpreadsheetWithList({
         columns: [
             { name: "foo", string: "Foo" },
@@ -74,7 +74,7 @@ test("computed column referencing another column by its string name", async () =
                 {
                     name: "'2 Foo'",
                     string: "2 Foo",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -113,7 +113,7 @@ test("computed column referencing a spreadsheet cell", async () => {
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*A20", sheetId },
+                    computedBy: { formula: "=foo*A20", sheetId },
                 },
             ],
         },
@@ -145,7 +145,7 @@ test("computed column is recomputed when its cell dependency changes", async () 
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*A20", sheetId },
+                    computedBy: { formula: "=foo*A20", sheetId },
                 },
             ],
         },
@@ -179,12 +179,12 @@ test("chained computed columns", async () => {
                 {
                     name: "computed1",
                     string: "Computed1",
-                    computedBy: { formula: "=Foo*3", sheetId },
+                    computedBy: { formula: "=foo*3", sheetId },
                 },
                 {
                     name: "computed2",
                     string: "Computed2",
-                    computedBy: { formula: "=Computed1*2", sheetId },
+                    computedBy: { formula: "=computed1*2", sheetId },
                 },
             ],
         },
@@ -215,7 +215,7 @@ test("self-referencing computed column returns #CYCLE", async () => {
                 {
                     name: "self",
                     string: "Self",
-                    computedBy: { formula: "=Self+1", sheetId },
+                    computedBy: { formula: "=self+1", sheetId },
                 },
             ],
         },
@@ -274,7 +274,7 @@ test("computed column works in dynamic ODOO.LIST mode", async () => {
                 {
                     name: "Double Foo",
                     string: "Double Foo",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -318,7 +318,7 @@ test("adding or updating a computed column via UPDATE_ODOO_LIST does not trigger
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -335,7 +335,7 @@ test("adding or updating a computed column via UPDATE_ODOO_LIST does not trigger
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*5", sheetId },
+                    computedBy: { formula: "=foo*5", sheetId },
                 },
             ],
         },
@@ -355,7 +355,7 @@ test("computed column definition is preserved in export/import roundtrip", async
     const computedCol = {
         name: "double_foo",
         string: "Double Foo",
-        computedBy: { formula: "=Foo*2", sheetId },
+        computedBy: { formula: "=foo*2", sheetId },
     };
     model.dispatch("UPDATE_ODOO_LIST", {
         listId,
@@ -369,7 +369,7 @@ test("computed column definition is preserved in export/import roundtrip", async
     expect(importedComputedCol).toMatchObject({
         name: "double_foo",
         string: "Double Foo",
-        computedBy: { formula: "=Foo*2", sheetId },
+        computedBy: { formula: "=foo*2", sheetId },
     });
 
     // Re-import and verify the value still computes correctly
@@ -400,7 +400,7 @@ test("undo/redo adding a computed column", async () => {
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -409,7 +409,7 @@ test("undo/redo adding a computed column", async () => {
 
     expect(
         model.getters.getListDefinition(listId).columns.find((col) => col.name === "computed")
-    ).toMatchObject({ name: "computed", computedBy: { formula: "=Foo*2", sheetId } });
+    ).toMatchObject({ name: "computed", computedBy: { formula: "=foo*2", sheetId } });
 
     undo(model);
     await waitForDataLoaded(model);
@@ -421,7 +421,7 @@ test("undo/redo adding a computed column", async () => {
     await waitForDataLoaded(model);
     expect(
         model.getters.getListDefinition(listId).columns.find((col) => col.name === "computed")
-    ).toMatchObject({ name: "computed", computedBy: { formula: "=Foo*2", sheetId } });
+    ).toMatchObject({ name: "computed", computedBy: { formula: "=foo*2", sheetId } });
 });
 
 test("hidden column referenced by a computed column is still fetched", async () => {
@@ -454,7 +454,7 @@ test("hidden column referenced by a computed column is still fetched", async () 
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -488,7 +488,7 @@ test("computed column referencing multiple other columns", async () => {
                 {
                     name: "sum_col",
                     string: "Sum",
-                    computedBy: { formula: "=Foo+Probability", sheetId },
+                    computedBy: { formula: "=foo+probability", sheetId },
                 },
             ],
         },
@@ -523,7 +523,7 @@ test("getListCompiledColumnFormula returns the compiled formula for a computed c
                 {
                     name: "computed",
                     string: "Computed",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
@@ -560,7 +560,7 @@ test("computed column header is its string name", async () => {
                 {
                     name: "computed",
                     string: "My Computed Column",
-                    computedBy: { formula: "=Foo*2", sheetId },
+                    computedBy: { formula: "=foo*2", sheetId },
                 },
             ],
         },
