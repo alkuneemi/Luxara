@@ -4446,11 +4446,26 @@ class AccountTax(models.Model):
 
         static_domain = Domain(self._check_company_domain(company))
         for tax_values in tax_values_list:
+<<<<<<< 6e9b674b843445448f131734a03f6515595e6381
             tax_domain = (
                Domain('amount_type', '=', tax_values['amount_type']) &
                Domain('type_tax_use', '=', tax_values['type_tax_use']) &
                Domain('amount', '=', tax_values['amount'])
             )
+||||||| 4cc1e6884be673523f768d5ec471a1ffa19c5fb4
+            tax_domain = [
+               ('amount_type', '=', tax_values['amount_type']),
+               ('type_tax_use', '=', tax_values['type_tax_use']),
+               ('amount', '=', tax_values['amount']),
+            ]
+=======
+            tax_domain = [
+               ('amount_type', '=', tax_values['amount_type']),
+               ('type_tax_use', '=', tax_values['type_tax_use']),
+               ('amount', '=', tax_values['amount']),
+               *([('country_id', '=', tax_values['invoice_predictive']['invoice'].tax_country_id.id)] if 'invoice_predictive' in tax_values else []),
+            ]
+>>>>>>> 5cd29fcb012945342a0810344b6ca549424d9551
             orders = ['sequence', 'id']
             if name := tax_values.get('name'):
                 tax_domain &= Domain('name', '=', name)
