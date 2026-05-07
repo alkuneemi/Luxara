@@ -466,7 +466,7 @@ class MockEmail(common.BaseCase, MockSmtplibCase):
 
         :param email-to: a list of emails that will be compared to email_to
           of sent emails (also a list of emails);
-        :parap trace_id: (optional) filter emails in which the links are linked
+        :param trace_id: (optional) filter emails in which the links are linked
           to that trace;
 
         :return email: an email which is a dictionary mapping values given to
