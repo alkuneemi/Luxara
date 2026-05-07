@@ -2,7 +2,7 @@ import { registry } from "@web/core/registry";
 import { Plugin } from "../plugin";
 import { zip } from "@web/core/utils/arrays";
 import { DIMENSIONS } from "../hooks";
-import { Analysis, ElementLayout, EmailNode } from "../core/node_models";
+import { Analysis, ElementLayout, EmailNode } from "../core/render_models";
 
 const { DESKTOP, MOBILE } = DIMENSIONS;
 // Prevent the last inline-block element from wrapping to the next line due

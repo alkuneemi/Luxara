@@ -1,6 +1,6 @@
 import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
-import { Analysis, ElementLayout, EmailNode, TextLayout } from "./node_models";
+import { Analysis, ElementLayout, EmailNode, TextNodeLayout } from "./render_models";
 import { renderEmailNode } from "./render_models";
 
 /**
@@ -72,7 +72,7 @@ export class RenderPlugin extends Plugin {
     createEmailNode(node, parentEmailNode) {
         let childNodes, emailNode;
         if (node.nodeType === Node.TEXT_NODE) {
-            const layout = new TextLayout({ content: node.nodeValue });
+            const layout = new TextNodeLayout({ content: node.nodeValue });
             emailNode = new EmailNode({
                 layout,
                 referenceNode: node,

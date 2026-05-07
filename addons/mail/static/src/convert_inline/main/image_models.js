@@ -1,4 +1,4 @@
-import { LayoutModel } from "../core/layout_models";
+import { LayoutModel } from "../core/render_models";
 
 /**
  * TODO EGGMAIL NOW: imageModel?

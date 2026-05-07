@@ -14,8 +14,8 @@ export class NodePositionManager extends Array {
         return nodeIds;
     }
 
-    setNodePositions(fragment) {
-        for (const nodePosition of fragment.querySelectorAll("node-position[data-id]")) {
+    setNodePositions(node) {
+        for (const nodePosition of node.querySelectorAll("node-position[data-id]")) {
             const node = this[nodePosition.dataset.id];
             if (node) {
                 nodePosition.before(this[nodePosition.dataset.id]);
@@ -25,7 +25,11 @@ export class NodePositionManager extends Array {
     }
 
     renderContext(context = {}) {
-        const { nodes } = context;
+        let nodes = [];
+        const { renderPositionedNodes } = context;
+        if (renderPositionedNodes) {
+            nodes = renderPositionedNodes(context);
+        }
         return { ...context, nodeIds: this.registerNodes(nodes) };
     }
 
@@ -79,12 +83,14 @@ export class LayoutModel {
     refToAttributes = new ObjectMap();
     refToClassNames = new SetMap();
     refToStyleInfo = new StyleInfoMap();
+    pluginIds = new Set();
 
     /**
      * @param {Object} [options={}]
      * @param {Object<string, ElementOptions>} [options.refs={}] assign ElementOptions to named template refs
      */
     constructor({ refs = {} } = {}) {
+        this.refs = refs;
         // TODO EGGMAIL: maybe remove the generic class?
         // Generic class for every layoutModel root element
         this.setAttributes({ classNames: "o-ci" });
@@ -92,6 +98,14 @@ export class LayoutModel {
         for (const [ref, options] of Object.entries(refs)) {
             this.setAttributes(options, ref);
         }
+    }
+
+    /**
+     * TODO EGGMAIL investigate when identities are merged to clarify the flow
+     * Can be overridden to define how 2 layouts should be merged together
+     */
+    merge(originalLayout) {
+        return originalLayout;
     }
 
     get template() {
@@ -120,53 +134,57 @@ export class LayoutModel {
         return { ...context, model: this };
     }
 
-    renderToFragment() {
+    renderToFragment(context = {}) {
         const nodePositionManager = new NodePositionManager();
         const fragment = renderToFragment(
             this.template,
-            this.renderContext({ nodePositionManager })
+            this.renderContext(
+                Object.assign({ renderPositionedNodes: () => {} }, context, { nodePositionManager })
+            )
         );
         nodePositionManager.setNodePositions(fragment);
         return fragment;
     }
 }
 
-export class LayoutModelRef extends LayoutModel {
-    static template = "mail.LayoutModelRef";
+export class ElementLayout extends LayoutModel {
+    static template = "mail.ElementLayout";
 
-    constructor({ hooks = {} } = {}) {
-        super(...arguments);
-        this.hooks = hooks;
-    }
-}
-
-export class LayoutModelRefChildNodes extends LayoutModelRef {
-    constructor({ childNodes = [], hooks = {} } = {}) {
-        super(...arguments);
-        this.childNodes = childNodes;
-        if (!hooks.content) {
-            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelChildNodes" };
-        }
-    }
-}
-
-export class LayoutModelRefTag extends LayoutModelRefChildNodes {
-    constructor({ hooks = {}, tag } = {}) {
-        super(...arguments);
+    constructor({ tag = "DIV", attributes = {}, classNames = "", style = {} } = {}) {
+        super({
+            refs: {
+                root: { attributes, classNames, style },
+            },
+        });
         this.tag = tag;
-        if (!hooks.content) {
-            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelTag" };
-        }
+    }
+
+    /**
+     * TODO EGGMAIL: reevaluate if we merge into the argument or if the
+     * argument merges into this => for consistency
+     */
+    merge(originalLayout) {
+        originalLayout.setAttributes(this.refs.root);
+        originalLayout.tag = this.tag;
+    }
+
+    getStyleInfo() {
+        return this.refToStyleInfo.get("root");
     }
 }
 
-export class LayoutModelList extends LayoutModelRef {
-    constructor({ hooks = {}, modelList = [] } = {}) {
-        super(...arguments);
-        this.modelList = modelList;
-        if (!hooks.content) {
-            this.hooks.content = { isTemplate: true, template: "mail.LayoutModelList" };
-        }
+export class TextNodeLayout {
+    content = "";
+
+    constructor({ content }) {
+        this.content = content;
+    }
+
+    renderToFragment() {
+        const fragment = document.createDocumentFragment();
+        const textNode = document.createTextNode(this.content);
+        fragment.append(textNode);
+        return fragment;
     }
 }
 
@@ -236,9 +254,11 @@ export class Analysis {
     }
 }
 
-export function renderEmailNode(emailNode) {
+export function renderEmailNode(emailNode, context = {}) {
     return emailNode.layout.renderToFragment({
-        children: emailNode.children.map((child) => renderEmailNode(child)),
+        ...context,
+        renderPositionedNodes: (positionContext = {}) =>
+            emailNode.children.map((child) => renderEmailNode(child, positionContext)),
     });
 }
 
@@ -309,66 +329,5 @@ export class EmailNode {
 
     get lastChild() {
         return this.children.at(-1);
-    }
-}
-
-class Layout {
-    pluginIds = new Set();
-
-    /**
-     * Can be overridden to define how 2 identities should be merged together
-     */
-    merge(originalLayout) {
-        return originalLayout;
-    }
-}
-
-/**
- * TODO EGGMAIL: implement API so that plugins can modify/define characteristics?
- * Objective of layout is to provide an API for a LayoutModel to get the required arguments
- * for that layoutModel.
- * => layout is closely related to a node, either text or element
- */
-export class ElementLayout extends Layout {
-    tag;
-    styleInfo = new StyleInfo();
-    attributes = {};
-    classNames = new Set();
-
-    constructor(options) {
-        options ??= {};
-        super(options);
-        this.tag = options.tag;
-        this.setAttributes(options);
-    }
-
-    merge(originalLayout) {
-        originalLayout.setAttributes(this);
-        originalLayout.tag = this.tag;
-        return originalLayout;
-    }
-
-    setAttributes({ attributes = {}, classNames = "", style = {} } = {}) {
-        Object.assign(this.attributes, attributes);
-        if (typeof classNames === "string") {
-            classNames = classNames.split(" ").filter(Boolean);
-        }
-        this.classNames = this.classNames.union(new Set(classNames));
-        this.styleInfo.merge(StyleInfo.from(style), this.styleInfo.maxSequence);
-    }
-
-    get style() {
-        return this.styleInfo;
-    }
-}
-
-export class TextLayout extends Layout {
-    content;
-
-    constructor({ content } = {}) {
-        super(...arguments);
-        // TODO EGGMAIL: same consideration as ElementLayout: do we really
-        // need node details? We could just get it from the actual node later.
-        this.content = content;
     }
 }
