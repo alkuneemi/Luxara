@@ -394,6 +394,19 @@ class TestPeppolMessage(TestAccountMoveSendCommon, MailCommon):
                 'move_type': 'in_invoice',
             }])
 
+    def test_delete_received_document(self):
+        self.env['account_edi_proxy_client.user']._cron_peppol_get_new_documents()
+        move = self.env['account.move'].search([('peppol_message_uuid', '=', FAKE_UUID[1])])
+        with self.assertRaisesRegex(UserError, r"^Cannot delete the following invoices:"):
+            move.unlink()
+
+    def test_action_peppol_cancel_and_remove_sequence(self):
+        self.env['account_edi_proxy_client.user']._cron_peppol_get_new_documents()
+        move = self.env['account.move'].search([('peppol_message_uuid', '=', FAKE_UUID[1])])
+        move.action_peppol_cancel_and_remove_sequence()
+        self.assertEqual(move.state, 'cancel')
+        self.assertEqual(move.name, '/')
+
     def test_received_bill_notification(self):
         peppol_purchase_journal = self.env.company.peppol_purchase_journal_id
         peppol_purchase_journal.incoming_einvoice_notification_email = 'oops_another_bill@example.com'
