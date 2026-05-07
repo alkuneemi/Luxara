@@ -37,6 +37,10 @@ class EventEventTicket(models.Model):
         string='Is Available', compute='_compute_sale_available', compute_sudo=True,
         help='Whether it is possible to sell these tickets')
     registration_ids = fields.One2many('event.registration', 'event_ticket_id', string='Registrations')
+    entry_limit = fields.Integer(default=0, string="Entry Limit",
+        help="Enable multi-entry tickets\n"
+        "- Set to 0 or 1 to disable.\n"
+        "- Enter 2 or more to define the maximum number of allowed entries.")
     # seats
     seats_reserved = fields.Integer(string='Reserved Seats', compute='_compute_seats', store=False)
     seats_available = fields.Integer(string='Available Seats', compute='_compute_seats', store=False)
@@ -48,6 +52,11 @@ class EventEventTicket(models.Model):
         'Sold Out', compute='_compute_is_sold_out', help='Whether seats are not available for this ticket.')
     # reports
     color = fields.Char('Color', default="#875A7B")
+
+    _entry_limit_positive = models.Constraint(
+        'CHECK(entry_limit >= 0)',
+        'The Entry Limit of an event ticket cannot be lower than 0.',
+    )
 
     @api.depends('end_sale_datetime', 'event_id.date_tz')
     def _compute_is_expired(self):
