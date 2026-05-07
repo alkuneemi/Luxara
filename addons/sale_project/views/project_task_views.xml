@@ -48,6 +48,7 @@
         <field name="name">project.project.view.inherit</field>
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project"/>
+        <field name="priority">20</field>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='project_update_all_action']" position="after">
                 <field name="display_sales_stat_buttons" invisible="1"/>
@@ -146,7 +147,7 @@
                     </setting>
                 </div>
             </xpath>
-            <xpath expr="//t[@name='allocated_hours_placeholder']" position="after">
+            <xpath expr="//group[@name='other_section']" position="inside">
                 <field name="reinvoiced_sale_order_id" invisible="not allow_billable or not partner_id or is_template"  context="{'default_partner_id': partner_id}"/>
                 <label for="sale_line_id" invisible="not allow_billable or not partner_id or is_template"/>
                 <div

@@ -176,8 +176,7 @@
                                     </span>
                                 </group>
                                 <div class="o_col">
-                                    <group>
-                                        <t name="allocated_hours_placeholder"/>
+                                    <group name="other_section">
                                     </group>
                                     <group name="analytic" groups="analytic.group_analytic_accounting">
                                         <div class="o_flexible_margin_top o_horizontal_separator text-uppercase fw-bolder small mb-3" colspan="2">analytic</div>
