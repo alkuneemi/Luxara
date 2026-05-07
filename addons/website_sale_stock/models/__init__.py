@@ -2,6 +2,7 @@
 
 from . import (
     delivery_carrier,
+    product_template,
     res_config_settings,
     res_partner,
     sale_order,

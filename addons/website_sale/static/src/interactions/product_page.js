@@ -9,7 +9,7 @@ import { memoize, uniqueId } from '@web/core/utils/functions';
 import { KeepLast } from '@web/core/utils/concurrency';
 import { setElementContent } from '@web/core/utils/html';
 import { insertThousandsSep, formatFloat } from '@web/core/utils/numbers';
-import { renderToElement, renderToFragment } from '@web/core/utils/render';
+import { renderToFragment } from '@web/core/utils/render';
 import { isEmail } from '@web/core/utils/strings';
 import { throttleForAnimation } from '@web/core/utils/timing';
 import { htmlEscape, markup } from '@odoo/owl';
@@ -736,8 +736,15 @@ export class ProductPage extends Interaction {
         const addQtyInput = parent.querySelector('input[name="add_qty"]');
         const qty = parseFloat(addQtyInput?.value) || 1;
         const ctaWrapper = parent.querySelector('#o_wsale_cta_wrapper');
-        ctaWrapper.classList.replace('d-none', 'd-flex');
+        const outOfStockWrapper = ctaWrapper.querySelector('#out_of_stock_buttons_wrapper');
+        const notifyMeButton = ctaWrapper.querySelector('#product_stock_notification_message');
+        const subscribedButton = ctaWrapper.querySelector('#stock_notification_success_message');
+        const notificationWrapper = ctaWrapper.querySelector('#stock_notification_div_wrapper');
         ctaWrapper.classList.remove('out_of_stock');
+        outOfStockWrapper?.classList.replace('d-flex', 'd-none');
+        notifyMeButton?.classList.add('d-none');
+        subscribedButton?.classList.add('d-none');
+        notificationWrapper?.classList.add('d-none');
 
         if (!combination.allow_out_of_stock_order) {
             const unavailableQty = await this.waitFor(this._getUnavailableQty(combination));
@@ -752,8 +759,14 @@ export class ProductPage extends Interaction {
                 }
             }
             if (combination.free_qty < 1 && !combination.prevent_sale) {
-                ctaWrapper.classList.replace('d-flex', 'd-none');
                 ctaWrapper.classList.add('out_of_stock');
+                addToCart.classList.add('d-none');
+                outOfStockWrapper?.classList.replace('d-none', 'd-flex');
+                if (combination.has_stock_notification) {
+                    subscribedButton?.classList.remove('d-none');
+                } else {
+                    notifyMeButton?.classList.remove('d-none');
+                }
             }
         }
 
@@ -765,8 +778,14 @@ export class ProductPage extends Interaction {
                 }
             }
             if (combination.max_combo_quantity < 1 && !combination.prevent_sale) {
-                ctaWrapper.classList.replace('d-flex', 'd-none');
                 ctaWrapper.classList.add('out_of_stock');
+                addToCart.classList.add('d-none');
+                outOfStockWrapper?.classList.replace('d-none', 'd-flex');
+                if (combination.has_stock_notification) {
+                    subscribedButton?.classList.remove('d-none');
+                } else {
+                    notifyMeButton?.classList.remove('d-none');
+                }
             }
         }
 
@@ -791,17 +810,6 @@ export class ProductPage extends Interaction {
         this.el.querySelector('div.availability_messages').append(renderToFragment(
             'website_sale.product_availability', combination
         ));
-        if (this.el.querySelector('.o_add_wishlist_dyn')) {
-            const messageEl = this.el.querySelector('div.availability_messages');
-            if (messageEl && !this.el.querySelector('#stock_wishlist_message')) {
-                this.services['public.interactions'].stopInteractions(messageEl);
-                messageEl.append(
-                    renderToElement('website_sale.product_availability_wishlist', combination)
-                    || ''
-                );
-                this.services['public.interactions'].startInteractions(messageEl);
-            }
-        }
     }
 
     async _getUnavailableQty(combination) {
@@ -872,8 +880,12 @@ export class ProductPage extends Interaction {
         const partnerEmail = document.querySelector('#wsale_user_email').value;
         const emailInputEl = document.querySelector('#stock_notification_input');
 
-        emailInputEl.value = partnerEmail;
-        this._handleClickStockNotificationMessage(ev);
+        if (partnerEmail) {
+            emailInputEl.value = partnerEmail;
+            this.onClickSubmitProductStockNotificationForm(ev);
+        } else {
+            this._handleClickStockNotificationMessage(ev);
+        }
     }
 
     onClickSubmitProductStockNotificationForm(ev) {
@@ -882,14 +894,25 @@ export class ProductPage extends Interaction {
     }
 
     _handleClickStockNotificationMessage(ev) {
-        ev.currentTarget.classList.add('d-none');
-        ev.currentTarget.parentElement.querySelector('#stock_notification_form').classList.remove('d-none');
+        const ctaSection = ev.currentTarget.closest("#o_wsale_product_cta_section");
+        const ctaWrapper = ctaSection.querySelector("#o_wsale_cta_wrapper");
+        ctaSection
+            .querySelector("#stock_notification_div_wrapper")
+            .classList.replace("d-none", "d-flex");
+        if (
+            !ctaWrapper.classList.contains("o_wsale_cta_wrapper_large") &&
+            !ctaWrapper.classList.contains("o_wsale_cta_wrapper_boxed")
+        ) {
+            ctaWrapper.classList.replace("mb-4", "mb-2");
+        }
     }
 
     async _handleClickSubmitStockNotificationForm(ev, productId) {
-        const stockNotificationEl = ev.currentTarget.closest('#stock_notification_div');
-        const formEl = stockNotificationEl.querySelector('#stock_notification_form');
-        const email = stockNotificationEl.querySelector('#stock_notification_input').value.trim();
+        const ctaSection = ev.currentTarget.closest("#o_wsale_product_cta_section");
+        const ctaWrapper = ctaSection.querySelector("#o_wsale_cta_wrapper");
+        const stockNotificationEl = ctaSection.querySelector("#stock_notification_div_wrapper");
+        const notifyEl = ctaSection.querySelector("#product_stock_notification_message");
+        const email = stockNotificationEl.querySelector("#stock_notification_input").value.trim();
 
         if (!isEmail(email)) {
             return this._displayEmailIncorrectMessage(stockNotificationEl);
@@ -903,9 +926,16 @@ export class ProductPage extends Interaction {
             this._displayEmailIncorrectMessage(stockNotificationEl);
             return;
         }
-        const message = stockNotificationEl.querySelector('#stock_notification_success_message');
-        message.classList.remove('d-none');
-        formEl.classList.add('d-none');
+        const message = ctaSection.querySelector("#stock_notification_success_message");
+        stockNotificationEl.classList.replace("d-flex", "d-none");
+        message.classList.remove("d-none");
+        notifyEl.classList.add("d-none");
+        if (
+            !ctaWrapper.classList.contains("o_wsale_cta_wrapper_large") &&
+            !ctaWrapper.classList.contains("o_wsale_cta_wrapper_boxed")
+        ) {
+            ctaWrapper.classList.replace("mb-2", "mb-4");
+        }
     }
 
     _displayEmailIncorrectMessage(stockNotificationEl) {
