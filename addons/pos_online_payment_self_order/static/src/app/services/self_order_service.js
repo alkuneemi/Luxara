@@ -62,8 +62,9 @@ patch(SelfOrder.prototype, {
 
             exitRouteUrl += `?access_token=${this.access_token}${table}`;
         }
+        const exit =
+            this.config.self_ordering_mode === "mobile" ? encodeURIComponent(exitRouteUrl) : "";
 
-        const exit = encodeURIComponent(exitRouteUrl);
         return `${baseUrl}/pos/pay/${order_id}?access_token=${order_access_token}&exit_route=${exit}`;
     },
     shouldUpdateLastOrderChange() {
