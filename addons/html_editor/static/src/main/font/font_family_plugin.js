@@ -51,8 +51,7 @@ export class FontFamilyPlugin extends Plugin {
                         this.fontFamily.displayName = item.nameShort;
                     },
                 },
-                isAvailable: (selection) =>
-                    isHtmlContentSupported(selection) && (this.config.allowFontFamily ?? true),
+                isAvailable: isHtmlContentSupported,
             }),
         ],
         /** Handlers */
