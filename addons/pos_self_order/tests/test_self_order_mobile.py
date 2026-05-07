@@ -324,7 +324,7 @@ class TestSelfOrderMobile(SelfOrderCommonTest):
 
         self.start_tour(self_route, "test_self_order_table_no_more_sharing-each_mode")
         last_order = self.pos_config.current_session_id.order_ids[0]
-        self.assertEqual(last_order.floating_order_name, f"Self-Order T {table.table_number}")
+        self.assertEqual(last_order.floating_order_name, f"Self-Order T {table.table_number} ({last_order.tracking_number})")
         self.assertFalse(last_order.table_id)
 
         self.pos_config.write({
