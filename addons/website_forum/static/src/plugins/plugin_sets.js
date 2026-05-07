@@ -1,7 +1,7 @@
 import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { ForumFontPlugin } from "./font_plugin";
 
-const removedPlugins = new Set(["colorUi", "file", "iconColor", "fontFamily"]);
+const removedPlugins = new Set(["colorUi", "file", "iconColor", "fontFamily", "powerButtons"]);
 
 const customPlugins = {
     font: ForumFontPlugin,
