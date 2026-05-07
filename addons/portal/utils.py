@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from odoo.fields import Domain
 from odoo.tools import consteq
 
 
@@ -24,3 +25,13 @@ def get_portal_partner(thread, _hash, pid, token):
         if partner := thread._mail_get_partners()[thread.id][:1]:
             return partner
     return thread.env["res.partner"]
+
+
+def get_portal_message_fetch_domain(records):
+    """Return the domain of messages visible on the portal.
+    This combines the share visibility domain and the non-empty message domain."""
+    return (
+        Domain([("model", "=", records._name), ("res_id", "in", records.ids)])
+        & ~records.env["mail.message"]._get_empty_domain()
+        & records.env["mail.message"]._get_share_domain()
+    )

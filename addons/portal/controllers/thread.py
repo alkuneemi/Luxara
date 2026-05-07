@@ -5,7 +5,7 @@ from odoo.http import request
 from odoo.addons.mail.controllers.thread import ThreadController
 from odoo.addons.mail.controllers.webclient import WebclientController, WRITE_FETCH_PARAMS
 from odoo.addons.mail.tools.discuss import Store
-from odoo.addons.portal.utils import get_portal_partner
+from odoo.addons.portal.utils import get_portal_message_fetch_domain, get_portal_partner
 
 WRITE_FETCH_PARAMS |= {"/portal/chatter_init"}
 
@@ -35,8 +35,6 @@ class PortalWebClientController(WebclientController):
     def _process_request_for_all(self, store: Store, name, params):
         super()._process_request_for_all(store, name, params)
         if name == "/mail/chatter_fetch":
-            # Only search into website_message_ids, so apply the same domain to perform only one search
-            # extract domain from the 'website_message_ids' field
             fetch_params = params.pop("fetch_params", None)
             model = request.env[params.pop("thread_model")]
             thread = ThreadController._get_thread_with_access(
@@ -59,17 +57,12 @@ class PortalWebClientController(WebclientController):
             # supposed to see the portal as it is for the portal user, so they also have the same restriction.
             domain = (
                 Domain(self._setup_portal_message_fetch_extra_domain(params))
-                & Domain(model._fields['website_message_ids'].get_comodel_domain(model))
-                & Domain("res_id", "=", thread.id)
-                & Domain("subtype_id", "=", request.env.ref("mail.mt_comment").id)
-                & ~request.env["mail.message"]._get_empty_domain()
-                & request.env["mail.message"]._get_search_domain_share()
+                & get_portal_message_fetch_domain(thread)
             )
             # sudo: mail.message - thread access is validated above, and domain is massively restricted to share-only messages
             messages = self._resolve_messages(
                 store,
                 domain=domain,
-                thread=thread,
                 fetch_params=fetch_params,
                 add_to_store=False,
                 sudo=True,
