@@ -755,22 +755,45 @@ class HrAttendance(models.Model):
         for company in all_companies:
             max_tol = company.auto_check_out_tolerance
             to_verify_company = to_verify.filtered(lambda a: a.employee_id.company_id.id == company.id)
+            calendar_resources = defaultdict(lambda: self.env['resource.resource'])
+            calendar_ranges = {}
+            attendance_day_bounds = {}
 
             for att in to_verify_company:
-
-                employee_timezone = pytz.timezone(att.employee_id._get_tz())
+                employee = att.employee_id
+                calendar_id = employee.resource_calendar_id
+                employee_timezone = pytz.timezone(employee._get_tz())
                 check_in_datetime = check_in_tz(att)
-                now_datetime = fields.Datetime.now().astimezone(employee_timezone)
-                current_attendance_duration = (now_datetime - check_in_datetime).total_seconds() / 3600
-                previous_attendances_duration = mapped_previous_duration[att.employee_id][check_in_datetime.date()]
+                day_start = employee_timezone.localize(datetime.combine(check_in_datetime.date(), datetime.min.time())).astimezone(pytz.utc)
+                day_end = employee_timezone.localize(datetime.combine(check_in_datetime.date() + timedelta(days=1), datetime.min.time())).astimezone(pytz.utc)
+                attendance_day_bounds[att.id] = (calendar_id, day_start, day_end)
+                calendar_resources[calendar_id] |= employee.resource_id
+                if calendar_id in calendar_ranges:
+                    range_start, range_end = calendar_ranges[calendar_id]
+                    calendar_ranges[calendar_id] = (min(range_start, day_start), max(range_end, day_end))
+                else:
+                    calendar_ranges[calendar_id] = (day_start, day_end)
 
-                expected_worked_hours = sum(
-                    att.employee_id.resource_calendar_id.attendance_ids.filtered(
-                        lambda a: a.dayofweek == str(check_in_datetime.weekday())
-                            and (not a.two_weeks_calendar or a.week_type == str(a.get_week_type(check_in_datetime.date())))
-                    ).mapped("duration_hours")
+            work_intervals_by_resource_by_calendar = {}
+            for calendar, resources in calendar_resources.items():
+                range_start, range_end = calendar_ranges[calendar]
+                work_intervals_by_resource_by_calendar[calendar.id] = calendar._work_intervals_batch(
+                    range_start,
+                    range_end,
+                    resources=resources,
                 )
 
+            for att in to_verify_company:
+                employee_timezone = pytz.timezone(att.employee_id._get_tz())
+                check_in_datetime = check_in_tz(att)
+                current_attendance_duration = (fields.Datetime.now().astimezone(employee_timezone) - check_in_datetime).total_seconds() / 3600
+                previous_attendances_duration = mapped_previous_duration[att.employee_id][check_in_datetime.date()]
+
+                calendar_id, day_start, day_end = attendance_day_bounds[att.id]
+                day_interval = Intervals([(day_start, day_end, self.env['resource.calendar'])])
+                expected_worked_hours = sum_intervals(
+                    day_interval & work_intervals_by_resource_by_calendar[calendar_id.id][att.employee_id.resource_id.id]
+                )
                 # Attendances where Last open attendance time + previously worked time on that day + tolerance greater than the attendances hours (including lunch) in his calendar
                 if (current_attendance_duration + previous_attendances_duration - max_tol) > expected_worked_hours:
                     att.check_out = att.check_in.replace(hour=23, minute=59, second=59)
