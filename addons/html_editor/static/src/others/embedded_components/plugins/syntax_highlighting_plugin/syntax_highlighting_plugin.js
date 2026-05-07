@@ -9,6 +9,7 @@ import {
 import { removeInvisibleWhitespace } from "@html_editor/utils/dom";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { closestBlock } from "@html_editor/utils/blocks";
+import { childNodes, closestElement } from "@html_editor/utils/dom_traversal";
 
 const CODE_BLOCK_CLASS = "o_syntax_highlighting";
 const CODE_BLOCK_SELECTOR = `div.${CODE_BLOCK_CLASS}`;
@@ -45,6 +46,7 @@ export class SyntaxHighlightingPlugin extends Plugin {
                 removeInvisibleWhitespace(el, cursors);
             }
         },
+        set_block_overrides: this.handleSetBlock.bind(this),
 
         /** Processors */
         clipboard_content_processors: (clonedContent) => this.cleanForSave(clonedContent),
@@ -167,17 +169,45 @@ export class SyntaxHighlightingPlugin extends Plugin {
                 convertToParagraph: ({ target }) => {
                     this.dependencies.history.stageSelection();
                     const component = target.closest(`[data-embedded='${name}']`);
-                    const embeddedProps = getEmbeddedProps(component);
-                    const baseContainer = this.dependencies.baseContainer.createBaseContainer();
-                    baseContainer.textContent = embeddedProps.value;
-                    component.replaceWith(baseContainer);
-                    newlinesToLineBreaks(baseContainer);
-                    this.dependencies.selection.setCursorStart(baseContainer);
+                    this.convertToElement(component);
                     this.dependencies.history.addStep();
                 },
                 setSelection: (selection) => this.dependencies.selection.setSelection(selection),
             });
             props.host.removeAttribute("data-syntax-highlighting-autofocus");
+        }
+    }
+
+    applyEmbeddedValue(element, component) {
+        const { value } = getEmbeddedProps(component);
+        element.textContent = value;
+        newlinesToLineBreaks(element);
+    }
+
+    convertToElement(component, tagName) {
+        const newElement = tagName
+            ? this.document.createElement(tagName)
+            : this.dependencies.baseContainer.createBaseContainer();
+        this.applyEmbeddedValue(newElement, component);
+        component.replaceWith(newElement);
+        this.dependencies.selection.setCursorStart(newElement);
+    }
+
+    handleSetBlock(newEl, block, tagName) {
+        if (block.nodeName === "TEXTAREA" && block.classList.contains("o_prism_source")) {
+            const component = closestElement(block, ".o_syntax_highlighting");
+            if (
+                ["BLOCKQUOTE", "PRE"].includes(newEl?.nodeName) &&
+                component.parentElement === newEl.parentElement
+            ) {
+                const div = this.document.createElement("div");
+                this.applyEmbeddedValue(div, component);
+                newEl.append(this.document.createElement("br"), ...childNodes(div));
+                component.remove();
+            } else {
+                this.convertToElement(component, tagName);
+            }
+            return true;
         }
     }
 }
