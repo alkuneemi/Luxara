@@ -22,8 +22,9 @@ declare module "plugins" {
     import { InstagramOptionShared } from "@website/builder/plugins/options/instagram_option_plugin";
     import { MegaMenuOptionShared } from "@website/builder/plugins/options/mega_menu_option_plugin";
     import { NavTabsStyleOptionShared } from "@website/builder/plugins/options/navtabs_style_option_plugin";
+    import { popup_container_selectors, popup_show_on_dropzones, popup_show_on_options } from "@website/builder/plugins/options/popup_option_plugin";
     import { WebsiteParallaxShared } from "@website/builder/plugins/options/parallax_option_plugin";
-    import { searchbar_option_order_by_items } from "@website/builder/plugins/options/searchbar_option_plugin";
+    import { searchbar_option_display_items, searchbar_option_order_by_items } from "@website/builder/plugins/options/searchbar_option_plugin";
     import { SocialMediaOptionShared } from "@website/builder/plugins/options/social_media_option_plugin";
     import { on_visibility_toggled_handlers, visibility_selector_parameters } from "@website/builder/plugins/options/visibility_option_plugin";
     import { WebsitePageConfigOptionShared } from "@website/builder/plugins/options/website_page_config_option_plugin";
@@ -94,6 +95,10 @@ declare module "plugins" {
         header_templates_providers: header_templates_providers;
 
         // Data
+        popup_container_selectors: popup_container_selectors;
+        popup_show_on_dropzones: popup_show_on_dropzones;
+        popup_show_on_options: popup_show_on_options;
+        searchbar_option_display_items: searchbar_option_display_items;
         searchbar_option_order_by_items: searchbar_option_order_by_items;
         force_background_translation_state_selectors: force_background_translation_state_selectors;
         theme_options: theme_options;
