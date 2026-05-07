@@ -4048,3 +4048,42 @@ class TestStockValuationWithCOA(AccountTestInvoicingCommon):
 
         # check bill total tax has not changed
         self.assertEqual(bill.amount_tax, 500)
+
+    def test_bill_price_diff_cost_no_reset_tax(self):
+        """ Check that confirming a Bill for a standard perpetual product with price different
+        than the product's cost (so in a situation where price difference compensation amls are created)
+        does not reset a manually set total tax on the Bill."""
+
+        self.product1.product_tmpl_id.categ_id.property_cost_method = 'standard'
+        self.product1.product_tmpl_id.categ_id.property_valuation = 'real_time'
+        self.product1.supplier_taxes_id = self.company.account_purchase_tax_id
+        self.product1.standard_price = 10
+
+        # PO for 1 @ 15
+        po = self.env['purchase.order'].create({
+            'partner_id': self.partner_id.id,
+            'order_line': [
+                Command.create({
+                    'name': self.product1.name,
+                    'product_id': self.product1.id,
+                    'product_qty': 1.0,
+                    'price_unit': 20.0,
+                }),
+            ],
+        })
+        po.button_confirm()
+        receipt = po.picking_ids
+        receipt.move_ids.move_line_ids.quantity = 1
+        receipt.button_validate()
+
+        # create bill
+        action = po.action_create_invoice()
+        bill = self.env["account.move"].browse(action["res_id"])
+        bill.invoice_date = fields.Date.today()
+
+        # set tax amount as 100 and confirm bill
+        bill.line_ids.filtered(lambda l: l.display_type == "tax").balance = 100
+        bill.action_post()
+
+        # check bill total tax has not changed
+        self.assertEqual(bill.amount_tax, 100)
