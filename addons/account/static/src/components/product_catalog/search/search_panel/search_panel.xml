@@ -16,27 +16,15 @@
             <section t-if="this.showSections" class="o_search_panel_sections o_search_panel_section mt-4 pb-4 border-bottom">
                 <header class="d-flex align-items-center cursor-default mb-3">
                     <b class="text-uppercase me-2">Sections</b>
-                    <i
-                        class="fa fa-fw fa-plus-square cursor-pointer"
+                    <button
+                        class="btn btn-sm btn-secondary ms-auto"
                         t-on-click="() => this.enableSectionInput()"
                         title="Add a section"
-                    />
-                    <div class="d-flex align-items-center ms-auto">
-                        <span class="me-2">Filter</span>
-                        <div class="form-check form-switch mb-0">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                t-att-checked="this.selectedSection.filtered ? true : false"
-                                t-on-click="() => this.setSelectedSection(
-                                    this.selectedSection.sectionId, !this.selectedSection.filtered
-                                )"
-                            />
-                        </div>
-                    </div>
+                    >
+                        Add
+                    </button>
                 </header>
-                <ul class="list-group d-block" t-ref="sectionTreeRef">
+                <ul t-if="this.state.sections.length > 1" class="list-group d-block" t-ref="sectionTreeRef">
                     <t t-foreach="this.state.sections" t-as="section" t-key="section.id">
                         <SectionRow section="section" state="this.state"/>
                     </t>
@@ -50,6 +38,15 @@
                     t-on-keydown="(ev) => this.onSectionInputKeydown(ev)"
                     t-on-blur="() => this.createSection()"
                 />
+                <div
+                    t-if="this.state.sections.length === 1 &amp;&amp; this.state.sections[0].id === false"
+                    class="border-top"
+                >
+                    <div class="d-flex justify-content-between mt-4">
+                        <span>Total</span>
+                        <span t-out="this.getFormattedSubTotal(this.state.totalUntaxedAmount)"/>
+                    </div>
+                </div>
             </section>
         </section>
 

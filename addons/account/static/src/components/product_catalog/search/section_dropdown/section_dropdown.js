@@ -37,6 +37,12 @@ export class SectionDropdown extends Component {
         } else {
             state.sections = state.sections.filter(s => s.id !== section.id);
         }
+
+        if (state.sections.length === 1 && state.sections[0].id === false) {
+            await this.env.loadSections();
+            return;
+        }
+
         const selectedSectionId = this.env.searchModel.selectedSection.sectionId;
         if (selectedSectionId === section.id) {
             this.env.setSelectedSection(false, false);
