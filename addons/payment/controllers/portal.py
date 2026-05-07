@@ -9,7 +9,7 @@ from odoo.exceptions import AccessError
 from odoo.http import request
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.controllers.post_processing import PaymentPostProcessing
+from odoo.addons.payment.controllers.payment_status import PaymentStatus
 from odoo.addons.portal.controllers import portal
 
 
@@ -418,7 +418,7 @@ class PaymentPortal(portal.CustomerPortal):
             tx_sudo._charge_with_token()  # Token payments are charged immediately.
 
         # Monitor the transaction to make it available in the portal.
-        PaymentPostProcessing.monitor_transaction(tx_sudo)
+        PaymentStatus.monitor_transaction(tx_sudo)
 
         return tx_sudo
 

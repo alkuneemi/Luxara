@@ -13,7 +13,7 @@ _lt = LazyTranslate(__name__)
 _logger = logging.getLogger(__name__)
 
 
-class PaymentPostProcessing(http.Controller):  # TODO ANV rename to PaymentStatus, JS too
+class PaymentStatus(http.Controller):
     """Controller for the payment status page.
 
     It keeps track of the transaction being monitored via the user's session and exposes routes to
