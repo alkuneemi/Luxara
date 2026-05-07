@@ -762,8 +762,8 @@ class MailingMailing(models.Model):
     def _action_view_mailing_statistics_filtered(self, view_filter, base_domain=None):
         """Display the mailing statistics for the given KPI
 
-        :view_filter: the KPI to which the statistics are related. Eg: `clicked`
-        :base_domain: used to override the default base domain that limits the returned
+        :param view_filter: the KPI to which the statistics are related. Eg: `clicked`
+        :param base_domain: used to override the default base domain that limits the returned
         statistics to the working mailing `Domain('mass_mailing_id', '=', self.id)`
         Allows for the use of the method from other models."""
         if view_filter == "clicked":
