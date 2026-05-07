@@ -56,7 +56,7 @@
             runbot "errors".
             See WEBSITE_RECORDS_VIEWS_ACCESS_RIGHTS.
             -->
-            <attribute name="default_group_by">user_id</attribute>
+            <!--<attribute name="default_group_by">user_id</attribute>-->
         </xpath>
         <xpath expr="//kanban" position="inside">
             <field name="website_url"/>
