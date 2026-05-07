@@ -58,9 +58,19 @@
 "tax15","15%","","31 Output VAT medium rate 15%","Output VAT","15.0","percent","sale","tax_group_15","base","invoice","","","+31 Base","31 Utgående mva middel sats 15%","Utgående mva"
 "","","","","","","","","","tax","invoice","chart2701","","+31 Tax","",""
 "","","","","","","","","","base","refund","","","-31 Base","",""
+<<<<<<< 4cc1e6884be673523f768d5ec471a1ffa19c5fb4
 "","","","","","","","","","tax","refund","chart2701","","-31 Tax","",""
 "tax16","11% Fish","","32 Output VAT raw fish 11%","Output VAT","11.0","percent","sale","tax_group_15","base","invoice","","","+32 Base","32 Utgående mva råfisk 11%","Utgående mva"
 "","","","","","","","","","tax","invoice","chart2702","","+32 Tax","",""
+||||||| 9da52919a03dbcee5209430918195158c0652099
+"","","","","","","","","","tax","refund","chart2703","","-31 Tax","",""
+"tax16","11% Fish","","32 Output VAT raw fish 11%","Output VAT","11.0","percent","sale","tax_group_15","base","invoice","","","+32 Base","32 Utgående mva råfisk 11%","Utgående mva"
+"","","","","","","","","","tax","invoice","chart2700","","+32 Tax","",""
+=======
+"","","","","","","","","","tax","refund","chart2703","","-31 Tax","",""
+"tax16","11.11% Fish","","32 Output VAT raw fish 11.11%","Output VAT","11.11","percent","sale","tax_group_15","base","invoice","","","+32 Base","32 Utgående mva råfisk 11.11%","Utgående mva"
+"","","","","","","","","","tax","invoice","chart2700","","+32 Tax","",""
+>>>>>>> 022ac81a852c33de93c7eeb18a03a096a4bc0a36
 "","","","","","","","","","base","refund","","","-32 Base","",""
 "","","","","","","","","","tax","refund","chart2702","","-32 Tax","",""
 "tax17","12%","","33 Output VAT low rate 12%","Output VAT","12.0","percent","sale","tax_group_12","base","invoice","","","+33 Base","33 Utgående mva lav sats 12%","Utgående mva"
