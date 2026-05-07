@@ -264,7 +264,6 @@ class TestAngloSaxonFlow(TestAngloSaxonCommon):
         self.assertEqual(pos_order_pos0.account_move.journal_id, self.pos_config.invoice_journal_id)
         self.assertEqual(line.debit, 27, 'As it is a fifo product, the move\'s value should be 5*5 + 2*1')
 
-    @skip('Temporary to fast merge new valuation')
     def test_cogs_with_ship_later_no_invoicing(self):
         # This test will check that the correct journal entries are created when a product in real time valuation
         # is sold using the ship later option and no invoice is created in a company using anglo-saxon
@@ -324,25 +323,13 @@ class TestAngloSaxonFlow(TestAngloSaxonCommon):
         current_session.picking_ids.button_validate()
 
         # I test that the generated journal entries are correct.
-        account_output = self.category.property_stock_account_output_categ_id
+        account_output = self.category.property_stock_valuation_account_id
         expense_account = self.category.property_account_expense_categ_id
         aml = current_session._get_related_account_moves().line_ids
         aml_output = aml.filtered(lambda l: l.account_id.id == account_output.id)
         aml_expense = aml.filtered(lambda l: l.account_id.id == expense_account.id)
-
-        self.assertEqual(len(aml_output), 2, "There should be 2 output account move lines")
-        # 2 moves in POS journal (Pos order + manual entry at delivery)
-        self.assertEqual(len(aml_output.move_id.filtered(lambda l: l.journal_id == self.pos_config.journal_id)), 1)
-        # 1 move in stock journal (delivery from stock layers)
-        self.assertEqual(len(aml_output.move_id.filtered(lambda l: l.journal_id == self.category.property_stock_journal)), 1)
-        #Check the lines created after the picking validation
-        self.assertEqual(aml_output[1].credit, self.product.standard_price, "Cost of Good Sold entry missing or mismatching")
-        self.assertEqual(aml_output[1].debit, 0.0, "Cost of Good Sold entry missing or mismatching")
-        self.assertEqual(aml_expense[0].debit, self.product.standard_price, "Cost of Good Sold entry missing or mismatching")
-        self.assertEqual(aml_expense[0].credit, 0.0, "Cost of Good Sold entry missing or mismatching")
-        #Check the lines created by the PoS session
-        self.assertEqual(aml_output[0].debit, 100.0, "Cost of Good Sold entry missing or mismatching")
-        self.assertEqual(aml_output[0].credit, 0.0, "Cost of Good Sold entry missing or mismatching")
+        self.assertEqual(aml_expense.balance, 100)
+        self.assertEqual(aml_output.balance, -100)
 
     @skip('Temporary to fast merge new valuation')
     def test_action_pos_order_invoice(self):
