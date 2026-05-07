@@ -1,5 +1,5 @@
 import { onWillRender, useLayoutEffect, useRef, useState } from "@web/owl2/utils";
-import { Component } from "@odoo/owl";
+import { Component, onMounted } from "@odoo/owl";
 import { useDateTimePicker } from "@web/core/datetime/datetime_picker_hook";
 import { areDatesEqual, deserializeDate, deserializeDateTime, today } from "@web/core/l10n/dates";
 import { localization } from "@web/core/l10n/localization";
@@ -52,6 +52,7 @@ export class DateTimeField extends Component {
         warnFuture: { type: Boolean, optional: true },
         showSeconds: { type: Boolean, optional: true },
         showTime: { type: Boolean, optional: true },
+        autoOpen: { type: Boolean, optional: true },
         minPrecision: {
             type: String,
             optional: true,
@@ -175,6 +176,12 @@ export class DateTimeField extends Component {
         );
 
         onWillRender(() => this.triggerIsDirty());
+
+        onMounted(() => {
+            if (this.props.autoOpen) {
+                this.openPicker();
+            }
+        })
 
         this.futureWarningMsg = _t("This date is in the future");
     }
@@ -484,6 +491,7 @@ export const dateField = {
         warnFuture: Boolean(options.warn_future),
         minPrecision: options.min_precision,
         maxPrecision: options.max_precision,
+        autoOpen: options.auto_open,
     }),
     listViewWidth: ({ options }) =>
         options.numeric ? FIELD_WIDTHS.numeric_date : FIELD_WIDTHS.date,
