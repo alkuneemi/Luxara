@@ -644,7 +644,10 @@ export function classToStyle(element, cssRules) {
                     node.style.setProperty(styleName, value);
                     if (value.includes("calc(")) {
                         // If value included a calc(), assign the node's computed style property value for Outlook compatibility
-                        node.style.setProperty(styleName, computedStyle.getPropertyValue(styleName));
+                        node.style.setProperty(
+                            styleName,
+                            computedStyle.getPropertyValue(styleName)
+                        );
                     }
                 }
             }
@@ -976,6 +979,10 @@ export async function toInline(element, cssRules) {
     element
         .querySelectorAll(".o_converted_col")
         .forEach((node) => node.classList.remove("o_converted_col"));
+
+    element
+        .querySelectorAll(".o_checklist")
+        .forEach((node) => node.classList.remove("o_checklist"));
 }
 /**
  * Take all elements with a `background-image` style and convert them to `vml`
