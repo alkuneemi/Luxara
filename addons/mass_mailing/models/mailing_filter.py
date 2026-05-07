@@ -101,7 +101,7 @@ class MailingFilter(models.Model):
         def date_from(interval=1):
             return (today - timedelta(days=interval)).strftime("%Y-%m-%d %H:%M:%S")
 
-        def date_to(interval):
+        def date_to(interval=1):
             return (today + timedelta(days=interval)).strftime("%Y-%m-%d %H:%M:%S")
         return {
             'start_from_scratch': {
@@ -116,7 +116,7 @@ class MailingFilter(models.Model):
                 'description': _('Mailing Contacts added during the last 30 days'),
                 'icon': '/mass_mailing/static/img/wifi.svg',
                 'function': 'get_mailing_list_template_values',
-                'domain': repr([("create_date", ">=", "today -30d"), ("create_date", "<", "today +1d")])
+                'domain': repr([("create_date", ">=", date_from(30)), ("create_date", "<", date_to(1))])
             },
             'super_fans': {
                 'title': _('Super Fans'),
