@@ -15,9 +15,7 @@ import typing
 import uuid
 import warnings
 from collections import defaultdict
-
-import psycopg2
-import werkzeug.security
+from datetime import datetime
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
@@ -25,6 +23,7 @@ from odoo.fields import Domain
 from odoo.http.stream import Stream
 from odoo.tools import (
     OrderedSet,
+    SQL,
     config,
     consteq,
     image,
@@ -44,6 +43,9 @@ SECURITY_FIELDS = ('res_model', 'res_id', 'create_uid', 'public', 'res_field')
 MAX_COMODELS_FOR_DOMAIN = 5
 MAX_SEARCH_LIMIT = PREFETCH_MAX * 10
 CREATE_FROM_STREAM_FLAG = object()  # sentinel that cannot be given over RPC
+GC_FILE_SUFFIX = '.__gc'
+GC_GRACE_PERIOD = 1800  # 30 minutes
+GC_GRACE_PERIOD_MAX = 604800  # 1 week
 
 
 def condition_values(model, field_name, domain):
@@ -129,7 +131,7 @@ class IrAttachment(models.Model):
     @api.model
     def _full_path(self, path):
         # sanitize path
-        path = re.sub('[.:]', '', path)
+        path = re.sub(r'[.:]', '', path)
         path = path.strip('/\\')
         return os.path.join(self._filestore(), path)
 
@@ -157,8 +159,12 @@ class IrAttachment(models.Model):
         assert isinstance(self, IrAttachment)
         try:
             return LocalBinaryFile(fname, self)
-        except OSError:
+        except OSError as e:
             full_path = self._full_path(fname)
+            if isinstance(e, FileNotFoundError) and os.path.exists(full_path + GC_FILE_SUFFIX):
+                # XXX in case the file was being deleted but not entirely?
+                os.rename(full_path + GC_FILE_SUFFIX, full_path)
+                return LocalBinaryFile(fname, self)
             _logger.info("_file_read reading %s", full_path, exc_info=True)
             return EMPTY_BINARY
 
@@ -166,15 +172,16 @@ class IrAttachment(models.Model):
     def _file_write(self, bin_value, checksum):
         assert isinstance(self, IrAttachment)
         fname, full_path = self._get_path(io.BytesIO(bin_value), checksum)
-        if not os.path.exists(full_path):
-            try:
-                # add fname to checklist, in case the transaction aborts
-                self._mark_for_gc(fname)
-                with open(full_path, 'wb') as fp:
+        # add fname to checklist to touch it on every write and before the write
+        # of the file in case the transaction aborts
+        self._mark_for_gc(fname)
+        try:
+            with open(full_path, 'ab') as fp:
+                if not fp.tell():  # empty file
                     fp.write(bin_value)
-            except OSError:
-                _logger.info("_file_write writing %s", full_path)
-                raise
+        except OSError:
+            _logger.info("_file_write writing %s", full_path)
+            raise
         return fname
 
     @api.model
@@ -185,14 +192,23 @@ class IrAttachment(models.Model):
     def _mark_for_gc(self, fname):
         """ Add ``fname`` in a checklist for the filestore garbage collection. """
         assert isinstance(self, IrAttachment)
-        fname = re.sub('[.:]', '', fname).strip('/\\')
+        fname = re.sub(r'[.:]', '', fname).strip('/\\')
+        assert not fname.endswith(GC_FILE_SUFFIX)
         # we use a spooldir: add an empty file in the subdirectory 'checklist'
         full_path = os.path.join(self._full_path('checklist'), fname)
-        if not os.path.exists(full_path):
+        # touch the full_path
+        try:
+            os.utime(full_path, None)
+            return
+        except OSError:
+            pass
+        try:
+            # create or update last modification date
+            open(full_path, 'wb').close()
+        except FileNotFoundError:
+            # raised when directory does not exist, create it and the file
             dirname = os.path.dirname(full_path)
-            if not os.path.isdir(dirname):
-                with contextlib.suppress(OSError):
-                    os.makedirs(dirname)
+            os.makedirs(dirname, exist_ok=True)
             open(full_path, 'ab').close()
 
     @api.autovacuum
@@ -201,63 +217,77 @@ class IrAttachment(models.Model):
         assert isinstance(self, IrAttachment)
         if self._storage() != 'file':
             return
+        # Fetch the timeouts from the database.
+        # GC_GRACE_PERIOD is set to a sensible default, if the DB is configured
+        # with a larger value respect it.
+        [[grace_db]] = self.env.execute_query(SQL("""
+            SELECT MAX(setting::int) / 1000
+            FROM pg_settings
+            WHERE vartype = 'integer' AND unit = 'ms'
+            AND name IN ('idle_in_transaction_session_timeout', 'transaction_timeout')
+            AND setting <> '0'
+        """))
+        self._gc_file_store_unsafe(grace_period=min(GC_GRACE_PERIOD_MAX, max(GC_GRACE_PERIOD, (grace_db or 0) * 2)))
 
-        # Continue in a new transaction. The LOCK statement below must be the
-        # first one in the current transaction, otherwise the database snapshot
-        # used by it may not contain the most recent changes made to the table
-        # ir_attachment! Indeed, if concurrent transactions create attachments,
-        # the LOCK statement will wait until those concurrent transactions end.
-        # But this transaction will not see the new attachements if it has done
-        # other requests before the LOCK (like the method _storage() above).
-        cr = self.env.cr
-        cr.commit()
+    def _gc_file_store_unsafe(self, grace_period):
+        # Generate the file names to check
+        limit_time = datetime.now().timestamp() - grace_period
 
-        # prevent all concurrent updates on ir_attachment while collecting,
-        # but only attempt to grab the lock for a little bit, otherwise it'd
-        # start blocking other transactions. (will be retried later anyway)
-        cr.execute("SET LOCAL lock_timeout TO '10s'")
-        try:
-            cr.execute("LOCK ir_attachment IN SHARE MODE")
-        except psycopg2.errors.LockNotAvailable:
-            cr.rollback()
-            return False
-
-        self._gc_file_store_unsafe()
-
-        # commit to release the lock
-        cr.commit()
-
-    def _gc_file_store_unsafe(self):
-        # retrieve the file names from the checklist
-        checklist = {}
-        for dirpath, _, filenames in os.walk(self._full_path('checklist')):
-            dirname = os.path.basename(dirpath)
-            for filename in filenames:
-                fname = "%s/%s" % (dirname, filename)
-                checklist[fname] = os.path.join(dirpath, filename)
+        def files_to_gc():
+            for dirpath, _, filenames in os.walk(self._full_path('checklist')):
+                dirname = os.path.basename(dirpath)
+                for filename in filenames:
+                    check_file = os.path.join(dirpath, filename)
+                    if filename.endswith(GC_FILE_SUFFIX):
+                        # leftover from a previous GC
+                        # move the file back, ignore if file already exists
+                        try:
+                            # XXX check if raises
+                            os.rename(check_file, check_file.removesuffix(GC_FILE_SUFFIX))
+                        except OSError:
+                            os.unlink(check_file)
+                    elif os.path.getmtime(check_file) < limit_time:
+                        # we can collect the file
+                        del_file = check_file + GC_FILE_SUFFIX
+                        os.replace(check_file, del_file)
+                        yield (f"{dirname}/{filename}", del_file)
 
         # Clean up the checklist. The checklist is split in chunks and files are garbage-collected
         # for each chunk.
+        checked = 0
         removed = 0
-        for names in split_every(self.env.cr.IN_MAX, checklist):
+        for name_pairs in split_every(self.env.cr.IN_MAX, files_to_gc()):
             # determine which files to keep among the checklist
-            self.env.cr.execute("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", [names])
-            whitelist = set(row[0] for row in self.env.cr.fetchall())
+            whitelist = {fname for fname, in self.env.execute_query(
+                SQL("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", tuple(p for p, _ in name_pairs)))
+            }
+            checked += len(name_pairs)
 
-            # remove garbage files, and clean up checklist
-            for fname in names:
-                filepath = checklist[fname]
+            # remove files, and clean up checklist
+            for fname, del_file in name_pairs:
                 if fname not in whitelist:
+                    check_file = del_file.removesuffix(GC_FILE_SUFFIX)
+                    full_path = self._full_path(fname)
+                    del_full_path = full_path + GC_FILE_SUFFIX
                     try:
-                        os.unlink(self._full_path(fname))
-                        _logger.debug("_file_gc unlinked %s", self._full_path(fname))
-                        removed += 1
+                        os.replace(full_path, del_full_path)
+                        if os.path.exists(check_file):
+                            # concurent write happening
+                            os.replace(del_full_path, full_path)
+                            os.unlink(del_file)
+                            continue
+                        os.unlink(del_full_path)
                     except OSError:
-                        _logger.info("_file_gc could not unlink %s", self._full_path(fname), exc_info=True)
-                with contextlib.suppress(OSError):
-                    os.unlink(filepath)
+                        _logger.info("_file_gc could not unlink %s", full_path, exc_info=True)
+                    else:
+                        removed += 1
+                        _logger.debug("_file_gc unlinked %s", full_path)
+                try:
+                    os.unlink(del_file)
+                except OSError:
+                    _logger.debug("_file_gc could not unlink %s", del_file)
 
-        _logger.info("filestore gc %d checked, %d removed", len(checklist), removed)
+        _logger.info("filestore gc %d checked, %d removed", checked, removed)
 
     @api.depends('store_fname', 'db_datas')
     def _compute_raw(self):
