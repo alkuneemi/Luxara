@@ -54,8 +54,13 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "custom":
             return super()._apply_updates(payment_data)
 
-        _logger.info("Validated custom payment for transaction %s: set as pending.", self.reference)
-        self._set_pending()
+        if payment_data.get("confirmed"):
+            self._set_done()
+        else:
+            self._set_pending()
+        _logger.info(
+            "Validated custom payment for transaction %s: set as %s.", self.reference, self.state
+        )
 
     def _extract_amount_data(self, payment_data):
         """Override of `payment` to skip the amount validation for custom flows."""
