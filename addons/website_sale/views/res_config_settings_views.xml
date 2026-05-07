@@ -143,6 +143,13 @@
                     <field name="group_automate_suggested_products"/>
                 </setting>
                 <setting
+                    string="Unpublish out-of-stock products"
+                    id="website_sale_unpublish_out_of_stock_setting"
+                    help="Unpublish/Republish products based on stock availability."
+                >
+                    <field name="website_sale_unpublish_out_of_stock"/>
+                </setting>
+                <setting
                     string="Product Reference Price"
                     id="ecom_uom_price_option_setting"
                     help="Add a reference price per UoM on products (e.g $/kg), in addition to the

@@ -288,11 +288,8 @@ class ProductProduct(models.Model):
 
     def _get_extra_tracking_values(self, **kwargs):
         extra_tracking_values = {}
-        if (
-            kwargs.get('res_model') == self._name
-            and (res_id := kwargs.get('res_id'))
-        ):
-            extra_tracking_values['product_id'] = res_id
+        if kwargs.get("res_model") == self._name and (res_id := kwargs.get("res_id")):
+            extra_tracking_values["product_id"] = res_id
         return extra_tracking_values
 
     def _is_sold_out(self):
@@ -363,3 +360,14 @@ class ProductProduct(models.Model):
 
                 product.stock_notification_partner_ids -= partner
                 self.env["ir.cron"]._commit_progress(1)
+
+    def _is_out_of_stock_for_website(self, warehouse):  # noqa: ARG002
+        """Return whether this variant is out of stock for the given warehouse.
+
+        Overridden in website_sale_stock where stock fields are available.
+
+        :param stock.warehouse warehouse: website warehouse (may be empty)
+        :return: True if the variant is out of stock
+        :rtype: bool
+        """
+        return False

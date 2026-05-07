@@ -175,6 +175,25 @@ class ProductTemplate(models.Model):
     show_availability = fields.Boolean(string="Show availability Qty", default=False)
     out_of_stock_message = fields.Html(string="Out-of-Stock Message", translate=html_translate)
 
+    website_sale_auto_unpublished = fields.Boolean(
+        string="Auto-Unpublished Due to Stock",
+        copy=False,
+        default=False,
+        help=(
+            "Set when the system automatically unpublished this product because all variants "
+            "ran out of stock. Cleared when stock is restored and the product is republished."
+        ),
+    )
+    website_sale_manual_published = fields.Boolean(
+        string="Manually Published Override",
+        copy=False,
+        default=False,
+        help=(
+            "True when a user manually published this product while it was out of stock. "
+            "Prevents automatic unpublishing."
+        ),
+    )
+
     # === INDEXES === #
 
     # We need gist indexes for similarity check in ecommerce fuzzy search.
@@ -274,17 +293,35 @@ class ProductTemplate(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        records = super().create(vals_list)
-        # Compute the suggest_x fields based on the m2m x now correctly saved
+        """Skip publish-state tracking in write() during product creation."""
+        records = super(
+            ProductTemplate, self.with_context(website_sale_creating_product=True)
+        ).create(vals_list)
         for record, vals in zip(records, vals_list):
-            record.write({
+            record.with_context(website_sale_creating_product=True).write({
                 "suggest_optional_products": not vals.get("optional_product_ids"),
                 "suggest_accessory_products": not vals.get("accessory_product_ids"),
                 "suggest_alternative_products": not vals.get("alternative_product_ids"),
             })
-        return records
+        return records.with_env(self.env)
 
     def write(self, vals):
+        ctx = self.env.context
+        if (
+            ctx.get("website_sale_syncing_published")
+            or ctx.get("install_mode")
+            or ctx.get("website_sale_creating_product")
+        ):
+            return super().write(vals)
+
+        if "is_published" in vals:
+            vals = dict(vals)
+            if vals["is_published"]:
+                vals["website_sale_manual_published"] = True
+                vals["website_sale_auto_unpublished"] = False
+            else:
+                vals["website_sale_manual_published"] = False
+
         # Clear empty ecommerce description content to avoid side-effects on product pages
         # when there is no content to display anyway.
         if vals.get("description_ecommerce"):
@@ -297,9 +334,21 @@ class ProductTemplate(models.Model):
                     else v
                 ),
             )
-        return super().write(vals)
+
+        res = super().write(vals)
+
+        if vals.get("is_storable") or "allow_out_of_stock_order" in vals:
+            self._sync_website_published_state()
+
+        return res
 
     # === BUSINESS METHODS ===#
+
+    def _sync_website_published_state(self):
+        """Auto-unpublish/republish products based on stock availability.
+
+        Overridden in website_sale_stock where stock fields are available.
+        """
 
     def _get_website_accessory_product(self):
         domain = Domain(self.env["website"].sale_product_domain())
@@ -945,9 +994,9 @@ class ProductTemplate(models.Model):
             has_stock_notification = product_sudo._has_stock_notification(
                 self.env.user.partner_id
             ) or (
-                    request
-                    and product_sudo.id
-                    in request.session.get("product_with_stock_notification_enabled", set())
+                request
+                and product_sudo.id
+                in request.session.get("product_with_stock_notification_enabled", set())
             )
             stock_notification_email = request and request.session.get(
                 "stock_notification_email", ""
@@ -958,7 +1007,7 @@ class ProductTemplate(models.Model):
                     request.cart._get_cart_qty(product_sudo.id), to_unit=uom
                 )
             digits = self.env["decimal.precision"].precision_get("Product Unit")
-            rounding = 10 ** -digits
+            rounding = 10**-digits
             combination_info.update({
                 "free_qty": free_qty,
                 "cart_qty": cart_quantity,
@@ -1146,6 +1195,7 @@ class ProductTemplate(models.Model):
             )
         else:
             return self.set_sequence_bottom()
+        return None
 
     def _default_website_meta(self):
         res = super()._default_website_meta()
@@ -1203,7 +1253,7 @@ class ProductTemplate(models.Model):
         ]
 
     @api.model
-    def _search_get_detail(self, website, order, options):
+    def _search_get_detail(self, website, order, options):  # noqa: ARG002
         domains = [website.sale_product_domain()]
         category = options.get("category")
         tags = options.get("tags")
@@ -1245,12 +1295,31 @@ class ProductTemplate(models.Model):
         mapping = {
             "name": {"name": "name", "type": "text", "match": True},
             "website_url": {"name": "website_url", "type": "text", "truncate": False},
-            "search_item_metadata": {"name": "price", "type": "html", "display_currency": options["display_currency"]},
+            "search_item_metadata": {
+                "name": "price",
+                "type": "html",
+                "display_currency": options["display_currency"],
+            },
             "image_url": {"name": "image_url", "type": "html"},
-            "description": {"name": "description_ecommerce", "type": "text", "html": True, "match": True},
+            "description": {
+                "name": "description_ecommerce",
+                "type": "text",
+                "html": True,
+                "match": True,
+            },
             "tags": {"name": "product_tag_ids", "type": "tags", "match": True},
-            "attribute_value_ids": {"name": "attribute_value_ids", "type": "tags", "match": True, "force_show": True},
-            "description_sale": {"name": "description_sale", "type": "text", "html": True, "match": True},
+            "attribute_value_ids": {
+                "name": "attribute_value_ids",
+                "type": "tags",
+                "match": True,
+                "force_show": True,
+            },
+            "description_sale": {
+                "name": "description_sale",
+                "type": "text",
+                "html": True,
+                "match": True,
+            },
         }
         return {
             "model": "product.template",
@@ -1270,9 +1339,7 @@ class ProductTemplate(models.Model):
             values = product.mapped("attribute_line_ids.value_ids")
             data["attribute_value_ids"] = values.read(["id", "name"])
             data["product_tag_ids"] = product.product_tag_ids.read(["name"])
-            price = self._search_render_results_prices(
-                mapping, combination_info
-            )
+            price = self._search_render_results_prices(mapping, combination_info)
             if price:
                 data["price"] = price
             data["image_url"] = "/web/image/product.template/%s/image_128" % data["id"]
@@ -1286,7 +1353,7 @@ class ProductTemplate(models.Model):
         price = self.env["ir.qweb.field.monetary"].value_to_html(
             combination_info["price"], monetary_options
         )
-        return price
+        return price  # noqa: RET504
 
     def _get_google_analytics_data(self, product, combination_info):
         self.ensure_one()
@@ -1532,7 +1599,7 @@ class ProductTemplate(models.Model):
 
     @api.model
     def _get_additional_configurator_data(
-            self, product_or_template, date, currency, pricelist, *, uom=None, **kwargs
+        self, product_or_template, date, currency, pricelist, *, uom=None, **kwargs
     ):
         """Override of `sale` to append basic stock data.
 

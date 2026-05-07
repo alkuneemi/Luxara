@@ -244,6 +244,12 @@ class Website(models.Model):
         string="Wishlist Grid Gap", help="Gap between products on the wishlist page", default="16px"
     )
 
+    website_sale_unpublish_out_of_stock = fields.Boolean(
+        string="Unpublish Out-of-Stock Products",
+        default=False,
+        help="Automatically unpublish/republish products based on stock availability.",
+    )
+
     prevent_sale = fields.Boolean(string="Hide Add To Cart")
 
     prevent_sale_for = fields.Selection(
