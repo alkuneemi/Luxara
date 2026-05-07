@@ -71,11 +71,6 @@ class ResConfigSettings(models.TransientModel):
     )
     sale_invoice_policy = fields.Selection(related="company_id.sale_invoice_policy", readonly=False)
 
-    sale_order_mandatory_product = fields.Boolean(
-        related='company_id.sale_order_mandatory_product',
-        readonly=False,
-    )
-
     # Modules
     module_delivery = fields.Boolean("Delivery Methods")
 

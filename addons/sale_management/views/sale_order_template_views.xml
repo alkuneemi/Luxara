@@ -109,6 +109,7 @@
                                 <field
                                     name="product_uom_id"
                                     domain="[('id', 'in', allowed_uom_ids)] if allowed_uom_ids or mandatory_product else []"
+                                    required="not display_type"
                                     groups="uom.group_uom"
                                 />
                                 <widget

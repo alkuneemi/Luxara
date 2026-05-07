@@ -59,6 +59,7 @@
                                 groups="uom.group_uom"
                                 widget="many2one_uom"
                                 readonly="product_uom_readonly"
+                                required="not display_type"
                             />
                             <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
                             <field name="order_partner_id" invisible="1"/>

@@ -166,26 +166,14 @@ class SaleOrder(models.Model):
 
         res = super().write(values)
         if values.get('order_line') and self.state == 'sale':
-            precision_digits = self.env['decimal.precision'].precision_get('Product Unit')
             for order in self:
                 to_log = {}
                 order.order_line.fetch(['product_uom_id', 'product_uom_qty', 'display_type', 'is_downpayment'])
                 for order_line in order.order_line:
                     if order_line.display_type or order_line.is_downpayment:
                         continue
-                    if (
-                        float_compare(
-                            order_line.product_uom_qty,
-                            pre_order_line_qty.get(order_line, 0.0),
-                            precision_digits,
-                        )
-                        < 0
-                    ):
-                        to_log[order_line] = (
-                            order_line.product_uom_qty,
-                            pre_order_line_qty.get(order_line, 0.0),
-                        )
-
+                    if order_line.product_uom_id.compare(order_line.product_uom_qty, pre_order_line_qty.get(order_line, 0.0)) < 0:
+                        to_log[order_line] = (order_line.product_uom_qty, pre_order_line_qty.get(order_line, 0.0))
                 if to_log:
                     documents = self.env['stock.picking'].sudo()._log_activity_get_documents(to_log, 'move_ids', 'UP')
                     documents = {k: v for k, v in documents.items() if k[0].state != 'cancel'}

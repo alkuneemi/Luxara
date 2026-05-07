@@ -63,6 +63,7 @@ class TestSaleSectionTemplates(SaleCommon):
                     "price_unit": 420,
                     "discount": 15,
                     "tax_ids": (cls.tax_1 + cls.tax_2).ids,
+                    "product_uom_id": cls.uom_unit.id,
                 }),
             ],
         })

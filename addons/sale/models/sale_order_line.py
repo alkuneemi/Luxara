@@ -18,6 +18,11 @@ class SaleOrderLine(models.Model):
     _order = "order_id, sequence, id"
     _check_company_auto = True
 
+    _accountable_required_fields = models.Constraint(
+        "CHECK(display_type IS NOT NULL OR is_downpayment OR (product_uom_id IS NOT NULL))",  # noqa: E501
+        "Missing required fields on accountable sale order line.",
+    )
+
     _non_accountable_null_fields = models.Constraint(
         "CHECK(display_type IS NULL OR (product_id IS NULL AND price_unit = 0 AND product_uom_qty = 0 AND product_uom_id IS NULL AND customer_lead = 0))",  # noqa: E501
         "Forbidden values on non-accountable sale order line",
@@ -594,9 +599,16 @@ class SaleOrderLine(models.Model):
 
     @api.depends("product_id")
     def _compute_product_uom_id(self):
+        # To VFE: Should we raise if user deleted the unit UOM?
+        # if we don't then we can't keep it required
+        unit_uom = self.env.ref("uom.product_uom_unit", raise_if_not_found=False)
         for line in self:
-            if not line.product_uom_id or (line.product_id.uom_id.id != line.product_uom_id.id):
+            if (not line.product_uom_id and line.product_id) or (
+                line.product_id.uom_id.id != line.product_uom_id.id
+            ):
                 line.product_uom_id = line.product_id.uom_id
+            elif not line.product_uom_id and not line.display_type and not line.product_id:
+                line.product_uom_id = unit_uom
 
     @api.depends("product_id.sale_line_warn_msg")
     def _compute_sale_line_warn_msg(self):
@@ -608,13 +620,8 @@ class SaleOrderLine(models.Model):
 
     @api.depends("product_id")
     def _compute_allowed_uom_ids(self):
-        lines_without_product = self.filtered(lambda l: not l.product_id)
-        all_uoms = self.env['uom.uom'].search([]) if lines_without_product else self.env['uom.uom']
         for line in self:
-            if line.product_id:
-                line.allowed_uom_ids = line.product_id._get_available_uoms()
-            else:
-                line.allowed_uom_ids = all_uoms
+            line.allowed_uom_ids = line.product_id._get_available_uoms()
 
     @api.depends("product_id", "company_id")
     def _compute_tax_ids(self):
@@ -630,7 +637,8 @@ class SaleOrderLine(models.Model):
                 taxes = None
                 if line.product_id:
                     taxes = line.product_id.taxes_id._filter_taxes_by_company(company)
-                if not taxes and not line.product_id and self.env.context.get('from_order_line_tab'):
+                # if it's a productless line add default company's tax
+                if not taxes and not line.product_id and not line.display_type:
                     taxes = company.account_sale_tax_id
                 if not taxes:
                     line.tax_ids = False
