@@ -72,12 +72,12 @@
             <!-- Case 2: Special EU transactions (OSS, Triangular Sale). -->
             <t t-elif="special_transactions">
               <KodUE t-out="get_vat_country(buyer.vat) or buyer.country_code"/>
-              <NrVatUE t-out="get_vat_number(buyer.vat)"/>
+              <NrVatUE t-out="get_vat_number_without_country(buyer.vat)"/>
             </t>
             <!-- Case 3: Other foreign buyer with a tax ID. -->
             <t t-else="">
               <KodKraju t-out="get_vat_country(buyer.vat) or buyer.country_code"/>
-              <NrID t-out="get_vat_number(buyer.vat)"/>
+              <NrID t-out="get_vat_number_without_country(buyer.vat)"/>
             </t>
           </t>
           <!-- Case 4: Buyer has no tax identifier. -->

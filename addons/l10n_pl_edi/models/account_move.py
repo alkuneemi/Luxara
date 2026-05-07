@@ -135,6 +135,9 @@ class AccountMove(models.Model):
                 return False
             return vat[:2].upper()
 
+        def get_vat_number_without_country(vat):
+            return self.env['res.partner']._split_vat(vat)[1]
+
         def get_address(partner):
             return re.sub(r'\n+', r' ', partner._display_address(True))
 
@@ -255,6 +258,7 @@ class AccountMove(models.Model):
             'float_is_zero': float_is_zero,
             'get_vat_country': get_vat_country,
             'get_vat_number': compact,
+            'get_vat_number_without_country': get_vat_number_without_country,
             'get_amounts_from_tag': get_amounts_from_tag,
             'get_amounts_from_tag_in_PLN_currency': get_amounts_from_tag_in_PLN_currency,
             'invoice_type': ksef_type,
