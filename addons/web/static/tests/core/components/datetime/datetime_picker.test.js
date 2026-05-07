@@ -1046,6 +1046,15 @@ test("single value, select time", async () => {
     expect.verifySteps(["2023-04-30T18:05:00"]);
 });
 
+test("today's date is marked correctly if picker's date has different timezone", async () => {
+    await mountWithCleanup(DateTimePicker, {
+        props: {
+            value: DateTime.now().setZone("UTC-2"),
+        },
+    });
+    expect(".o_date_item_cell.o_today").toHaveText("25");
+});
+
 test.tags("desktop");
 test("single value, select time in twelve-hour clock format", async () => {
     defineParams({

@@ -17,6 +17,11 @@ export class DateTimePickerPopover extends Component {
     static props = {
         close: Function, // Given by the Popover service
         pickerProps: { type: Object, shape: DateTimePicker.props },
+        showResetButton: { type: Boolean, optional: true },
+    };
+
+    static defaultProps = {
+        showResetButton: true,
     };
 
     static template = "web.DateTimePickerPopover";

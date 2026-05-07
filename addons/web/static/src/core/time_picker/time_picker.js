@@ -34,6 +34,7 @@ export class TimePicker extends Component {
         showSeconds: { type: Boolean, optional: true },
         minutesRounding: { type: Number, optional: true },
         placeholder: { type: String, optional: true },
+        close: { type: Function, optional: true }, // Given by the Popover service
     };
     static defaultProps = {
         cssClass: {},
