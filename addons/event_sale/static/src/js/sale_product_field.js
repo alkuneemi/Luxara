@@ -1,5 +1,5 @@
 import { patch } from "@web/core/utils/patch";
-import { SaleOrderLineProductField } from "@sale/js/sale_product_field";
+import { SaleOrderLineProductField } from "@sale/js/sale_product_field/sale_product_field";
 import { useService } from "@web/core/utils/hooks";
 
 patch(SaleOrderLineProductField.prototype, {

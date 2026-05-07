@@ -3,7 +3,7 @@ import {
     ListSaleOrderLineText,
     listSaleOrderLineText,
     saleOrderLineText,
-} from "./sale_order_line_field";
+} from "../sale_order_line_field/sale_order_line_field";
 import { registry } from "@web/core/registry";
 
 export class SaleLabelTextField extends AccountLabelTextField {
