@@ -2,7 +2,7 @@ import { registry } from "@web/core/registry";
 import { Plugin } from "../plugin";
 import { zip } from "@web/core/utils/arrays";
 import { DIMENSIONS } from "../hooks";
-import { Analysis, ElementIdentity, NodeAnalysis } from "../core/node_models";
+import { Analysis, ElementIdentity, EmailNode } from "../core/node_models";
 
 const { DESKTOP, MOBILE } = DIMENSIONS;
 // Prevent the last inline-block element from wrapping to the next line due
@@ -17,11 +17,11 @@ export class HybridFluidStrategyPlugin extends Plugin {
         "math",
         "responsiveBlock",
         "rules",
-        "node",
+        "referenceNode",
     ];
     resources = {
         element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
-        synthetic_node_analysis_processors: this.addSyntheticNodeAnalysis.bind(this),
+        synthetic_email_node_processors: this.addSyntheticEmailNode.bind(this),
     };
 
     setup() {
@@ -37,30 +37,30 @@ export class HybridFluidStrategyPlugin extends Plugin {
     // with potentially multiple rows, each with potentially multiple
     // cells.
     // however right now, we only have one container and its children
-    // we have to create a NodeAnalysis for each row, and a NodeAnalysis
+    // we have to create a EmailNode for each row, and a EmailNode
     // for each cell.
     // some of the existing children can be used as is as a cell
-    // the current nodeAnalysis should be replaced with the list of rows
+    // the current emailNode should be replaced with the list of rows
     // need feature to insert multiple nodes as children of another
-    // nodeAnalysis
+    // emailNode
     // features needed here:
-    // - replace an item in nodeAnalysis.children
+    // - replace an item in emailNode.children
     // // currently setParent appends -> this is not enough
     // // -> honestly, need to replace the set by a special set+list structure
     // // done
     // Logic:
     // exact copy paste of buildFragment logic except we create a datastructure of
     // template arguments instead of the templates directly?
-    // Real idea here is that I should create a synthetic nodeAnalysis
-    // I already have my basic nodeAnalysis from the first pass which identifies the row
-    // and potentially some other nodeAnalysis as children of that row that may have any purpose.
+    // Real idea here is that I should create a synthetic emailNode
+    // I already have my basic emailNode from the first pass which identifies the row
+    // and potentially some other emailNode as children of that row that may have any purpose.
     // Objective here is to make sure that every child of the row is classified as a CELL,
     // be it a child itself becomes a CELL, or 1+ children are wrapped in a CELL
     // BTW the row node itself can become multiple row in some circumstances
-    addSyntheticNodeAnalysis(nodeAnalysis) {
+    addSyntheticEmailNode(emailNode) {
         // TODO EGGMAIL: arbitrary choice to take the last referenceNode to motivate
-        const referenceNode = nodeAnalysis.lastReferenceNode;
-        const parent = nodeAnalysis.parent;
+        const referenceNode = emailNode.lastReferenceNode;
+        const parent = emailNode.parent;
         const desktopBlock = this.getLayoutBlock(referenceNode, DESKTOP);
         const rows = [];
         // TODO EGGMAIL: some values for text-align are not supported
@@ -74,7 +74,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
             },
         };
         for (const band of desktopBlock.bands) {
-            const rowAnalysis = new NodeAnalysis({
+            const rowAnalysis = new EmailNode({
                 // TODO EGGMAIL: currently oversimplified identity, add tracking of positioning values.
                 identity: new ElementIdentity({ tag: "div" }),
                 analysis: new Analysis({
@@ -90,7 +90,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
                     const offsetWidth = desktopBlock.padding.left;
                     rowAnalysis.appendChild(
                         this.buildCellWithOffset(
-                            nodeAnalysis,
+                            emailNode,
                             offsetWidth,
                             prevCluster,
                             styleContext,
@@ -99,7 +99,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
                     );
                 } else {
                     rowAnalysis.appendChild(
-                        this.buildCell(nodeAnalysis, prevCluster, styleContext, isLast)
+                        this.buildCell(emailNode, prevCluster, styleContext, isLast)
                     );
                 }
             }
@@ -109,11 +109,11 @@ export class HybridFluidStrategyPlugin extends Plugin {
                 const isLast = i === band.clusters.length - 1;
                 if (gap > 0) {
                     rowAnalysis.appendChild(
-                        this.buildCellWithOffset(nodeAnalysis, gap, cluster, styleContext, isLast)
+                        this.buildCellWithOffset(emailNode, gap, cluster, styleContext, isLast)
                     );
                 } else {
                     rowAnalysis.appendChild(
-                        this.buildCell(nodeAnalysis, prevCluster, styleContext, isLast)
+                        this.buildCell(emailNode, prevCluster, styleContext, isLast)
                     );
                 }
                 prevCluster = cluster;
@@ -122,7 +122,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
                 rowAnalysis.appendChild(this.buildEmptyCell(desktopBlock.padding.right));
             }
         }
-        parent.spliceChildren(parent.children.indexOf(nodeAnalysis), 1, ...rows);
+        parent.spliceChildren(parent.children.indexOf(emailNode), 1, ...rows);
     }
 
     analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
@@ -131,7 +131,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         }
         Object.assign(analysis.parsingFacts, {
             canMerge: false,
-            addSyntheticNodeAnalysis: true,
+            addSyntheticEmailNode: true,
         });
         analysis.facts.isHybridFluidRow = true;
         identity.pluginIds.add(HybridFluidStrategyPlugin.id);
@@ -167,13 +167,13 @@ export class HybridFluidStrategyPlugin extends Plugin {
 
     /**
      * TODO EGGMAIL: test how this works/find a more optimized solution?
-     * Evaluate which children in nodeAnalysis are related to a given cluster
+     * Evaluate which children in emailNode are related to a given cluster
      * of nodes
      */
-    getClusterAnalysis(nodeAnalysis, cluster) {
+    getClusterAnalysis(emailNode, cluster) {
         const range = this.getNodeClusterRange(cluster.nodes.at(0), cluster.nodes.at(-1));
         const clusterAnalysis = [];
-        for (const childAnalysis of nodeAnalysis.children) {
+        for (const childAnalysis of emailNode.children) {
             if (
                 childAnalysis.referenceNodes.length &&
                 range.comparePoint(childAnalysis.firstReferenceNode, 0) === 0
@@ -184,10 +184,10 @@ export class HybridFluidStrategyPlugin extends Plugin {
         return clusterAnalysis;
     }
 
-    buildCell(nodeAnalysis, cluster, styleContext, isLast = false) {
-        const clusterAnalysis = this.getClusterAnalysis(nodeAnalysis, cluster);
+    buildCell(emailNode, cluster, styleContext, isLast = false) {
+        const clusterAnalysis = this.getClusterAnalysis(emailNode, cluster);
         const clusterWidth = cluster.rect.width - (isLast ? ZOOM_WIDTH_CORRECTION : 0);
-        const cellAnalysis = new NodeAnalysis({
+        const cellAnalysis = new EmailNode({
             // TODO EGGMAIL: currently oversimplified identity, to elaborate?
             identity: new ElementIdentity({ tag: "div" }),
             analysis: new Analysis({
@@ -208,7 +208,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
     }
 
     buildEmptyCell(width) {
-        return new NodeAnalysis({
+        return new EmailNode({
             identity: new ElementIdentity({ tag: "div" }),
             analysis: new Analysis({
                 facts: {
@@ -222,13 +222,13 @@ export class HybridFluidStrategyPlugin extends Plugin {
         });
     }
 
-    buildCellWithOffset(nodeAnalysis, offsetWidth, cluster, styleContext, isLast = false) {
+    buildCellWithOffset(emailNode, offsetWidth, cluster, styleContext, isLast = false) {
         // TODO EGGMAIL: should a cell + offset be considered differently from a normal cell?
         // It behaves like a row inside a row.
         const clusterWidth = cluster.rect.width - (isLast ? ZOOM_WIDTH_CORRECTION : 0);
         const offsetAnalysis = this.buildEmptyCell(offsetWidth);
-        const cellAnalysis = this.buildCell(nodeAnalysis, cluster, styleContext);
-        const cellWithOffsetAnalysis = new NodeAnalysis({
+        const cellAnalysis = this.buildCell(emailNode, cluster, styleContext);
+        const cellWithOffsetAnalysis = new EmailNode({
             identity: new ElementIdentity({ tag: "div" }),
             analysis: new Analysis({
                 facts: {

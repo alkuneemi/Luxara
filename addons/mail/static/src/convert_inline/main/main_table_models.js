@@ -1,4 +1,4 @@
-import { assignDefaultElementOptions, LayoutCell } from "../core/layout_models";
+import { assignDefaultElementOptions, LayoutCell } from "../core/render_models";
 
 export class MainTable extends LayoutCell {
     static template = "mail.MainTable";

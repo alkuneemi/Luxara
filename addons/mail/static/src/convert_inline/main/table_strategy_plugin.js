@@ -7,17 +7,17 @@ const { DESKTOP, MOBILE } = DIMENSIONS;
 
 export class TableStrategyPlugin extends Plugin {
     static id = "tableStrategy";
-    static dependencies = ["responsiveBlock", "node"];
+    static dependencies = ["responsiveBlock", "referenceNode"];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
         element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
     };
 
-    analyzeElementIdentity({ identity, analysis }, { referenceNode, parentNodeAnalysis }) {
+    analyzeElementIdentity({ identity, analysis }, { referenceNode, parentEmailNode }) {
         if (analysis.isFrozen || !this.detectTableLayout(referenceNode)) {
             return;
         }
-        if (parentNodeAnalysis.identity.tag === "TABLE") {
+        if (parentEmailNode.identity.tag === "TABLE") {
             analysis.parsingFacts.canParentMerge = true;
         }
         analysis.parsingFacts.canMerge = false;

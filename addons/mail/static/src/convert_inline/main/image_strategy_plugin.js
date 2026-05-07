@@ -10,7 +10,7 @@ export class ImageStrategyPlugin extends Plugin {
         "measurementSnapshot",
         "responsiveBlock",
         "rules",
-        "node",
+        "referenceNode",
     ];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),

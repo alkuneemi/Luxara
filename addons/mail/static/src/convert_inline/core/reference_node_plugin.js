@@ -3,8 +3,8 @@ import { registry } from "@web/core/registry";
 
 const ALLOWED_NODE_TYPES = [Node.ELEMENT_NODE, Node.TEXT_NODE];
 
-export class NodePlugin extends Plugin {
-    static id = "node";
+export class ReferenceNodePlugin extends Plugin {
+    static id = "referenceNode";
     static shared = ["createReferenceTreeWalker", "isAllowedReferenceNode", "processChildNodes"];
 
     setup() {
@@ -40,4 +40,6 @@ export class NodePlugin extends Plugin {
     }
 }
 
-registry.category("mail-html-conversion-core-plugins").add(NodePlugin.id, NodePlugin);
+registry
+    .category("mail-html-conversion-core-plugins")
+    .add(ReferenceNodePlugin.id, ReferenceNodePlugin);

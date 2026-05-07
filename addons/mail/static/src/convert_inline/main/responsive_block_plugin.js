@@ -5,7 +5,7 @@ import { Band, Block, Cluster } from "./responsive_models";
 
 export class ResponsiveBlockPlugin extends Plugin {
     static id = "responsiveBlock";
-    static dependencies = ["measurementSnapshot", "math", "node"];
+    static dependencies = ["measurementSnapshot", "math", "referenceNode"];
     static shared = ["getLayoutBlock", "isBlock"];
     resources = {
         on_parse_layout_with_dimensions_handlers: this.computeBlocks.bind(this),

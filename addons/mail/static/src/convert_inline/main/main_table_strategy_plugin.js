@@ -7,7 +7,13 @@ import { StyleInfo } from "../core/style_models";
 
 export class MainTableStrategyPlugin extends Plugin {
     static id = "mainTableStrategy";
-    static dependencies = ["filterContent", "measurementSnapshot", "rules", "style", "node"];
+    static dependencies = [
+        "filterContent",
+        "measurementSnapshot",
+        "rules",
+        "style",
+        "referenceNode",
+    ];
     resources = {
         apply_layout_strategy_overrides: withSequence(2, this.applyLayoutStrategy.bind(this)),
         element_identity_analysis_processors: withSequence(

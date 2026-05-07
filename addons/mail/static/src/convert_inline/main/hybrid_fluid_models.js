@@ -3,7 +3,7 @@ import {
     LayoutCell,
     LayoutModel,
     LayoutRow,
-} from "../core/layout_models";
+} from "../core/render_models";
 
 export class HybridFluidRow extends LayoutRow {
     static template = "mail.HybridFluidRow";

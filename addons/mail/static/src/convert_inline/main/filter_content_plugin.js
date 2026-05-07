@@ -33,7 +33,7 @@ export class FilterContentPlugin extends Plugin {
         "responsiveBlock",
         "rules",
         "style",
-        "node",
+        "referenceNode",
     ];
     static shared = ["getBodyGlobalStyleInfo", "getBodyTextStyleInfo", "isInvisible"];
     resources = {
@@ -55,15 +55,15 @@ export class FilterContentPlugin extends Plugin {
         this.provideBodyStyleRules();
     }
 
-    analyzeElementIdentity({ analysis }, { referenceNode, parentNodeAnalysis }) {
+    analyzeElementIdentity({ analysis }, { referenceNode, parentEmailNode }) {
         const node = referenceNode;
         let parentNode;
         if (
-            !parentNodeAnalysis ||
-            parentNodeAnalysis.referenceNodes.length === 0 ||
+            !parentEmailNode ||
+            parentEmailNode.referenceNodes.length === 0 ||
             !this.isBlock(node) ||
             // TODO EGGMAIL: arbitrary choice to take the lastReferenceNode to motivate
-            !this.isBlock((parentNode = parentNodeAnalysis.lastReferenceNode)) ||
+            !this.isBlock((parentNode = parentEmailNode.lastReferenceNode)) ||
             parentNode.nodeName !== "DIV"
         ) {
             analysis.parsingFacts.canParentMerge = false;

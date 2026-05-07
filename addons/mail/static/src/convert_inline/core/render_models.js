@@ -1,6 +1,6 @@
 import { xml } from "@odoo/owl";
 import { renderToFragment } from "@web/core/utils/render";
-import { ObjectMap, SetMap } from "../data_structures";
+import { ObjectMap, SetMap, UniqueArray } from "../data_structures";
 import { StyleInfo, StyleInfoMap } from "./style_models";
 import { renderAttributes } from "./utils";
 
@@ -194,5 +194,181 @@ export class LayoutCell extends LayoutModel {
     constructor({ childNodes = [] } = {}) {
         super(...arguments);
         this.childNodes = childNodes;
+    }
+}
+
+/**
+ * TODO EGGMAIL: simplify/flatten model and combine properties with EmailNode?
+ */
+export class Analysis {
+    parsingFacts = {};
+    constraintsForAncestors = [];
+    constraintsForDescendants = [];
+    facts = {};
+    isFrozen = false;
+
+    constructor(options = {}) {
+        options.parsingFacts ??= {
+            canMerge: false,
+            canParentMerge: false,
+        };
+        this.merge(options);
+    }
+
+    /**
+     * Informative freeze to indicate that further analysis evaluation is
+     * most likely unnecessary / could be wrong
+     */
+    freeze() {
+        this.isFrozen = true;
+    }
+
+    merge(analysis) {
+        Object.assign(this.parsingFacts, analysis.parsingFacts ?? {});
+        this.constraintsForAncestors = this.constraintsForAncestors.concat(
+            analysis.constraintsForAncestors
+        );
+        this.constraintsForDescendants = this.constraintsForDescendants.concat(
+            analysis.constraintsForDescendants
+        );
+        Object.assign(this.facts, analysis.facts ?? {});
+        return this;
+    }
+}
+
+export function renderEmailNode(emailNode) {
+    return emailNode.identity.renderToFragment({
+        children: emailNode.children.map((child) => renderEmailNode(child)),
+    });
+}
+
+export class EmailNode {
+    referenceNodes = new UniqueArray();
+    analysis = new Analysis();
+    children = new UniqueArray();
+
+    constructor({ identity, referenceNode, parent, analysis = {} } = {}) {
+        this.identity = identity;
+        if (parent) {
+            parent.appendChild(this);
+        }
+        if (referenceNode) {
+            this.pushReferenceNode(referenceNode);
+        }
+        this.analysis.merge(analysis);
+    }
+
+    spliceChildren(start, deleteCount, ...items) {
+        const removedChildren = this.children.splice(start, deleteCount, ...items);
+        for (const child of removedChildren) {
+            if (!this.children.has(child)) {
+                child.parent = undefined;
+            }
+        }
+        for (const child of items) {
+            if (child.parent && child.parent.children !== this.children) {
+                child.parent.removeChild(child);
+            }
+            child.parent = this;
+        }
+        return removedChildren;
+    }
+
+    pushReferenceNode(referenceNode) {
+        return this.referenceNodes.push(referenceNode);
+    }
+
+    get firstReferenceNode() {
+        return this.referenceNodes.at(0);
+    }
+
+    get lastReferenceNode() {
+        return this.referenceNodes.at(-1);
+    }
+
+    appendChild(emailNode) {
+        if (emailNode.parent && emailNode.parent !== this) {
+            emailNode.parent.removeChild(emailNode);
+        }
+        emailNode.parent = this;
+        return this.children.push(emailNode);
+    }
+
+    removeChild(emailNode) {
+        if (this.children.has(emailNode)) {
+            emailNode.parent = undefined;
+            return this.children.delete(emailNode);
+        } else {
+            return false;
+        }
+    }
+
+    get firstChild() {
+        return this.children.at(0);
+    }
+
+    get lastChild() {
+        return this.children.at(-1);
+    }
+}
+
+class Identity {
+    pluginIds = new Set();
+
+    /**
+     * Can be overridden to define how 2 identities should be merged together
+     */
+    merge(originalIdentity) {
+        return originalIdentity;
+    }
+}
+
+/**
+ * TODO EGGMAIL: implement API so that plugins can modify/define characteristics?
+ * Objective of identity is to provide an API for a LayoutModel to get the required arguments
+ * for that layoutModel.
+ * => identity is closely related to a node, either text or element
+ */
+export class ElementIdentity extends Identity {
+    tag;
+    styleInfo = new StyleInfo();
+    attributes = {};
+    classNames = new Set();
+
+    constructor(options) {
+        options ??= {};
+        super(options);
+        this.tag = options.tag;
+        this.setAttributes(options);
+    }
+
+    merge(originalIdentity) {
+        originalIdentity.setAttributes(this);
+        originalIdentity.tag = this.tag;
+        return originalIdentity;
+    }
+
+    setAttributes({ attributes = {}, classNames = "", style = {} } = {}) {
+        Object.assign(this.attributes, attributes);
+        if (typeof classNames === "string") {
+            classNames = classNames.split(" ").filter(Boolean);
+        }
+        this.classNames = this.classNames.union(new Set(classNames));
+        this.styleInfo.merge(StyleInfo.from(style), this.styleInfo.maxSequence);
+    }
+
+    get style() {
+        return this.styleInfo;
+    }
+}
+
+export class TextIdentity extends Identity {
+    content;
+
+    constructor({ content } = {}) {
+        super(...arguments);
+        // TODO EGGMAIL: same consideration as ElementIdentity: do we really
+        // need node details? We could just get it from the actual node later.
+        this.content = content;
     }
 }
