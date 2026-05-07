@@ -7,13 +7,15 @@ msgstr ""
 "Project-Id-Version: Odoo Server 19.4a1+e\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-28 13:11+0000\n"
-"PO-Revision-Date: 2026-04-28 13:11+0000\n"
+"PO-Revision-Date: 2026-04-28 15:18+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: \n"
-"Plural-Forms: \n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields.selection,name:l10n_es_edi_tbai.selection__l10n_es_edi_tbai_document__state__accepted
@@ -33,8 +35,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_es_edi_tbai/models/account_move.py:0
 msgid ""
-"Be careful if you modified this vendor bill, because the official version is"
-" still the previous one sent. "
+"Be careful if you modified this vendor bill, because the official version is "
+"still the previous one sent. "
 msgstr ""
 
 #. module: l10n_es_edi_tbai
@@ -57,7 +59,7 @@ msgstr ""
 #. module: l10n_es_edi_tbai
 #: model:ir.model,name:l10n_es_edi_tbai.model_certificate_certificate
 msgid "Certificate"
-msgstr ""
+msgstr "Certificat"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_company__l10n_es_tbai_certificate_id
@@ -67,7 +69,7 @@ msgstr ""
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_certificate_certificate__scope
 msgid "Certificate scope"
-msgstr ""
+msgstr "Abast del certificat"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.ui.menu,name:l10n_es_edi_tbai.menu_l10n_es_edi_tbai_certificates
@@ -88,12 +90,12 @@ msgstr ""
 #: model:ir.model,name:l10n_es_edi_tbai.model_res_company
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_l10n_es_edi_tbai_document__company_id
 msgid "Company"
-msgstr ""
+msgstr "Empresa"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model,name:l10n_es_edi_tbai.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "Paràmetres de configuració"
 
 #. module: l10n_es_edi_tbai
 #: model_terms:ir.actions.act_window,help:l10n_es_edi_tbai.l10n_es_edi_tbai_certificate_action
@@ -125,7 +127,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_company__display_name
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_config_settings__display_name
 msgid "Display Name"
-msgstr ""
+msgstr "Nom mostrat"
 
 #. module: l10n_es_edi_tbai
 #. odoo-python
@@ -170,7 +172,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_es_edi_tbai/models/l10n_es_edi_tbai_document.py:0
 msgid ""
-"In case of a foreign customer, you need to configure the tax scope on taxes:\n"
+"In case of a foreign customer, you need to configure the tax scope on "
+"taxes:\n"
 "%s"
 msgstr ""
 
@@ -203,8 +206,8 @@ msgstr ""
 #: model:ir.model.fields,help:l10n_es_edi_tbai.field_account_bank_statement_line__l10n_es_tbai_chain_index
 #: model:ir.model.fields,help:l10n_es_edi_tbai.field_account_move__l10n_es_tbai_chain_index
 msgid ""
-"Invoice index in chain, set if and only if an in-chain XML was submitted and"
-" did not error"
+"Invoice index in chain, set if and only if an in-chain XML was submitted and "
+"did not error"
 msgstr ""
 
 #. module: l10n_es_edi_tbai
@@ -226,7 +229,7 @@ msgstr ""
 #. module: l10n_es_edi_tbai
 #: model:ir.model,name:l10n_es_edi_tbai.model_account_move
 msgid "Journal Entry"
-msgstr ""
+msgstr "Assentament comptable"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model,name:l10n_es_edi_tbai.model_account_move_reversal
@@ -236,7 +239,7 @@ msgstr ""
 #. module: l10n_es_edi_tbai
 #: model:ir.model,name:l10n_es_edi_tbai.model_account_move_line
 msgid "Journal Item"
-msgstr ""
+msgstr "Apunt comptable"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_bank_statement_line__l10n_es_tbai_cancel_document_id
@@ -332,13 +335,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_bank_statement_line__original_invoice_credited
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_move__original_invoice_credited
 msgid "Original Invoice Credited"
-msgstr ""
+msgstr "Factura original rectificada"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_bank_statement_line__l10n_es_tbai_original_invoice_date
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_move__l10n_es_tbai_original_invoice_date
 msgid "Original Invoice Date (TicketBAI)"
-msgstr ""
+msgstr "Data de la factura original (TicketBAI)"
 
 #. module: l10n_es_edi_tbai
 #. odoo-python
@@ -633,8 +636,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_es_edi_tbai/models/l10n_es_edi_tbai_document.py:0
 msgid ""
-"TicketBAI: Cannot post a reversal document while the source document has not"
-" been posted"
+"TicketBAI: Cannot post a reversal document while the source document has not "
+"been posted"
 msgstr ""
 
 #. module: l10n_es_edi_tbai
@@ -648,8 +651,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_es_edi_tbai/models/l10n_es_edi_tbai_document.py:0
 msgid ""
-"TicketBAI: For reversal documents without a source invoice in Odoo, you must"
-" provide the original invoice number and date"
+"TicketBAI: For reversal documents without a source invoice in Odoo, you must "
+"provide the original invoice number and date"
 msgstr ""
 
 #. module: l10n_es_edi_tbai

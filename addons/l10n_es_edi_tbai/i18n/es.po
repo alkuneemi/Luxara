@@ -4,28 +4,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 19.4a1+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 12:31+0000\n"
-"PO-Revision-Date: 2025-01-13 15:08+0000\n"
+"POT-Creation-Date: 2026-04-28 13:11+0000\n"
+"PO-Revision-Date: 2026-04-28 15:17+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-#. module: l10n_es_edi_tbai
-#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_LROE_240_inner
-#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_LROE_240_inner_recibidas
-msgid "1.0"
-msgstr "1.0"
-
-#. module: l10n_es_edi_tbai
-#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_LROE_240_inner
-msgid "1.1"
-msgstr "1.1"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields.selection,name:l10n_es_edi_tbai.selection__l10n_es_edi_tbai_document__state__accepted
@@ -143,7 +133,7 @@ msgstr "Fecha"
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_company__display_name
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_config_settings__display_name
 msgid "Display Name"
-msgstr "Nombre mostrado"
+msgstr "Nombre para mostrar"
 
 #. module: l10n_es_edi_tbai
 #. odoo-python
@@ -165,6 +155,12 @@ msgstr "Hacienda Foral de Bizkaia"
 #: model:ir.model.fields.selection,name:l10n_es_edi_tbai.selection__res_company__l10n_es_tbai_tax_agency__gipuzkoa
 msgid "Hacienda Foral de Gipuzkoa"
 msgstr "Diputación Foral de Gipuzkoa"
+
+#. module: l10n_es_edi_tbai
+#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_LROE_recibidas_common
+#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_invoice_factura
+msgid "I"
+msgstr ""
 
 #. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_move__id
@@ -319,6 +315,11 @@ msgid "Manage certificates (TicketBAI)"
 msgstr "Gestionar certificados (TicketBAI)"
 
 #. module: l10n_es_edi_tbai
+#: model_terms:ir.ui.view,arch_db:l10n_es_edi_tbai.template_invoice_sujetos
+msgid "N"
+msgstr ""
+
+#. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_l10n_es_edi_tbai_document__name
 msgid "Name"
 msgstr "Nombre"
@@ -350,6 +351,18 @@ msgid ""
 msgstr ""
 "No se ha encontrado ningún certificado válido para esta empresa, el archivo "
 "TicketBAI no se podrá firmar.\n"
+
+#. module: l10n_es_edi_tbai
+#: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_bank_statement_line__original_invoice_credited
+#: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_move__original_invoice_credited
+msgid "Original Invoice Credited"
+msgstr "Factura original rectificada"
+
+#. module: l10n_es_edi_tbai
+#: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_bank_statement_line__l10n_es_tbai_original_invoice_date
+#: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_account_move__l10n_es_tbai_original_invoice_date
+msgid "Original Invoice Date (TicketBAI)"
+msgstr "Fecha de la factura original (TicketBAI)"
 
 #. module: l10n_es_edi_tbai
 #. odoo-python
@@ -667,6 +680,14 @@ msgstr ""
 "cabeza de cadena (%s)"
 
 #. module: l10n_es_edi_tbai
+#. odoo-python
+#: code:addons/l10n_es_edi_tbai/models/l10n_es_edi_tbai_document.py:0
+msgid ""
+"TicketBAI: For reversal documents without a source invoice in Odoo, you must "
+"provide the original invoice number and date"
+msgstr ""
+
+#. module: l10n_es_edi_tbai
 #: model:ir.model.fields,field_description:l10n_es_edi_tbai.field_res_company__l10n_es_tbai_chain_sequence_id
 msgid "TicketBai account.move chain sequence"
 msgstr "Secuencia en cadena del account.move de TicketBai"
@@ -693,6 +714,12 @@ msgstr "Adjunto XML"
 #: code:addons/l10n_es_edi_tbai/models/account_move.py:0
 msgid "You cannot delete a move that has a TicketBAI chain id."
 msgstr "No puede eliminar un asiento que tiene un ID en cadena de TicketBai."
+
+#. module: l10n_es_edi_tbai
+#. odoo-python
+#: code:addons/l10n_es_edi_tbai/models/account_move.py:0
+msgid "You cannot reset to draft a locked journal entry."
+msgstr ""
 
 #. module: l10n_es_edi_tbai
 #. odoo-python
