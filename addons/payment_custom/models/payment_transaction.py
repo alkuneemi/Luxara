@@ -6,6 +6,7 @@ from odoo import _, models
 from odoo.tools import is_html_empty
 
 from odoo.addons.payment.logging import get_payment_logger
+from odoo.addons.payment_custom import const
 from odoo.addons.payment_custom.controllers.main import CustomController
 
 _logger = get_payment_logger(__name__)
@@ -54,7 +55,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != "custom":
             return super()._apply_updates(payment_data)
 
-        if payment_data.get("confirmed"):
+        if payment_data.get(const.CUSTOM_STATE_DONE_KEY):
             self._set_done()
         else:
             self._set_pending()
