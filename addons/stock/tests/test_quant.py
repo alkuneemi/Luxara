@@ -1401,6 +1401,7 @@ class TestStockQuant(TestStockCommon):
             'lot_id': False,
         }])
 
+<<<<<<< 85ed3bbfb386e392e2069d1e7adea4bde17cad29
     def test_set_inventory_no_property_stock_inventory(self):
         """
         Test that quant inventory can be applied on products with no property_stock_inventory set.
@@ -1410,6 +1411,42 @@ class TestStockQuant(TestStockCommon):
             'product_id': self.productA.id,
             'inventory_quantity': 10,
         }])
+||||||| ae6e254348d8d6d3a5a07d6a6bfaa957421c0d42
+=======
+    def test_forced_full_packaging_reservation(self):
+        '''
+        Ensure reservations respect the setting set on the product's category.
+        '''
+        uom_dozen = self.env.ref('uom.product_uom_dozen')
+        self.product.categ_id = self.env.ref('product.product_category_goods')
+        self.product.categ_id.packaging_reserve_method = 'full'
+        # Delivery for 26 units
+        delivery = self.env['stock.picking'].create({
+            'picking_type_id': self.ref('stock.picking_type_out'),
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.ref('stock.stock_location_customers'),
+            'move_ids': [Command.create({
+                'product_id': self.product.id,
+                'location_id': self.stock_location.id,
+                'location_dest_id': self.ref('stock.stock_location_customers'),
+                'product_uom_qty': 26,
+                'product_uom': self.product.uom_id.id,
+            })],
+            'state': 'draft',
+        })
+        delivery.move_ids.packaging_uom_id = uom_dozen
+
+        # Only 1 full packaging in stock, so reservation should be 12
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 15)
+        delivery.action_confirm()
+        self.assertEqual(delivery.move_ids.quantity, 12)
+
+        # Plenty in stock, reservation should be the max amount of full packagings so 24
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 100)
+        delivery.action_assign()
+        self.assertEqual(delivery.move_ids.quantity, 24)
+
+>>>>>>> c11d61b5e0a7e60c0a7553c35710005e2a5a41bb
 
         self.productA.property_stock_inventory = False
 
