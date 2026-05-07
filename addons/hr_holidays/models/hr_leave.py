@@ -609,6 +609,42 @@ Versions:
                         days = 1 if not leave.request_unit_half or leave.request_date_from_period != leave.request_date_to_period else 0.5
                     else:
                         days = hours / 24
+                elif calendar.duration_based and leave.request_unit_hours:
+                    employee_tz = pytz.timezone(leave.employee_id.tz or calendar.tz or 'UTC')
+                    start_local = pytz.utc.localize(leave.date_from).astimezone(employee_tz)
+                    end_local = pytz.utc.localize(leave.date_to).astimezone(employee_tz)
+
+                    schedule = {}
+                    for attendance in calendar.attendance_ids:
+                        if not attendance.display_type and attendance.day_period != 'lunch':
+                            weekday = int(attendance.dayofweek)
+                            work_hours, work_days = schedule.get(weekday, (0.0, 0.0))
+                            schedule[weekday] = (work_hours + attendance.duration_hours, work_days + attendance.duration_days)
+
+                    total_hours = total_days = 0.0
+                    one_day = timedelta(days=1)
+                    current_date = start_local.date()
+                    end_date = end_local.date()
+
+                    while current_date <= end_date:
+                        scheduled_hours, scheduled_days = schedule.get(current_date.weekday(), (0.0, 0.0))
+                        if not scheduled_hours:
+                            current_date += one_day
+                            continue
+
+                        day_start = employee_tz.localize(datetime.combine(current_date, time.min))
+                        day_end = employee_tz.localize(datetime.combine(current_date, time.max))
+                        consumed_hours = min(
+                            (min(end_local, day_end) - max(start_local, day_start)).total_seconds() / 3600,
+                            scheduled_hours)
+
+                        if consumed_hours > 0:
+                            total_hours += consumed_hours
+                            total_days += scheduled_days * (consumed_hours / scheduled_hours)
+
+                        current_date += one_day
+                    result[leave.id] = (total_days, total_hours)
+                    continue
                 elif leave.leave_type_request_unit == 'day' and check_leave_type:
                     # list of tuples (day, hours)
                     work_time_per_day_list = work_time_per_day_mapped[leave.date_from, leave.date_to, leave.holiday_status_id.include_public_holidays_in_duration, calendar][leave.employee_id.id]
