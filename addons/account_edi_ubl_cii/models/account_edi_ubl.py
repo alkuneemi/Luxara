@@ -2902,6 +2902,7 @@ class AccountEdiUBL(models.AbstractModel):
 
     def _import_ubl_invoice_retrieve_product_uoms(self, collected_values):
         lines_collected_values = collected_values['lines_collected_values']
+        logs = collected_values['logs']
         cache = {}
         for line_collected_values in lines_collected_values:
             product_uom_values = line_collected_values['product_uom_values']
@@ -2917,6 +2918,21 @@ class AccountEdiUBL(models.AbstractModel):
                     else:
                         uom = cache[matched_uom_xmlid] = self.env.ref(matched_uom_xmlid, raise_if_not_found=False)
                     if uom:
+                        product = line_collected_values['product_values'].get('product')
+                        if product and uom.category_id != product.product_tmpl_id.uom_id.category_id:
+                            logs.append(_(
+                                "The Unit of Measure '%(uom)s' (from unit code '%(code)s') "
+                                "found on the line for product '%(product)s' was ignored "
+                                "because its category (%(xml_category)s) does not match the "
+                                "product's UoM category (%(product_category)s). The product's "
+                                "default UoM was used instead.",
+                                uom=uom.name,
+                                code=uom_code,
+                                product=product.display_name,
+                                xml_category=uom.category_id.name,
+                                product_category=product.product_tmpl_id.uom_id.category_id.name,
+                            ))
+                            continue
                         to_write['product_uom_id'] = uom.id
                         product_uom_values['uom'] = uom
 
