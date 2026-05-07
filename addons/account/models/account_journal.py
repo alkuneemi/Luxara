@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from odoo import api, Command, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.base.models.res_partner_bank import sanitize_account_number
-from odoo.tools import email_normalize, email_normalize_all, groupby, urls
+from odoo.tools import email_normalize, email_normalize_all, groupby, urls, clean_context
 from odoo.tools.misc import hash_sign
 from collections import defaultdict
 import logging
@@ -832,7 +832,14 @@ class AccountJournal(models.Model):
 
     def _alias_get_creation_values(self):
         values = super()._alias_get_creation_values()
-        values['alias_model_id'] = self.env['ir.model']._get_id('account.move')
+
+        if self.type in ('bank', 'cash', 'credit'):
+            model_name = 'account.journal'
+        else:
+            model_name = 'account.move'
+
+        values['alias_model_id'] = self.env['ir.model']._get_id(model_name)
+
         if self.id:
             values['alias_name'] = self._alias_prepare_alias_name(self.alias_name, self.name, self.code, self.type, self.company_id)
             values['alias_defaults'] = defaults = literal_eval(self.alias_defaults or "{}")
@@ -1303,3 +1310,65 @@ class AccountJournal(models.Model):
         Should fetch customer invoices statuses synchronously and doesn't return anything.
         """
         pass
+
+    @api.model
+    def message_new(self, msg_dict, custom_values=None):
+        if custom_values is None:
+            custom_values = {}
+
+        journal_id = custom_values.get('journal_id') or self._context.get('default_journal_id')
+        journal = self.browse(journal_id)
+
+        attachments_raw = msg_dict.pop('attachments', [])
+        attachment_vals_list = []
+        for attachment in attachments_raw:
+            if isinstance(attachment.content, str):
+                content_encoded = attachment.content.encode('utf-8')
+            elif isinstance(attachment.content, bytes):
+                content_encoded = attachment.content
+            else:
+                content_encoded = b''
+
+            attachment_vals_list.append({
+                'name': getattr(attachment, 'fname', getattr(attachment, 'name', 'email')),
+                'raw': content_encoded,
+            })
+
+        attachments = self.env['ir.attachment'].create(attachment_vals_list)
+
+        if attachments:
+            msg_dict['attachment_ids'] = attachments.ids
+
+            action = journal.with_context(clean_context(self.env.context)).create_document_from_attachment(attachments.ids)
+            records = self._find_records_from_action(action)
+
+            if records:
+                safe_post_values = {
+                    'body': msg_dict.get('body', ''),
+                    'subject': msg_dict.get('subject', ''),
+                    'author_id': msg_dict.get('author_id'),
+                    'email_from': msg_dict.get('email_from'),
+                    'message_type': msg_dict.get('message_type', 'email'),
+                    'attachment_ids': msg_dict.get('attachment_ids', []),
+                    'subtype_xmlid': 'mail.mt_note'
+                }
+
+                for record in records[1:]:
+                    record.message_post(**safe_post_values)
+
+                return records[0]
+
+        return super().message_new(msg_dict, custom_values=custom_values)
+
+    def _find_records_from_action(self, action):
+        if not isinstance(action, dict):
+            return None
+        res_id = action.get('res_id')
+        if res_id:
+            return self.env[action.get('res_model', 'account.move')].browse(res_id)
+        domain = action.get('domain', [])
+        for condition in domain:
+            if isinstance(condition, (list, tuple)) and condition[0] == 'statement_id':
+                statement_ids = condition[2]
+                return self.env['account.bank.statement.line'].search([('statement_id', 'in', statement_ids)])
+        return None
