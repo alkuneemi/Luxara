@@ -162,6 +162,12 @@ function parseDuration(value, unit = "hours") {
         value = "";
     }
 
+    // Formula
+    if (value.startsWith("=")) { 
+        duration[unit] = evaluateMathematicalExpression(value.substring(1));
+        value = "";
+    }
+    
     // 12:30:45 format
     else if (value.match(/(\d+)?:\d*(:\d*)?/)) {
         const result = value.split(":");
