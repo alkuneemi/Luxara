@@ -127,10 +127,11 @@ class PurchaseRequisition(models.Model):
 
     def action_confirm(self):
         self.ensure_one()
-        if not self.line_ids:
+        product_lines = self.line_ids.filtered(lambda line: not line.display_type)
+        if not product_lines:
             raise UserError(_("You cannot confirm agreement '%(agreement)s' because it does not contain any product lines.", agreement=self.name))
         if self.requisition_type == 'blanket_order':
-            for requisition_line in self.line_ids:
+            for requisition_line in product_lines:
                 if requisition_line.price_unit <= 0.0:
                     raise UserError(_('You cannot confirm a blanket order with lines missing a price.'))
                 if requisition_line.product_qty <= 0.0:
@@ -168,7 +169,13 @@ class PurchaseRequisitionLine(models.Model):
     _order = 'sequence, id'
 
     sequence = fields.Integer(string='Sequence', default=10)
-    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True)], required=True)
+    display_type = fields.Selection([
+        ('line_section', "Section"),
+        ('line_subsection', "Subsection"),
+        ('line_note', "Note"),
+    ], default=False, help="Technical field for UX purpose.")
+    name = fields.Text(string='Line Description')
+    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True)])
     uom_id = fields.Many2one(
         'uom.uom', 'Unit',
         compute='_compute_uom_id', store=True, readonly=False, precompute=True)
@@ -186,6 +193,9 @@ class PurchaseRequisitionLine(models.Model):
     def _compute_ordered_qty(self):
         line_found = defaultdict(set)
         for line in self:
+            if line.display_type:
+                line.qty_ordered = 0
+                continue
             total = 0.0
             for po in line.requisition_id.purchase_ids.filtered(lambda purchase_order: purchase_order.state == 'purchase'):
                 for po_line in po.order_line.filtered(lambda order_line: order_line.product_id == line.product_id):
@@ -216,13 +226,18 @@ class PurchaseRequisitionLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('display_type'):
+                vals.update(self._get_display_line_vals())
         lines = super().create(vals_list)
-        for line, vals in zip(lines, vals_list):
+        for line in lines:
+            if line.display_type:
+                continue
             if line.requisition_id.requisition_type == 'blanket_order' and line.requisition_id.state not in ['draft', 'cancel', 'done']:
-                if vals['price_unit'] <= 0.0:
+                if line.price_unit <= 0.0:
                     raise UserError(_("You cannot have a negative or unit price of 0 for an already confirmed blanket order."))
                 supplier_infos = self.env['product.supplierinfo'].search([
-                    ('product_id', '=', vals.get('product_id')),
+                    ('product_id', '=', line.product_id.id),
                     ('partner_id', '=', line.requisition_id.vendor_id.id),
                 ])
                 if not any(s.purchase_requisition_id for s in supplier_infos):
@@ -230,6 +245,10 @@ class PurchaseRequisitionLine(models.Model):
         return lines
 
     def write(self, vals):
+        if 'display_type' in vals and self.filtered(lambda line: line.display_type != vals.get('display_type')):
+            raise UserError(_("You cannot change the type of a purchase agreement line. Instead you should delete the current line and create a new line of the proper type."))
+        if vals.get('display_type'):
+            vals = dict(vals, **self._get_display_line_vals())
         res = super().write(vals)
         if 'price_unit' not in vals:
             return res
@@ -241,6 +260,23 @@ class PurchaseRequisitionLine(models.Model):
         self.supplier_info_ids.write({'price': vals['price_unit']})
         return res
 
+    @api.model
+    def _get_display_line_vals(self):
+        return {
+            'product_id': False,
+            'product_qty': 0.0,
+            'uom_id': False,
+            'price_unit': 0.0,
+        }
+
+    @api.constrains('display_type', 'product_id')
+    def _check_line_type(self):
+        for line in self:
+            if line.display_type and line.product_id:
+                raise ValidationError(_("A section or note line cannot have a product."))
+            if not line.display_type and not line.product_id:
+                raise ValidationError(_("A product is required on purchase agreement lines."))
+
     def unlink(self):
         to_unlink = self.filtered(lambda r: r.requisition_id.state not in ['draft', 'cancel', 'done'])
         to_unlink.supplier_info_ids.unlink()
@@ -249,7 +285,7 @@ class PurchaseRequisitionLine(models.Model):
     def _create_supplier_info(self):
         self.ensure_one()
         purchase_requisition = self.requisition_id
-        if purchase_requisition.requisition_type == 'blanket_order' and purchase_requisition.vendor_id:
+        if not self.display_type and purchase_requisition.requisition_type == 'blanket_order' and purchase_requisition.vendor_id:
             # create a supplier_info only in case of blanket order
             self.env['product.supplierinfo'].sudo().create({
                 'partner_id': purchase_requisition.vendor_id.id,
@@ -263,6 +299,12 @@ class PurchaseRequisitionLine(models.Model):
 
     def _prepare_purchase_order_line(self, name, product_qty=0.0, price_unit=0.0, taxes_ids=False):
         self.ensure_one()
+        if self.display_type:
+            return {
+                'display_type': self.display_type,
+                'name': self.name,
+                'sequence': self.sequence,
+            }
         if self.product_description_variants:
             name += '\n' + self.product_description_variants
         date_planned = fields.Datetime.now()
@@ -277,4 +319,5 @@ class PurchaseRequisitionLine(models.Model):
             'tax_ids': [(6, 0, taxes_ids)],
             'date_planned': date_planned,
             'analytic_distribution': self.analytic_distribution,
+            'sequence': self.sequence,
         }
