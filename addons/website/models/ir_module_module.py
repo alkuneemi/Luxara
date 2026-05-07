@@ -680,15 +680,31 @@ class IrModuleModule(models.Model):
         addons = manifest.get('configurator_snippets_addons', {})
         installed_modules = self.env['ir.module.module']._installed()
 
-        # Add addon snippets to the main snippet list for batch generation
-        for module_name, pages in addons.items():
-            # generate snippet only if the module is installed
-            if module_name not in installed_modules and module_name != self.name:
-                continue
-            for page, snippets_to_insert in pages.items():
-                snippets = configurator_snippets.setdefault(page, [])
-                dynamic_snippets = [snippet for snippet, *_ in snippets_to_insert]
-                configurator_snippets[page] = list(dict.fromkeys(snippets + dynamic_snippets))
+        def add_snippets_addons(addons):
+            for module_name, pages in addons.items():
+                # A snippet such as `website_sale.x` can only be generated
+                # once `website_sale` exists, or while installing it.
+                if module_name not in installed_modules and module_name != self.name:
+                    continue
+                for page, snippets_to_insert in pages.items():
+                    snippets = configurator_snippets.setdefault(page, [])
+                    dynamic_snippets = [snippet for snippet, *_ in snippets_to_insert]
+                    configurator_snippets[page] = list(dict.fromkeys(snippets + dynamic_snippets))
+
+        add_snippets_addons(addons)
+
+        # The current theme is set before configurator features are installed.
+        # It may already reference snippets from this module, for example a
+        # `website_sale` category snippet. When this module is installed later
+        # in the same flow, include those theme snippets so their configurator
+        # primary templates are generated before the homepage is rendered.
+        theme = self.env['website'].get_current_website().theme_id
+        if theme:
+            add_snippets_addons({
+                self.name: Manifest.for_addon(theme.name).get(
+                    'configurator_snippets_addons', {}
+                ).get(self.name, {}),
+            })
 
         # Generate general configurator snippet templates
         create_values = []
