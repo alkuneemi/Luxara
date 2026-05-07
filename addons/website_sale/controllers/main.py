@@ -883,9 +883,10 @@ class WebsiteSale(payment_portal.PaymentPortal):
         website = request.website
         ProductCategory = request.env["product.public.category"]
         original_category = category
-        category = category or product.public_categ_ids.filtered(
-            lambda c: c.can_access_from_current_website()
-        )[:1]
+        category = (
+            category
+            or product.public_categ_ids.filtered(lambda c: c.can_access_from_current_website())[:1]
+        )
         markup_data = [
             website._prepare_ecommerce_store_markup_data(),
             product._to_markup_data(website),
@@ -898,8 +899,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         if last_attributes_search := request.session.get("attribute_values", []):
             keep = QueryURL(
-                self._get_shop_path(original_category),
-                attribute_values=last_attributes_search
+                self._get_shop_path(original_category), attribute_values=last_attributes_search
             )
         else:
             keep = QueryURL(self._get_shop_path(original_category))
@@ -936,7 +936,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "attribute_value_images": attribute_value_images,
             "categories": ProductCategory.search([("parent_id", "=", False)]),
             "category": category,
-            'original_category': original_category,
+            "original_category": original_category,
             "combination_info": combination_info,
             "has_available_uoms": len(product._get_available_uoms()) > 0,
             "keep": keep,
@@ -948,7 +948,8 @@ class WebsiteSale(payment_portal.PaymentPortal):
             "view_track": view_track,
             "markup_data_json": json_scriptsafe.dumps(markup_data, indent=2),
             "shop_path": SHOP_PATH,
-            "user_email": request.env.user.email or request.session.get("stock_notification_email", ""),
+            "user_email": request.env.user.email
+            or request.session.get("stock_notification_email", ""),
         }
 
     def _prepare_breadcrumb_markup_data(self, base_url, category):
@@ -1028,22 +1029,24 @@ class WebsiteSale(payment_portal.PaymentPortal):
 
         return request.redirect(redirect_url or self._get_shop_path())
 
-    @route("/shop/pricelist", type="http", auth="public", website=True, sitemap=False)
-    def pricelist(self, promo, **post):
-        redirect = post.get("r", "/shop/cart")
+    @route("/shop/pricelist/apply", type="jsonrpc", auth="public", website=True, sitemap=False)
+    def pricelist_apply(self, promo):
         if promo:
             pricelist_sudo = (
                 request.env["product.pricelist"].sudo().search([("code", "=", promo)], limit=1)
             )
             if not (pricelist_sudo and request.website.is_pricelist_available(pricelist_sudo.id)):
-                return request.redirect("%s?code_not_available=1" % redirect)
+                return {
+                    "success": False,
+                    "message": self.env._("This promo code is not available."),
+                }
 
             self._apply_pricelist(pricelist=pricelist_sudo)
         else:
             # Reset the pricelist if empty promo code is given
             self._apply_pricelist(pricelist=None)
 
-        return request.redirect(redirect)
+        return {"success": True}
 
     def _apply_selectable_pricelist(self, pricelist_id):
         """Change the request pricelist if selectable on the website.
