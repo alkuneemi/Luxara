@@ -533,7 +533,11 @@ class ResourceCalendar(models.Model):
                 self.env['resource.calendar'],
             )])
 
-            result[resource.id] = full_interval_UTC - utc_work_intervals
+            result[resource.id] = Intervals([
+                (start, stop, meta)
+                for start, stop, meta in full_interval_UTC - utc_work_intervals
+                if stop - start >= timedelta(seconds=1)
+            ])
         return result
 
     # --------------------------------------------------
