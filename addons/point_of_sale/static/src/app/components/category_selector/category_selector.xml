@@ -11,9 +11,19 @@
                         'justify-content-center': this.ui.isSmall
                     }"
                     class="category-button p-1 btn btn-light d-flex justify-content-around align-items-center rounded-3 gap-1">
+<<<<<<< 846830dfcb4ad03b08f883509d8116d50537bf4d
                     <div t-if="this.showCategoryImg(category)" class="overflow-hidden flex-shrink-0 ratio ratio-1x1" style="width:40%;">
                         <img t-if="category.imgSrc and !this.ui.isSmall" t-att-src="category.imgSrc"
                             class="category-img-thumb h-100 rounded-3 object-fit-cover"
+||||||| fec9fc214a052105c7acd71829a7a2ad306637cd
+                    <div t-if="showCategoryImg(category)" class="overflow-hidden flex-shrink-0 ratio ratio-1x1" style="width:40%;">
+                        <img t-if="category.imgSrc and !ui.isSmall" t-att-src="category.imgSrc"
+                            class="category-img-thumb h-100 rounded-3 object-fit-cover"
+=======
+                    <div t-if="showCategoryImg(category)" class="overflow-hidden flex-shrink-0 ratio ratio-1x1" style="width:40%;">
+                        <img t-if="category.imgSrc and !ui.isSmall" t-att-src="category.imgSrc"
+                            class="category-img-thumb h-100 rounded-3 object-fit-cover pe-none"
+>>>>>>> adb46e49e8f150087d77f335853a738a34283c37
                             alt="Category"
                         />
                     </div>
