@@ -1,4 +1,5 @@
 import { onWillStart } from "@odoo/owl";
+import { formatCurrency } from "@web/core/currency";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { rpc } from "@web/core/network/rpc";
 import { useBus } from "@web/core/utils/hooks";
@@ -16,17 +17,20 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
 
         this.state = useState({
             ...this.state,
-            sections: [],
+            totalUntaxedAmount: 0.0,
+            currencyId: null,
+            dragging: false,
             isAddingSection: "",
             newSectionName: "",
-            dragging: false,
             renamingSectionId: null,
+            sections: [],
         });
 
         useSubEnv({
             setSelectedSection: this.setSelectedSection.bind(this),
             enableSectionInput: this.enableSectionInput.bind(this),
             enableRenameSectionInput: this.enableRenameSectionInput.bind(this),
+            getFormattedSubTotal: this.getFormattedSubTotal.bind(this),
             createSection: this.createSection.bind(this),
             loadSections: this.loadSections.bind(this),
             renameSection: this.renameSection.bind(this),
@@ -109,6 +113,10 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
         setTimeout(() => document.querySelector(".o_section_input")?.focus(), 100);
     }
 
+    getFormattedSubTotal(amount) {
+        return formatCurrency(amount, this.state.currencyId);
+    }
+
     onSectionInputKeydown(ev, parentId, renameId=null) {
         const hotkey = getActiveHotkey(ev);
         if (hotkey === "enter") {
@@ -174,7 +182,12 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
 
     async loadSections(sectionId) {
         if (!this.showSections) return;
-        const sections = await rpc("/product/catalog/get_sections", this.getSectionInfoParams());
+        const {amount_untaxed, currency_id, sections} = await rpc(
+            "/product/catalog/get_sections", this.getSectionInfoParams()
+        );
+
+        this.state.totalUntaxedAmount = amount_untaxed;
+        this.state.currencyId = currency_id;
 
         const sectionsById = new Map();
         const sectionTree = [];
@@ -271,6 +284,11 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
     }
 
     updateSectionSubtotal({ detail: { sectionId, subtotalDelta } }) {
+        if (this.state.sections.length === 1 && this.state.sections[0].id === false) {
+            this.state.totalUntaxedAmount += subtotalDelta;
+            return;
+        }
+
         const section = this.findSectionById(sectionId);
         if (!section) return;
 

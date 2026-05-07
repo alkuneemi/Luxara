@@ -3,6 +3,32 @@
         background-color: var(--list-group-active-bg);
     }
 
+    .o_selected_section:hover{
+        .o_section_toggle {
+            display: flex;
+
+            .form-check {
+                min-height: auto;
+            }
+        }
+
+        .o_section_subtotal {
+            display: none;
+        }
+
+        .o_toggle_fold {
+            color: var(--SearchPanelHeader-hover-fold-color, #{$black});
+        }
+    }
+
+    .o_section_toggle {
+        display: none;
+    }
+
+    .o_toggle_fold {
+        color: $text-muted;
+    }
+
     .o_section_row {
         padding-block: 0;
 

@@ -9,25 +9,30 @@ class ProductCatalogAccountController(ProductCatalogController):
 
     @route('/product/catalog/get_sections', auth='user', type='jsonrpc', readonly=True)
     def product_catalog_get_sections(self, res_model, order_id, child_field, **kwargs):
-        """Return the sections which are in given order to be shown in the product catalog.
+        """Return the sections which are in given order, total untaxed amount and currency_id of
+        the order to be shown in the product catalog.
 
         :param string res_model: The order model.
         :param int order_id: The order id.
         :param string child_field: The field name of the lines in the order model.
-        :rtype: list
-        :return: A list of dictionaries containing section information with following structure:
-            [
-                {
-                    'id': int,
-                    'name': string,
-                    'sequence': int,
-                    'parent_id': int or False,
-                    'display_type': string,
-                    'subtotal': float,
-                    'currency_id': int,
-                    + any additional values given by inherited models
-                },
-            ]
+        :rtype: dict
+        :return: A dictionary containing the total untaxed amount, currency_id of the order and a
+            list of dictionaries containing section information with following structure:
+            {
+                "amount_untaxed": float,
+                "currency_id": int,
+                "sections": [
+                    {
+                        'id': int,
+                        'name': string,
+                        'sequence': int,
+                        'parent_id': int or False,
+                        'display_type': string,
+                        'subtotal': float,
+                        + any additional values given by inherited models
+                    },
+                ]
+            }
         """
         order = request.env[res_model].browse(order_id)
         return order.with_company(order.company_id)._get_sections(child_field, **kwargs)

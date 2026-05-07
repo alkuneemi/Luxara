@@ -32,7 +32,7 @@ export function addSectionFromProductCatalog() {
         },
         {
             content: "Click 'Add Section' button",
-            trigger: '.o_search_panel_sections i.fa-plus-square',
+            trigger: '.o_search_panel_sections button:contains("Add")',
             run: 'click',
         },
         {

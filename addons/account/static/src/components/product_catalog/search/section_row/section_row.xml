@@ -35,8 +35,44 @@
                     <span
                         t-attf-class="o_search_panel_label_title d-flex flex-grow-1 {{this.selectedSection.sectionId == this.props.section.id ? 'fw-bold' : ''}}"
                     >
-                        <span class="text-truncate" t-out="this.props.section.name"/>
-                        <span class="ms-auto text-muted" t-out="this.getFormattedSubTotal(this.props.section)"/>
+                        <span
+                            class="text-truncate me-1"
+                            style="width: 110px;"
+                            t-out="this.props.section.name"
+                        />
+                        <i
+                            t-if="this.props.section.collapse_prices"
+                            class="fa fa-eye-slash text-muted"
+                        />
+                        <i
+                            t-elif="this.props.section.collapse_composition"
+                            class="fa fa-compress text-muted"
+                        />
+                        <i
+                            t-elif="this.props.section.is_optional"
+                            class="fa fa-fw fa-dot-circle-o text-muted"
+                        />
+                        <span
+                            class="ms-auto text-muted o_section_subtotal"
+                            t-out="this.env.getFormattedSubTotal(this.props.section.subtotal)"
+                        />
+                        <div
+                            t-if="this.selectedSection.sectionId == this.props.section.id"
+                            class="ms-auto align-items-center o_section_toggle"
+                        >
+                            <span class="me-2">Filter</span>
+                            <div class="form-check form-switch mb-0 small py-0">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    t-att-checked="this.selectedSection.filtered ? true : false"
+                                    t-on-click="() => this.env.setSelectedSection(
+                                        this.selectedSection.sectionId, !this.selectedSection.filtered
+                                    )"
+                                />
+                            </div>
+                        </div>
                     </span>
                 </div>
                 <SectionDropdown t-props="this.props"/>
