@@ -66,6 +66,9 @@ class PosConfig(models.Model):
             tip_product_id = self.env['product.product'].search([('default_code', '=', 'TIPS')], limit=1)
         return tip_product_id
 
+    def _default_simplified_receipt(self):
+        return False
+
     name = fields.Char(string='Point of Sale', required=True, help="An internal identification of the point of sale.")
     preparation_printer_ids = fields.Many2many('pos.printer', 'pos_config_printer_rel', 'config_id', 'printer_id', string="Preparation Printers", domain="[('use_type', '=', 'preparation')]")
     receipt_printer_ids = fields.Many2many('pos.printer', 'pos_config_receipt_printer_rel', 'config_id', 'printer_id', string="Receipt Printers", domain="[('use_type', '=', 'receipt')]")
@@ -109,7 +112,7 @@ class PosConfig(models.Model):
     set_maximum_difference = fields.Boolean('Set Maximum Difference', help="Set a maximum difference allowed between the expected and counted money during the closing of the session.")
     receipt_header = fields.Text(string='Receipt Header', help="A short text that will be inserted as a header in the printed receipt.")
     receipt_footer = fields.Text(string='Receipt Footer', help="A short text that will be inserted as a footer in the printed receipt.")
-    basic_receipt = fields.Boolean(string='Basic Receipt', help="Print basic ticket without prices. Can be used for gifts.")
+    basic_receipt = fields.Boolean(string='Gift Receipt', help="Print gift ticket without prices. Can be used for gifts.")
     active = fields.Boolean(default=True)
     uuid = fields.Char(readonly=True, default=lambda self: str(uuid4()), copy=False,
         help='A globally unique identifier for this pos configuration, used to prevent conflicts in client-generated data.')
@@ -211,6 +214,11 @@ class PosConfig(models.Model):
     use_download_invoice = fields.Boolean(
         string='Download Invoice',
         help="Automatically download the invoice PDF when an order is invoiced."
+    )
+    simplified_receipt = fields.Boolean(
+        string='Simplified Receipt',
+        default=lambda self: self._default_simplified_receipt(),
+        help="Hide order details from printed receipts. Show only tax summary."
     )
 
     def _get_next_order_refs(self, device_identifier='0'):
