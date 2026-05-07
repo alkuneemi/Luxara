@@ -56,6 +56,8 @@ export class ClickAndCollectAvailability extends Component {
         this.state.deliveryStockData = combinationInfo.delivery_stock_data;
         this.state.active = combinationInfo.is_combination_possible;
         this.state.uomId = combinationInfo.uom_id;
+        this.state.hasOutOfStockMessage = combinationInfo.has_out_of_stock_message;
+        this.state.outOfStockMessage = combinationInfo.out_of_stock_message;
     }
 
     /**

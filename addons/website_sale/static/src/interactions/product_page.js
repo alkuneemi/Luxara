@@ -751,7 +751,7 @@ export class ProductPage extends Interaction {
                     addQtyInput.value = addQtyInput.dataset.max;
                 }
             }
-            if (combination.free_qty < 1 && !combination.prevent_sale) {
+            if (combination.free_qty < 1 && !combination.prevent_sale && !combination.is_rental) {
                 ctaWrapper.classList.replace('d-flex', 'd-none');
                 ctaWrapper.classList.add('out_of_stock');
             }
@@ -764,7 +764,7 @@ export class ProductPage extends Interaction {
                     addQtyInput.value = addQtyInput.dataset.max;
                 }
             }
-            if (combination.max_combo_quantity < 1 && !combination.prevent_sale) {
+            if (combination.max_combo_quantity < 1 && !combination.prevent_sale && !combination.is_rental) {
                 ctaWrapper.classList.replace('d-flex', 'd-none');
                 ctaWrapper.classList.add('out_of_stock');
             }
@@ -788,6 +788,9 @@ export class ProductPage extends Interaction {
             setElementContent(outOfStockMessage, combination.out_of_stock_message);
             combination.has_out_of_stock_message = !!outOfStockMessage.textContent.trim();
         }
+        this.el.querySelector('div.out_of_stock_messages').append(renderToFragment(
+            'website_sale.product_out_of_stock_badge', combination
+        ));
         this.el.querySelector('div.availability_messages').append(renderToFragment(
             'website_sale.product_availability', combination
         ));
