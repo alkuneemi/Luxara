@@ -150,7 +150,7 @@ class AccountEdiProxyClientUser(models.Model):
 
         company = self.company_id
         if company.account_peppol_proxy_state in {'smp_registration', 'receiver'}:
-            # a participant can only try registering as a receiver if they are not registered
+            # A participant can only try registering as a receiver if they are not registered
             proxy_state_translated = dict(company._fields['account_peppol_proxy_state']._description_selection(self.env))[company.account_peppol_proxy_state]
             raise UserError(self.env._('Cannot register a user with a %s application', proxy_state_translated))
 
@@ -165,7 +165,7 @@ class AccountEdiProxyClientUser(models.Model):
         for edi_user in self:
             edi_user = edi_user.with_company(edi_user.company_id)
             try:
-                # request all messages that haven't been acknowledged
+                # Request all messages that haven't been acknowledged
                 messages = edi_user._call_peppol_proxy(
                     endpoint=edi_user._get_peppol_proxy_endpoint('1/get_all_ppf_documents'),
                 )
@@ -183,7 +183,7 @@ class AccountEdiProxyClientUser(models.Model):
             need_retrigger = need_retrigger or len(message_uuids) > job_count
             message_uuids = message_uuids[:job_count]
 
-            # retrieve attachments for filtered messages
+            # Retrieve attachments for filtered messages
             all_messages = edi_user._call_peppol_proxy(
                 endpoint=edi_user._get_peppol_proxy_endpoint('1/get_ppf_document'),
                 params={'ppf_message_uuids': message_uuids},
@@ -214,8 +214,7 @@ class AccountEdiProxyClientUser(models.Model):
             peppol_response = record
             if content.get('error'):
                 if content['error'].get('code') == 702:
-                    # "Peppol request not ready" error:
-                    # thrown when the IAP is still processing the message
+                    # "Peppol request not ready" error: thrown when the IAP is still processing the message
                     continue
                 if content['error'].get('code') == 207:
                     peppol_response.peppol_state = 'not_serviced'

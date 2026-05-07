@@ -47,8 +47,9 @@
                         string="Send Response"
                         invisible="not pdp_can_send_response"/>
             </header>
-            <field name="peppol_move_state" position="attributes">
-            </field>
+            <label for="peppol_move_state" position="attributes">
+                <attribute name="invisible">not peppol_move_state</attribute>
+            </label>
             <xpath expr="//div[@name='peppol_div']" position="attributes">
                 <attribute name="invisible">not peppol_move_state</attribute>
             </xpath>

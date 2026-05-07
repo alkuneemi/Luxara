@@ -10,6 +10,7 @@
         'l10n_fr_account',
         'account_peppol_response',
     ],
+    'auto_install': ['l10n_fr_account'],
     'data': [
         'data/ir_cron.xml',
         'security/ir.model.access.csv',

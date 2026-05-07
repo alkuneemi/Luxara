@@ -88,6 +88,13 @@ class ResPartner(models.Model):
         self.ensure_one()
         return self.vat == '/' or not self.vat
 
+    def _l10n_fr_pdp_get_siren(self):
+        self.ensure_one()
+        id_type, id_value = self._l10n_fr_pdp_get_base_identifier()
+        if id_type in ('siren', 'siret'):
+            return id_value[:9]
+        return False
+
     def _l10n_fr_pdp_get_base_identifier(self):
         self.ensure_one()
         siret = self.siret or (self.company_registry if self.company_registry and siren_siret_re.match(self.company_registry) else '')
@@ -102,12 +109,7 @@ class ResPartner(models.Model):
         self.ensure_one()
         # We suggest the SIREN (even if the SIRET is filled in).
         # "Everyone" will probably have registered the SIREN on annuaire. (Even if they have a SIRET.)
-        id_type, id_value = self._l10n_fr_pdp_get_base_identifier()
-        if id_type == 'siren':
-            return id_value
-        elif id_type == 'siret':
-            return id_value[:9]  # SIREN
-        return False
+        return self._l10n_fr_pdp_get_siren()
 
     def _get_peppol_endpoint_value(self, country_code, field):
         self.ensure_one()

@@ -16,5 +16,4 @@ class ResPartner(models.Model):
 
     def _peppol_eas_endpoint_depends(self):
         # extends account_edi_ubl_cii
-        # TODO: does this work?
         return super()._peppol_eas_endpoint_depends() + ['siret']

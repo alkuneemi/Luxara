@@ -72,7 +72,7 @@ class PeppolSettingsButtons extends Component {
             return _t("Discard");
         }
         if (this.isPdpEdiIdentification) {
-            return _t("Remove from PA");
+            return _t("Remove from Approved Platform");
         }
         return _t("Remove from Peppol");
     }
@@ -110,7 +110,7 @@ class PeppolSettingsButtons extends Component {
             this.props.record._discard();
         } else if (['sender', 'smp_registration', 'receiver'].includes(this.proxyState)) {
             this.showConfirmation(
-                this.isPdpEdiIdentification ? "This will delete your PA registration." : "This will delete your Peppol registration.",
+                this.isPdpEdiIdentification ? "This will delete your Approved Platform registration." : "This will delete your Peppol registration.",
                 "button_deregister_peppol_participant"
             )
         }

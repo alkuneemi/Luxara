@@ -125,12 +125,11 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         partner = vals['party_vals']['partner']
         commercial_partner = partner.commercial_partner_id
 
-        siret = commercial_partner.siret or ''
-        siren = siret[:9]
         vals['party_node']['cac:PartyLegalEntity'] = {
             'cbc:RegistrationName': {'_text': commercial_partner.name},
             'cbc:CompanyID': {
-                '_text': siren, 'schemeID': '0002',
+                '_text': commercial_partner._l10n_fr_pdp_get_siren(),
+                'schemeID': '0002',
             },
         }
 
