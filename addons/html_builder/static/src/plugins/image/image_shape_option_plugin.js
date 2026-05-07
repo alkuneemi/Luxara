@@ -77,6 +77,8 @@ export class ImageShapeOptionPlugin extends Plugin {
         process_image_post_handlers: this.processImagePost.bind(this),
         hover_effect_allowed_predicates: (el) => this.canHaveHoverEffect(el),
         on_media_dialog_saved_handlers: withSequence(5, this.onMediaDialogSavedHandlers.bind(this)),
+        website_color_updated_handlers: this.syncShapeColorsWithTheme.bind(this),
+        on_snippet_addition_dialog_handlers: this.onSnippetAdditionDialog.bind(this),
     };
     setup() {
         this.shapeSvgTextCache = {};
@@ -101,6 +103,52 @@ export class ImageShapeOptionPlugin extends Plugin {
             }
         };
         await handleImagesIfDataset(elements, node, "shape", callback);
+    }
+    /**
+     * Update the shape color (when a theme color is selected) whenever the
+     * theme preset color changes.
+     *
+     * @param {String} updatedColorVariable - Updated theme color variable value
+     * like 'o-color-*'.
+     */
+    async syncShapeColorsWithTheme(updatedColorVariable) {
+        if (!updatedColorVariable.startsWith("o-color-")) {
+            return;
+        }
+        const selector = `img[data-shape][data-shape-colors*="${updatedColorVariable};"], img[data-shape][data-shape-colors$="${updatedColorVariable}"]`;
+        const targetedImgShapeEls = [...this.document.querySelectorAll(selector)];
+        await this.refreshShapes(targetedImgShapeEls);
+    }
+    /**
+     * Update the shape color (when a theme color is selected) in custom saved
+     * snippets.
+     *
+     * @param {Object} params
+     * @param {SnippetModel} params.snippetModel - The snippet model
+     */
+    async onSnippetAdditionDialog({ snippetModel }) {
+        const customSnippets = snippetModel.snippetsByCategory.snippet_custom;
+        if (!customSnippets.length) {
+            return;
+        }
+        const selector = "img[data-shape][data-shape-colors*='o-color-']";
+        const targetedImgShapeEls = customSnippets.flatMap((snippet) => [
+            ...snippet.content.querySelectorAll(selector),
+        ]);
+        await this.refreshShapes(targetedImgShapeEls);
+    }
+    async refreshShapes(imgEls) {
+        // Promise.allSettled is used here to ensure that all shapes are
+        // processed, even if some fail to refresh. This prevents a single
+        // failure from blocking updates to the remaining shapes.
+        await Promise.allSettled(
+            imgEls.map(async (imgEl) => {
+                const updateImageAttributes = await this.loadShape(imgEl, {
+                    shapeColors: imgEl.dataset.shapeColors,
+                });
+                updateImageAttributes();
+            })
+        );
     }
     async canHaveHoverEffect(imgEl) {
         const dataset = Object.assign({}, imgEl.dataset, await loadImageInfo(imgEl));
@@ -388,11 +436,7 @@ export class ImageShapeOptionPlugin extends Plugin {
     }
     getThemedSvgColors(shapeSvgText) {
         const svgColors = this.getSvgColors(shapeSvgText);
-        return svgColors.map((color, i) =>
-            color !== null
-                ? this.dependencies.imageToolOption.getCSSColorValue(`o-color-${i + 1}`)
-                : null
-        );
+        return svgColors.map((color, i) => (color !== null ? `o-color-${i + 1}` : null));
     }
     applyShapeColors(editingElement, newColors) {}
     isTransformableShape(shapeId) {
@@ -492,16 +536,18 @@ export class SetImgShapeColorAction extends BuilderAction {
     static id = "setImgShapeColor";
     static dependencies = ["imageShapeOption", "imageToolOption"];
     getValue({ editingElement: img, params: { index: colorIndex } }) {
-        return img.dataset.shapeColors?.split(";")[colorIndex] || "";
+        // The load function must work with a color variable to keep the color
+        // in sync with theme color changes. Therefore, here the corresponding
+        // hex value of color is returned.
+        const color = img.dataset.shapeColors?.split(";")[colorIndex];
+        return this.dependencies.imageToolOption.getCSSColorValue(color);
     }
     async load({ editingElement: img, params: { index: colorIndex }, value: color }) {
         color = getValueFromVar(color);
         const newColorId = parseInt(colorIndex);
         const oldColors = img.dataset.shapeColors.split(";");
         const newColors = oldColors.slice(0);
-        newColors[newColorId] = this.dependencies.imageToolOption.getCSSColorValue(
-            color === "" ? `o-color-${newColorId + 1}` : color
-        );
+        newColors[newColorId] = color === "" ? `o-color-${newColorId + 1}` : color;
         return this.dependencies.imageShapeOption.loadShape(img, {
             shapeColors: newColors.join(";"),
         });

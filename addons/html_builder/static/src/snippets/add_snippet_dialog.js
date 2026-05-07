@@ -7,6 +7,7 @@ import { SnippetViewer } from "./snippet_viewer";
 
 /**
  * @typedef {((arg: { iframe: HTMLIFrameElement }) => void)[]} snippet_preview_dialog_stylesheets_handlers
+ * @typedef {((arg: { snippetModel: SnippetModel }) => Promise<void>)[]} on_snippet_addition_dialog_handlers
  */
 
 export class AddSnippetDialog extends Component {
@@ -56,6 +57,12 @@ export class AddSnippetDialog extends Component {
                     this.iframeRef.el.addEventListener("load", resolve, { once: true });
                 });
             }
+
+            await Promise.all(
+                this.props.editor
+                    .getResource("on_snippet_addition_dialog_handlers")
+                    .map((handler) => handler({ snippetModel: this.props.snippetModel }))
+            );
 
             // Ensure preview styles are applied before mounting the snippets.
             // Otherwise layout-dependent measurements (e.g., carousel height in
