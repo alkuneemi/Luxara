@@ -9,6 +9,14 @@ const AnimationEdit = I => class extends I {
         // here because otherwise it is added back when exiting edit mode.
         this.el.classList.remove("o_animate_preview");
     }
+
+    getConfigurationSnapshot() {
+        return JSON.stringify({
+            isAnimateOnScroll: this.el.classList.contains("o_animate_on_scroll"),
+            isAnimateOnScrollOut: this.el.classList.contains("o_animate_out"),
+            isAnimateBothScroll: this.el.classList.contains("o_animate_both_scroll"),
+        });
+    }
 };
 
 registry

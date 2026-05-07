@@ -177,6 +177,7 @@ export class HistoryPlugin extends Plugin {
         "canUndo",
         "ignoreDOMMutations",
         "getHistorySteps",
+        "getNodeId",
         "getNodeById",
         "makePreviewableOperation",
         "makePreviewableAsyncOperation",
@@ -278,6 +279,13 @@ export class HistoryPlugin extends Plugin {
         this.idToNodeMap = new Map();
         this.setNodeId(this.editable);
         this.dispatchTo("history_cleaned_handlers");
+    }
+    /**
+     * @param {Node} node
+     * @returns {Number}
+     */
+    getNodeId(node) {
+        return this.nodeToIdMap.get(node);
     }
     /**
      * @param {string} id
