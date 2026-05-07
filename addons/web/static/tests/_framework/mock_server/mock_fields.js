@@ -70,9 +70,7 @@ function makeFieldGenerator(type, { aggregator, requiredKeys = [] } = {}) {
 
             for (const key of requiredKeys) {
                 if (!(key in field)) {
-                    throw new MockServerError(
-                        `Missing key "${key}" in ${type || "generic"} field definition`
-                    );
+                    throw new MockServerError(`Missing key "${key}" in ${type} field definition`);
                 }
             }
 
@@ -190,7 +188,12 @@ export const Float = makeFieldGenerator("float", {
     aggregator: "sum",
 });
 
-export const Generic = makeFieldGenerator("generic");
+/**
+ * Defines a custom field type (e.g. `type: "custom_char"`)
+ */
+export const Generic = makeFieldGenerator("generic", {
+    requiredKeys: ["type"],
+});
 
 export const Html = makeFieldGenerator("html");
 
