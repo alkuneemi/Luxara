@@ -447,7 +447,7 @@ class MockEmail(common.BaseCase, MockSmtplibCase):
     def _find_linked_trace_id(self, email):
         """Search for a link in the given email and identify the linked trace id from that link
 
-        :email: the email in which to look for the link and the corresponding trace id
+        :param email: the email in which to look for the link and the corresponding trace id
 
         :return the trace id.
         """
