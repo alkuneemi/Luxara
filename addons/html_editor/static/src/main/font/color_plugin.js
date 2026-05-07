@@ -69,6 +69,7 @@ export class ColorPlugin extends Plugin {
 
         /** Handlers */
         selectionchange_handlers: withSequence(100, this.updateSelectedColor.bind(this)),
+        on_table_selectionchange_handlers: withSequence(100, this.updateSelectedColor.bind(this)),
         remove_format_handlers: this.removeAllColor.bind(this),
         normalize_handlers: this.normalize.bind(this),
         /** Providers */

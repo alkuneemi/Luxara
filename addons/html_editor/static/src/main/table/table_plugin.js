@@ -141,6 +141,7 @@ export class TablePlugin extends Plugin {
             if (shiftArrowHandled.includes(getActiveHotkey(ev))) {
                 this.isShiftArrowKeyboardSelection = true;
                 this.updateTableKeyboardSelection(ev);
+                this.dispatchTo("on_table_selectionchange_handlers");
             }
         });
         this.onMousemove = this.onMousemove.bind(this);
@@ -844,6 +845,12 @@ export class TablePlugin extends Plugin {
                     // which deselects the single cell. Hence, we need a label
                     // to keep it selected.
                     this._isFirefoxDoubleMousedown = true;
+                }
+                if (ev.detail === 2) {
+                    // Specifically for double click on empty cell, because it
+                    // doesn't trigger the selectionchange event trough the
+                    // selection plugin.
+                    this.dispatchTo("on_table_selectionchange_handlers", td);
                 }
                 if (ev.detail === 3) {
                     // Doing a tripleclick on a text will change the selection.
