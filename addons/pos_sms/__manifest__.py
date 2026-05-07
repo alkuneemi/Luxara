@@ -15,6 +15,9 @@
         'web.assets_tests': [
             'pos_sms/static/tests/tours/**/*',
         ],
+        'web.assets_unit_tests': [
+            'pos_sms/static/tests/unit/**/*',
+        ],
     },
     'author': 'Odoo S.A.',
     'license': 'LGPL-3',

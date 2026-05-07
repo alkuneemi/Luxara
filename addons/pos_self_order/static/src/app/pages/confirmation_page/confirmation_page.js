@@ -48,6 +48,14 @@ export class ConfirmationPage extends Component {
 
         onMounted(async () => {
             await this.initOrder();
+            if (
+                ["paid", "done"].includes(this.confirmedOrder.state) &&
+                this.selfOrder._checkBeforeSendOrderReceipt(this.confirmedOrder) &&
+                !this.confirmedOrder.uiState.isAlreadySent
+            ) {
+                this.selfOrder._sendOrderReceipt(this.confirmedOrder);
+                this.confirmedOrder.uiState.isAlreadySent = true;
+            }
         });
     }
 
