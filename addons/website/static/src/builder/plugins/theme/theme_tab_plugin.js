@@ -87,14 +87,37 @@ export class ThemeTabPlugin extends Plugin {
                         class ThemeWebsiteSettingsOption extends BaseOptionComponent {
                             static template = "website.ThemeWebsiteSettingsOption";
                             static components = { ImageSize };
+                            static dependencies = ["customizeWebsite"];
 
                             setup() {
                                 super.setup();
                                 this.state = useDomState((el) => ({
-                                    isRangeDisabled: el.hasAttribute(
-                                        "data-border-radius-range-disabled"
-                                    ),
+                                    isRangeActive: this.isRangeActive(),
                                 }));
+                            }
+                            isRangeActive() {
+                                const variables = {};
+                                for (const [variable, multiplier] of Object.entries(
+                                    BORDER_RADIUS_MULTIPLIERS
+                                )) {
+                                    variables[variable] =
+                                        parseFloat(
+                                            this.dependencies.customizeWebsite.getWebsiteVariableValue(
+                                                variable
+                                            )
+                                        ) / multiplier;
+                                }
+                                return this.areAllValuesAlmostEqual(Object.values(variables));
+                            }
+
+                            areAllValuesAlmostEqual(values, tolerance = 0.0001) {
+                                if (values.length <= 1) {
+                                    return true;
+                                }
+                                const firstValue = values[0];
+                                return values.every(
+                                    (val) => Math.abs(val - firstValue) < tolerance
+                                );
                             }
                         },
                     ],
@@ -383,30 +406,19 @@ export class ConfigureApiKeyAction extends BuilderAction {
 
 export class CustomizeBorderRadiusVariableAction extends CustomizeWebsiteVariableAction {
     static id = "customizeBorderRadiusVariable";
-    getValue(context) {
-        const param =
-            context.params.mainParam === "border-radius-range"
-                ? "border-radius"
-                : context.params.mainParam;
-        return super.getValue({ ...context, params: { ...context.params, mainParam: param } });
+    getValue() {
+        return super.getValue({ params: { mainParam: "border-radius" } });
     }
-    async apply(context) {
-        if (context.params.mainParam === "border-radius-range") {
-            const value = parseFloat(context.value);
-            const unit = context.value.replace(value, "").trim();
-            const variables = {};
-            for (const [key, multiplier] of Object.entries(BORDER_RADIUS_MULTIPLIERS)) {
-                variables[key] = `${multiplier * value}${unit}`;
-            }
-            context.editingElement.removeAttribute("data-border-radius-range-disabled");
-            await this.dependencies.customizeWebsite.customizeWebsiteVariables(
-                variables,
-                context.params.nullValue ?? "null"
-            );
-        } else {
-            context.editingElement.setAttribute("data-border-radius-range-disabled", "");
-            await super.apply(context);
+    async apply({ value: rawRadiusInput }) {
+        const baseRadius = parseFloat(rawRadiusInput);
+        const unit = rawRadiusInput.replace(baseRadius.toString(), "").trim();
+
+        const scaledVariables = {};
+        for (const [varName, multiplier] of Object.entries(BORDER_RADIUS_MULTIPLIERS)) {
+            const computedValue = baseRadius * multiplier;
+            scaledVariables[varName] = `${computedValue}${unit}`;
         }
+        await this.dependencies.customizeWebsite.customizeWebsiteVariables(scaledVariables);
     }
 }
 

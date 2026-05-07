@@ -84,24 +84,24 @@
                 <BuilderNumberInput actionParam="'body-image-pattern-height'" placeholder.translate="auto" unit="'px'" min="1" default="null"/>
             </BuilderRow>
         </BuilderContext>
-        <BuilderContext action="'customizeBorderRadiusVariable'">
             <!-- Different location in the theme tab have different names for the border-radius control: "Roundness" (suggested here), "Round Corners" and "Border Radius". Which one should I use? Should I make the other names consistent as well? -->
-            <BuilderRow label.translate="Roundness" disabled="this.state.isRangeDisabled">
+            <BuilderRow label.translate="Roundness" action="'customizeBorderRadiusVariable'" disabled="!this.state.isRangeActive" expand="!this.state.isRangeActive">
                 <!-- Ask from PO what should be the min, max and step values -->
-                <BuilderRange actionParam="'border-radius-range'" min="0" max="100" step="1" unit="'px'" saveUnit="'rem'"/>
+                <BuilderRange min="0" max="100" step="1" unit="'px'" saveUnit="'rem'"/>
                 <t t-set-slot="collapse">
-                    <BuilderRow label.translate="Normal" level="1" disabled="!this.state.isRangeDisabled">
-                        <BuilderNumberInput actionParam="'border-radius'" default="null" unit="'px'" saveUnit="'rem'"/>
-                    </BuilderRow>
-                    <BuilderRow label.translate="Small" level="1" disabled="!this.state.isRangeDisabled">
-                        <BuilderNumberInput actionParam="'border-radius-sm'" default="null" unit="'px'" saveUnit="'rem'"/>
-                    </BuilderRow>
-                    <BuilderRow label.translate="Large" level="1" disabled="!this.state.isRangeDisabled">
-                        <BuilderNumberInput actionParam="'border-radius-lg'" default="null" unit="'px'" saveUnit="'rem'"/>
-                    </BuilderRow>
+                    <BuilderContext action="'customizeWebsiteVariable'">
+                        <BuilderRow label.translate="Normal" level="1" disabled="this.state.isRangeActive">
+                            <BuilderNumberInput actionParam="'border-radius'" default="null" unit="'px'" saveUnit="'rem'"/>
+                        </BuilderRow>
+                        <BuilderRow label.translate="Small" level="1" disabled="this.state.isRangeActive">
+                            <BuilderNumberInput actionParam="'border-radius-sm'" default="null" unit="'px'" saveUnit="'rem'"/>
+                        </BuilderRow>
+                        <BuilderRow label.translate="Large" level="1" disabled="this.state.isRangeActive">
+                            <BuilderNumberInput actionParam="'border-radius-lg'" default="null" unit="'px'" saveUnit="'rem'"/>
+                        </BuilderRow>
+                    </BuilderContext>
                 </t>
             </BuilderRow>
-        </BuilderContext>
     </BuilderContext>
 </t>
 
