@@ -47,6 +47,10 @@ class HrEmployee(models.Model):
         ('presence_holiday_present', 'Present but on leave')])
     member_of_department = fields.Boolean('Member of Department', compute='_compute_member_of_department', search='_search_part_of_department')
 
+    def _get_hr_responsible_domain(self):
+        return "[('share', '=', False), ('company_ids', 'in', company_id), ('all_group_ids', 'in', %s)]" % self.env.ref('hr_holidays.group_hr_holidays_user').id
+    hr_responsible_id = fields.Many2one(domain=_get_hr_responsible_domain)
+
     def _compute_current_work_entry_type_id(self):
         self.current_work_entry_type_id = False
 
