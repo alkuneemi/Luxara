@@ -52,9 +52,9 @@ export const getPreValue = (pre) => {
         .replace(/<br\s*\/?>/gi, "\n")
         .replace(/<[^>]+>|[\u200B\uFEFF]/g, "")
         .replace(
-            /&(amp|lt|gt|#x27|quot|#x60);/g,
+            /&(amp|lt|gt|#x27|quot|#x60|nbsp);/g,
             (_, entity) =>
-                ({ amp: "&", lt: "<", gt: ">", "#x27": "'", quot: '"', "#x60": "`" }[entity])
+                ({ amp: "&", lt: "<", gt: ">", "#x27": "'", quot: '"', "#x60": "`", nbsp: " " }[entity])
         );
     if (hasTrailingBr && text.endsWith("\n")) {
         text = text.slice(0, -1);
