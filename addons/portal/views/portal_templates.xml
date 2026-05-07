@@ -56,6 +56,22 @@
                 <meta name="twitter:card" content="summary_large_image"/>
             </t>
         </xpath>
+        <xpath expr="//head" position="inside">
+            <t t-if="not website and request.env.company.email_secondary_color">
+                <t t-set="pc" t-value="request.env.company.email_secondary_color"/>
+                <t t-set="txt" t-value="request.env.company.email_primary_color"/>
+                <style>
+                    a, .text-primary {
+                        color: <t t-out="pc"/> !important;
+                    }
+                    .btn-primary {
+                        background-color: <t t-out="pc"/> !important;
+                        border-color: <t t-out="pc"/> !important;
+                        color: <t t-out="txt"/> !important;
+                    }
+                </style>
+            </t>
+        </xpath>
     </template>
 
     <!-- Added by another template so that it can be disabled if needed -->
