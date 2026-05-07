@@ -14,6 +14,9 @@ _logger = logging.getLogger(__name__)
 class PosConfig(models.Model):
     _inherit = 'pos.config'
 
+    def _default_simplified_receipt(self):
+        return self.env.company.is_france_country
+
     def open_ui(self):
         for config in self:
             if not config.company_id.country_id:

@@ -16,10 +16,11 @@ export class GeneratePrinterData {
         this.setup(...arguments);
     }
 
-    setup({ models, order = false, basicReceipt = false }) {
+    setup({ models, order = false, basicReceipt = false, simplified = false }) {
         this.models = models;
         this.order = order;
         this.basicReceipt = basicReceipt;
+        this.simplified = simplified;
     }
 
     get config() {
@@ -236,6 +237,7 @@ export class GeneratePrinterData {
             },
             conditions: {
                 basic_receipt: this.basicReceipt,
+                simplified_receipt: this.simplified,
                 display_vat: this.config._IS_VAT,
                 display_qr_code: useQrCode,
                 display_url: company.point_of_sale_ticket_portal_url_display_mode != "qr_code",
