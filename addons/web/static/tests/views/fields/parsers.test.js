@@ -64,6 +64,7 @@ test("parseFloatTime", () => {
     expect(parseFloatTime("1h30")).toBe(1.5);
     expect(parseFloatTime("-1h 30m 45s")).toBe(-1.5125);
 
+    expect(parseFloatTime("=2*2")).toBe(4);
     expect(parseFloatTime("qwerwqer")).toBe(0);
 
     clearMemoizeCaches();
