@@ -21,13 +21,11 @@ export class PaymentPostProcessing extends Interaction {
     }
 
     async willStart() {
+        // TODO ANV: temp location for this initial processing call
+        await rpc("/payment/process");
+
         // Assume we missed a notification from the postprocessing
         await this.onProcessingComplete();
-    }
-
-    start() {
-        // TODO ANV: temp location for this initial processing call
-        rpc("/payment/process");
     }
 
     /**

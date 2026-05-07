@@ -96,11 +96,13 @@ class PaymentCommon(BaseCommon):
     def setUp(self):
         super().setUp()
         if self.account_payment_installed and self.enable_post_process_patcher:
-            # disable account payment generation if account_payment is installed
-            # because the accounting setup of providers is not managed in this common
+            # Disable the generation of account payments if account_payment is installed, because
+            # the accounting setup of providers is not managed in this common, but mark transactions
+            # as post-processed to allow redirecting users from /payment/status to the landing page.
             self.post_process_patcher = patch(
                 "odoo.addons.account_payment.models.payment_transaction.PaymentTransaction"
-                "._post_process"
+                "._post_process",
+                new=lambda self_: self_.write({"is_post_processed": True}),
             )
             self.startPatcher(self.post_process_patcher)
 
