@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+from unittest.mock import patch
 
 from odoo.tools import mute_logger
 from odoo.addons.payment.tests.http_common import PaymentHttpCommon
@@ -17,13 +18,22 @@ class OnlinePaymentCommon(PaymentHttpCommon):
         return response
 
     def _fake_open_pos_order_pay_page(self, pos_order_id, access_token):
-        response = self._fake_http_get_request(PaymentPortal._get_pay_route(pos_order_id, access_token))
+        with patch(
+                "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
+                return_value=self.provider,
+        ):
+            response = self._fake_http_get_request(PaymentPortal._get_pay_route(pos_order_id, access_token))
         return self._get_payment_context(response)
 
     def _fake_request_pos_order_pay_transaction_page(self, pos_order_id, route_values):
         uri = f'/pos/pay/transaction/{pos_order_id}'
         url = self._build_url(uri)
-        return self.make_jsonrpc_request(url, route_values)
+        with patch(
+                "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
+                return_value=self.provider,
+        ):
+            response = self.make_jsonrpc_request(url, route_values)
+        return response
 
     def _fake_open_pos_order_pay_confirmation_page(self, pos_order_id, access_token, tx_id, exit_route=None):
         self._fake_http_get_request(PaymentPortal._get_landing_route(pos_order_id, access_token, tx_id=tx_id, exit_route=exit_route))

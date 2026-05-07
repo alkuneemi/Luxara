@@ -97,62 +97,38 @@ class TestFlows(PaymentHttpCommon):
         # Make sure the company considered in payment/pay
         # doesn't fall back on the public user main company (not the test one)
         self.partner.company_id = self.env.company.id
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("direct")
+        self._test_flow("direct")
 
     def test_11_direct_checkout_portal(self):
         self.authenticate(self.portal_user.login, self.portal_user.login)
         self.user = self.portal_user
         self.partner = self.portal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("direct")
+        self._test_flow("direct")
 
     def test_12_direct_checkout_internal(self):
         self.authenticate(self.internal_user.login, self.internal_user.login)
         self.user = self.internal_user
         self.partner = self.internal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("direct")
+        self._test_flow("direct")
 
     def test_20_redirect_checkout_public(self):
         self.user = self.public_user
         # Make sure the company considered in payment/pay
         # doesn't fall back on the public user main company (not the test one)
         self.partner.company_id = self.env.company.id
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("redirect")
+        self._test_flow("redirect")
 
     def test_21_redirect_checkout_portal(self):
         self.authenticate(self.portal_user.login, self.portal_user.login)
         self.user = self.portal_user
         self.partner = self.portal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("redirect")
+        self._test_flow("redirect")
 
     def test_22_redirect_checkout_internal(self):
         self.authenticate(self.internal_user.login, self.internal_user.login)
         self.user = self.internal_user
         self.partner = self.internal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("redirect")
+        self._test_flow("redirect")
 
     # Payment by token #
     ####################
@@ -163,21 +139,13 @@ class TestFlows(PaymentHttpCommon):
         self.authenticate(self.portal_user.login, self.portal_user.login)
         self.partner = self.portal_partner
         self.user = self.portal_user
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("token")
+        self._test_flow("token")
 
     def test_32_tokenize_internal(self):
         self.authenticate(self.internal_user.login, self.internal_user.login)
         self.partner = self.internal_partner
         self.user = self.internal_user
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_flow("token")
+        self._test_flow("token")
 
     # VALIDATION #
     ##############
@@ -236,38 +204,22 @@ class TestFlows(PaymentHttpCommon):
     def test_51_validation_direct_portal(self):
         self.authenticate(self.portal_user.login, self.portal_user.login)
         self.partner = self.portal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_validation(flow="direct")
+        self._test_validation(flow="direct")
 
     def test_52_validation_direct_internal(self):
         self.authenticate(self.internal_user.login, self.internal_user.login)
         self.partner = self.internal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_validation(flow="direct")
+        self._test_validation(flow="direct")
 
     def test_61_validation_redirect_portal(self):
         self.authenticate(self.portal_user.login, self.portal_user.login)
         self.partner = self.portal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_validation(flow="direct")
+        self._test_validation(flow="direct")
 
     def test_62_validation_redirect_internal(self):
         self.authenticate(self.internal_user.login, self.internal_user.login)
         self.partner = self.internal_partner
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            self._test_validation(flow="direct")
+        self._test_validation(flow="direct")
 
     # Specific flows #
     ##################
@@ -284,11 +236,8 @@ class TestFlows(PaymentHttpCommon):
 
         # Pay without a partner specified (but logged) --> pay with the partner of current user.
         self.authenticate(self.portal_user.login, self.portal_user.login)
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            tx_context = self._get_portal_pay_context(**route_values)
+
+        tx_context = self._get_portal_pay_context(**route_values)
         self.assertEqual(tx_context["partner_id"], self.portal_partner.id)
 
     def test_pay_no_token(self):
@@ -304,11 +253,7 @@ class TestFlows(PaymentHttpCommon):
 
         # Pay without a partner specified (but logged) --> pay with the partner of current user.
         self.authenticate(self.portal_user.login, self.portal_user.login)
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            tx_context = self._get_portal_pay_context(**route_values)
+        tx_context = self._get_portal_pay_context(**route_values)
         self.assertEqual(tx_context["partner_id"], self.portal_partner.id)
 
     def test_pay_wrong_token(self):

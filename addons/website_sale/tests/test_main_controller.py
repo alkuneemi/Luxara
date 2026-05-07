@@ -29,7 +29,7 @@ class TestPaymentProviderVisibility(PaymentHttpCommon, SaleCommon):
             .sudo()
             .search([("name", "=", "Demo"), ("company_id", "=", website_shop.company_id.id)])
         )
-        restricted_provider.write({"state": "test", "website_id": website_shop.id})
+        restricted_provider.website_id = website_shop.id
 
         url_so = self.sale_order.get_portal_url()
         self.sale_order.require_payment = True

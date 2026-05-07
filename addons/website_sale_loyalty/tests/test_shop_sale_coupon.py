@@ -40,7 +40,7 @@ class WebsiteSaleLoyaltyTestUi(TestSaleCommon, HttpCase):
 
         transfer_provider = self.env.ref("payment.payment_provider_transfer")
         transfer_provider.sudo().write({
-            "state": "enabled",
+            "is_test": False,
             "is_published": True,
             "company_id": self.env.company.id,
         })

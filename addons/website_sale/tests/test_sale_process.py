@@ -68,7 +68,7 @@ class TestSaleProcess(HttpCaseWithUserDemo, WebsiteSaleCommon, HttpCaseWithWebsi
 
         if cls.env["ir.module.module"]._get("payment_custom").state == "installed":
             transfer_provider = cls.env.ref("payment.payment_provider_transfer")
-            transfer_provider.write({"state": "enabled", "is_published": True})
+            transfer_provider.write({"is_test": False, "is_published": True})
             transfer_provider._transfer_ensure_pending_msg_is_set()
 
     def test_01_admin_shop_tour(self):
@@ -146,7 +146,7 @@ class TestSaleProcess(HttpCaseWithUserDemo, WebsiteSaleCommon, HttpCaseWithWebsi
                 Command.create({"attribute_id": attribute.id, "value_ids": attribute.value_ids})
             ],
         })
-        self.env.ref('website.default_website').write({"google_analytics_key": "G-XXXXXXXXXXX"})
+        self.env.ref("website.default_website").write({"google_analytics_key": "G-XXXXXXXXXXX"})
         self.start_tour("/shop?search=Colored T-Shirt", "website_sale.google_analytics_view_item")
         # Data for google_analytics_add_to_cart
         self.env["product.template"].create({
