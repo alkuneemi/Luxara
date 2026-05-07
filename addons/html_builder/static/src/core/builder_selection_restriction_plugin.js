@@ -143,7 +143,7 @@ export class BuilderSelectionRestrictionPlugin extends Plugin {
         });
         // Then correct the selection if some uncrossable elements are crossed
         // on the extended part.
-        this.correctSelectionOnUncrossable();
+        this.correctSelectionOnUncrossableExhaustive();
 
         // Get the fixed extended selection after the first step, and then
         // extend it to the end of the element.
@@ -156,22 +156,7 @@ export class BuilderSelectionRestrictionPlugin extends Plugin {
         });
         // Finally correct the selection if some uncrossable elements are
         // crossed on the extended part.
-        this.correctSelectionOnUncrossable();
-
-        // Make sure the selection does not contain uncrossable elements. We
-        // limit this to 5 attempts to not block the editor (it is very unlikely
-        // to have more than 5 nested uncrossable elements, so 5 is acceptable).
-        selection = this.dependencies.selection.getEditableSelection();
-        let attemptsLeft = 5;
-        while (
-            closestElement(selection.anchorNode, this.uncrossableSelectors) !==
-                closestElement(selection.focusNode, this.uncrossableSelectors) &&
-            attemptsLeft
-        ) {
-            this.correctSelectionOnUncrossable();
-            selection = this.dependencies.selection.getEditableSelection();
-            attemptsLeft -= 1;
-        }
+        this.correctSelectionOnUncrossableExhaustive();
     }
 
     /**
@@ -223,7 +208,7 @@ export class BuilderSelectionRestrictionPlugin extends Plugin {
         }
         // Finally, we correct the selection if some uncrossable elements are
         // crossed.
-        this.correctSelectionOnUncrossable();
+        this.correctSelectionOnUncrossableExhaustive();
     }
 
     /**
@@ -278,10 +263,9 @@ export class BuilderSelectionRestrictionPlugin extends Plugin {
         // found that is crossed by the selection, the selection is
         // corrected to be just before or after the uncrossable element based on
         // the selection direction.
-        let tempFocusNode;
+        let tempFocusNode, newFocusNode, newFocusOffset;
         for (const node of selectedNodes) {
             if (this.isNodeSelectionUncrossable(node, selectedNodes)) {
-                let newFocusNode, newFocusOffset;
                 const closestUncrossableEl = closestElement(node, this.uncrossableSelectors);
                 if (!node.contains(anchorNode)) {
                     // If the anchor is inside the same uncrossable ancestor as
@@ -347,6 +331,45 @@ export class BuilderSelectionRestrictionPlugin extends Plugin {
             }
         }
 
+        return { newFocusNode, newFocusOffset };
+    }
+
+    /**
+     * An exhaustive version of correctSelectionOnUncrossable, it will call
+     * correctSelectionOnUncrossable until no more correction is needed or after
+     * a certain number of attempts to avoid infinite loops.
+     */
+    correctSelectionOnUncrossableExhaustive() {
+        let current = this.correctSelectionOnUncrossable();
+        let previous = { newFocusNode: null, newFocusOffset: null };
+        // It is very unlikely to have more than 5 nested uncrossable elements,
+        // so 5 is acceptable.
+        let attemptsLeft = 5;
+
+        // only loop if the selection is corrected, and a new correction is
+        // actually done by correctSelectionOnUncrossable
+        if (!current) {
+            return;
+        }
+        while (
+            current &&
+            attemptsLeft &&
+            (current.newFocusNode !== previous.newFocusNode ||
+                current.newFocusOffset !== previous.newFocusOffset)
+        ) {
+            previous = current;
+            current = this.correctSelectionOnUncrossable();
+            attemptsLeft--;
+        }
+        // Only update the containers when the selection has been corrected at
+        // least once, at the end of the correction process.
         this.shouldUpdateContainersWithSelection = true;
+
+        if (!attemptsLeft) {
+            console.warning(
+                "Too many attempts to correct the selection, something might be wrong with the selection including the uncrossable selectors",
+                this.uncrossableSelectors
+            );
+        }
     }
 }
