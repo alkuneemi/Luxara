@@ -1387,6 +1387,54 @@ class TestUi(TestPointOfSaleHttpCommon):
             'barcode': '3760171283370',
         })
 
+<<<<<<< 846830dfcb4ad03b08f883509d8116d50537bf4d
+||||||| c3172d65db44c41f5619aef20532c3846494ea0e
+        size_attribute = self.env['product.attribute'].create({
+            'name': 'Size',
+            'create_variant': 'always',
+            'value_ids': [
+                Command.create({'name': 'S', 'sequence': 1}),
+                Command.create({'name': 'L', 'sequence': 2}),
+            ],
+        })
+        product_tmpl = self.env['product.template'].create({
+            'name': 'GS1 Variant Product',
+            'available_in_pos': True,
+            'tracking': 'lot',
+            'is_storable': True,
+            'attribute_line_ids': [Command.create({
+                'attribute_id': size_attribute.id,
+                'value_ids': [Command.set(size_attribute.value_ids.ids)],
+            })],
+        })
+        pos_categ = self.env['pos.category'].create({'name': 'GS1 Test'})
+        product_tmpl.pos_categ_ids = [Command.set([pos_categ.id])]
+        variant = product_tmpl.product_variant_ids[0]
+        variant.write({'barcode': '5123648695416'})
+=======
+        size_attribute = self.env['product.attribute'].create({
+            'name': 'Size',
+            'create_variant': 'always',
+            'value_ids': [
+                Command.create({'name': 'S', 'sequence': 1}),
+                Command.create({'name': 'L', 'sequence': 2}),
+            ],
+        })
+        product_tmpl = self.env['product.template'].create({
+            'name': 'GS1 Variant Product',
+            'available_in_pos': True,
+            'tracking': 'lot',
+            'is_storable': True,
+            'attribute_line_ids': [Command.create({
+                'attribute_id': size_attribute.id,
+                'value_ids': [Command.set(size_attribute.value_ids.ids)],
+            })],
+        })
+        pos_categ = self.env['pos.category'].create({'name': 'GS1 Test'})
+        product_tmpl.pos_categ_ids = [Command.set([pos_categ.id])]
+        variant = product_tmpl.product_variant_ids[0]
+        variant.write({'barcode': '05123648695416'})
+>>>>>>> b6a3c2cae5e3b4f9a6d514dac2801be5149de97e
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_tour("/pos/ui/%d" % self.main_pos_config.id, 'GS1BarcodeScanningTour', login="pos_user")
 
