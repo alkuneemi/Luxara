@@ -237,7 +237,7 @@ export class Analysis {
 }
 
 export function renderEmailNode(emailNode) {
-    return emailNode.identity.renderToFragment({
+    return emailNode.layout.renderToFragment({
         children: emailNode.children.map((child) => renderEmailNode(child)),
     });
 }
@@ -247,8 +247,8 @@ export class EmailNode {
     analysis = new Analysis();
     children = new UniqueArray();
 
-    constructor({ identity, referenceNode, parent, analysis = {} } = {}) {
-        this.identity = identity;
+    constructor({ layout, referenceNode, parent, analysis = {} } = {}) {
+        this.layout = layout;
         if (parent) {
             parent.appendChild(this);
         }
@@ -312,24 +312,24 @@ export class EmailNode {
     }
 }
 
-class Identity {
+class Layout {
     pluginIds = new Set();
 
     /**
      * Can be overridden to define how 2 identities should be merged together
      */
-    merge(originalIdentity) {
-        return originalIdentity;
+    merge(originalLayout) {
+        return originalLayout;
     }
 }
 
 /**
  * TODO EGGMAIL: implement API so that plugins can modify/define characteristics?
- * Objective of identity is to provide an API for a LayoutModel to get the required arguments
+ * Objective of layout is to provide an API for a LayoutModel to get the required arguments
  * for that layoutModel.
- * => identity is closely related to a node, either text or element
+ * => layout is closely related to a node, either text or element
  */
-export class ElementIdentity extends Identity {
+export class ElementLayout extends Layout {
     tag;
     styleInfo = new StyleInfo();
     attributes = {};
@@ -342,10 +342,10 @@ export class ElementIdentity extends Identity {
         this.setAttributes(options);
     }
 
-    merge(originalIdentity) {
-        originalIdentity.setAttributes(this);
-        originalIdentity.tag = this.tag;
-        return originalIdentity;
+    merge(originalLayout) {
+        originalLayout.setAttributes(this);
+        originalLayout.tag = this.tag;
+        return originalLayout;
     }
 
     setAttributes({ attributes = {}, classNames = "", style = {} } = {}) {
@@ -362,12 +362,12 @@ export class ElementIdentity extends Identity {
     }
 }
 
-export class TextIdentity extends Identity {
+export class TextLayout extends Layout {
     content;
 
     constructor({ content } = {}) {
         super(...arguments);
-        // TODO EGGMAIL: same consideration as ElementIdentity: do we really
+        // TODO EGGMAIL: same consideration as ElementLayout: do we really
         // need node details? We could just get it from the actual node later.
         this.content = content;
     }

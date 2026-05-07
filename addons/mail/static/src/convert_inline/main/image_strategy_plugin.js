@@ -14,7 +14,7 @@ export class ImageStrategyPlugin extends Plugin {
     ];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
-        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
+        element_layout_analysis_processors: this.analyzeElementLayout.bind(this),
         attribute_rules_processors: [
             [this.provideAttributeRules.bind(this), ImageStrategyPlugin.id],
         ],
@@ -46,7 +46,7 @@ export class ImageStrategyPlugin extends Plugin {
         return referenceNode.nodeName === "IMG";
     }
 
-    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
+    analyzeElementLayout({ layout, analysis }, { referenceNode }) {
         if (analysis.isFrozen) {
             return;
         }
@@ -63,7 +63,7 @@ export class ImageStrategyPlugin extends Plugin {
                 canMerge: false,
                 canParentMerge: false,
             });
-            identity.pluginIds.add(ImageStrategyPlugin.id);
+            layout.pluginIds.add(ImageStrategyPlugin.id);
         }
     }
 

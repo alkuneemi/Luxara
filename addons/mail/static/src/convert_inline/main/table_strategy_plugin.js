@@ -10,19 +10,19 @@ export class TableStrategyPlugin extends Plugin {
     static dependencies = ["responsiveBlock", "referenceNode"];
     resources = {
         apply_layout_strategy_overrides: this.applyLayoutStrategy.bind(this),
-        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
+        element_layout_analysis_processors: this.analyzeElementLayout.bind(this),
     };
 
-    analyzeElementIdentity({ identity, analysis }, { referenceNode, parentEmailNode }) {
+    analyzeElementLayout({ layout, analysis }, { referenceNode, parentEmailNode }) {
         if (analysis.isFrozen || !this.detectTableLayout(referenceNode)) {
             return;
         }
-        if (parentEmailNode.identity.tag === "TABLE") {
+        if (parentEmailNode.layout.tag === "TABLE") {
             analysis.parsingFacts.canParentMerge = true;
         }
         analysis.parsingFacts.canMerge = false;
         analysis.facts.isTable = true;
-        identity.pluginIds.add(TableStrategyPlugin.id);
+        layout.pluginIds.add(TableStrategyPlugin.id);
     }
 
     // TODO EGGMAIL NOW: special case for the first element inside the reference:

@@ -1,6 +1,6 @@
 import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
-import { Analysis, ElementIdentity, EmailNode, TextIdentity } from "./node_models";
+import { Analysis, ElementLayout, EmailNode, TextLayout } from "./node_models";
 import { renderEmailNode } from "./render_models";
 
 /**
@@ -12,10 +12,10 @@ import { renderEmailNode } from "./render_models";
  * 2) propagate constraints from these groupings to annotate them:
  * // a) bottom up analysis (descendants propagate constraints and information to their ancestors)
  * // b) top down analysis (ancestors propagate constraints and information to their descendants)
- * 3) refine the identity of semantic nodes from the analysis plugin
+ * 3) refine the layout of semantic nodes from the analysis plugin
  * // a) alter/replace node identities to fulfill constraints for every node
  * 4) render the final email html tree
- * // a) render each identity to create the final html tree
+ * // a) render each layout to create the final html tree
  */
 export class RenderPlugin extends Plugin {
     static id = "render";
@@ -68,18 +68,18 @@ export class RenderPlugin extends Plugin {
     // -- multiple objectives:
     // -- -- deny absorption by parent (if parent allows it)
     // -- -- deny future children absorption (without considering children identities)
-    // -- -- provide useful identity info (styleInfo selection, attributes, etc)
+    // -- -- provide useful layout info (styleInfo selection, attributes, etc)
     createEmailNode(node, parentEmailNode) {
         let childNodes, emailNode;
         if (node.nodeType === Node.TEXT_NODE) {
-            const identity = new TextIdentity({ content: node.nodeValue });
+            const layout = new TextLayout({ content: node.nodeValue });
             emailNode = new EmailNode({
-                identity,
+                layout,
                 referenceNode: node,
                 parent: parentEmailNode,
             });
         } else {
-            const { identity, analysis } = this.processElementIdentity(node, parentEmailNode);
+            const { layout, analysis } = this.processElementLayout(node, parentEmailNode);
             const parentParsingFacts = parentEmailNode.analysis.parsingFacts;
             if (parentEmailNode && !analysis.parsingFacts.canParentMerge) {
                 parentParsingFacts.canMerge = false;
@@ -87,14 +87,14 @@ export class RenderPlugin extends Plugin {
             emailNode = parentEmailNode;
             if (parentEmailNode && parentParsingFacts.canMerge) {
                 parentEmailNode.pushReferenceNode(node);
-                // defaults to keeping the lowest identity as the main identity,
+                // defaults to keeping the lowest layout as the main layout,
                 // written on top of the parent values.
                 // merge can be overridden to change that behavior.
-                parentEmailNode.identity = identity.merge(parentEmailNode.identity);
+                parentEmailNode.layout = layout.merge(parentEmailNode.layout);
                 parentEmailNode.analysis.merge(analysis);
             } else {
                 emailNode = new EmailNode({
-                    identity,
+                    layout,
                     referenceNode: node,
                     parent: parentEmailNode,
                     analysis,
@@ -133,11 +133,11 @@ export class RenderPlugin extends Plugin {
 
     // TODO EGGMAIL: search and replace all usages of:
     // apply_layout_strategy_overrides
-    processElementIdentity(referenceNode, parentEmailNode) {
-        const { identity, analysis } = this.processThrough(
-            "element_identity_analysis_processors",
+    processElementLayout(referenceNode, parentEmailNode) {
+        const { layout, analysis } = this.processThrough(
+            "element_layout_analysis_processors",
             {
-                identity: new ElementIdentity({
+                layout: new ElementLayout({
                     tag: referenceNode.tagName,
                     attributes: this.getAttributes(referenceNode),
                     style: this.getStyleInfo(referenceNode),
@@ -148,11 +148,11 @@ export class RenderPlugin extends Plugin {
             },
             { referenceNode, parentEmailNode }
         );
-        if (identity.pluginIds.size === 0) {
-            identity.pluginIds.add(RenderPlugin.id);
+        if (layout.pluginIds.size === 0) {
+            layout.pluginIds.add(RenderPlugin.id);
         }
-        console.log(Array.from(identity.pluginIds).join(", "), referenceNode);
-        return { identity, analysis };
+        console.log(Array.from(layout.pluginIds).join(", "), referenceNode);
+        return { layout, analysis };
     }
 
     /**
@@ -211,24 +211,24 @@ export class RenderPlugin extends Plugin {
     }
 
     // My idea right now:
-    // identity starts as the simple element transcription
+    // layout starts as the simple element transcription
     // analysis accumulates facts during various kind of passes
     // after every node has its facts updated, the render_plugin goes through the tree
     // and fulfill all facts
-    // // -> all facts are "requests" to be fulfilled by the identity, if the identity changes, it should ensure
+    // // -> all facts are "requests" to be fulfilled by the layout, if the layout changes, it should ensure
     // // all facts are fulfilled.
     // TODO:
     // cleanup comments to extract useful ideas and remove other stuff
-    // decide on identity general API
-    // merge LayoutModel and Identity models, makes no sense to have both
-    // an identity can contain others => we are really into the LayoutModel territory here
-    // an identity can also have multiple slots instead of sub-identities (do I keep such flexibility?)
-    // the "render" method of an Identity should take care of handling its subtree
-    // the Identity subtree relates to only one EmailNode, which was one render intention
+    // decide on layout general API
+    // merge LayoutModel and Layout models, makes no sense to have both
+    // an layout can contain others => we are really into the LayoutModel territory here
+    // an layout can also have multiple slots instead of sub-identities (do I keep such flexibility?)
+    // the "render" method of an Layout should take care of handling its subtree
+    // the Layout subtree relates to only one EmailNode, which was one render intention
     enforceConstraints(emailNode) {
-        // keep original identity (inside emailNode) untouched during the
-        // whole process, but the current identity can be used
-        emailNode.identity = this.processThrough("refine_identity_processors", emailNode.identity, {
+        // keep original layout (inside emailNode) untouched during the
+        // whole process, but the current layout can be used
+        emailNode.layout = this.processThrough("refine_layout_processors", emailNode.layout, {
             emailNode,
         });
         for (const childAnalysis of emailNode.children) {

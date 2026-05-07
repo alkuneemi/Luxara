@@ -2,7 +2,7 @@ import { registry } from "@web/core/registry";
 import { Plugin } from "../plugin";
 import { zip } from "@web/core/utils/arrays";
 import { DIMENSIONS } from "../hooks";
-import { Analysis, ElementIdentity, EmailNode } from "../core/node_models";
+import { Analysis, ElementLayout, EmailNode } from "../core/node_models";
 
 const { DESKTOP, MOBILE } = DIMENSIONS;
 // Prevent the last inline-block element from wrapping to the next line due
@@ -20,7 +20,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         "referenceNode",
     ];
     resources = {
-        element_identity_analysis_processors: this.analyzeElementIdentity.bind(this),
+        element_layout_analysis_processors: this.analyzeElementLayout.bind(this),
         synthetic_email_node_processors: this.addSyntheticEmailNode.bind(this),
     };
 
@@ -75,8 +75,8 @@ export class HybridFluidStrategyPlugin extends Plugin {
         };
         for (const band of desktopBlock.bands) {
             const rowAnalysis = new EmailNode({
-                // TODO EGGMAIL: currently oversimplified identity, add tracking of positioning values.
-                identity: new ElementIdentity({ tag: "div" }),
+                // TODO EGGMAIL: currently oversimplified layout, add tracking of positioning values.
+                layout: new ElementLayout({ tag: "div" }),
                 analysis: new Analysis({
                     facts: { isHybridFluidRow: true },
                 }),
@@ -125,7 +125,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         parent.spliceChildren(parent.children.indexOf(emailNode), 1, ...rows);
     }
 
-    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
+    analyzeElementLayout({ layout, analysis }, { referenceNode }) {
         if (analysis.isFrozen || !this.detectHybridFluidLayout(referenceNode)) {
             return;
         }
@@ -134,7 +134,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
             addSyntheticEmailNode: true,
         });
         analysis.facts.isHybridFluidRow = true;
-        identity.pluginIds.add(HybridFluidStrategyPlugin.id);
+        layout.pluginIds.add(HybridFluidStrategyPlugin.id);
     }
 
     /**
@@ -188,12 +188,12 @@ export class HybridFluidStrategyPlugin extends Plugin {
         const clusterAnalysis = this.getClusterAnalysis(emailNode, cluster);
         const clusterWidth = cluster.rect.width - (isLast ? ZOOM_WIDTH_CORRECTION : 0);
         const cellAnalysis = new EmailNode({
-            // TODO EGGMAIL: currently oversimplified identity, to elaborate?
-            identity: new ElementIdentity({ tag: "div" }),
+            // TODO EGGMAIL: currently oversimplified layout, to elaborate?
+            layout: new ElementLayout({ tag: "div" }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,
-                    // TODO EGGMAIL: move refs in identity?
+                    // TODO EGGMAIL: move refs in layout?
                     refs: {
                         root: { style: { "max-width": `${clusterWidth}px` } },
                         styleContext,
@@ -209,7 +209,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
 
     buildEmptyCell(width) {
         return new EmailNode({
-            identity: new ElementIdentity({ tag: "div" }),
+            layout: new ElementLayout({ tag: "div" }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,
@@ -229,7 +229,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
         const offsetAnalysis = this.buildEmptyCell(offsetWidth);
         const cellAnalysis = this.buildCell(emailNode, cluster, styleContext);
         const cellWithOffsetAnalysis = new EmailNode({
-            identity: new ElementIdentity({ tag: "div" }),
+            layout: new ElementLayout({ tag: "div" }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,

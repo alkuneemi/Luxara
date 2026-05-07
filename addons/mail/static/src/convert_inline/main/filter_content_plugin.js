@@ -40,9 +40,9 @@ export class FilterContentPlugin extends Plugin {
         attribute_rules_processors: [
             [this.provideAttributeRules.bind(this), FilterContentPlugin.id],
         ],
-        element_identity_analysis_processors: withSequence(
+        element_layout_analysis_processors: withSequence(
             1,
-            this.analyzeElementIdentity.bind(this)
+            this.analyzeElementLayout.bind(this)
         ),
         style_rules_processors: [[this.provideStyleRules.bind(this), FilterContentPlugin.id]],
         is_blocked_rule_selector_predicates: this.blockUserContextSelectors.bind(this),
@@ -55,7 +55,7 @@ export class FilterContentPlugin extends Plugin {
         this.provideBodyStyleRules();
     }
 
-    analyzeElementIdentity({ analysis }, { referenceNode, parentEmailNode }) {
+    analyzeElementLayout({ analysis }, { referenceNode, parentEmailNode }) {
         const node = referenceNode;
         let parentNode;
         if (

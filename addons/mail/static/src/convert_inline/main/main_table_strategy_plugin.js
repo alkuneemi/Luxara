@@ -16,9 +16,9 @@ export class MainTableStrategyPlugin extends Plugin {
     ];
     resources = {
         apply_layout_strategy_overrides: withSequence(2, this.applyLayoutStrategy.bind(this)),
-        element_identity_analysis_processors: withSequence(
+        element_layout_analysis_processors: withSequence(
             2,
-            this.analyzeElementIdentity.bind(this)
+            this.analyzeElementLayout.bind(this)
         ),
         on_reference_content_loaded_handlers: this.identifyLayout.bind(this),
     };
@@ -56,11 +56,11 @@ export class MainTableStrategyPlugin extends Plugin {
     }
 
     /**
-     * TODO EGGMAIL: mutually exclusive identities? Does having this identity
-     * prevent another plugin from claiming another identity? To think about.
+     * TODO EGGMAIL: mutually exclusive identities? Does having this layout
+     * prevent another plugin from claiming another layout? To think about.
      * evaluate withSequence
      */
-    analyzeElementIdentity({ identity, analysis }, { referenceNode }) {
+    analyzeElementLayout({ layout, analysis }, { referenceNode }) {
         if (analysis.isFrozen) {
             return;
         }
@@ -76,7 +76,7 @@ export class MainTableStrategyPlugin extends Plugin {
                 canMerge: false,
                 canParentMerge: false,
             });
-            identity.pluginIds.add(MainTableStrategyPlugin.id);
+            layout.pluginIds.add(MainTableStrategyPlugin.id);
         }
     }
 
