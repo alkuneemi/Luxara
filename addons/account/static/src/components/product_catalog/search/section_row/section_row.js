@@ -1,0 +1,29 @@
+import { Component } from "@odoo/owl";
+import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
+import { SectionDropdown } from "../section_dropdown/section_dropdown";
+
+export class SectionRow extends Component {
+    static template = "account.SectionRow";
+
+    static components = {
+        SectionRow,
+        SectionDropdown,
+    };
+
+    static props = {
+        section: Object,
+        state: Object,
+    };
+
+    get selectedSection() {
+        return this.env.searchModel.selectedSection;
+    }
+
+    onSectionLabelKeydown(ev) {
+        const hotkey = getActiveHotkey(ev);
+        if (hotkey === "Enter" || hotkey === " ") {
+            ev.preventDefault();
+            this.env.setSelectedSection(this.props.section.id, this.selectedSection.filtered);
+        }
+    }
+}

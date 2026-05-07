@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates id="template" xml:space="preserve">
+    <t
+        t-name="account.ProductCatalogSearchPanelContent"
+        t-inherit="web.SearchPanelContent"
+        t-inherit-mode="primary"
+    >
+        <div t-custom-ref="root" position="attributes">
+            <attribute name="class" add="o_product_catalog_search_panel" separator=" "/>
+        </div>
+
+        <xpath expr="//header/i" position="replace"/>
+
+        <section position="before">
+            <section t-if="this.showSections" class="o_search_panel_sections o_search_panel_section mt-4 pb-4 border-bottom">
+                <header class="d-flex align-items-center cursor-default mb-3">
+                    <b class="text-uppercase me-2">Sections</b>
+                    <button
+                        class="btn btn-sm btn-secondary ms-auto"
+                        t-on-click="() => this.enableSectionInput()"
+                        title="Add a section"
+                    >
+                        Add
+                    </button>
+                </header>
+                <ul t-if="this.state.sections.length > 1" class="list-group d-block" t-ref="sectionTreeRef">
+                    <t t-foreach="this.state.sections" t-as="section" t-key="section.id">
+                        <SectionRow section="section" state="this.state"/>
+                    </t>
+                </ul>
+                <input
+                    t-if="this.state.isAddingSection === 'section'"
+                    class="o_section_input py-1"
+                    type="text"
+                    placeholder="Enter a description"
+                    t-custom-model="this.state.newSectionName"
+                    t-on-keydown="(ev) => this.onSectionInputKeydown(ev)"
+                    t-on-blur="() => this.createSection()"
+                />
+                <div
+                    t-if="this.state.sections.length === 1 &amp;&amp; this.state.sections[0].id === false"
+                    class="border-top"
+                >
+                    <div class="d-flex justify-content-between mt-4">
+                        <span>Total</span>
+                        <span t-out="this.getFormattedSubTotal(this.state.totalUntaxedAmount)"/>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <div class="o_search_panel_empty_state me-3" position="attributes">
+            <attribute name="class" add="d-none" separator=" "/>
+        </div>
+    </t>
+
+    <t t-name="account.ProductCatalogSearchPanel" t-inherit="web.SearchPanel" t-inherit-mode="primary">
+        <t t-call="web.SearchPanel.Regular" position="attributes">
+            <attribute name="t-call">account.ProductCatalogSearchPanelContent</attribute>
+        </t>
+    </t>
+</templates>

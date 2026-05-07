@@ -35,18 +35,24 @@ patch(ProductCatalogKanbanRecord.prototype, {
     },
 
     updateQuantity(quantity) {
-        const lineCountChange = (quantity > 0) - (this.productCatalogData.quantity > 0);
-        if (lineCountChange !== 0) {
-            this.notifyLineCountChange(lineCountChange);
-        }
-
+        this.oldSubtotal = this.productCatalogData.quantity * this.productCatalogData.price;
         super.updateQuantity(quantity);
     },
 
-    notifyLineCountChange(lineCountChange) {
-        this.env.searchModel.trigger('section-line-count-change', {
+    async _onQuantityChange() {
+        await super._onQuantityChange();
+
+        const newSubtotal = this.productCatalogData.quantity * this.productCatalogData.price;
+        const subtotalDelta = newSubtotal - this.oldSubtotal;
+        if (subtotalDelta !== 0) {
+            this.notifySectionSubtotalChange(subtotalDelta);
+        }
+    },
+
+    notifySectionSubtotalChange(subtotalDelta) {
+        this.env.searchModel.trigger('section-subtotal-change', {
             sectionId: this.env.selectedSectionId,
-            lineCountChange: lineCountChange,
+            subtotalDelta: subtotalDelta,
         });
     },
 })

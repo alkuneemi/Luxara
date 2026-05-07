@@ -2961,7 +2961,7 @@ class AccountMove(models.Model):
             )
         for line in self.line_ids:
             if (
-                line.get_parent_section_line().id == section_id
+                line.is_in_section(section_id)
                 and line.display_type == 'product'
                 and line.product_id.id in product_ids
             ):
@@ -2982,8 +2982,7 @@ class AccountMove(models.Model):
         :rtype: float
         """
         move_line = self.line_ids.filtered(
-            lambda line: line.product_id.id == product.id
-            and line.get_parent_section_line().id == section_id,
+            lambda line: line.product_id.id == product.id and line.is_in_section(section_id)
         )
         if move_line:
             if quantity != 0:
@@ -3014,21 +3013,14 @@ class AccountMove(models.Model):
         self.ensure_one()
         return self.state == 'cancel'
 
+    def _get_extra_values_for_section(self, line):
+        return {
+            'collapse_prices': line.collapse_prices,
+            'collapse_composition': line.collapse_composition,
+        }
+
     def _get_parent_field_on_child_model(self):
         return 'move_id'
-
-    def _is_line_valid_for_section_line_count(self, line):
-        """Check if a line is valid for inclusion in the section's line count.
-
-        :param recordset line: A record of a move line.
-        :return: True if this line is a valid, else False.
-        :rtype: bool
-        """
-        return (
-            line.product_id
-            and line.product_id.product_tmpl_id.type != 'combo'
-            and line.quantity > 0
-        )
 
     # -------------------------------------------------------------------------
     # EARLY PAYMENT DISCOUNT
