@@ -782,12 +782,23 @@ export class Composer extends Component {
                 MessageConfirmDialog,
                 {
                     message: composer.message,
+<<<<<<< e3ce044cb43c5e8438649601601b58868828443e
                     onConfirm: () => {
                         this.message.remove({
                             removeFromThread: this.shouldHideFromMessageListOnDelete,
                         });
                         this.props.onDiscardCallback?.();
                     },
+||||||| 2154cf3a69af3f2016b291c880ab0972c916eb75
+                    onConfirm: this.message.remove({
+                        removeFromThread: this.shouldHideFromMessageListOnDelete,
+                    }),
+=======
+                    onConfirm: () =>
+                        this.message.remove({
+                            removeFromThread: this.shouldHideFromMessageListOnDelete,
+                        }),
+>>>>>>> 1014d7df58934b5ff174bc3229219bd892627ff0
                     prompt: _t("Are you sure you want to delete this message?"),
                 },
                 { context: this }
