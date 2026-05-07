@@ -201,7 +201,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'description': '',
             'location': '',
             'guestsCanModify': True,
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'organizer': {'email': 'odoobot@example.com', 'self': True},
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'accepted'}],
             'extendedProperties': {'shared': {'%s_odoo_id' % self.env.cr.dbname: event.id}},
@@ -262,7 +261,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'description': '',
             'location': '',
             'guestsCanModify': True,
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'organizer': {'email': 'odoobot@example.com', 'self': True},
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'accepted'}],
             'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=2;BYDAY=WE'],
@@ -297,7 +295,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'description': '',
             'location': '',
             'guestsCanModify': True,
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'organizer': {'email': 'odoobot@example.com', 'self': True},
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'accepted'}],
             'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=2;BYDAY=WE'],
@@ -348,7 +345,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'organizer': {'email': 'odoobot@example.com', 'self': True},
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'accepted'}],
             'extendedProperties': {'shared': {'%s_odoo_id' % self.env.cr.dbname: event.recurrence_id.id}},
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'recurrence': ['RRULE:FREQ=WEEKLY;WKST=SU;COUNT=1;BYDAY=WE'],
             'transparency': 'opaque',
         }, timeout=3)
@@ -436,7 +432,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'attendees': [{'email': 'odoobot@example.com', 'responseStatus': 'accepted'}],
             'recurrence': ['RRULE:FREQ=WEEKLY;WKST=SU;COUNT=2;BYDAY=WE'],
             'extendedProperties': {'shared': {'%s_odoo_id' % self.env.cr.dbname: new_recurrence.id}},
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'transparency': 'opaque',
         }, timeout=3)
 
@@ -564,7 +559,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'organizer': {'email': 'odoobot@example.com', 'self': True},
             'attendees': [{'email': 'jean-luc@opoo.com', 'responseStatus': 'declined'}],
             'extendedProperties': {'shared': {'%s_odoo_id' % self.env.cr.dbname: event.id}},
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'transparency': 'opaque',
         })
 
@@ -877,7 +871,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
             'description': event.description,
             'location': '',
             'guestsCanModify': True,
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'organizer': {'email': self.organizer_user.email, 'self': True},
             'attendees': [{'email': self.organizer_user.email, 'responseStatus': 'accepted'}],
             'recurrence': ['RRULE:FREQ=WEEKLY;COUNT=1;BYDAY=WE'],
@@ -966,7 +959,6 @@ class TestSyncOdoo2Google(TestSyncOdoo2GoogleCommon):
                             {'email': self.attendee_user.email, 'responseStatus': 'needsAction'},
                             {'email': self.organizer_user.email, 'responseStatus': 'accepted'}
                          ],
-            'reminders': {'overrides': [{'method': 'popup', 'minutes': 15}], 'useDefault': False},
             'transparency': 'opaque',
         }
         self.assertGoogleEventInsertedMultiTime({

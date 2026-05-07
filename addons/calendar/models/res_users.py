@@ -93,10 +93,10 @@ class ResUsers(models.Model):
 
     def _systray_get_calendar_event_domain(self):
         # Determine the domain for which the users should be notified. This method sends notification to
-        # events occurring between now and the end of the day. Note that "now" needs to be computed in the
-        # user TZ and converted into UTC to compare with the records values and "the end of the day" needs
-        # also conversion. Otherwise TZ diverting a lot from UTC would send notification for events occurring
-        # tomorrow.
+        # events for which there's a reminder set and occurring between now and the end of the day.
+        # Note that "now" needs to be computed in the user TZ and converted into UTC to compare with the records values
+        # and "the end of the day" needs also conversion. Otherwise TZ diverting a lot from UTC would send notification
+        # for events occurring tomorrow.
         # The user is notified if the start is occurring between now and the end of the day
         # if the event is not finished.
         #   |           |
@@ -135,7 +135,7 @@ class ResUsers(models.Model):
             ('state', '!=', 'declined'),
         ])
 
-        return ['&', '|',
+        return ['&', '&', '|',
                 '&',
                     '|',
                         ['start', '>=', fields.Datetime.to_string(start_dt_utc)],
@@ -144,7 +144,8 @@ class ResUsers(models.Model):
                 '&',
                     ['allday', '=', True],
                     ['start_date', '=', fields.Date.to_string(start_date)],
-                ('attendee_ids', 'in', current_user_non_declined_attendee_ids)]
+                ('attendee_ids', 'in', current_user_non_declined_attendee_ids),
+                ('alarm_ids', "!=", False)]
 
     @api.model
     def _get_activity_groups(self):
@@ -153,9 +154,10 @@ class ResUsers(models.Model):
         meetings_lines = EventModel.search_read(
             self._systray_get_calendar_event_domain(),
             ['id', 'start', 'name', 'allday'],
-            order='start')
+            order='start',
+            limit=2)
         if meetings_lines:
-            meeting_label = _("Today's Meetings")
+            meeting_label = _("Upcoming Meetings")
             meetings_systray = {
                 'id': self.env['ir.model']._get('calendar.event').id,
                 'type': 'meeting',
