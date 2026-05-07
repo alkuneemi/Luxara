@@ -19,9 +19,9 @@ class TestConsumeComponentCommon(common.TransactionCase):
         """
         super().setUpClass()
 
-        cls.SERIAL_AVAILABLE_TRIGGERS_COUNT = 3
+        cls.SERIAL_AVAILABLE_TRIGGERS_COUNT = 2
         cls.DEFAULT_AVAILABLE_TRIGGERS_COUNT = 2
-        cls.SERIAL_TRIGGERS_COUNT = 2
+        cls.SERIAL_TRIGGERS_COUNT = 1
         cls.DEFAULT_TRIGGERS_COUNT = 1
 
         cls.manufacture_route = cls.env.ref('mrp.route_warehouse0_manufacture')
@@ -171,10 +171,13 @@ class TestConsumeComponentCommon(common.TransactionCase):
         return mos
 
     def executeConsumptionTriggers(self, mrp_productions):
-        """There's 3 different triggers to test : _onchange_producing(), action_generate_serial(), button_mark_done().
+        """There's 2 different production triggers to test : _onchange_producing(), button_mark_done().
+
+        For single-serial productions, action_generate_serial() now only pre-generates the
+        finished serial number and must not start production or consume components.
 
         Depending on the tracking of the final product and the availability of the components,
-        only a part of these 3 triggers is available or intended to work.
+        only a part of these 2 triggers is available or intended to work.
 
         This function automatically call and process the appropriate triggers.
         """
@@ -205,10 +208,6 @@ class TestConsumeComponentCommon(common.TransactionCase):
         mrp_productions[0]._onchange_qty_producing()
 
         i = 1
-        if isSerial:
-            mrp_productions[i].action_generate_serial()
-            i += 1
-
         if isAvailable:
             error = False
             try:
@@ -249,9 +248,9 @@ class TestConsumeComponent(TestConsumeComponentCommon):
         self.executeConsumptionTriggers(mo_none)
         self.executeConsumptionTriggers(mo_lot)
 
-        # updating qty_producing by _on_change_producing() or action_generate_serial()
+        # updating qty_producing by _on_change_producing()
         # doesn't mark moves as picked but only qty_done to match the qty_consumed
-        should_be_picked_moves = mo_serial[2].move_raw_ids | mo_none[1].move_raw_ids | mo_lot[1].move_raw_ids
+        should_be_picked_moves = mo_serial[1].move_raw_ids | mo_none[1].move_raw_ids | mo_lot[1].move_raw_ids
         should_not_be_picked_moves = mo_all.move_raw_ids - should_be_picked_moves
 
         for move in should_be_picked_moves:
@@ -340,7 +339,6 @@ class TestConsumeComponent(TestConsumeComponentCommon):
         testUnit(self.mo_none_tmpl)
         testUnit(self.mo_lot_tmpl)
         testUnit(self.mo_serial_tmpl, 1)
-        testUnit(self.mo_serial_tmpl, 2)
 
     def test_tracked_production_2_steps_manufacturing(self):
         """
@@ -378,10 +376,11 @@ class TestConsumeComponent(TestConsumeComponentCommon):
             {'quantity': 1.0, 'picked': False, 'lot_ids': lot_2.ids},
         ])
         mo.action_generate_serial()
+        self.assertEqual(mo.qty_producing, 0)
         self.assertRecordValues(mo.move_raw_ids, [
-            {'should_consume_qty': 3.0, 'quantity': 3.0, 'picked': False, 'lot_ids': []},
-            {'should_consume_qty': 2.0, 'quantity': 0.0, 'picked': False, 'lot_ids': []},
-            {'should_consume_qty': 1.0, 'quantity': 0.0, 'picked': False, 'lot_ids': []},
+            {'should_consume_qty': 0.0, 'quantity': 0.0, 'picked': False, 'lot_ids': []},
+            {'should_consume_qty': 0.0, 'quantity': 0.0, 'picked': False, 'lot_ids': []},
+            {'should_consume_qty': 0.0, 'quantity': 0.0, 'picked': False, 'lot_ids': []},
         ])
         self.assertTrue(mo.lot_producing_ids)
         mo.picking_ids.button_validate()
