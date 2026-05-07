@@ -30,7 +30,7 @@ class PaymentProvider(models.Model):
 
     @api.model
     def _get_compatible_providers(
-        self, company_id, partner_id, amount, sale_order_id=None, report=None, **kwargs
+        self, company_id, partner_id, amount, *args, sale_order_id=None, report=None, **kwargs
     ):
         """Override of payment to exclude COD providers if the delivery method doesn't match, or if
         the amount is not greater than or equal to the order remaining balance.
@@ -44,7 +44,13 @@ class PaymentProvider(models.Model):
         :rtype: payment.provider
         """
         compatible_providers = super()._get_compatible_providers(
-            company_id, partner_id, amount, sale_order_id=sale_order_id, report=report, **kwargs
+            company_id,
+            partner_id,
+            amount,
+            *args,
+            sale_order_id=sale_order_id,
+            report=report,
+            **kwargs,
         )
 
         reason = None

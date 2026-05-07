@@ -339,7 +339,6 @@ class SaleOrder(models.Model):
     amount_total = fields.Monetary(
         string="Total", store=True, compute="_compute_amounts", tracking=4
     )
-    amount_remaining = fields.Monetary(compute="_compute_amount_remaining")
     amount_to_invoice = fields.Monetary(
         string="Un-invoiced Balance", compute="_compute_amount_to_invoice"
     )
@@ -397,6 +396,7 @@ class SaleOrder(models.Model):
         compute="_compute_amount_paid",
         compute_sudo=True,
     )
+    amount_remaining = fields.Monetary(compute="_compute_amount_remaining", compute_sudo=True)
 
     # UTMs - enforcing the fact that we want to 'set null' when relation is unlinked
     campaign_id = fields.Many2one(ondelete="set null")
@@ -722,8 +722,8 @@ class SaleOrder(models.Model):
             # Posted downpayments.
             downpayment_amount = sum(downpayment_lines.mapped("amount_invoiced"))
             reconciled_amount = sum(downpayment_txs.mapped("amount"))
-            # Even if we only sum downpayment related transactions, they might pay for more than
-            # just the downpayments. Clip at zero.
+            # Even if we only sum downpayment related transactions, the transaction could be paying
+            # more than just the downpayments. Clip at zero.
             unreconciled_downpayment_amount = max(downpayment_amount - reconciled_amount, 0)
 
             order.amount_remaining = max(
