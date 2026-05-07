@@ -13,7 +13,7 @@ _lt = LazyTranslate(__name__)
 _logger = logging.getLogger(__name__)
 
 
-class PaymentPostProcessing(http.Controller):
+class PaymentPostProcessing(http.Controller):  # TODO ANV rename to PaymentStatus, JS too
     """Controller for the payment status page.
 
     It keeps track of the transaction being monitored via the user's session and exposes routes to
@@ -42,7 +42,7 @@ class PaymentPostProcessing(http.Controller):
         monitored_tx = self._get_monitored_transaction()
         # The session might have expired, or the transaction never existed.
         if monitored_tx:
-            notification_access_token = payment_utils.generate_access_token([monitored_tx.id])
+            notification_access_token = payment_utils.generate_access_token(monitored_tx.id)
             notification_channel = (
                 f"payment_transaction_channel:{monitored_tx.id},{notification_access_token}"
             )
@@ -76,15 +76,10 @@ class PaymentPostProcessing(http.Controller):
         :return: The post-processing values of the transaction.
         :rtype: dict
         """
-        # We only call the payment post-processing on existing transactions.
         monitored_tx = self._get_monitored_transaction()
-
-        # Post-process the transaction before redirecting the user to the landing route and its
-        # document.
-        _logger.info("Post-processing tx with id %s.", monitored_tx.id)
         if monitored_tx and not monitored_tx.is_post_processed:
+            post_processing_cron = request.env.ref("payment.cron_post_process_payment_tx")
             try:
-                post_processing_cron = request.env.ref("payment.cron_post_process_payment_tx")
                 post_processing_cron.lock_for_update(allow_referencing=True)
             except LockError:  # The cron is already running.
                 # Schedule it to run ASAP in case it missed the current tx.
