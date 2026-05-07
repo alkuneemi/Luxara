@@ -27,6 +27,7 @@
                         <field name="parent_id" class="oe_inline"/>
                         <field name="company_id" groups="base.group_multi_company" class="oe_inline"/>
                     </group>
+                    <notebook/>
                 </sheet>
                 <chatter/>
             </form>
