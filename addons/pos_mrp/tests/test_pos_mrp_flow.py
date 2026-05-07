@@ -443,3 +443,102 @@ class TestPosMrpTemp(CommonPosMrpTest):
 
         self.assertEqual(expense_line.debit, 1000.0)
         self.assertEqual(interim_line.credit, 1000.0)
+
+    def test_mo_custom_description_ship_later(self):
+        """
+        Tests that a custom attribute is shown on the MO when being
+        processed through the PoS, in the custom description field
+        """
+        attribute_custom, attribute_never, attribute_always = self.env['product.attribute'].create([
+            {
+                'name': 'Custom',
+                'display_type': 'radio',
+                'create_variant': 'no_variant',
+            },
+            {
+                'name': 'Never',
+                'display_type': 'radio',
+                'create_variant': 'no_variant',
+            },
+            {
+                'name': 'Always',
+                'display_type': 'radio',
+                'create_variant': 'always',
+            },
+
+        ])
+        value_custom, value_never, value_always = self.env['product.attribute.value'].create([
+            {
+                'name': 'Color',
+                'attribute_id': attribute_custom.id,
+                'is_custom': True,
+            },
+            {
+                'name': 'Taste',
+                'attribute_id': attribute_never.id,
+            },
+            {
+                'name': 'Shape',
+                'attribute_id': attribute_always.id,
+            }
+        ])
+        self.test_product_1 = self.env['product.template'].create({
+            'name': 'Custom Product',
+            'available_in_pos': True,
+            'list_price': 10.0,
+            'attribute_line_ids': [
+                Command.create({
+                    'attribute_id': attribute_custom.id,
+                    'value_ids': [Command.set([value_custom.id])],
+                }),
+                Command.create({
+                    'attribute_id': attribute_never.id,
+                    'value_ids': [Command.set([value_never.id])],
+                }),
+                Command.create({
+                    'attribute_id': attribute_always.id,
+                    'value_ids': [Command.set([value_always.id])],
+                }),
+            ],
+        })
+        product_variant = self.test_product_1.product_variant_id
+        ptavs = self.test_product_1.attribute_line_ids.product_template_value_ids
+        ptav_custom = ptavs.filtered(lambda p: p.attribute_id == attribute_custom)
+        ptav_never = ptavs.filtered(lambda p: p.attribute_id == attribute_never)
+        ptav_always = ptavs.filtered(lambda p: p.attribute_id == attribute_always)
+        self.pos_config_usd.open_ui()
+
+        order = {
+            'company_id': self.env.company.id,
+            'session_id': self.pos_config_usd.current_session_id.id,
+            'partner_id': self.partner.id,
+            'lines': [Command.create({
+                'product_id': product_variant.id,
+                'price_unit': 10.0,
+                'qty': 1.0,
+                'price_subtotal': 10.0,
+                'price_subtotal_incl': 10.0,
+                'attribute_value_ids': [Command.set([
+                    ptav_custom.id, 
+                    ptav_never.id, 
+                    ptav_always.id
+                ])],
+                'custom_attribute_value_ids': [Command.create({
+                    'custom_product_template_attribute_value_id': ptav_custom.id,
+                    'custom_value': 'White',
+                })],
+            })],
+            'payment_ids': [(0, 0, {
+                'amount': 10,
+                'name': fields.Datetime.now(),
+                'payment_method_id': self.cash_payment_method.id
+            })],
+
+            'amount_total': 10.0,
+            'amount_tax': 0.0,
+            'amount_paid': 10.0,
+            'amount_return': 0.0,
+        }
+
+        self.env["pos.order"].sync_from_ui([order])
+        self.assertEqual(order.picking_ids.move_ids.description_picking, 'Custom: Color: White')
