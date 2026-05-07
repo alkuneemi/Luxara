@@ -23,6 +23,7 @@ import { initLNA } from "@point_of_sale/app/utils/init_lna";
 import { GeneratePrinterData } from "@point_of_sale/app/utils/printer/generate_printer_data";
 import { SnoozedProductTracker } from "@point_of_sale/app/models/utils/snooze_tracker";
 import { session } from "@web/session";
+import { TerminalError } from "@point_of_sale/app/utils/payment/payment_interface";
 
 const { DateTime } = luxon;
 
@@ -921,6 +922,8 @@ export class SelfOrder extends Reactive {
                 access_token: this.access_token,
             });
             return;
+        } else if (error instanceof TerminalError) {
+            message = _t("Payment terminal error: ") + error.message;
         }
 
         this.notification.add(message, {
