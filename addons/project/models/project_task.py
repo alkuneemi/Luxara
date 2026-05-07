@@ -1739,9 +1739,6 @@ class ProjectTask(models.Model):
 
         return super()._message_post_after_hook(message, msg_vals)
 
-    def _get_share_message_types(self):
-        return ["auto_comment", "comment", "email", "email_outgoing"]
-
     def _get_projects_to_make_billable_domain(self, additional_domain=None):
         return Domain('partner_id', '!=', False) & Domain(additional_domain or Domain.TRUE)
 

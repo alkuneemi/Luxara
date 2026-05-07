@@ -25,6 +25,7 @@ class MailMessageSubtype(models.Model):
              'subtype. If void, the name will be added instead.')
     internal = fields.Boolean(
         'Internal Only',
+        default=True,
         help='Messages with internal subtypes will be visible only by employees, aka members of base_user group')
     parent_id = fields.Many2one(
         'mail.message.subtype', string='Parent', ondelete='set null',

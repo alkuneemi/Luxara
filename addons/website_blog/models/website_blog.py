@@ -329,6 +329,3 @@ class BlogPost(models.Model):
             data['tag_ids'] = post.tag_ids.read(['name'])
             data['image_url'] = post._get_image_url()
         return results_data
-
-    def _get_share_message_types(self):
-        return ["comment"]

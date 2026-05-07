@@ -4,6 +4,7 @@
     <!-- Discussion subtype for messaging / Chatter -->
     <record id="mt_comment" model="mail.message.subtype">
         <field name="name">Messages</field>
+        <field name="internal" eval="False"/>
         <field name="sequence" eval="0"/>
         <field name="track_recipients" eval="True"/>
     </record>

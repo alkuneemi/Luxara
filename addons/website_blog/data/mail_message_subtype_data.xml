@@ -6,6 +6,7 @@
         <field name="name">Published Post</field>
         <field name="res_model">blog.blog</field>
         <field name="default" eval="True"/>
+        <field name="internal" eval="False"/>
         <field name="description">Published Post</field>
     </record>
 
