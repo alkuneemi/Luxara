@@ -1472,3 +1472,17 @@ class TestAccountBankStatementLine(AccountTestInvoicingCommon):
 
         transaction = self.create_bank_transaction(1, '2020-01-10', journal=self.bank_journal_1)
         assert transaction.date == transaction.move_id.date == fields.Date.from_string('2020-01-10')
+
+    def test_compute_journal_id_with_multiple_line_journals(self):
+        self.statement.write({
+            'line_ids': [
+                Command.create({
+                    'date': '2019-01-02',
+                    'payment_ref': 'line_2',
+                    'partner_id': self.partner_a.id,
+                    'amount': 500.0,
+                    'journal_id': self.bank_journal_2.id,
+                }),
+            ]
+        })
+        self.assertTrue(self.statement.journal_id, "Statement should have a journal assigned")
