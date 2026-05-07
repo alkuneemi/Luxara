@@ -77,6 +77,10 @@ class SmsComposer(models.TransientModel):
     sms_max_char = fields.Integer(compute='_compute_sms_stats')
     sms_encoding = fields.Char(compute='_compute_sms_stats')
     scheduled_date = fields.Char('Scheduled Date', compute='_compute_scheduled_date', readonly=False, store=True, compute_sudo=False)
+    can_edit_body = fields.Boolean(default=True)
+    render_model = fields.Char(compute='_compute_render_model', string='Rendering Model')
+    model = fields.Char(related='res_model', string='Technical Model')
+    template_name = fields.Char(string='Template Name')
 
     @api.depends('res_ids_count')
     @api.depends_context('sms_composition_mode')
@@ -202,6 +206,24 @@ class SmsComposer(models.TransientModel):
             else:
                 composer.scheduled_date = False
 
+    @api.depends('res_model')
+    def _compute_render_model(self):
+        for composer in self:
+            composer.render_model = composer.res_model
+
+    def open_template_creation_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'view_id': self.env.ref('sms.sms_composer_view_form_template_save').id,
+            'name': _('Create an SMS Template'),
+            'res_model': 'sms.composer',
+            'context': {'dialog_size': 'medium'},
+            'target': 'new',
+            'res_id': self.id,
+        }
+
     # ------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------
@@ -222,6 +244,31 @@ class SmsComposer(models.TransientModel):
 
     def action_schedule_message(self):
         self._action_schedule_message()
+        return {'type': 'ir.actions.act_window_close'}
+
+    def action_sms_template_dropdown(self):
+        return {
+            'name': _('Select a Template'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'sms.template',
+            'view_mode': 'list',
+            'views': [[False, 'list']],
+            'target': 'new',
+            'domain': [('model_id.model', '=', self.res_model)],
+            'context': {'sms_composer_id': self.id},
+        }
+
+    def action_create_sms_template(self):
+        self.ensure_one()
+
+        ir_model_record = self.env['ir.model'].search([('model', '=', self.res_model)], limit=1)
+        if not ir_model_record:
+            raise UserError(_("Impossible to determine the model for the template."))
+        self.env['sms.template'].create({
+            'name': self.template_name,
+            'body': self.body,
+            'model_id': ir_model_record.id,
+        })
         return {'type': 'ir.actions.act_window_close'}
 
     def _prepare_sms_scheduled_values(self, res_id):
