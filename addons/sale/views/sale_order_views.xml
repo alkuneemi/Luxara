@@ -477,10 +477,12 @@
                         <field name="transaction_count" widget="statinfo" string="Payments"/>
                     </button>
                 </div>
+                <div name="custom_badge_container" class="position-absolute end-0 d-flex align-items-center gap-2 me-3">
                 <div class="badge rounded-pill text-bg-secondary float-end fs-6 border-0"
                     invisible="not locked">
                     <i class="fa fa-lock"/>
                     Locked
+                </div>
                 </div>
                 <div class="oe_title">
                     <h1 class="o_outlined">
