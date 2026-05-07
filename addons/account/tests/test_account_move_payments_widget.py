@@ -204,3 +204,59 @@ class TestAccountMovePaymentsWidget(AccountTestInvoicingCommon):
                 expected_amounts[ln.matched_credit_ids.exchange_move_id.id] = 50.0
 
         self.assert_invoice_outstanding_reconciled_widget(out_invoice, expected_amounts)
+
+    def test_outstanding_payments_branch_and_companies(self):
+        ''' Test the outstanding payments widget on invoices of a branch
+        of the company having oustanding payments.
+        '''
+
+        branch = self.env['res.company'].create([{
+            'name': "Branch A",
+            'parent_id': self.env.company.id,
+        }])
+        self.cr.precommit.run()  # load the CoA
+
+        other_company_data = self.setup_other_company()
+        other_company = other_company_data['company']
+
+        self.env['account.journal'].with_company(company=other_company).create([
+            {'name': 'sale', 'type': 'sale', 'code': 'SALE'},
+            {'name': 'purchase', 'type': 'purchase', 'code': 'BUY'},
+        ])
+
+        # Customer invoice of 2500.0 in curr_1.
+        out_invoices = self.env['account.move'].create([{
+            'move_type': 'out_invoice',
+            'date': '2017-01-01',
+            'invoice_date': '2017-01-01',
+            'partner_id': self.partner_a.id,
+            'currency_id': self.curr_1.id,
+            'company_id': company.id,
+            'invoice_line_ids': [(0, 0, {'name': '/', 'price_unit': 2500.0})],
+        } for company in [branch, other_company]])
+        out_invoices.action_post()
+
+        # Vendor bill of 2500.0 in curr_1.
+        in_invoices = self.env['account.move'].create([{
+            'move_type': 'in_invoice',
+            'date': '2017-01-01',
+            'invoice_date': '2017-01-01',
+            'partner_id': self.partner_a.id,
+            'currency_id': self.curr_1.id,
+            'company_id': company.id,
+            'invoice_line_ids': [(0, 0, {'name': '/', 'price_unit': 2500.0})],
+        } for company in [branch, other_company]])
+        in_invoices.action_post()
+
+        expected_amounts = {
+            self.payment_2016_curr_1.id: 500.0,
+            self.payment_2016_curr_2.id: 500.0,
+            self.payment_2017_curr_2.id: 500.0,
+            self.payment_2016_curr_3.id: 500.0,
+            self.payment_2017_curr_3.id: 500.0,
+        }
+
+        self.assert_invoice_outstanding_to_reconcile_widget(out_invoices[0], expected_amounts)
+        self.assert_invoice_outstanding_to_reconcile_widget(in_invoices[0], expected_amounts)
+        self.assert_invoice_outstanding_to_reconcile_widget(out_invoices[1], {})
+        self.assert_invoice_outstanding_to_reconcile_widget(in_invoices[1], {})
