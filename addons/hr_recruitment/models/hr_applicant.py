@@ -89,7 +89,7 @@ class HrApplicant(models.Model):
     create_date = fields.Datetime("Applied on", readonly=True)
     stage_id = fields.Many2one('hr.recruitment.stage', 'Stage', ondelete='restrict', tracking=True,
                                compute='_compute_stage', store=True, readonly=False,
-                               domain="['|', ('job_ids', '=', False), ('job_ids', '=', job_id)]",
+                               domain="['&', '|', ('job_ids', '=', False), ('job_ids', '=', job_id), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
                                copy=False, index=True,
                                group_expand='_read_group_stage_ids')
     last_stage_id = fields.Many2one('hr.recruitment.stage', "Last Stage",
@@ -547,6 +547,11 @@ class HrApplicant(models.Model):
             search_domain = ['|', ('job_ids', '=', job_id)] + search_domain
         if stages:
             search_domain = ['|', ('id', 'in', stages.ids)] + search_domain
+
+        search_domain = Domain.AND([
+            search_domain,
+            [('company_id', 'in', self.env.companies.ids + [False])]
+        ])
 
         stage_ids = stages.sudo()._search(search_domain, order=stages._order)
         return stages.browse(stage_ids)
