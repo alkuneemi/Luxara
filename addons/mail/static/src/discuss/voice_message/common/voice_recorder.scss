@@ -1,19 +1,84 @@
-.o-mail-VoiceRecorder.o-recording {
-    background-color: $gray-200;
-}
+.o-mail-VoiceRecorder {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    user-select: none;
+    overflow: visible;
+    flex-shrink: 0;
+    height: 28px; // Match standard action button height to prevent UI jumping
 
-.o-mail-VoiceRecorder-dot {
-    animation: flash 2s ease infinite;
-    animation-iteration-count: 2;
-}
-
-.o-mail-VoiceRecorder-elapsed {
-    width: max-content;
-    &.o-active {
-        transition: max-width 2s ease-in-out, width 1s ease-in-out;
-        max-width: 500px;
+    .o-mail-VoiceRecorder-elapsed {
+        width: max-content;
+        font-variant-numeric: tabular-nums;
+        color: $text-muted;
+        margin-right: map-get($spacers, 2);
     }
-    &:not(.o-active) {
-        transition: max-width 1s ease-in-out;
+
+    .o-mail-VoiceRecorder-cancel, .o-mail-VoiceRecorder-confirm {
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .fa {
+            font-size: 1rem;
+        }
+    }
+
+    // High specificity selector to win against .o-mail-Composer:not(.o-focused)
+    & .btn.btn-link.o-mail-VoiceRecorder-confirm {
+        color: $primary;
+        opacity: 1;
+
+        &:hover, &:focus, &:active {
+            opacity: 1;
+            text-decoration: none;
+
+            .o-mail-VoiceRecorder-visualizer {
+                background-color: darken($primary, 8%);
+                transform: scale(1.1);
+            }
+        }
+
+        .o-mail-VoiceRecorder-visualizer {
+            background-color: $primary;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .o-mail-VoiceRecorder-bar {
+            width: 2px;
+            height: 75%;
+            flex-shrink: 0;
+            align-self: center;
+            background-color: white;
+            border-radius: 4px;
+            transform-origin: center;
+            will-change: transform;
+            transition: transform 0.05s linear;
+        }
+    }
+
+    & .btn.btn-link.o-mail-VoiceRecorder-cancel {
+        color: $danger;
+        border: none;
+        opacity: 0.8;
+        transition: opacity 0.2s, color 0.2s;
+        margin-inline-start: auto;
+
+        &:hover, &:focus, &:active {
+            color: darken($danger, 15%);
+            opacity: 1;
+            text-decoration: none;
+        }
     }
 }
