@@ -1726,7 +1726,8 @@ test("properties: default value", async () => {
     await click(".o_field_property_definition_value input");
     await edit("First Default Value", { confirm: "Enter" });
     await animationFrame();
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
 
     expect(".o_field_properties .o_property_field:last .o_property_field_value input").toHaveValue(
         "First Default Value"
@@ -1795,7 +1796,8 @@ test("properties: default value date", async () => {
     expect(".o_date_picker").toHaveCount(1);
     await click(getPickerCell("3"));
     await animationFrame();
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
     expect(".o_datetime_input").toHaveValue("01/03/2022", {
         message: "The default date value should have been propagated",
     });
@@ -2847,7 +2849,8 @@ test("properties: signature", async () => {
         "Field Type",
     ]);
 
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
     expect(".o_field_property_definition").toHaveCount(0);
     expect(".o_signature").toHaveCount(1);
     expect(".o_property_field:eq(0) .o_property_field_value_suffix").toHaveCount(0, {
@@ -2936,13 +2939,15 @@ test("properties definition: test display and edit", async () => {
     await click(".o_field_property_selection .fa-plus");
     await animationFrame();
     await edit("New option");
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
     await click(".o_property_field:nth-child(2) .o_field_property_open_popover");
     await animationFrame();
     expect(".o_field_property_selection_option").toHaveCount(4, {
         message: "The added option should now be displayed.",
     });
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
 
     // Add a new definition
     await click(".o_field_property_add button");
@@ -2956,7 +2961,8 @@ test("properties definition: test display and edit", async () => {
     expect(".o_field_property_definition_type input").toHaveValue("Text", {
         message: "Default type must be text",
     });
-    await closePopover();
+    await click(".o_property_field_popover .o_field_property_definition_save");
+    await animationFrame();
     expect(".o_property_field_value").toHaveCount(5, {
         message: "5 field value should be present : 1 for each definition.",
     });
@@ -3023,9 +3029,7 @@ test("properties: no parent document set", async () => {
     patchWithCleanup(formView.env.services.notification, {
         add: (message, options) => {
             expect.step("notification");
-            expect(message).toBe(
-                "Oops! A Company is needed to add property fields."
-            );
+            expect(message).toBe("Oops! A Company is needed to add property fields.");
             expect(options.type).toBe("warning");
         },
     });

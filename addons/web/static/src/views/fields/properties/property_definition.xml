@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="web.PropertyDefinition">
+        <!-- prevent editing or saving, fields outside while popover open -->
+        <div class="w-100 h-100 position-fixed" style="top: 0; left: 0; z-index: -1;"></div>
         <div class="o_field_property_definition o_field_widget o_form_view d-block" t-custom-ref="propertyDefinition">
-            <div t-if="this.env.isSmall" class="d-flex justify-content-between px-3 border-bottom">
-                <button class="btn oi oi-arrow-left my-2" t-on-click="() => this.props.close()"/>
-                <button
-                    t-if="!this.props.readonly and this.props.canChangeDefinition"
-                    class="btn pe-0 text-danger float-end o_field_property_definition_delete"
-                    title="Remove Property"
-                    t-on-click="this.props.onDelete">
-                    <i class="fa fa-trash"/> Delete
-                </button>
+             <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <div class="fw-bold">
+                    <t t-if="props.isNewlyCreated">
+                        Add Property Field
+                    </t>
+                    <t t-else="">
+                        Update Property Field
+                    </t>
+                </div>
+                <button type="button"
+                    class="btn btn-close"
+                    t-on-click="this.onPropertyDefinitionDiscard"
+                    aria-label="Close"
+                    data-tooltip="Discard Changes"
+                />
             </div>
             <div class="o_modal_container p-3 o_inner_group grid">
                 <div class="d-contents mb-3 mb-sm-0">
@@ -188,9 +196,16 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex px-3 pb-1 mt-auto" t-if="!this.env.isSmall">
-                <button
-                    t-if="!this.props.readonly and this.props.canChangeDefinition"
+            <div class="d-flex px-3 pb-1 mt-auto">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary o_field_property_definition_save" t-on-click="this.onPropertyDefinitionSave">
+                        Add
+                    </button>
+                    <button class="btn btn-secondary" t-on-click="this.onPropertyDefinitionDiscard">
+                        Discard
+                    </button>
+                </div>
+                <button t-if="!this.props.readonly and this.props.canChangeDefinition and !this.props.isNewlyCreated"
                     class="ms-auto btn btn-danger o_field_property_definition_delete"
                     title="Remove Property"
                     t-on-click="this.props.onDelete">
