@@ -81,10 +81,11 @@
                     <span t-out="partner.grade_id.name"/>
                     <t t-call="website.publish_management" object="partner.grade_id" action="'partnership.res_partner_grade_action'" publish_edit="True"/>
                 </h5>
+                <t t-set="partner_card_shadow" t-value="False"/>
                 <t t-set="last_grade" t-value="partner.grade_id.id"/>
             </t>
             <div class="col-md-4 col-xl-3 col-12 mb-4">
-                <div class="card h-100 text-decoration-none">
+                <div t-attf-class="o_wpartners_card card h-100 text-decoration-none #{partner_card_shadow and 'shadow-lg'}">
                     <a id="partner_link_card" class="text-decoration-none" aria-label="Go to partner">
                         <div t-field="partner.avatar_1920"
                             class="card-img-top border-bottom"
@@ -112,23 +113,8 @@
     </div>
 </template>
 
-<template id="partner_page" name="Partner Page">
-    <t t-call="website.layout">
-        <div id="wrap">
-            <div class="oe_structure oe_empty" id="oe_structure_website_partnership_partner_1" data-editor-message.translate="Drag blocks here to add them on all partners"/>
-            <div class="container">
-                <div class="row">
-                    <t t-call="website_partnership.partner_detail"/>
-                </div>
-            </div>
-            <div class="oe_structure oe_empty" id="oe_structure_website_partnership_partner_2" data-editor-message.translate="Drag blocks here to add them on all partners"/>
-        </div>
-    </t>
-</template>
-
 <template id="partner_detail" inherit_id="website_partner.partner_detail" name="Partner Details">
     <xpath expr="//div" position="before">
-        <t t-set="contact_details" t-value="False"/>
         <div t-if="not edit_page" class="mt-4 mb-3">
             <a id="link_back_to_partners" t-attf-href="/partners#{ current_grade and '/grade/%s' % slug(current_grade) or '' }" aria-label="Back to partners list"><i class="oi oi-chevron-left me-2"/>Back</a>
         </div>
@@ -141,7 +127,7 @@
     </xpath>
 </template>
 
-<template id="search_setting" inherit_id="website_partnership.index" name="Search">
+<template id="search_setting" inherit_id="website_partnership.index" name="Search" priority="10">
     <xpath expr="//section[@id='page_top_section']" position="inside">
         <div class="o_wcrm_search d-flex w-100 w-lg-25">
             <form class="flex-grow-1" action="" method="get">
@@ -194,12 +180,6 @@
     </xpath>
 </template>
 
-<template id="contact_details" inherit_id="website_partnership.partner_detail" name="Contact Details">
-    <xpath expr="//t[@t-set='contact_details']" position="replace">
-        <t t-set="contact_details" t-value="True"/>
-    </xpath>
-</template>
-
 <template id="companies_only_setting" inherit_id="website_partnership.index" name="Companies only" active="False">
     <xpath expr="//t[@id='partners_cards']" position="before">
         <t t-set="partners" t-value="partners.filtered('is_company')"/>
@@ -227,6 +207,12 @@
 <template id="image_four_five_partner_page" inherit_id="website_partnership.index" name="Partner page">
     <xpath expr="//div[hasclass('card-img-top')]" position="attributes">
         <attribute name="t-options">{"widget": "image", "qweb_img_responsive": False, "class": "img img-fluid h-100 w-100 mw-100", "style": "max-height: 375px; min-height: 375px; object-fit: cover"}</attribute>
+    </xpath>
+</template>
+<template name="Partner Card Shadow" id="website_partnership.partners_card_shadow"
+    inherit_id="website_partnership.index">
+    <xpath expr="//t[@t-set='partner_card_shadow']" position="attributes">
+        <attribute name="t-value">True</attribute>
     </xpath>
 </template>
 
