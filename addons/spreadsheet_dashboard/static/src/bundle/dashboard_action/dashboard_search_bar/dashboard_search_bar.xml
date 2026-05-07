@@ -21,11 +21,11 @@
                             <i class="oi oi-search me-2"></i>
                         </button>
                         <div
-                            class="o_searchview_input_container d-flex flex-grow-1 flex-wrap gap-1 mw-100">
+                            class="o_searchview_input_container d-flex flex-grow-1 flex-wrap gap-1 mw-100" t-on-click="this.onInputContainerClick">
                             <t t-foreach="this.facets" t-as="facet" t-key="facet.id">
                                 <DashboardFacet facet="facet"
                                     clearFilter="() => this.clearFilter(facet.id)"
-                                    onClick.bind="this.openFilterValueDropdown" />
+                                    onClick.bind="this.onSearchClick" />
                             </t>
                             <input type="text"
                                 class="o_searchview_input o_input d-print-none flex-grow-1 w-auto border-0"
