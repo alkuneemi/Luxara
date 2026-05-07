@@ -70,6 +70,9 @@ export class BuilderList extends Component {
         isEditable: { type: Boolean, optional: true },
         limit: { type: Number, optional: true },
         disableLastCheckedCheckbox: { type: Boolean, optional: true },
+        fullWidthDropdown: { type: Boolean, optional: true },
+        alternativeChoiceItemTemplate: { type: String, optional: true },
+        emptyListMessage: { type: String, optional: true },
     };
     static defaultProps = {
         addItemTitle: _t("Add"),

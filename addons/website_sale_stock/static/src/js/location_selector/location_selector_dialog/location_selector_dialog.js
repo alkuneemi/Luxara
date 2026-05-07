@@ -5,8 +5,8 @@ import { Dialog } from '@web/core/dialog/dialog';
 import { _t } from '@web/core/l10n/translation';
 import { rpc } from '@web/core/network/rpc';
 import { useDebounced } from '@web/core/utils/timing';
-import { LocationList } from '@website_sale_stock/js/location_selector/location_list/location_list';
-import { MapContainer } from '@website_sale_stock/js/location_selector/map_container/map_container';
+import { LocationList } from '@website/components/location_selector/location_list/location_list';
+import { MapContainer } from '@website/components/location_selector/map_container/map_container';
 
 export class LocationSelectorDialog extends Component {
     static components = { Dialog, LocationList, MapContainer };
@@ -19,9 +19,22 @@ export class LocationSelectorDialog extends Component {
         selectedLocationId: { type: String, optional: true },
         save: Function,
         close: Function, // This is the close from the env of the Dialog Component
+
+        // The following props are never set from `website_sale_stock`. They
+        // always keep their default values and are required to adapt the
+        // `LocationSelector` (`website`) to `website_sale_stock` module.
+        showDetailsTooltip: { type: Boolean, optional: true },
+        showDetailsTextArea: { type: Boolean, optional: true },
+        showSearchbar: { type: Boolean, optional: true },
+        showSidebar: { type: Boolean, optional: true },
     };
+
     static defaultProps = {
         selectedLocationId: false,
+        showDetailsTextArea: true,
+        showDetailsTooltip: false,
+        showSearchbar: true,
+        showSidebar: true,
     };
 
     setup() {
@@ -37,7 +50,7 @@ export class LocationSelectorDialog extends Component {
 
         this.getLocationUrl = '/website_sale_stock/get_pickup_locations';
 
-        this.debouncedOnResize = useDebounced(this.updateSize, 300);
+        this.debouncedOnResize = useDebounced(() => this.updateSize(), 300);
         this.debouncedSearchButton = useDebounced(() => {
             this.state.locations = [];
             this._loadLocations();
@@ -52,12 +65,12 @@ export class LocationSelectorDialog extends Component {
         // Fetch new locations when the zip code is updated.
         useLayoutEffect(
             () => {
-                this._loadLocations()
+                this._loadLocations();
                 return () => {
                     this.state.locations = []
                 };
             },
-            () => [this.state.zipCode]
+            () => [this.state.zipCode],
         );
     }
 
