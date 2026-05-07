@@ -86,6 +86,21 @@ class PaymentProvider(models.Model):
                     _("Only the currency %s is available for this account.", account_currency)
                 )
 
+    @api.constrains("is_published", "mercado_pago_access_token")
+    def _check_mercado_pago_credentials_are_set_before_publishing(self):
+        """Check that the Mercado Pago credentials are valid when the provider is enabled.
+
+        :raise ValidationError: If the Mercado Pago credentials are not set.
+        """
+        for provider in self.filtered(lambda p: p.code == "mercado_pago" and p.is_published):
+            if not provider.mercado_pago_access_token:
+                raise ValidationError(
+                    _(
+                        'Mercado Pago credentials are missing. Click the "Connect" button to set'
+                        " up your account."
+                    )
+                )
+
     @api.constrains("allow_tokenization", "mercado_pago_public_key")
     def _check_mercado_pago_credentials_are_set_before_allowing_tokenization(self):
         """Check that the OAuth credentials are valid when the tokenization is enabled.

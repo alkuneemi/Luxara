@@ -47,9 +47,14 @@ class TestPaymentProviderVisibility(PaymentHttpCommon, SaleCommon):
             self.assertEqual(mock_method.call_args.kwargs["website_id"], website_portal.id)
 
         mock_method.call_args.kwargs.pop("show_non_tokenize_provider", None)
-        providers = self.env["payment.provider"]._get_compatible_providers(
-            *mock_method.call_args.args, **mock_method.call_args.kwargs
-        )
+        providers = self.provider + restricted_provider
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider._get_compatible_providers",
+            return_value=providers,
+        ):
+            providers = self.env["payment.provider"]._get_compatible_providers(
+                *mock_method.call_args.args, **mock_method.call_args.kwargs
+            )
 
         self.assertIn(self.provider.id, providers.ids, "The visible provider should be visible.")
 

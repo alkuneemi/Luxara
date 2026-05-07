@@ -24,11 +24,7 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
         # Pay for this invoice (no impact even if amounts do not match)
         route_values = self._prepare_pay_values()
         route_values['invoice_id'] = self.invoice.id
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            tx_context = self._get_portal_pay_context(**route_values)
+        tx_context = self._get_portal_pay_context(**route_values)
 
         # /invoice/transaction/<id>
         tx_route_values = {
@@ -119,11 +115,7 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
 
         route_values = self._prepare_pay_values()
         route_values['invoice_id'] = invoice.id
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            tx_context = self._get_portal_pay_context(**route_values)
+        tx_context = self._get_portal_pay_context(**route_values)
 
         tx_route_values = {
             'provider_id': self.provider.id,

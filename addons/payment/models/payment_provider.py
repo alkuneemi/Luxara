@@ -226,16 +226,16 @@ class PaymentProvider(models.Model):
 
     @api.depends("payment_transaction_ids")
     def _compute_transaction_count(self):
-        for provider in self.filtered(lambda provider: provider.module_state == "installed"):
+        for provider in self:
             provider.transaction_count = provider.env["payment.transaction"].search_count([
-                ("provider_id", "=", provider.id)
+                ("provider_id", "=", self._origin.id)
             ])
 
     @api.depends("payment_transaction_ids")
     def _compute_transaction_amount(self):
         # take currency into account
-        for provider in self.filtered(lambda provider: provider.module_state == "installed"):
-            domain = [("provider_id", "=", provider.id), ("state", "=", "done")]
+        for provider in self:
+            domain = [("provider_id", "=", self._origin.id), ("state", "=", "done")]
             provider.txs_amount = sum(
                 self.env["payment.transaction"].search(domain).mapped("amount")
             )

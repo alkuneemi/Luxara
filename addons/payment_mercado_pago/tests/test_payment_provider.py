@@ -13,14 +13,14 @@ class TestPaymentProvider(MercadoPagoCommon):
         self._assert_does_not_raise(ValidationError, self.provider.write({"is_test": False}))
 
     def test_prevent_publishing_if_credentials_are_not_set(self):
-        """Test that enabling a Mercado Pago provider without credentials raises a
+        """Test that publishing a Mercado Pago provider without credentials raises a
         ValidationError."""
         # Reset the state and credentials together to avoid triggering the constraint outside of the
         # 'assertRaises'.
         self.provider.module_state = "installed"
         self.provider.action_reset_credentials()
         with self.assertRaises(ValidationError):
-            self.provider.is_test = False
+            self.provider.is_published = True
 
     def test_incompatible_with_unsupported_currencies(self):
         """Test that Mercado Pago providers are filtered out from compatible providers when the

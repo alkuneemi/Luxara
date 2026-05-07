@@ -12,11 +12,11 @@ class TestPaymentProvider(RazorpayCommon):
         """Test that enabling a Razorpay provider with credentials succeeds."""
         self._assert_does_not_raise(ValidationError, self.provider.write({"is_test": False}))
 
-    def test_prevent_enabling_if_credentials_are_not_set(self):
+    def test_prevent_publishing_if_credentials_are_not_set(self):
         """Test that enabling a Razorpay provider without credentials raises a ValidationError."""
         self.provider.write({"razorpay_key_id": None, "razorpay_key_secret": None})
         with self.assertRaises(ValidationError):
-            self.provider.is_test = False
+            self.provider.is_published = True
 
     def test_incompatible_with_unsupported_currencies(self):
         """Test that Razorpay providers are filtered out from compatible providers when the
