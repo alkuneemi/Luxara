@@ -1074,6 +1074,8 @@ class ResPartner(models.Model):
         create_values = {self._rec_name: name or email_normalized}
         if email_normalized:  # keep default_email in context
             create_values['email'] = email_normalized
+        if not self.env.context.get('default_lang') and self.env.context.get('lang'):  # if no default_lang specified, use context lang instead
+            create_values['lang'] = self.env.context.get('lang')
         partner = self.create(create_values)
         return partner.id, partner.display_name
 
