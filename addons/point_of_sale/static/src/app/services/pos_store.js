@@ -770,11 +770,13 @@ export class PosStore extends WithLazyGetterTrap {
 
     get productViewMode() {
         const viewMode = this.productListView && this.ui.isSmall ? this.productListView : "grid";
-        if (viewMode === "grid") {
-            return "flex-column";
-        } else {
-            return "flex-row-reverse justify-content-between m-1";
-        }
+        const base =
+            viewMode === "grid" ? "flex-column" : "flex-row-reverse justify-content-between m-1";
+
+        const noImageClass =
+            !this.config.show_product_images && !this.ui.isSmall ? " no-image-aspect-ratio" : "";
+
+        return base + noImageClass;
     }
     async onProductInfoClick(productTemplate, productProduct = false) {
         const info = await this.getProductInfo(productTemplate, 1, 0, productProduct);

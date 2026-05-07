@@ -670,6 +670,13 @@ class PosConfig(models.Model):
         self.last_data_change = self.env.cr.now()
 
     def write(self, vals):
+        tip_product = self.env.ref(
+            'point_of_sale.product_product_tip',
+            raise_if_not_found=False,
+        )
+        if vals.get('iface_tipproduct') and not tip_product:
+            convert.convert_file(self._env_with_clean_context(), 'point_of_sale', 'data/point_of_sale_tips_data.xml', idref=None, mode='init', noupdate=True)
+
         if 'iface_tipproduct' in vals and not vals['iface_tipproduct']:
             vals['tip_product_id'] = False
             vals['set_tip_after_payment'] = False
