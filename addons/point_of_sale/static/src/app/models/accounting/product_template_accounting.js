@@ -7,10 +7,13 @@ import { formatCurrency } from "@web/core/currency";
 export class ProductTemplateAccounting extends Base {
     static pythonModel = "product.template";
 
+    get config() {
+        return this.models["pos.config"].get(odoo.pos_config_id);
+    }
+
     prepareProductBaseLineForTaxesComputationExtraValues(opts = {}) {
         const { price = false, pricelist = false, fiscalPosition = false, priceExtra = 0 } = opts;
         const isVariant = Boolean(this?.product_tmpl_id);
-        const config = this.models["pos.config"].getFirst();
         const productTemplate = isVariant ? this.product_tmpl_id : this;
         const baseP = productTemplate.getPrice(
             pricelist,
@@ -20,7 +23,7 @@ export class ProductTemplateAccounting extends Base {
             isVariant ? this : false
         );
         const priceUnit = price || price === 0 ? price : baseP;
-        const currency = config.currency_id;
+        const currency = this.config.currency_id;
 
         let taxes = this.taxes_id;
 
@@ -112,7 +115,7 @@ export class ProductTemplateAccounting extends Base {
             price = standardPrice;
         }
 
-        const posCurrency = this.models["pos.config"].getFirst().currency_id;
+        const posCurrency = this.config.currency_id;
         const pricelistCurrency = pricelist.currency_id;
         const needsCurrencyConversion =
             pricelistCurrency && posCurrency && pricelistCurrency.id !== posCurrency.id;
@@ -170,19 +173,17 @@ export class ProductTemplateAccounting extends Base {
     }
 
     getTaxDetails(opts = {}) {
-        const config = this.models["pos.config"].getFirst();
         const baseLine = this.getBaseLine(opts);
-        accountTaxHelpers.add_tax_details_in_base_line(baseLine, config.company_id);
-        accountTaxHelpers.round_base_lines_tax_details([baseLine], config.company_id);
+        accountTaxHelpers.add_tax_details_in_base_line(baseLine, this.config.company_id);
+        accountTaxHelpers.round_base_lines_tax_details([baseLine], this.config.company_id);
         return baseLine.tax_details;
     }
 
     get displayPriceUnit() {
-        const config = this.models["pos.config"].getFirst();
         const price =
-            config.iface_tax_included === "total"
+            this.config.iface_tax_included === "total"
                 ? this.getTaxDetails().total_included
                 : this.getTaxDetails().total_excluded;
-        return formatCurrency(price, config.currency_id.id);
+        return formatCurrency(price, this.config.currency_id.id);
     }
 }
