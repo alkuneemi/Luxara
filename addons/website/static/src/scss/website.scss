@@ -3436,6 +3436,40 @@ input[value*="data-oe-translation-source-sha"] {
     border-right-width: 0;
 }
 
+// Show focus box-shadow only on sides that have a visible border.
+// If all sides have borders, the default Bootstrap focus ring is used.
+// Otherwise, inset shadows are applied per-side to match the active borders.
+.form-control:focus, .form-select:focus {
+    $-top: $input-border-top-width or $input-border-width;
+    $-right: $input-border-right-width or $input-border-width;
+    $-bottom: $input-border-bottom-width or $input-border-width;
+    $-left: $input-border-left-width or $input-border-width;
+
+    $-all-same: ($-top == $-right) and ($-right == $-bottom) and ($-bottom == $-left);
+
+    @if $-all-same {
+        box-shadow: $input-btn-focus-box-shadow;
+    } @else {
+        $-focus-width: $input-btn-focus-width;
+        $-focus-color: $input-btn-focus-color;
+        $-shadows: ();
+
+        @if $-top != 0 {
+        $-shadows: append($-shadows, 0 (-$-focus-width) 0 0 $-focus-color, comma);
+        }
+        @if $-right != 0 {
+        $-shadows: append($-shadows, $-focus-width 0 0 0 $-focus-color, comma);
+        }
+        @if $-bottom != 0 {
+        $-shadows: append($-shadows, 0 $-focus-width 0 0 $-focus-color, comma);
+        }
+        @if $-left != 0 {
+        $-shadows: append($-shadows, (-$-focus-width) 0 0 0 $-focus-color, comma);
+        }
+        box-shadow: if(length($-shadows) > 0, $-shadows, none);
+    }
+}
+
 // The `nav-link` and `btn` classes do not induce the same padding and border
 // radius. However, in some cases, we need to apply these properties of `btn`
 // with the color of `nav-link` (e.g. for the "Sign In" button of the "sidebar"
