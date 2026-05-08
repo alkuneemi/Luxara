@@ -1,5 +1,6 @@
 import { browser } from '@web/core/browser/browser';
 import { ConfirmationDialog } from '@web/core/confirmation_dialog/confirmation_dialog';
+import { loadJS } from '@web/core/assets';
 import { _t } from '@web/core/l10n/translation';
 import { rpc, RPCError } from '@web/core/network/rpc';
 import { registry } from '@web/core/registry';
@@ -28,7 +29,6 @@ export class PaymentForm extends Interaction {
     }
 
     async willStart() {
-        this._checkAppleGooglePaySupport();
         // Expand the payment form of the selected payment option if there is only one.
         const checkedRadio = document.querySelector('input[name="o_payment_radio"]:checked');
         if (checkedRadio) {
@@ -149,58 +149,65 @@ export class PaymentForm extends Interaction {
 
     // #=== DOM MANIPULATION ===#
     /**
-     * Check if Apple Pay and Google Pay are supported by the browser and device.
-     * Reveals the option if supported, completely hides and disables it if not.
+     * Update the visibility of wallet payment methods (Apple Pay, Google Pay)
+     * based on browser and device support.
      *
+     * Supported wallets are shown; unsupported ones are hidden and disabled.
      * @private
      * @return {void}
      */
-    async _checkAppleGooglePaySupport() {
+    async _updateWalletsVisibility() {
         const applePayInput = this.el.querySelector('input[data-payment-method-code="apple_pay"]');
         if (applePayInput) {
-            const isApplePaySupported = window.ApplePaySession && window.ApplePaySession.canMakePayments();
             const optionContainer = applePayInput.closest('[name="o_payment_option"]');
+            if (optionContainer && this.isApplePaySupported()) {
+                optionContainer.classList.remove('d-none');
+            }
+        }
 
-            if (optionContainer) {
-                if (isApplePaySupported) {
+        const googlePayInput = this.el.querySelector(
+            'input[data-payment-method-code="google_pay"]'
+        );
+        if(googlePayInput){
+            const scriptURL = "https://pay.google.com/gp/p/js/pay.js";
+            await loadJS(scriptURL)
+            if (window.google?.payments) {
+                const optionContainer = googlePayInput.closest('[name="o_payment_option"]');
+                if (optionContainer && (await this.isGooglePaySupported())) {
                     optionContainer.classList.remove('d-none');
                 }
             }
         }
+    }
 
-        const googlePayInput = this.el.querySelector('input[data-payment-method-code="google_pay"]');
-        if (googlePayInput) {
-            const optionContainer = googlePayInput.closest('[name="o_payment_option"]');
+    isApplePaySupported() {
+        return Boolean(window.ApplePaySession?.canMakePayments());
+    }
 
-            if (optionContainer && window.google && window.google.payments) {
-                try {
-                    const paymentsClient = new window.google.payments.api.PaymentsClient(
-                        { environment: 'PRODUCTION' }
-                    );
+    async isGooglePaySupported(){
+        if (!window.google?.payments?.api) {
+            throw new Error("SDK not initialized");
+        }
+        try {
+            const paymentsClient = new window.google.payments.api.PaymentsClient(
+                { environment: 'TEST' }
+            );
 
-                    const isReadyToPayRequest = {
-                        apiVersion: 2,
-                        apiVersionMinor: 0,
-                        allowedPaymentMethods: [
-                            {
-                                type: 'CARD',
-                                parameters: {
-                                    allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-                                    allowedCardNetworks: ['MASTERCARD', 'VISA']
-                                }
-                            }
-                        ]
-                    };
-
-                    const response = await paymentsClient.isReadyToPay(isReadyToPayRequest);
-
-                    if (response.result) {
-                        optionContainer.classList.remove('d-none');
+            const response = await paymentsClient.isReadyToPay({
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: [{
+                    type: 'CARD',
+                    parameters: {
+                        allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                        allowedCardNetworks: ['MASTERCARD', 'VISA']
                     }
-                } catch (err) {
-                    console.error("Google Pay Error:", err);
-                }
-            }
+                }]
+            });
+
+            return response.result === true;
+        } catch {
+            return false;
         }
     }
 

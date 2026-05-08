@@ -13,6 +13,11 @@ patch(PaymentForm.prototype, {
         this.stripeElements = {}; // Store the element of each instantiated payment method.
     },
 
+    async willStart() {
+        await super.willStart(...arguments);
+        this._updateWalletsVisibility();
+    },
+
     // #=== DOM MANIPULATION ===#
 
     /**

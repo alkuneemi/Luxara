@@ -333,17 +333,6 @@
         <field name="support_refund">partial</field>
     </record>
 
-    <record id="payment_method_google_pay" model="payment.method">
-        <field name="name">Google Pay</field>
-        <field name="code">google_pay</field>
-        <field name="sequence">1000</field>
-        <field name="active">False</field>
-        <field name="image" type="bytes" file="payment/static/img/google_pay.png"/>
-        <field name="support_tokenization">False</field>
-        <field name="support_express_checkout">True</field>
-        <field name="support_refund">partial</field>
-    </record>
-
     <record id="payment_method_astropay" model="payment.method">
         <field name="name">Astropay TEF</field>
         <field name="code">astropay</field>
@@ -1287,6 +1276,17 @@
                          ref('base.PHP'),
                      ])]"
         />
+    </record>
+
+    <record id="payment_method_google_pay" model="payment.method">
+        <field name="name">Google Pay</field>
+        <field name="code">google_pay</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/google_pay.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">True</field>
+        <field name="support_refund">partial</field>
     </record>
 
     <record id="payment_method_gopay" model="payment.method">

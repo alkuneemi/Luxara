@@ -12,5 +12,6 @@
     "data": ["views/payment_provider_views.xml", "data/payment_provider_data.xml"],
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",
+    "assets": {"web.assets_frontend": ["payment_mollie/static/src/interactions/**/*"]},
     "license": "LGPL-3",
 }
