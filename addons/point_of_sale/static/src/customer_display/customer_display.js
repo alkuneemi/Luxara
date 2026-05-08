@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "@web/owl2/utils";
+import { useLayoutEffect, useRef, useState } from "@web/owl2/utils";
 import { Component, whenReady } from "@odoo/owl";
 import { OdooLogo } from "@point_of_sale/app/components/odoo_logo/odoo_logo";
 import { MainComponentsContainer } from "@web/core/main_components_container";
@@ -15,8 +15,13 @@ export class CustomerDisplay extends Component {
 
     setup() {
         this.session = session;
-        this.dialog = useService("dialog");
-        this.order = useService("customer_display_data");
+
+        this.customerDisplayService = useService("customer_display_service");
+        this.customerDisplayService.initReceiver(this.session.identifier);
+        this.order = useState(this.customerDisplayService.data);
+
+        window.displayData = this.customerDisplayService;
+
         this.time = useTime();
 
         this.scrollableRef = useRef("scrollable");
@@ -34,8 +39,15 @@ export class CustomerDisplay extends Component {
         };
     }
 
-    getInternalNotes(line) {
-        return JSON.parse(line.internalNote || "[]");
+    parseInternalNotes(noteStr) {
+        if (!noteStr || typeof noteStr !== "string") {
+            return [];
+        }
+        return JSON.parse(noteStr);
+    }
+
+    get configLogoSrc() {
+        return `/web/image/pos.config/${this.session.config_id}/logo`;
     }
 }
 
