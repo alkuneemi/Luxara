@@ -590,10 +590,11 @@ class ProductProduct(models.Model):
         if self.uom_id.compare(fifo_stack_size, 0) <= 0:
             return fifo_stack, 0
 
-        moves_domain = Domain([
-            ('product_id', '=', self.id),
-            ('company_id', '=', self.env.company.id)
-        ])
+        moves_domain = Domain([('product_id', '=', self.id)])
+        if self.lot_valuated:
+            moves_domain &= Domain([('company_id', 'in', self.env.context.get('allowed_company_ids'))])
+        else:
+            moves_domain &= Domain([('company_id', '=', self.env.company.id)])
         if lot:
             moves_domain &= Domain([('move_line_ids.lot_id', 'in', lot.id)])
         if at_date:
