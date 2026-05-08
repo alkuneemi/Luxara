@@ -10,6 +10,7 @@ class DiscussCallHistory(models.Model):
     _explanation = "Stores the history of internal discuss calls (audio/video), tracking the start time, end time, duration, and the associated channel."
 
     channel_id = fields.Many2one("discuss.channel", index=True, required=True, ondelete="cascade")
+    artifact_ids = fields.One2many("mail.call.artifact", "discuss_call_history_id", string="Artifacts")
     duration_hour = fields.Float(compute="_compute_duration_hour")
     start_dt = fields.Datetime(index=True, required=True)
     end_dt = fields.Datetime()
