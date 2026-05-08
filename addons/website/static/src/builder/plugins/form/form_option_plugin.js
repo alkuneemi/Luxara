@@ -745,7 +745,9 @@ export class FormOptionPlugin extends Plugin {
             const type = getFieldType(fieldEl);
 
             const [optionText, checkType] = selectEl
-                ? [_t("Option List"), "exclusive_boolean"]
+                ? selectEl.multiple
+                    ? [_t("Option List"), "boolean"]
+                    : [_t("Option List"), "exclusive_boolean"]
                 : type === "selection"
                 ? [_t("Radio Button List"), "exclusive_boolean"]
                 : [_t("Checkbox List"), "boolean"];
@@ -1210,6 +1212,15 @@ export class ExistingFieldSelectTypeAction extends BuilderAction {
     apply({ editingElement: fieldEl, value, loadResult: fields }) {
         const field = getActiveField(fieldEl, { fields });
         field.type = value;
+        // Select the first record by default if none are selected for
+        // multi-select dropdown.
+        if (
+            value === "many2many_selection" &&
+            field.records.length &&
+            !field.records.some((rec) => rec.selected)
+        ) {
+            field.records[0].selected = true;
+        }
         this.dependencies.websiteFormOption.replaceField(fieldEl, field, fields);
     }
     isApplied({ editingElement: fieldEl, value }) {
@@ -1414,6 +1425,15 @@ export class ToggleAllowEmptyAction extends BuilderAction {
         const field = getActiveField(fieldEl, { fields });
         field.allowEmpty = !field.allowEmpty;
         field.records.forEach((rec) => (rec.selected = false));
+        // Select the first record for multi-select dropdown so the field is
+        // never left with no selection.
+        if (
+            !field.allowEmpty &&
+            getFieldType(fieldEl) === "many2many_selection" &&
+            field.records.length
+        ) {
+            field.records[0].selected = true;
+        }
         this.dependencies.websiteFormOption.replaceField(fieldEl, field, fields);
     }
     isApplied({ editingElement: fieldEl }) {
