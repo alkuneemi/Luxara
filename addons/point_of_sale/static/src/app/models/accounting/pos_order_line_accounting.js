@@ -139,8 +139,10 @@ export class PosOrderlineAccounting extends Base {
 
     get taxGroupLabels() {
         let taxes_id = this.tax_ids;
-        if (this.order_id.fiscal_position_id) {
-            taxes_id = this.order_id.fiscal_position_id.getTaxesAfterFiscalPosition(this.tax_ids);
+        const fiscalPosition =
+            this.order_id.fiscal_position_id || this.order_id.preset_id?.fiscal_position_id;
+        if (fiscalPosition) {
+            taxes_id = fiscalPosition.getTaxesAfterFiscalPosition(this.tax_ids);
         }
         return [
             ...new Set(
@@ -187,9 +189,10 @@ export class PosOrderlineAccounting extends Base {
             is_refund: this.qty * priceUnit < 0,
             ...customValues,
         };
-        if (order?.fiscal_position_id && product !== this.config.discount_product_id) {
+        const fiscalPosition = order?.fiscal_position_id || order?.preset_id?.fiscal_position_id;
+        if (fiscalPosition && product !== this.config.discount_product_id) {
             // Recompute taxes based on product and fiscal position.
-            values.tax_ids = order.fiscal_position_id.getTaxesAfterFiscalPosition(values.tax_ids);
+            values.tax_ids = fiscalPosition.getTaxesAfterFiscalPosition(values.tax_ids);
         }
         return values;
     }

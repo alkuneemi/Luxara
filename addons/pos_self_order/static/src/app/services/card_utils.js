@@ -192,8 +192,12 @@ export function getOrderLineValues(
     }
 
     if (values.price_extra > 0) {
+        const pricelist =
+            currentOrder.pricelist_id ||
+            currentOrder.preset_id?.pricelist_id ||
+            selfOrder.config.pricelist_id;
         const price = values.product_id.getPrice(
-            currentOrder.pricelist_id,
+            pricelist,
             values.qty,
             values.price_extra,
             false,
