@@ -793,6 +793,7 @@ registry.category("web_tour.tours").add("RestaurantPresetEatInTour", {
             PaymentScreen.clickValidate(),
             FeedbackScreen.checkTicketData({
                 cashier_name: "test_user",
+                preset_name: "Dine In",
             }),
             Chrome.closePrintingWarning(),
             FeedbackScreen.clickNextOrder(),

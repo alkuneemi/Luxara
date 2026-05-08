@@ -72,6 +72,7 @@ export function checkTicketData(data, basic = false) {
     //   is_shipping_date_today,
     //   is_cashier,
     //   cashier_name,
+    //   preset_name
     //   is_qr_code,
     //   payment_lines: [{
     // 	  name,
@@ -109,9 +110,12 @@ export function checkTicketData(data, basic = false) {
         if (!ticket && !Object.keys(data).length) {
             return true;
         }
-
         if (data.total_amount) {
             ticket.querySelector(".total-amount").innerHTML.includes(data.total_amount);
+        }
+
+        if (data.preset_name === "Dine In" && ticket.querySelector(".preset-info")) {
+            throw new Error("Preset info has been found in the receipt.");
         }
 
         if (data.logo) {
