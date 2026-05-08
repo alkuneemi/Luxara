@@ -205,6 +205,14 @@ export class GeneratePrinterData {
         }));
     }
 
+    generateCompanyData() {
+        return {
+            ...this.company.raw,
+            state_name: this.company.state_id?.name || false,
+            country_name: this.company.country_id?.name || false,
+        };
+    }
+
     generateReceiptData() {
         const baseUrl = this.config._base_url;
         const company = this.company;
@@ -220,7 +228,7 @@ export class GeneratePrinterData {
         return {
             order: this.order.raw,
             config: this.config.raw,
-            company: this.company.raw,
+            company: this.generateCompanyData(),
             partner: this.order.partner_id ? this.order.partner_id.raw : false,
             preset: this.order.preset_id ? this.order.preset_id.raw : false,
             lines: this.generateLineData(),

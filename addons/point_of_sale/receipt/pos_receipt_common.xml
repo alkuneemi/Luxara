@@ -130,6 +130,22 @@
                 #pos-receipt .text-bold { font-weight: bold !important; }
                 #pos-receipt .text-italic { font-style: italic !important; }
                 #pos-receipt .text-break { word-break: break-word !important; word-wrap: break-word !important; }
+
+                /** Flexbox classes **/
+                #pos-receipt .d-flex { display: flex !important; }
+                #pos-receipt .flex-row { flex-direction: row !important; }
+                #pos-receipt .flex-column { flex-direction: column !important; }
+                #pos-receipt .align-items-start { align-items: flex-start !important; }
+                #pos-receipt .align-items-end { align-items: flex-end !important; }
+                #pos-receipt .align-items-center { align-items: center !important; }
+                #pos-receipt .align-items-baseline { align-items: baseline !important; }
+                #pos-receipt .align-items-stretch { align-items: stretch !important; }
+                #pos-receipt .justify-content-start { justify-content: flex-start !important; }
+                #pos-receipt .justify-content-end { justify-content: flex-end !important; }
+                #pos-receipt .justify-content-center { justify-content: center !important; }
+                #pos-receipt .justify-content-between { justify-content: space-between !important; }
+                #pos-receipt .justify-content-around { justify-content: space-around !important; }
+                #pos-receipt .justify-content-evenly { justify-content: space-evenly !important; }
             </style>
         </template>
     </data>
