@@ -354,16 +354,17 @@ class Message(models.Model):
         allowed, based on '_get_mail_message_access' behavior and potential
         model override. """
         DocumentModel = self.env[doc_model].with_context(active_test=False).with_prefetch(doc_res_ids)
-        documents_per_operation = defaultdict(self.env[doc_model].browse)
+        documents_ids_per_operation = defaultdict(list)
         for document in DocumentModel.browse(doc_res_ids):
             if hasattr(document, '_get_mail_message_access'):
                 doc_operation = DocumentModel._get_mail_message_access(document.ids, operation)  # why not giving model here?
             else:
                 doc_operation = self.env['mail.thread']._get_mail_message_access(document.ids, operation, model_name=document._name)
-            documents_per_operation[doc_operation] |= document
+            documents_ids_per_operation[doc_operation].append(document.id)
 
         allowed = self.env[doc_model]
-        for record_operation, records in documents_per_operation.items():
+        for record_operation, documents_ids in documents_ids_per_operation.items():
+            records = DocumentModel.browse(documents_ids)
             operation_allowed = records.check_access_rights(record_operation, raise_exception=False)
             if operation_allowed:
                 filter_method = records._filter_access_rules_python if filter_python else records._filter_access_rules
