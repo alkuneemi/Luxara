@@ -17,7 +17,7 @@ import requests
 import werkzeug.urls
 import werkzeug.wrappers
 from lxml import etree, html
-from markupsafe import escape as markup_escape
+from markupsafe import Markup, escape as markup_escape
 from werkzeug.exceptions import NotFound
 
 from odoo import _, fields, http, models, release, tools
@@ -466,6 +466,16 @@ class Website(Home):
         dynamic_filter_found = single_record_filter or dynamic_filter_sudo
         return dynamic_filter_sudo._render(**kwargs) if dynamic_filter_found else []
 
+    @http.route('/website/snippet/filter_snippet', type='http', auth='user', website=True, readonly=True)
+    def render_dynamic_filter_snippet(self, params, main_object_name, main_object_id):
+        class Fake:
+            _name = main_object_name
+            id = int(main_object_id)
+        return request.env['ir.qweb'].with_context(dynamic_filter_snippet_with_sample=True)._render(
+            etree.Element('t', {'t-dynamic-filter-snippet': json.dumps(json.loads(params))}),
+            { 'main_object': Fake() },
+        )
+
     @http.route('/website/snippet/options_filters', type='jsonrpc', auth='user', website=True, readonly=True)
     def get_dynamic_snippet_filters(self, model_name=None, search_domain=None):
         if not request.env.user.has_group('website.group_website_restricted_editor'):
@@ -496,7 +506,7 @@ class Website(Home):
             attribs = etree.fromstring(t.pop('arch_db')).attrib or {}
             t['numberOfElements'] = attribs.get('data-number-of-elements')
             t['numberOfElementsSmallDevices'] = attribs.get('data-number-of-elements-sm')
-            t['numberOfRecords'] = attribs.get('data-number-of-elements-fetch')
+            t['limit'] = attribs.get('data-number-of-elements-fetch')
             t['rowPerSlide'] = attribs.get('data-row-per-slide')
             t['extraClasses'] = attribs.get('data-extra-classes')
             t['extraSnippetClasses'] = attribs.get('data-extra-snippet-classes')

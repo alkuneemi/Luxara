@@ -1,6 +1,5 @@
 import { _t } from '@web/core/l10n/translation';
 import { registry } from '@web/core/registry';
-import { utils as uiUtils } from '@web/core/ui/ui_service';
 import { DynamicSnippet } from '@website/snippets/s_dynamic_snippet/dynamic_snippet';
 
 
@@ -16,16 +15,16 @@ const ALIGNMENT_CLASSES_MAPPING = {
 };
 
 export class DynamicSnippetCategory extends DynamicSnippet {
-    static selector = '.s_dynamic_snippet_category';
+    static selector = '.s_dynamic_snippet_category_nope';
 
     setup(){
         super.setup();
         this.templateKey = 'website_sale.s_dynamic_snippet_category.grid';
         const nodeData = this.el.dataset;
         nodeData.button = nodeData.button || _t("Explore Now");
-        const colsCount = uiUtils.isSmall() ? 1 : parseInt(nodeData.columns);
-        const colSpanTwo = colsCount !== 1 && (nodeData.size !== 'small' || colsCount === 5);
+        const colSpanTwo = nodeData.size !== 'small' || parseInt(nodeData.columns) === 5;
         // Pass custom data to the template.
+        // this is extra rpc parameters
         nodeData.customTemplateData = JSON.stringify({
             size: SIZE_CONFIG[nodeData.size]?.span,
             alignmentClass: ALIGNMENT_CLASSES_MAPPING[nodeData.alignment],
@@ -39,7 +38,7 @@ export class DynamicSnippetCategory extends DynamicSnippet {
     getQWebRenderOptions() {
         const nodeData = this.el.dataset;
         return Object.assign(super.getQWebRenderOptions(...arguments), {
-            colsCount: uiUtils.isSmall() ? 1 : parseInt(nodeData.columns),
+            colsCount: parseInt(nodeData.columns),
             rowSize: SIZE_CONFIG[nodeData.size].row,
             gap: nodeData.gap,
             rounded: nodeData.rounded,

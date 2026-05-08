@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <template id="website.s_dynamic_snippet_error">
+        <div class="dynamic_filter_error alert alert-warning fade show d-print-none rounded-0 o_dynamic_snippet_empty">
+            Your Dynamic Snippet will be displayed here... This message is displayed because an error occured when retrieving its content.<br/>
+            <span t-out="error"/>
+        </div>
+    </template>
+
+    <template id="website.s_dynamic_snippet_incomplete">
+        <div class="missing_option_warning alert alert-info fade show d-print-none rounded-0 o_dynamic_snippet_empty">
+            Your Dynamic Snippet will be displayed here... This message is displayed because you did not provide enough options to retrieve its content.<br/>
+        </div>
+    </template>
+
+    <template id="website.s_dynamic_snippet_wrapper_grid">
+        <!-- Default Layout -->
+        <t t-if="not column_classes">
+            <!-- TODO: merge with the "Custom Layout" (without the row/column that will be taken care of by the fengshui interaction, this is almost the same) -->
+            <!-- TODO: annotation for the "fengshui" interaction, to tell it what is a column/row -->
+            <div
+                t-attf-class="row mb-4 #{extra_classes} #{'o_dynamic_snippet_empty' if not data else ''}"
+                t-att-data-fengshui-row-limit="limit"
+                t-att-data-fengshui-row-number-of-elements="number_of_elements"
+                t-att-data-fengshui-row-number-of-elements-small-devices="number_of_elements_small_devices"
+            >
+                <t t-foreach="data" t-as="data_entry">
+                    <div class="d-flex flex-grow-0 flex-shrink-0 col-3" data-fengshui-col="col-3">
+                        <t t-out="data_entry"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+
+        <!-- Custom Layout -->
+        <t t-else="">
+            <div t-attf-class="#{'' if limit == 1 else 's_dynamic_snippet_row'} row #{extra_classes} #{'o_dynamic_snippet_empty' if not data else ''}">
+                <t t-foreach="data" t-as="data_entry">
+                    <div t-attf-class="#{column_classes}">
+                        <t t-out="data_entry"/>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="website.s_dynamic_filter_snippet_template">
+        <t t-set="snippet_title_default">Our latest content</t>
+        <t t-set="snippet_description_default">Check out what's new in our company !</t>
+        <t t-set="snippet_button_text_default">See All <i class="fa fa-long-arrow-right ms-2" role="img"/></t>
+        <section t-att-data-snippet="snippet_name"
+            t-attf-class="#{snippet_name} #{snippet_classes} s_dynamic pt64 pb64">
+            <div t-attf-class="s_dynamic_snippet_container {{container_classes or 'container'}}">
+                <div class="row s_nb_column_fixed">
+                    <section t-attf-class="{{is_single_record and 'd-none' or 'd-flex'}} {{snippet_heading_extra_classes or 'justify-content-between flex-column flex-md-row'}} s_dynamic_snippet_title oe_unremovable oe_unmovable mb-lg-0 pb-3 pb-md-0 s_col_no_resize">
+                        <div t-att-class="snippet_heading_inner_extra_classes">
+                            <h2 class="h3" t-out="snippet_title or snippet_title_default"/>
+                            <p class="lead" t-out="snippet_description or snippet_description_default"/>
+                        </div>
+                        <div t-if="main_page_url">
+                            <a t-att-class="snippet_button_classes" t-att-href="main_page_url" t-out="snippet_button_text or snippet_button_text_default"/>
+                        </div>
+                    </section>
+                    <section t-attf-class="s_dynamic_snippet_content oe_unremovable oe_unmovable o_not_editable col s_col_no_resize #{content_classes}" t-att-data-oe-dynamic-filter-snippet="filter_param">
+                        <t t-out="0"/>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </template>
+
     <template id="website.s_dynamic_snippet_template">
         <t t-set="snippet_title_default">Our latest content</t>
         <t t-set="snippet_description_default">Check out what's new in our company !</t>
@@ -48,8 +117,12 @@
         </section>
     </template>
     <template id="s_dynamic_snippet" name="Dynamic Snippet">
-        <t t-call="website.s_dynamic_snippet_template"
-            snippet_name.f="s_dynamic_snippet"/>
+        <t t-call="website.s_dynamic_filter_snippet_template"
+            snippet_name.f="s_dynamic_snippet"
+            filter_param="json.dumps(dict(
+                wrapper_template_key='website.s_dynamic_snippet_wrapper_grid',
+            ))"
+        />
     </template>
 
 <asset id="website.s_dynamic_snippet_000_scss" name="Dynamic snippet 000 SCSS">

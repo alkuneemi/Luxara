@@ -1,15 +1,22 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import re
+import json
 
 from collections import OrderedDict
+from markupsafe import Markup, escape_silent
+import logging
 
+from lxml import etree
 from odoo import models
 from odoo.http import request
 from odoo.tools import lazy
+from odoo.addons.base.models.ir_qweb import indent_code
 from odoo.addons.website.models import ir_http
 from odoo.addons.website.tools import add_form_signature
 from odoo.exceptions import AccessError
+from odoo.fields import Domain
 
+_logger = logging.getLogger(__name__)
 
 re_background_image = re.compile(r"(background-image\s*:\s*url\(\s*['\"]?\s*)([^)'\"]+)")
 
@@ -120,6 +127,74 @@ class IrQweb(models.AbstractModel):
         irQweb = irQweb.with_context(cookies_allowed=is_allowed_optional_cookies)
 
         return irQweb
+
+    def _compile_directive_dynamic_filter_snippet(self, el, compile_context, indent):
+        args = el.attrib.pop('t-dynamic-filter-snippet')
+        if  ('snippet_lang' in self.env.context or 'inherit_branding' in self.env.context) and el.tag != 't':
+            el.attrib['data-oe-dynamic-filter-snippet'] = args
+        parsed_args = json.loads(args)
+
+        content_template_key = parsed_args.get('content_template_key')
+        content_extra_data = parsed_args.get('content_extra_data', {})
+        wrapper_template_key = parsed_args.get('wrapper_template_key')
+        wrapper_extra_data = parsed_args.get('wrapper_extra_data', {})
+        filter_id = parsed_args.get('filter_id')
+        res_model = parsed_args.get('res_model')
+        res_id = parsed_args.get('res_id')
+        search_domain = parsed_args.get('search_domain')
+        search_domain_extra = parsed_args.get('search_domain_extra')
+        limit = parsed_args.get('limit')
+
+        if not filter_id:
+            if filter_xmlid := parsed_args.get('filter_xmlid'):
+                filter_id = self.env.ref(filter_xmlid).id
+
+        if not content_template_key or not wrapper_template_key or not (filter_id or (res_id and res_model and limit == 1)):
+            el.insert(0, etree.Element('t', {'t-call': 'website.s_dynamic_snippet_incomplete'}))
+            return []
+
+        with_sample = self.env.context.get('dynamic_filter_snippet_with_sample')
+
+        code = [indent_code(f"values['DYNAMIC_FILTER_SNIPPET_DATA'], values['DYNAMIC_FILTER_SNIPPET_ERROR'] = self._dynamic_filter_snippet_at_runtime({content_template_key!r}, {content_extra_data!r}, {filter_id!r}, {res_model!r}, {res_id!r}, {search_domain!r}, {search_domain_extra!r}, {limit!r}, {with_sample!r}, values.get('main_object', None))", indent)]
+
+        el.insert(0, etree.Element('t', dict({
+            't-if': 'DYNAMIC_FILTER_SNIPPET_ERROR',
+            't-call': 'website.s_dynamic_snippet_error',
+            'error': 'DYNAMIC_FILTER_SNIPPET_ERROR',
+        })))
+
+        el.insert(1, etree.Element('t', dict({
+            't-else': '',
+            't-call': wrapper_template_key,
+            'data': 'DYNAMIC_FILTER_SNIPPET_DATA',
+            'limit': f"{limit!r}"
+        }, **{key: f"{value!r}" for key, value in wrapper_extra_data.items()})))
+
+        return code
+
+    def _dynamic_filter_snippet_at_runtime(self, content_template_key, content_extra_data, filter_id, res_model, res_id, search_domain, search_domain_extra, limit, with_sample, main_object):
+        dynamic_filter_sudo = self.env['website.snippet.filter'].sudo().browse(filter_id)
+        try:
+            return [Markup(item) for item in dynamic_filter_sudo._render(
+                template_key=content_template_key,
+                limit=limit,
+                search_domain=search_domain,
+                search_domain_extra=search_domain_extra,
+                with_sample=with_sample,
+                res_model=res_model,
+                res_id=res_id,
+                main_object_name=main_object and main_object._name,
+                main_object_id=main_object and main_object.id,
+                **content_extra_data,
+            )], None
+        except Exception as error:
+            return [], error
+
+    def _directives_eval_order(self):
+        directives = super()._directives_eval_order()
+        index = directives.index('options')
+        directives.insert(index, 'dynamic-filter-snippet')
+        return directives
 
     def _post_processing_att(self, tagName, atts):
         if atts.get('data-no-post-process'):
