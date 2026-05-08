@@ -168,9 +168,12 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         picking and return 5, edit the PO line to 15 units.
         The purpose of the test is to check the consistencies across the received quantities and the
         procurement quantities.
+        Also check that the purchase order's received quantity is not modified by a duplicated picking
+        whose picking type has been changed.
         """
         # Change the code of the picking type delivery
-        self.env['stock.picking.type'].search([('code', '=', 'outgoing')]).write({'code': 'internal'})
+        modified_pickings_type = self.env['stock.picking.type'].search([('code', '=', 'outgoing')])
+        modified_pickings_type.write({'code': 'internal'})
 
         # Sell and deliver 10 units
         item1 = self.product_id_1
@@ -234,6 +237,11 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
             po1.invoice_ids.activity_ids,
             "Lowering product qty below invoiced qty should schedule an activity",
         )
+        duplicated_picking = picking.copy()
+        duplicated_picking.move_ids.product_uom_qty = 5.0
+        duplicated_picking.picking_type_id = modified_pickings_type[0]
+        duplicated_picking.button_validate()
+        self.assertEqual(po1.order_line.qty_received, 5.0)
 
     def test_04_update_date_planned(self):
         today = datetime.today().replace(hour=9, microsecond=0)
