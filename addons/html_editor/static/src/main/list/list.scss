@@ -36,3 +36,31 @@ ul.o_checklist {
         }
     }
 }
+
+#wrapwrap, // avoid duplicating in portal
+.o_mass_mailing_value // avoid duplicating in mass_mailing
+.o_field_html {
+    *:has(> .float-start) {
+        & ~ ul, & ~ ol {
+            float: inline-start;
+        }
+    }
+
+    *:has(> .float-end) {
+        & ~ ul, & ~ ol {
+            &[dir] {
+                float: inline-end;
+            }
+        }
+    }
+
+    li .float-start {
+        float: unset !important;
+    }
+
+    ul, ol {
+        &[dir] li .float-end {
+            float: unset !important;
+        }
+    }
+}
