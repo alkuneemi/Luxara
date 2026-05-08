@@ -93,7 +93,10 @@ patch(PosOrder.prototype, {
         const removedCourses = [];
         const cleanedCourses = courses
             .filter((course, index) => {
-                const shouldKeep = index <= lastFiredIndex || !course.isEmpty();
+                const hasLines = this.lines.some(
+                    (line) => !line.combo_parent_id && line.course_id === course
+                );
+                const shouldKeep = index <= lastFiredIndex || (hasLines && !course.isEmpty());
                 if (!shouldKeep) {
                     removedCourses.push(course);
                 }
@@ -103,12 +106,15 @@ patch(PosOrder.prototype, {
                 course.index = newIndex + 1;
                 return course;
             });
-        removedCourses.forEach((course) => {
-            course.delete();
-        });
+        removedCourses.forEach((course) => course.delete());
         if (cleanedCourses.length !== originalLength) {
             this.course_ids = cleanedCourses;
         }
+    },
+    removeOrderline(line, deep = true) {
+        const result = super.removeOrderline(line);
+        this.cleanCourses();
+        return result;
     },
     get courses() {
         // Sort courses first by thier sequences, then by their index.

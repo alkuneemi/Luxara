@@ -85,23 +85,7 @@ patch(ProductScreen.prototype, {
             return await super.addProductToOrder(product);
         }
 
-        const courseCandidate = product.pos_categ_ids
-            .map((c) => c.course_id)
-            .filter(Boolean)
-            .sort((a, b) => a.sequence - b.sequence);
-
-        if (courseCandidate.length === 0) {
-            return await super.addProductToOrder(product);
-        }
-
-        let isNew = false;
-        let course = order.course_ids.find((c) => c.name === courseCandidate[0].name);
-        if (!course) {
-            isNew = true;
-            course = this.pos.addCourse({ backendCourse: courseCandidate[0] });
-        }
-
-        order.selectCourse(course);
+        const { course, isNew } = this.pos._setCourseToProduct(product, order);
         const result = await super.addProductToOrder(product);
         if (!result && isNew) {
             course.delete();
