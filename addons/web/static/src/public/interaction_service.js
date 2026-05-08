@@ -193,7 +193,6 @@ class InteractionService {
 }
 
 registry.category("services").add("public.interactions", {
-    dependencies: ["localization"],
     async start(env) {
         // fallback if #wrapwrap is not present in the dom
         const el = document.querySelector("#wrapwrap") || document.querySelector("body");
