@@ -192,6 +192,8 @@ export class SelectionPlugin extends Plugin {
         // "collapseIfZWS",
         "isSelectionInEditable",
         "isNodeEditable",
+        "getCachedSelection",
+        "setCachedSelection",
     ];
     resources = {
         user_commands: { id: "selectAll", run: this.selectAll.bind(this) },
@@ -248,6 +250,14 @@ export class SelectionPlugin extends Plugin {
             this.editable.focus = this.editableOriginalFocus;
         }
         super.destroy();
+    }
+
+    getCachedSelection() {
+        return this._cachedSelection;
+    }
+
+    setCachedSelection(value) {
+        this._cachedSelection = value;
     }
 
     selectAll() {
@@ -494,7 +504,7 @@ export class SelectionPlugin extends Plugin {
      * @return { SelectionData }
      */
     getSelectionData() {
-        const selection = this.document.getSelection();
+        const selection = this.getCachedSelection() || this.document.getSelection();
         const documentSelectionIsInEditable = selection && this.isSelectionInEditable(selection);
         const documentSelection =
             selection?.anchorNode && selection?.focusNode
