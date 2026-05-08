@@ -43,7 +43,7 @@ class ProductWishlist(models.Model):
                 ("website_id", "=", request.website.id),
             ])
 
-        # TODO for /shop page, no need to check _is_add_to_cart_possible as it's only used to see
+        # TODO for /shop page, no need to check _has_purchasable_variants as it's only used to see
         # whether the product is in the wishlist.
         return wish.filtered(
             lambda wish: (
@@ -51,7 +51,7 @@ class ProductWishlist(models.Model):
                     self.env.user.has_group("base.group_system")
                     or wish.sudo().product_id.product_tmpl_id.website_published
                 )
-                and wish.sudo().product_id.product_tmpl_id._is_add_to_cart_possible()
+                and wish.sudo().product_id.product_tmpl_id._has_purchasable_variants()
             )
         )
 
