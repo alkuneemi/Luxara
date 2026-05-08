@@ -114,6 +114,14 @@
     scrollbar-color: $o-we-bg-lightest $o-we-bg-darker;
     scrollbar-width: thin;
     will-change: scroll-position;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+
+    &.o-is-fading-out,
+    &.o-is-fading-in {
+        opacity: 0;
+        pointer-events: none;
+    }
 }
 
 .o_theme_tab {
@@ -206,4 +214,42 @@
 .o_pager_container {
     overflow-y: scroll;
     scroll-behavior: smooth;
+}
+
+.o-hb-customizable-option-text {
+    flex: 1;
+}
+
+.o-hb-theme-tab-link, .o-hb-theme-tab-link-inline {
+    border: none;
+    color: $o-we-color-global;
+
+    &:hover {
+        color: lighten($o-we-color-global, 50%);
+    }
+
+    &:not(:focus-visible) {
+        border: 1px solid transparent; // keep size stable on focus
+    }
+}
+
+.o-hb-theme-tab-link-inline {
+    border-width: 0;
+    padding: 10px;
+
+    &::before {
+        color: currentColor;
+    }
+}
+
+.hb-row-content {
+    .o-hb-theme-tab-link-inline {
+        display: none;
+    }
+}
+
+.o-hb-select-dropdown-item {
+    &:has(.o-hb-theme-tab-link-inline) {
+        padding-right: 0;
+    }
 }

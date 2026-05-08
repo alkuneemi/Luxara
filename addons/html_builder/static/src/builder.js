@@ -22,6 +22,7 @@ import { setBuilderCSSVariables } from "@html_builder/utils/utils_css";
 import { withSequence } from "@html_editor/utils/resource";
 import { getHtmlStyle } from "@html_editor/utils/formatting";
 import { isVisible } from "@html_builder/utils/utils";
+import { delay } from "@web/core/utils/concurrency";
 
 // These elements should only have inline content (even if they have a `block`
 // display style, for example if they are in a flex)
@@ -30,6 +31,8 @@ const ONLY_ALLOW_INLINE_TAGS = new Set([
     ...["a", "em", "strong", "small", "s", "cite", "q", "abbr", "data", "time", "code"],
     ...["samp", "sub", "sup", "i", "b", "u", "mark", "bdi", "span", "label", "button"],
 ]);
+
+const TAB_SWITCH_FADE_DURATION = 200;
 
 /**
  * @typedef {((args: {isMobileView: boolean}) => ())[]} on_mobile_view_switched_handlers
@@ -62,6 +65,7 @@ export class Builder extends Component {
         slots: { type: Object, optional: true },
         initialTab: { type: String, optional: true },
         onlyCustomizeTab: { type: Boolean, optional: true },
+        animateThemeTabSwitch: { type: Boolean, optional: true },
     };
     static defaultProps = {
         reloadEditor: () => {},
@@ -69,6 +73,7 @@ export class Builder extends Component {
         themeTabDisplayName: _t("Theme"),
         initialTab: "blocks",
         onlyCustomizeTab: false,
+        animateThemeTabSwitch: false,
     };
 
     setup() {
@@ -79,6 +84,11 @@ export class Builder extends Component {
             canRedo: false,
             activeTab: this.props.onlyCustomizeTab ? "customize" : this.props.initialTab,
             currentOptionsContainers: undefined,
+            tabContentTransitionClass: "",
+            themeColorPresetToShow: null,
+            themeTargetRowId: null,
+            themeTargetContainerId: null,
+            themeTabRenderKey: 0,
         });
         this.invisibleElementsPanelState = useState({
             invisibleEls: [],
@@ -94,9 +104,9 @@ export class Builder extends Component {
         this.snippetModel = useSnippets(this.props.snippetsName);
 
         this.lastTrigerUpdateId = 0;
+        // Cancels stale delayed tab switches when the user clicks again mid-animation.
+        this.tabSwitchToken = 0;
         this.editorBus = new EventBus();
-        this.colorPresetToShow = null;
-        this.shadowSizeToShow = null;
         this.activeTargetEl = null;
         const mobileBreakpoint = this.props.config.mobileBreakpoint ?? "lg";
 
@@ -172,10 +182,10 @@ export class Builder extends Component {
                         this.state.currentOptionsContainers = currentOptionsContainers;
                         if (currentOptionsContainers.length || this.props.onlyCustomizeTab) {
                             this.activeTargetEl = null;
-                            this.setTab("customize");
+                            this.state.activeTab = "customize";
                         } else if (this.state.activeTab === "customize") {
                             // If there is no option, go to add blocks
-                            this.setTab("blocks");
+                            this.state.activeTab = "blocks";
                         }
                     },
                     reload_context_processors: (context) => ({
@@ -268,7 +278,7 @@ export class Builder extends Component {
             editorBus: this.editorBus,
             triggerDomUpdated: this.triggerDomUpdated.bind(this),
             editColorCombination: this.editColorCombination.bind(this),
-            editShadow: this.editShadow.bind(this),
+            editThemeOption: this.editThemeOption.bind(this),
         });
         onWillDestroy(() => {
             this.resizeObserver.disconnect();
@@ -301,19 +311,27 @@ export class Builder extends Component {
      * Called when clicking on a tab. Sets the active tab to the given tab.
      *
      * @param {String} tab the tab to set
-     * @param {Number | null} presetId the color preset expanding on "theme" tab
-     * open.
      */
-    onTabClick(tab, { presetId = null, shadowSize = null } = {}) {
+    onTabClick(tab) {
         if (this.state.activeTab === tab) {
-            // If the tab is already active, do nothing.
             return;
         }
-        this.setTab(tab);
+        if (tab === "theme") {
+            this.setThemeReveal();
+        }
+        this.switchTab(tab, { animated: false });
+    }
+
+    setThemeReveal({ presetId = null, targetRowId = null, targetContainerId = null } = {}) {
+        this.state.themeColorPresetToShow = presetId;
+        this.state.themeTargetRowId = targetRowId;
+        this.state.themeTargetContainerId = targetContainerId;
+        this.state.themeTabRenderKey++;
+    }
+
+    applyTabSideEffects(tab) {
         // Deactivate the options when clicking on the "BLOCKS" or "THEME" tabs.
         if (tab === "theme" || tab === "blocks") {
-            this.colorPresetToShow = presetId;
-            this.shadowSizeToShow = shadowSize;
             this.activeTargetEl = this.activeTargetEl || this.getActiveTarget();
             this.editor.shared.builderOptions.deactivateContainers();
         } else if (this.activeTargetEl) {
@@ -325,8 +343,45 @@ export class Builder extends Component {
         }
     }
 
-    setTab(tab) {
+    shouldAnimateTabSwitch() {
+        return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+
+    async switchTab(tab, { animated = false } = {}) {
+        if (this.state.activeTab === tab) {
+            return;
+        }
+
+        const switchToken = ++this.tabSwitchToken;
+        const shouldAnimate = animated && this.shouldAnimateTabSwitch();
+        if (!shouldAnimate) {
+            this.state.tabContentTransitionClass = "";
+        }
+        if (shouldAnimate) {
+            this.state.tabContentTransitionClass = "o-is-fading-out";
+            await delay(TAB_SWITCH_FADE_DURATION);
+            if (switchToken !== this.tabSwitchToken) {
+                return;
+            }
+        }
         this.state.activeTab = tab;
+        this.applyTabSideEffects(tab);
+        if (shouldAnimate) {
+            this.state.tabContentTransitionClass = "o-is-fading-in";
+            await delay();
+            if (switchToken !== this.tabSwitchToken) {
+                return;
+            }
+            this.state.tabContentTransitionClass = "";
+        }
+    }
+
+    get themeTabProps() {
+        return {
+            colorPresetToShow: this.state.themeColorPresetToShow,
+            targetRowId: this.state.themeTargetRowId,
+            targetContainerId: this.state.themeTargetContainerId,
+        };
     }
 
     undo() {
@@ -357,11 +412,20 @@ export class Builder extends Component {
     }
 
     editColorCombination(presetId) {
-        this.onTabClick("theme", { presetId });
+        this.openThemeOption({ presetId });
     }
 
-    editShadow(shadowSize) {
-        this.onTabClick("theme", { shadowSize });
+    editThemeOption(targetRowId, targetContainerId) {
+        this.openThemeOption({ targetRowId, targetContainerId });
+    }
+
+    async openThemeOption({ presetId = null, targetRowId = null, targetContainerId = null } = {}) {
+        this.setThemeReveal({
+            presetId,
+            targetRowId,
+            targetContainerId,
+        });
+        await this.switchTab("theme", { animated: this.props.animateThemeTabSwitch });
     }
 
     getActiveTarget() {
