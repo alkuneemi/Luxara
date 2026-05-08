@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.fields import Command
-from odoo.tests import tagged
+from odoo.tests import Form, tagged
 
 from odoo.addons.sale.tests.common import SaleCommon
 
@@ -148,3 +148,66 @@ class TestSaleMargin(SaleCommon):
         self.assertAlmostEqual(750.0, following_sale.order_line.purchase_price)
         self.assertAlmostEqual(2500.0, following_sale.order_line.margin)
         self.assertAlmostEqual(0.25, following_sale.order_line.margin_percent)
+
+    def test_margin_onchange(self):
+        self.product.write({"standard_price": 50.0, "list_price": 100.0})
+        order = self._create_so()
+
+        with Form(order) as order_form:
+            with order_form.order_line.new() as sol:
+                # Add Product to Order Line
+                sol.product_id = self.product
+                # Make sure price and margin are correct
+                self.assertEqual(sol.price_unit, 100)
+                self.assertEqual(sol.margin, 50)
+                self.assertEqual(sol.margin_percent, 0.50)
+
+                # Modify Margin Percentage and make sure computations were correct
+                sol.margin_percent = 0.60
+                self.assertEqual(sol.price_unit, 125)
+                self.assertEqual(sol.margin, 75)
+
+                # Modify Margin and make sure computations were correct
+                sol.margin = 50
+                self.assertEqual(sol.price_unit, 100)
+                self.assertEqual(sol.margin_percent, 0.50)
+
+    def test_margin_onchange_taxes_and_discounts(self):
+        self._enable_discounts()
+        tax_included = self.env["account.tax"].create([
+            {
+                "name": "Tax with price include",
+                "amount": 10,
+                "price_include_override": "tax_included",
+            }
+        ])
+        self.product.write({
+            "standard_price": 50.0,
+            "list_price": 100.0,
+            "taxes_id": [Command.set(tax_included.ids)],
+        })
+        order = self._create_so()
+
+        with Form(order) as order_form:
+            with order_form.order_line.new() as sol:
+                # Add Product to Order Line
+                sol.product_id = self.product
+                # Make sure price and margin are correct
+                self.assertEqual(sol.price_unit, 100)
+                self.assertEqual(sol.margin, 50)
+                self.assertEqual(sol.margin_percent, 0.5)
+
+                # Test adding discount
+                sol.purchase_price = 45  # Modifying cost to get a round percentage
+                sol.product_uom_qty = 3
+                sol.discount = 10
+                self.assertEqual(sol.price_unit, 100)
+                self.assertEqual(sol.margin, 165)
+                self.assertEqual(sol.margin_percent, 0.55)
+
+                # Test manually modifying unit price, resetting discount
+                sol.price_unit = 80
+                sol.discount = 0
+                self.assertEqual(sol.price_unit, 80)
+                self.assertEqual(sol.margin, 105)
+                self.assertEqual(sol.margin_percent, 0.4375)
