@@ -288,7 +288,8 @@ class ResUsers(models.Model):
                 'email_to': self.email
             }
 
-            body = self.env['mail.render.mixin']._render_template(
+            user_lang = self.lang or self.env.lang or 'en_US'
+            body = self.env['mail.render.mixin'].with_context(lang=user_lang)._render_template(
                     'auth_signup.alert_login_new_device',
                     model='res.users', res_ids=self.ids,
                     engine='qweb_view', options={'post_process': True},
