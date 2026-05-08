@@ -567,8 +567,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
                 1: {
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True, 'is_decoded': True},
                     'invoice2.pdf': {'on_invoice': True, 'on_message': True},
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                 },
             },
         )
@@ -581,8 +581,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
                 1: {
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice2.pdf': {'on_invoice': True, 'on_message': True},
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                 },
             },
         )
@@ -606,8 +606,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             expected_invoices={
                 1: {
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True, 'is_decoded': True, 'is_new': True},
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                 },
                 2: {'invoice2.pdf': {'on_invoice': True, 'on_message': True, 'is_decoded': True, 'is_new': True}},
             },
@@ -619,8 +619,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             attachments_vals=[self.gif1_vals, self.gif2_vals],
             expected_invoices={
                 1: {
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                 },
             },
         )
@@ -897,8 +897,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             expected_invoices={
                 1: {
                     'invoice2.docx': {'on_invoice': True, 'on_message': True},
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice2.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice3.pdf': {'on_invoice': True, 'on_message': True},
@@ -917,8 +917,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             expected_invoices={
                 1: {
                     'invoice2.docx': {'on_invoice': True, 'on_message': True},
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice2.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice3.pdf': {'on_invoice': True, 'on_message': True},
@@ -955,8 +955,8 @@ class TestAccountIncomingSupplierInvoice(AccountTestInvoicingCommon, TestAccount
             attachments_vals=self.all_attachment_vals,
             expected_invoices={
                 1: {
-                    'gif1.gif': {'on_message': True},
-                    'gif2.gif': {'on_message': True},
+                    'gif1.gif': {'on_invoice': True, 'on_message': True},
+                    'gif2.gif': {'on_invoice': True, 'on_message': True},
                     'invoice1.pdf': {'on_invoice': True, 'on_message': True},
                     'invoice1.xml': {'on_invoice': True, 'is_decoded': True, 'is_new': True, 'on_message': True},
                 },
