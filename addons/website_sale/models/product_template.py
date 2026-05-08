@@ -612,13 +612,15 @@ class ProductTemplate(models.Model):
                     }
         return res
 
-    def _get_sales_prices(self, website):
+    def _get_sales_prices(self, website, pricelist=None, fiscal_position=None):
         if not self:
             return {}
 
-        pricelist = request.pricelist.with_context(self.env.context)
+        if pricelist is None:
+            pricelist = request.pricelist
+        pricelist = pricelist.with_context(self.env.context)
         currency = website.currency_id
-        fiscal_position_sudo = request.fiscal_position
+        fiscal_position_sudo = fiscal_position if fiscal_position is not None else request.fiscal_position
         date = fields.Date.context_today(self)
 
         pricelist_prices = pricelist._compute_price_rule(self, 1.0)
@@ -683,7 +685,15 @@ class ProductTemplate(models.Model):
         return next(self._get_possible_combinations(), False) is not False
 
     def _get_combination_info(
-        self, combination=False, product_id=False, add_qty=1.0, uom_id=False, only_template=False
+        self,
+        combination=False,
+        product_id=False,
+        add_qty=1.0,
+        uom_id=False,
+        only_template=False,
+        website=None,
+        pricelist=None,
+        fiscal_position=None,
     ):
         """Return info about a given combination.
 
@@ -731,7 +741,9 @@ class ProductTemplate(models.Model):
         self.ensure_one()
 
         combination = combination or self.env["product.template.attribute.value"]
-        website = request.website.with_context(self.env.context)
+        if website is None:
+            website = request.website
+        website = website.with_context(self.env.context)
         uom = self.env["uom.uom"].browse(uom_id) or self._get_main_uom()
 
         if not product_id and not combination and not only_template:
@@ -772,6 +784,8 @@ class ProductTemplate(models.Model):
                 uom=uom,
                 date=fields.Date.context_today(self),
                 website=website,
+                pricelist=pricelist,
+                fiscal_position=fiscal_position,
             ),
         }
 
@@ -792,7 +806,9 @@ class ProductTemplate(models.Model):
 
         return combination_info
 
-    def _get_additionnal_combination_info(self, product_or_template, quantity, uom, date, website):
+    def _get_additionnal_combination_info(
+        self, product_or_template, quantity, uom, date, website, pricelist=None, fiscal_position=None
+    ):
         """Compute additional combination info, based on given parameters.
 
         :param product_or_template: `product.product` or `product.template` record
@@ -806,7 +822,9 @@ class ProductTemplate(models.Model):
         :returns: additional product/template information
         :rtype: dict
         """
-        pricelist = request.pricelist.with_context(self.env.context)
+        if pricelist is None:
+            pricelist = request.pricelist
+        pricelist = pricelist.with_context(self.env.context)
         currency = website.currency_id.with_context(self.env.context)
 
         # Pricelist price doesn't have to be converted
@@ -857,7 +875,9 @@ class ProductTemplate(models.Model):
         )
         taxes = self.env["account.tax"]
         if product_taxes:
-            taxes = request.fiscal_position.map_tax(product_taxes)
+            if fiscal_position is None:
+                fiscal_position = request.fiscal_position
+            taxes = fiscal_position.map_tax(product_taxes)
             # We do not apply taxes on the compare_list_price value because it's meant to be
             # a strict value displayed as is.
             for price_key in ("price", "list_price"):
