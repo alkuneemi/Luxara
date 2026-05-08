@@ -3,12 +3,15 @@ import { registry } from '@web/core/registry';
 import { rpc } from '@web/core/network/rpc';
 import { redirect } from '@web/core/utils/urls';
 
+
 export class CustomerAddress extends Interaction {
     // /my/address & /my/account
     static selector = '.o_customer_address_fill';
     dynamicContent = {
+        'select[name="city_id"]': { 't-on-change': this.debounced(this.onChangeCity, 500) },
+        'select[name="state_id"]': { 't-on-change': this.debounced(this.onChangeState, 500) },
         'select[name="country_id"]': { 't-on-change': this.debounced(this.onChangeCountry, 500) },
-        'select[name="state_id"]': { 't-on-change': this.onChangeState },
+        'input[name="zip"]': { 't-on-input': this.onChangeZip.bind(this) },
         '#save_address': { 't-on-click.prevent': this.locked(this.saveAddress, true) },
     };
 
@@ -18,8 +21,15 @@ export class CustomerAddress extends Interaction {
         this.errorsDiv = this.el.querySelector('#errors');
         this.addressType = this.addressForm['address_type'].value;
         this.countryCode = this.addressForm.dataset.companyCountryCode;
-        this.requiredFields = this.addressForm.required_fields.value.split(',');
+        this.addressFields = ['street', 'zip', 'state_id', 'city', 'city_id'];
+
+        // Required fields (defined server-side)
+        this.requiredFields = this.addressForm.dataset.requiredFields.split(',');
         this.requiredFields.forEach((fieldName) => this._markRequired(fieldName, true));
+
+        // Support for customizations and additional required fields
+        this.alwaysRequiredFields = this.addressForm.required_fields.value.split(',');
+        this.alwaysRequiredFields.forEach((fieldName) => this._markRequired(fieldName, true));
     }
 
     async willStart() {
@@ -33,12 +43,13 @@ export class CustomerAddress extends Interaction {
     /**
      * Overridable hook.
      */
-    async onChangeState() {}
+    async onChangeZip() {}
 
     async _onChangeCountry(init=false) {
         const countryId = parseInt(this.addressForm.country_id.value);
         if (!countryId) return;
 
+        // TODO is_used_as_billing
         const data = await this.waitFor(rpc(
             `/my/address/country_info/${countryId}`,
             {address_type: this.addressType},
@@ -46,60 +57,83 @@ export class CustomerAddress extends Interaction {
 
         this.addressForm.phone.placeholder = data.phone_code !== 0 ? `+${data.phone_code}` : '';
 
-        // populate states and display
-        const selectStates = this.addressForm.state_id;
-        if (!init || selectStates.options.length === 1) {
-            // dont reload state at first loading (done in qweb)
-            if (data.states.length || data.state_required) {
-                // empty existing options, only keep the placeholder.
-                selectStates.options.length = 1;
-
-                // create new options and append them to the select element
-                data.states.forEach((state) => {
-                    const option = new Option(state[1], state[0]);
-                    // Used by localizations
-                    option.setAttribute('data-code', state[2]);
-                    selectStates.appendChild(option);
-                });
-                this._showInput('state_id');
-            } else {
-                this._hideInput('state_id');
+        // add requirement on new required fields
+        data.required_fields.forEach((fieldName) => {
+            this._markRequired(fieldName, true);
+        })
+        this.requiredFields.forEach((fieldName) => {
+            // remove requirement on previously required fields
+            if (
+                !data.required_fields.includes(fieldName)
+                && !this.alwaysRequiredFields.includes(fieldName)
+            ) {
+                this._markRequired(fieldName, false);
             }
-        }
+        });
 
         // manage fields order / visibility
-        if (data.fields) {
+        if (data.address_fields) {
             if (data.zip_before_city) {
-                this._getInputDiv('zip').after(this._getInputDiv('city'));
+                this._getInputDiv('zip').after(this._getInputDiv(this._getCityField(data)));
             } else {
-                this._getInputDiv('zip').before(this._getInputDiv('city'));
+                this._getInputDiv('zip').before(this._getInputDiv(this._getCityField(data)));
             }
 
-            const all_fields = ['street', 'zip', 'city'];
-            all_fields.forEach((fname) => {
-                if (data.fields.includes(fname)) {
+            this.addressFields.forEach((fname) => {
+                if (data.address_fields.includes(fname)) {
                     this._showInput(fname);
+                    // dont reload state at first loading (done in qweb)
+                    if (!init && data.selection && fname in data.selection) {
+                        // Configure the options for relational fields
+                        this._setFieldChoices(fname, data.selection[fname].data);
+                    }
                 } else {
                     this._hideInput(fname);
                 }
             });
         }
 
-        const required_fields = this.addressForm.querySelectorAll(':required');
-        required_fields.forEach((element) => {
-            // remove requirement on previously required fields
-            if (
-                !data.required_fields.includes(element.name)
-                && !this.requiredFields.includes(element.name)
-            ) {
-                this._markRequired(element.name, false);
-            }
-        });
-        data.required_fields.forEach((fieldName) => {
-            this._markRequired(fieldName, true);
-        })
+        return data;
+    }
+
+    async onChangeState() {
+        let data = {
+            'cities': [],
+        }
+        const stateId = parseInt(this.addressForm.state_id.value);
+        if (stateId)  {
+            data = await this.waitFor(rpc(`/my/address/state_info/${stateId}`, {}));
+        }
+        else {
+            const countryId = parseInt(this.addressForm.country_id.value);
+            data = await this.waitFor(rpc(
+            `/my/address/country_info/${countryId}`,
+            {
+                address_type: this.addressType,
+                from_state_update: true
+            },
+        ));
+        }
+        if (data.cities) {
+            this._setFieldChoices('city_id', data.cities);
+        }
 
         return data;
+    }
+
+    /*
+     * Auto-fill zip code according to chosen city
+     */
+    async onChangeCity() {
+        const cityZipCode = this.addressForm.city_id.selectedOptions[0].dataset.zipcode;
+
+        if (cityZipCode) {
+            this.addressForm.zip.value = cityZipCode;
+        }
+    }
+
+    _getCityField(data) {
+        return data.required_fields.includes('city_id') ? 'city_id' : 'city';
     }
 
     _getInputDiv(name) {
@@ -117,8 +151,9 @@ export class CustomerAddress extends Interaction {
     }
 
     _hideInput(name) {
-        // show parent div, containing label and input
+        // hide parent div, containing label and input
         this.addressForm[name].parentElement.style.display = 'none';
+        this.addressForm[name].value = ''
     }
 
     _markRequired(name, required) {
@@ -127,6 +162,28 @@ export class CustomerAddress extends Interaction {
             input.required = required;
         }
         this._getInputLabel(name)?.classList.toggle('label-optional', !required);
+    }
+
+    _setFieldChoices(name, data_list) {
+        const selection = this.addressForm[name];
+        // empty existing options, only keep the first-choice placeholder.
+        selection.options.length = 1;
+
+        if (!data_list.length) {
+            this._hideInput(name);
+            return
+        }
+        // create new options and append them to the select element
+        data_list.forEach((choice) => {
+            const option = new Option(choice.name, choice.id);
+            Object.keys(choice).forEach((key) => {
+                if (!['name', 'id'].includes(key) && choice[key]) {
+                    option.dataset[key] = choice[key];
+                }
+            });
+            selection.appendChild(option);
+        });
+        this._showInput(name);
     }
 
     /**
@@ -178,7 +235,7 @@ export class CustomerAddress extends Interaction {
      */
     _getSelectedCountryCode() {
         const country = this.addressForm.country_id;
-        return country.value ? country.selectedOptions[0].getAttribute('code') : '';
+        return country.value ? country.selectedOptions[0].dataset.code : '';
     }
 }
 

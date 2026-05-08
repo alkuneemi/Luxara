@@ -13,7 +13,12 @@ class ResCity(models.Model):
     zipcode = fields.Char("Zip")
     country_id = fields.Many2one(comodel_name='res.country', string='Country', required=True, index=True)
     country_code = fields.Char(related='country_id.code')
-    state_id = fields.Many2one(comodel_name='res.country.state', string='State', domain="[('country_id', '=', country_id)]")
+    state_id = fields.Many2one(
+        string="State",
+        comodel_name="res.country.state",
+        domain="[('country_id', '=', country_id)]",
+        index="btree_not_null",
+    )
 
     @api.depends_context('formatted_display_name')
     @api.depends('zipcode', 'state_id')

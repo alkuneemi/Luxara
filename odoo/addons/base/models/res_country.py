@@ -63,7 +63,7 @@ class ResCountry(models.CachedModel):
         compute="_compute_image_url", string="Flag",
         help="Url of static flag image",
     )
-    phone_code = fields.Integer(string='Country Calling Code')
+    phone_code = fields.Integer(string="Phone Prefix")
     country_group_ids = fields.Many2many('res.country.group', 'res_country_res_country_group_rel',
                          'res_country_id', 'res_country_group_id', string='Country Groups')
     country_group_codes = fields.Json(compute="_compute_country_group_codes")
