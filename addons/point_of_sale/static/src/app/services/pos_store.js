@@ -1740,6 +1740,11 @@ export class PosStore extends WithLazyGetterTrap {
     get printOptions() {
         return { webPrintFallback: true };
     }
+
+    get canSendReceipt() {
+        return true;
+    }
+
     getOrderChanges(order = this.getOrder()) {
         return getOrderChanges(order, this.config.preparationCategories);
     }
