@@ -59,6 +59,7 @@ class ResPartner(models.Model):
             lambda p: not p._is_vat_void(p.vat)
                 and p.l10n_latam_identification_type_id.l10n_ar_afip_code
                 and p.country_code == 'AR'
+                and p.commercial_partner_id == p
         )
         for partner in l10n_ar_partners:
             afip_code = partner.l10n_latam_identification_type_id.l10n_ar_afip_code

@@ -32,7 +32,7 @@ class ResPartner(models.Model):
     @api.depends('l10n_latam_identification_type_id', 'country_id')
     def _compute_is_company(self):
         latam_country_codes = self.env['res.company']._get_l10n_latam_base_country_codes()
-        latam_partners = self.filtered(lambda p: p.country_code in latam_country_codes)
+        latam_partners = self.filtered(lambda p: p.country_code in latam_country_codes and p.commercial_partner_id == p)
         for partner in latam_partners:
             partner.is_company = bool(
                 partner.l10n_latam_identification_type_id.country_id.code == partner.country_code
