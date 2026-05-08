@@ -41,6 +41,7 @@ class LeaveReport(models.Model):
                 /* Validated leaves */
                 validated_leaves as (
                     SELECT
+						l.id as leave_id,
 						l.employee_id as employee_id,
 						l.number_of_days as number_of_days,
 						l.number_of_hours as number_of_hours,
@@ -105,6 +106,7 @@ class LeaveReport(models.Model):
 						ga.date_from as date_from,
 						ga.date_to as date_to,
 						ga.company_id as company_id,
+						ga.overlap_group as overlap_group,
 						ROW_NUMBER() OVER (
 							PARTITION BY ga.employee_id, ga.leave_type, ga.overlap_group
 							ORDER BY ga.date_from, ga.allocation_id
@@ -122,45 +124,91 @@ class LeaveReport(models.Model):
                     FROM grouped_allocations ga
                 ),
 
-                /* Leaves applicable to each allocation */
-                taken_per_allocation as (
+                /* For each leave, find the earliest FIFO rank it overlaps within each overlap group */
+                leave_first_rank as (
                     SELECT
-                        oa.allocation_id,
-                        SUM(vl.number_of_days) as taken_days,
-						SUM(vl.number_of_hours) as taken_hours
-                    FROM ordered_allocations oa
-                    LEFT JOIN validated_leaves vl
+                        vl.leave_id,
+                        oa.employee_id,
+                        oa.leave_type,
+                        oa.overlap_group,
+                        MIN(oa.fifo_rank) as first_rank,
+                        MAX(vl.number_of_days) as number_of_days,
+                        MAX(vl.number_of_hours) as number_of_hours
+                    FROM validated_leaves vl
+                    JOIN ordered_allocations oa
                         ON vl.employee_id = oa.employee_id
                         AND vl.leave_type = oa.leave_type
                         AND vl.date_from <= COALESCE(oa.date_to, 'infinity')
-                        AND (
-                            oa.date_to IS NULL
-                            OR
-                            vl.date_to >= oa.date_from
-                        )
-                    GROUP BY oa.allocation_id
+                        AND (oa.date_to IS NULL OR vl.date_to >= oa.date_from)
+                    GROUP BY vl.leave_id, oa.employee_id, oa.leave_type, oa.overlap_group
                 ),
 
-                /* FIFO remaining balance per allocation */
+                /* Cumulative taken: for each allocation, sum all distinct leaves whose
+                   earliest overlapping rank <= this allocation's rank */
+                taken_by_rank as (
+                    SELECT
+                        employee_id,
+                        leave_type,
+                        overlap_group,
+                        first_rank,
+                        SUM(number_of_days) as taken_days,
+                        SUM(number_of_hours) as taken_hours
+                    FROM leave_first_rank
+                    GROUP BY employee_id, leave_type, overlap_group, first_rank
+                ),
+
+                /* FIFO remaining balance per allocation:
+                   cumul_remaining[k] = max(cumul_alloc[k] - cumul_taken[k], 0)
+                   remaining[k] = cumul_remaining[k] - cumul_remaining[k-1] */
                 fifo_balances as (
                     SELECT
-                        oa.employee_id as employee_id,
-                        oa.active_employee as active_employee,
-                        GREATEST(oa.number_of_days - GREATEST(
-							COALESCE(tpa.taken_days, 0) - (oa.cumulative_allocated_days - oa.number_of_days), 0),
-						0) as number_of_days,
-						GREATEST(oa.number_of_hours - GREATEST(
-							COALESCE(tpa.taken_hours, 0) - (oa.cumulative_allocated_hours - oa.number_of_hours), 0),
-						0) as number_of_hours,
-                        oa.department_id as department_id,
-                        oa.leave_type as leave_type,
-                        oa.state as state,
-                        oa.date_from as date_from,
-                        oa.date_to as date_to,
-                        oa.company_id as company_id
-                    FROM ordered_allocations oa
-                    LEFT JOIN taken_per_allocation tpa
-                        ON tpa.allocation_id = oa.allocation_id
+                        sub.employee_id,
+                        sub.active_employee,
+                        GREATEST(
+                            sub.cumul_remaining_days
+                            - COALESCE(LAG(sub.cumul_remaining_days) OVER w, 0),
+                            0
+                        ) as number_of_days,
+                        GREATEST(
+                            sub.cumul_remaining_hours
+                            - COALESCE(LAG(sub.cumul_remaining_hours) OVER w, 0),
+                            0
+                        ) as number_of_hours,
+                        sub.department_id,
+                        sub.leave_type,
+                        sub.state,
+                        sub.date_from,
+                        sub.date_to,
+                        sub.company_id
+                    FROM (
+                        SELECT
+                            oa.*,
+                            GREATEST(
+                                oa.cumulative_allocated_days
+                                - SUM(COALESCE(tbr.taken_days, 0)) OVER w,
+                                0
+                            ) as cumul_remaining_days,
+                            GREATEST(
+                                oa.cumulative_allocated_hours
+                                - SUM(COALESCE(tbr.taken_hours, 0)) OVER w,
+                                0
+                            ) as cumul_remaining_hours
+                        FROM ordered_allocations oa
+                        LEFT JOIN taken_by_rank tbr
+                            ON tbr.employee_id = oa.employee_id
+                            AND tbr.leave_type = oa.leave_type
+                            AND tbr.overlap_group = oa.overlap_group
+                            AND tbr.first_rank = oa.fifo_rank
+                        WINDOW w AS (
+                            PARTITION BY oa.employee_id, oa.leave_type, oa.overlap_group
+                            ORDER BY oa.fifo_rank
+                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                        )
+                    ) sub
+                    WINDOW w AS (
+                        PARTITION BY sub.employee_id, sub.leave_type, sub.overlap_group
+                        ORDER BY sub.fifo_rank
+                    )
                 )
 
                 /* Final unified result */
