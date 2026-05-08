@@ -148,6 +148,7 @@ class WebsiteSaleProductConfiguratorController(SaleProductConfiguratorController
                 date,
                 basic_product_information['price'],
                 basic_product_information['pricelist_rule_id'],
+                uom=kwargs.get("uom"),
             ) if 'price_info' not in basic_product_information else None
             if strikethrough_price:
                 basic_product_information['strikethrough_price'] = strikethrough_price
@@ -170,7 +171,7 @@ class WebsiteSaleProductConfiguratorController(SaleProductConfiguratorController
             return self._apply_taxes_to_price(price_extra, product_or_template, currency)
         return price_extra
 
-    def _get_strikethrough_price(self, product_or_template, currency, date, price, pricelist_rule_id=None):
+    def _get_strikethrough_price(self, product_or_template, currency, date, price, pricelist_rule_id=None, uom=None):
         """ Return the strikethrough price of the product, if there is one.
 
         :param product.product|product.template product_or_template: The product for which to
@@ -190,7 +191,7 @@ class WebsiteSaleProductConfiguratorController(SaleProductConfiguratorController
                 pricelist_rule._compute_price_before_discount(
                     product=product_or_template,
                     quantity=1.0,
-                    uom=product_or_template.uom_id,
+                    uom=uom or product_or_template.uom_id,
                     date=date,
                     currency=currency,
                 ),
@@ -214,6 +215,10 @@ class WebsiteSaleProductConfiguratorController(SaleProductConfiguratorController
                 date=date,
                 round=False,
             )
+            if uom and product_or_template.uom_id != uom:
+                compare_list_price = product_or_template.uom_id._compute_price(
+                    compare_list_price, uom,
+                )
             # Only show `compare_list_price` if it's greater than the actual price.
             if currency.compare_amounts(compare_list_price, price) == 1:
                 return compare_list_price
