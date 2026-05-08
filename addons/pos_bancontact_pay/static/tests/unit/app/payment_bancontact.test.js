@@ -220,6 +220,32 @@ describe("sendPaymentCancel", () => {
         }
     });
 
+    test("failed to cancel bancontact payment (ERR: 429)", async () => {
+        const store = await setupPosEnv();
+        const order = await getFilledOrder(store);
+        const display = store.models["pos.payment.method"].get(4);
+        const sticker = store.models["pos.payment.method"].get(5);
+
+        const opts = {
+            bancontact_id: -429,
+            payment_status: "waitingCancel",
+            qr_code: "bancontact_qr_code",
+        };
+        const paymentlineDisplay = createPaymentLine(store, order, display, opts);
+        const paymentlineSticker = createPaymentLine(store, order, sticker, opts);
+        const paymentlines = [paymentlineDisplay, paymentlineSticker];
+
+        for (const paymentline of paymentlines) {
+            const result = await paymentline.payment_interface.sendPaymentCancel(paymentline);
+            expect(result).toBe(true);
+            expect(paymentline.bancontact_id).toBeEmpty();
+            expect(paymentline.qr_code).toBeEmpty();
+
+            // The payment status is updated by `forceCancel`
+            expect(paymentline.payment_status).toBe("retry");
+        }
+    });
+
     test("success to cancel bancontact payment", async () => {
         const store = await setupPosEnv();
         const order = await getFilledOrder(store);
