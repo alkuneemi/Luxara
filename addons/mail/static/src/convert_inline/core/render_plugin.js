@@ -32,7 +32,7 @@ export class RenderPlugin extends Plugin {
 
     setup() {
         this.discardedNodes = new WeakSet();
-        this.needSyntheticEmailNode = new Set();
+        this.syntheticEmailNodeContainers = new Set();
     }
 
     buildRenderTree() {
@@ -123,8 +123,8 @@ export class RenderPlugin extends Plugin {
                 emailNode.analysis.parsingFacts.canMerge = false;
             }
         }
-        if (emailNode.analysis.parsingFacts.addSyntheticEmailNode) {
-            this.needSyntheticEmailNode.add(emailNode);
+        if (emailNode.analysis.parsingFacts.needSyntheticEmailNode) {
+            this.syntheticEmailNodeContainers.add(emailNode);
         }
         for (const childNode of childNodes ?? []) {
             this.createEmailNode(childNode, emailNode);
@@ -170,8 +170,8 @@ export class RenderPlugin extends Plugin {
      * natural treeWalking order
      */
     addSyntheticEmailNodes() {
-        for (const emailNode of [...this.needSyntheticEmailNode]) {
-            this.needSyntheticEmailNode.delete(emailNode);
+        for (const emailNode of [...this.syntheticEmailNodeContainers]) {
+            this.syntheticEmailNodeContainers.delete(emailNode);
             // IMPORTANT: if emailNode is replaced/removed, all of its children
             // should be given a new parent, this is not a phase where nodes
             // can be discarded.
