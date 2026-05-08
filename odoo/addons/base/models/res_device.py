@@ -82,11 +82,22 @@ class ResDeviceLog(models.Model):
 
     @api.autovacuum
     def _gc_device_log(self):
+<<<<<<< c00f2495da04aefa9b63e8024a5fc018aa304201
         # Soft GC:
         # Keep the last device log even if the session file
         # no longer exists on the filesystem
         query = SQL("""
+||||||| 454d41e33b94ca8cbd0fe19bf9f602e56b6a366e
+        # Keep the last device log
+        # (even if the session file no longer exists on the filesystem)
+        self.env.cr.execute("""
+=======
+        # Keep the last device log
+        # (even if the session file no longer exists on the filesystem)
+        query = SQL("""
+>>>>>>> 0d2fc4475fdfaad7d46defb8033632e32b61484f
             DELETE FROM res_device_log log1
+<<<<<<< c00f2495da04aefa9b63e8024a5fc018aa304201
             WHERE EXISTS (
                 SELECT 1 FROM res_device_log log2
                 WHERE
@@ -95,7 +106,27 @@ class ResDeviceLog(models.Model):
                     AND log1.user_agent = log2.user_agent
                     AND log1.last_activity < log2.last_activity
             )
+||||||| 454d41e33b94ca8cbd0fe19bf9f602e56b6a366e
+            WHERE EXISTS (
+                SELECT 1 FROM res_device_log log2
+                WHERE
+                    log1.session_identifier = log2.session_identifier
+                    AND log1.platform = log2.platform
+                    AND log1.browser = log2.browser
+                    AND log1.ip_address = log2.ip_address
+                    AND log1.last_activity < log2.last_activity
+            )
+=======
+            USING res_device_log log2
+            WHERE
+                log1.session_identifier = log2.session_identifier
+                AND log1.platform = log2.platform
+                AND log1.browser = log2.browser
+                AND log1.ip_address = log2.ip_address
+                AND log1.last_activity < log2.last_activity
+>>>>>>> 0d2fc4475fdfaad7d46defb8033632e32b61484f
         """)
+<<<<<<< c00f2495da04aefa9b63e8024a5fc018aa304201
 
         # Hard GC:
         # Delete device logs if the last activity has been exceeded by a defined
@@ -109,6 +140,17 @@ class ResDeviceLog(models.Model):
 
         self.env.cr.execute(query)
         _logger.info('GC device logs delete %d entries', self.env.cr.rowcount)
+||||||| 454d41e33b94ca8cbd0fe19bf9f602e56b6a366e
+        _logger.info("GC device logs delete %d entries", self.env.cr.rowcount)
+=======
+        if cron_lastcall := self.env.context.get('lastcall'):
+            query = SQL(
+                '%s AND log2.last_activity >= %s',
+                query, cron_lastcall,
+            )
+        self.env.cr.execute(query)
+        _logger.info("GC device logs delete %d entries", self.env.cr.rowcount)
+>>>>>>> 0d2fc4475fdfaad7d46defb8033632e32b61484f
 
     @api.autovacuum
     def __update_revoked(self):
