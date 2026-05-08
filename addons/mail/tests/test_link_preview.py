@@ -247,3 +247,8 @@ class TestLinkPreview(MailCommon):
             self.assertEqual(preview.source_url, self.source_url)
             self.test_partner._message_update_content(message, body="")
             self.assertFalse(message.link_preview_ids)
+
+    def test_link_preview_display_name(self):
+        """Verify the link preview display name shows the source URL."""
+        preview = self.env["mail.link.preview"].create({"source_url": self.source_url})
+        self.assertEqual(preview.display_name, self.source_url)
