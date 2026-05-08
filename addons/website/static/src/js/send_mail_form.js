@@ -52,7 +52,6 @@ registry.category("website.form_editor_actions").add("send_mail", {
             type: "char",
             required: true,
             string: _t("Recipient Emails"),
-            defaultValue: "info@yourcompany.example.com",
             help: _t("Add multiple emails separated by commas"),
         },
     ],
