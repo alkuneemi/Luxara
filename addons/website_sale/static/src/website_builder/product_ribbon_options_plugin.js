@@ -19,6 +19,7 @@ export class ProductsRibbonOptionPlugin extends Plugin {
         'setProductTemplateID',
         'getProductTemplateID',
         'addProductTemplatesRibbons',
+        'addProductVariantsRibbons',
         'loadInfo',
         'getCount',
     ];
@@ -37,6 +38,7 @@ export class ProductsRibbonOptionPlugin extends Plugin {
         this.positionClasses = { left: "o_left", right: "o_right" };
         this.styleClasses = { ribbon: "o_wsale_ribbon", tag: "o_wsale_badge" };
         this.productTemplatesRibbons = [];
+        this.productVariantsRibbons = [];
         this.editMode = false;
     }
     getCount() {
@@ -184,6 +186,28 @@ export class ProductsRibbonOptionPlugin extends Plugin {
             );
         }
 
+        // Save variant-level ribbon assignments
+        const finalVariantRibbons = this.productVariantsRibbons.reduce(
+            (acc, { variantId, ribbonId }) => {
+                acc[variantId] = ribbonId;
+                return acc;
+            }, {},
+        );
+        const ribbonVariants = {};
+        for (const [variantId, ribbonId] of Object.entries(finalVariantRibbons)) {
+            const serverRibbonId = this.getServerId(ribbonId);
+            const variants = (ribbonVariants[serverRibbonId] ||= []);
+            variants.push(parseInt(variantId));
+        }
+        for (const [ribbonIdStr, variantIds] of Object.entries(ribbonVariants)) {
+            const ribbonId = parseInt(ribbonIdStr) || false;
+            promises.push(
+                this.services.orm.write('product.product', variantIds, {
+                    variant_ribbon_id: ribbonId,
+                })
+            );
+        }
+
         return Promise.all(promises);
     }
 
@@ -216,20 +240,32 @@ export class ProductsRibbonOptionPlugin extends Plugin {
         ribbons.forEach((ribbonElement) => {
             ribbonElement.classList.add("d-none");
             ribbonElement.dataset.ribbonId = "";
-            let templateId;
             if (isProductPage) {
-                templateId = this.productTemplateID;
-            } else {
-                // Find the product template ID from the ribbon element's parent article.
-                const productArticle = ribbonElement.closest('article.oe_product_cart');
-                const templateElement = productArticle?.querySelector('[data-oe-model="product.template"]');
-                templateId = templateElement ? parseInt(templateElement.getAttribute('data-oe-id')) : null;
-            }
-            if (templateId && !isNaN(templateId)) {
                 this.addProductTemplatesRibbons({
-                    templateId: templateId,
+                    templateId: this.productTemplateID,
                     ribbonId: false,
                 });
+            } else {
+                const oeProduct = ribbonElement.closest('.oe_product');
+                const variantId = oeProduct?.dataset.variantId
+                    ? parseInt(oeProduct.dataset.variantId)
+                    : null;
+                if (variantId) {
+                    this.addProductVariantsRibbons({
+                        variantId: variantId,
+                        ribbonId: false,
+                    });
+                } else {
+                    const productArticle = ribbonElement.closest('article.oe_product_cart');
+                    const templateElement = productArticle?.querySelector('[data-oe-model="product.template"]');
+                    const templateId = templateElement ? parseInt(templateElement.getAttribute('data-oe-id')) : null;
+                    if (templateId && !isNaN(templateId)) {
+                        this.addProductTemplatesRibbons({
+                            templateId: templateId,
+                            ribbonId: false,
+                        });
+                    }
+                }
             }
         });
         await this._saveRibbons();
@@ -257,6 +293,16 @@ export class ProductsRibbonOptionPlugin extends Plugin {
             this.productTemplatesRibbons[index].ribbonId = ribbonId;
         } else {
             this.productTemplatesRibbons.push({ templateId, ribbonId });
+        }
+    }
+    addProductVariantsRibbons({ variantId, ribbonId }) {
+        const index = this.productVariantsRibbons.findIndex(
+            (entry) => entry.variantId === variantId
+        );
+        if (index !== -1) {
+            this.productVariantsRibbons[index].ribbonId = ribbonId;
+        } else {
+            this.productVariantsRibbons.push({ variantId, ribbonId });
         }
     }
     getRibbonsObject() {
@@ -295,16 +341,24 @@ export class SetRibbonAction extends BuilderAction {
         return match === value;
     }
     apply({ isPreviewing, editingElement, value }) {
-        const productTemplateID = parseInt(
-            editingElement
-                .querySelector('[data-oe-model="product.template"]')
-                .getAttribute('data-oe-id')
-        );
-        this.ribbonOptions.setProductTemplateID(productTemplateID)
-        this.ribbonOptions.addProductTemplatesRibbons({
-            templateId: productTemplateID,
-            ribbonId: value,
-        });
+        const variantId = parseInt(editingElement.dataset.variantId);
+        if (variantId) {
+            this.ribbonOptions.addProductVariantsRibbons({
+                variantId: variantId,
+                ribbonId: value,
+            });
+        } else {
+            const productTemplateID = parseInt(
+                editingElement
+                    .querySelector('[data-oe-model="product.template"]')
+                    .getAttribute('data-oe-id')
+            );
+            this.ribbonOptions.setProductTemplateID(productTemplateID)
+            this.ribbonOptions.addProductTemplatesRibbons({
+                templateId: productTemplateID,
+                ribbonId: value,
+            });
+        }
 
         const ribbon = this.ribbonOptions.getRibbonsObject()[value] || {
             id: '',
@@ -329,17 +383,25 @@ export class CreateRibbonAction extends BuilderAction {
         this.ribbonOptions = this.dependencies.productsRibbonOptionPlugin
     }
     apply({ editingElement }) {
-        const productTemplateId = parseInt(
-            editingElement
-                .querySelector('[data-oe-model="product.template"]')
-                .getAttribute('data-oe-id')
-        );
-        this.ribbonOptions.setProductTemplateID(productTemplateId);
         const ribbonId = Date.now();
-        this.ribbonOptions.addProductTemplatesRibbons({
-            templateId: productTemplateId,
-            ribbonId: ribbonId,
-        });
+        const variantId = parseInt(editingElement.dataset.variantId);
+        if (variantId) {
+            this.ribbonOptions.addProductVariantsRibbons({
+                variantId: variantId,
+                ribbonId: ribbonId,
+            });
+        } else {
+            const productTemplateId = parseInt(
+                editingElement
+                    .querySelector('[data-oe-model="product.template"]')
+                    .getAttribute('data-oe-id')
+            );
+            this.ribbonOptions.setProductTemplateID(productTemplateId);
+            this.ribbonOptions.addProductTemplatesRibbons({
+                templateId: productTemplateId,
+                ribbonId: ribbonId,
+            });
+        }
         const ribbon = reactive({
             serverId: null,
             id: ribbonId,
