@@ -3,13 +3,25 @@ import { BaseOptionComponent } from "@html_builder/core/base_option_component";
 import { useDomState } from "@html_builder/core/utils";
 import { getCSSVariableValue } from "@html_editor/utils/formatting";
 import { _t } from "@web/core/l10n/translation";
+import { getCSSPalettes, getPaletteFontCombos } from "@website/utils/theme_presets";
 
 export class ThemeColorsOption extends BaseOptionComponent {
     static template = "website.ThemeColorsOption";
     static dependencies = ["themeTab"];
     setup() {
         super.setup();
-        this.palettes = this.getPalettes();
+        const style = window.getComputedStyle(document.documentElement);
+        const paletteFontComboGroups = new Map();
+        for (const combo of getPaletteFontCombos(getCSSPalettes(style))) {
+            if (!paletteFontComboGroups.has(combo.palette)) {
+                paletteFontComboGroups.set(combo.palette, {
+                    palette: combo.palette,
+                    combos: [],
+                });
+            }
+            paletteFontComboGroups.get(combo.palette).combos.push(combo);
+        }
+        this.paletteFontComboGroups = [...paletteFontComboGroups.values()];
         this.colorPresetToShow = this.env.colorPresetToShow;
         this.grays = this.dependencies.themeTab.getGrays();
         this.state = useDomState(() => ({
@@ -20,26 +32,6 @@ export class ThemeColorsOption extends BaseOptionComponent {
             this.state.presets = this.getPresets();
             this.colorPresetToShow = null;
         });
-    }
-
-    getPalettes() {
-        const palettes = [];
-        const style = window.getComputedStyle(document.documentElement);
-        const allPaletteNames = getCSSVariableValue("palette-names", style)
-            .split(", ")
-            .map((name) => name.replace(/'/g, ""));
-        for (const paletteName of allPaletteNames) {
-            const palette = {
-                name: paletteName,
-                colors: [],
-            };
-            [1, 3, 2].forEach((c) => {
-                const color = getCSSVariableValue(`o-palette-${paletteName}-o-color-${c}`, style);
-                palette.colors.push(color);
-            });
-            palettes.push(palette);
-        }
-        return palettes;
     }
 
     getGrayTitle(grayCode) {

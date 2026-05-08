@@ -1,4 +1,12 @@
-import { reactive, useEnv, useExternalListener, useLayoutEffect, useRef, useState, useSubEnv } from "@web/owl2/utils";
+import {
+    reactive,
+    useEnv,
+    useExternalListener,
+    useLayoutEffect,
+    useRef,
+    useState,
+    useSubEnv,
+} from "@web/owl2/utils";
 import { browser } from "@web/core/browser/browser";
 const sessionStorage = browser.sessionStorage;
 import { AutoComplete } from "@web/core/autocomplete/autocomplete";
@@ -16,15 +24,17 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { mixCssColors } from "@web/core/utils/colors";
 import { router } from "@web/core/browser/router";
-import {
-    Component,
-    markup,
-    onMounted,
-    onWillStart,
-} from "@odoo/owl";
+import { Component, markup, onMounted, onWillStart, onWillUnmount } from "@odoo/owl";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 import { fuzzyLevenshteinLookup } from "@web/core/utils/search";
 import { isBrowserSafari } from "@web/core/browser/feature_detection";
+import {
+    CUSTOM_BG_COLOR_ATTRS,
+    getCSSPalettes,
+    getPaletteFontCombos,
+    PALETTE_FONT_COMBOS,
+    PALETTE_NAMES,
+} from "@website/utils/theme_presets";
 
 export const ROUTES = {
     descriptionScreen: 2,
@@ -49,50 +59,28 @@ export const WEBSITE_PURPOSES = {
     5: { id: 5, label: _t("schedule appointments"), name: "schedule_appointments" },
 };
 
-export const PALETTE_NAMES = [
-    "default-light-1",
-    "default-light-2",
-    "default-light-4",
-    "default-light-3",
-    "default-light-5",
-    "default-24",
-    "default-light-7",
-    "default-light-6",
-    "default-light-11",
-    "default-light-14",
-    "default-light-8",
-    "default-6",
-    "default-7",
-    "default-8",
-    "default-9",
-    "default-23",
-    "default-25",
-    "default-12",
-    "default-14",
-    "default-22",
-    "default-15",
-    "default-16",
-    "default-17",
-    "default-light-10",
-    "default-19",
-    "default-20",
-    "default-5",
-    "default-4",
-    "default-light-9",
-    "default-2",
-    "default-light-13",
-    "default-27",
-    "default-light-12",
-    "default-1",
-    "default-28",
-    "default-21",
-];
+const GOOGLE_FONTS_URL =
+    "https://fonts.googleapis.com/css?family=" +
+    "Roboto:400,700|Inter:400,700|Inter+Tight:400,700|Raleway:400,700|" +
+    "Playfair+Display:400,700|Noto+Serif:400,700|Arvo:400,700|" +
+    "Dancing+Script:400,700|Caveat:400,700|Pacifico:400|Lobster:400|Fredoka+One:400|" +
+    "Baloo+2:400,700|Oswald:400,700|Anton:400|Bebas+Neue:400|Open+Sans:400,700|Source+Sans+Pro:400,700" +
+    "&display=swap";
 
-// Attributes for which background color should be retrieved
-// from CSS and added in each palette.
-export const CUSTOM_BG_COLOR_ATTRS = ["menu", "footer"];
+let _googleFontsLoaded = false;
+function loadGoogleFonts() {
+    if (_googleFontsLoaded) {
+        return;
+    }
+    _googleFontsLoaded = true;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = GOOGLE_FONTS_URL;
+    document.head.appendChild(link);
+}
 
-const MAX_NBR_DISPLAY_MAIN_THEMES = 3;
+const MAX_NBR_DISPLAY_MAIN_THEMES = 6;
+const DESKTOP_PREVIEW_WIDTH = 1440;
 
 /**
  * Returns a list of maximum "resultNbrMax" themes that depends on the wanted
@@ -102,15 +90,17 @@ const MAX_NBR_DISPLAY_MAIN_THEMES = 3;
  * @param {Object} state - The state that contains the wanted industry and color
  * palette.
  * @param {Number} resultNbrMax - The number of different wanted themes.
- * @returns {Promise<Array>} A list of objects that contains the different
- * theme names and their related text svgs (as result of a Promise). The length
- * of the list is at most 'resultNbrMax'.
+ * @returns {Promise<Array>} A list of theme suggestion objects. The length of
+ * the list is at most 'resultNbrMax'.
  */
 async function getRecommendedThemes(orm, state, resultNbrMax = MAX_NBR_DISPLAY_MAIN_THEMES) {
     return orm.call("website", "configurator_recommended_themes", [], {
         industry_id: state.selectedIndustry.id,
+        industry_name: state.selectedIndustry.label,
         palette: state.selectedPalette,
         result_nbr_max: resultNbrMax,
+        website_type: WEBSITE_TYPES[state.selectedType]?.name || "business",
+        positioning: state.selectedPositioning || state.formerSelectedPositioning || "",
     });
 }
 
@@ -176,7 +166,7 @@ export class DescriptionScreen extends Component {
                     this.industrySelection.el.querySelector("input").focus();
                 }
                 if (selectedIndustry) {
-                    this.purposeSelectionRef.el.focus();
+                    this.purposeSelectionRef.el?.focus();
                 }
             },
             () => [this.state.selectedType, this.state.selectedIndustry]
@@ -186,19 +176,42 @@ export class DescriptionScreen extends Component {
     }
 
     onMounted() {
-        this.selectWebsitePurpose();
+        this.state.selectPositioning();
     }
-    /**
-     * Set the input's parent label value to automatically adapt input size
-     * and update the selected industry.
-     *
-     * @private
-     * @param {string} label
-     * @param {number} id
-     */
+
     _setSelectedIndustry(label, id) {
         this.state.selectIndustry(label, id);
-        this.checkDescriptionCompletion();
+        this.fetchPositionings(label);
+    }
+
+    async fetchPositionings(industryLabel) {
+        const fallback = [
+            "premium",
+            "affordable",
+            "professional",
+            "modern",
+            "community-focused",
+            "innovative",
+        ];
+        this.state.positionings = [];
+        this.state.selectedPositioning = undefined;
+        this.state.positioningsLoading = true;
+        try {
+            const prompt = `Design a website for my ${industryLabel} business with a _______ positioning. Return only a JSON array of 6 possibilities to fill in the blank.`;
+            const response = await rpc("/html_editor/generate_text", {
+                prompt,
+                conversation_history: [],
+            });
+            const match = response?.match(/\[[\s\S]*\]/);
+            const parsed = match && JSON.parse(match[0]);
+            this.state.positionings =
+                Array.isArray(parsed) && parsed.every((item) => typeof item === "string")
+                    ? parsed
+                    : fallback;
+        } catch {
+            this.state.positionings = fallback;
+        }
+        this.state.positioningsLoading = false;
     }
 
     _splitToSet(string) {
@@ -338,16 +351,14 @@ export class DescriptionScreen extends Component {
         this.checkDescriptionCompletion();
     }
 
-    selectWebsitePurpose(id) {
-        this.state.selectWebsitePurpose(id);
+    selectPositioning(positioning) {
+        this.state.selectPositioning(positioning);
         this.checkDescriptionCompletion();
     }
 
     checkDescriptionCompletion() {
-        const { selectedType, selectedPurpose, selectedIndustry } = this.state;
-        if (selectedType && selectedPurpose && selectedIndustry) {
-            // If the industry name is not known by the server, send it to the
-            // IAP server.
+        const { selectedType, selectedPositioning, selectedIndustry } = this.state;
+        if (selectedType && selectedPositioning && selectedIndustry) {
             if (selectedIndustry.id === -1) {
                 this.orm.call("website", "configurator_missing_industry", [], {
                     unknown_industry: selectedIndustry.label,
@@ -402,12 +413,147 @@ export class PaletteSelectionScreen extends Component {
         this.logoInputRef = useRef("logoSelectionInput");
         this.notification = useService("notification");
         this.orm = useService("orm");
+        this.isDestroyed = false;
 
-        onMounted(() => {
+        onWillUnmount(() => {
+            this.isDestroyed = true;
+        });
+
+        onMounted(async () => {
+            loadGoogleFonts();
             if (this.state.logo) {
                 this.updatePalettes();
             }
+            await this.fetchStyleRecommendation();
+            if (this.isDestroyed) {
+                return;
+            }
+            this.prefetchThemes();
         });
+    }
+
+    async fetchStyleRecommendation() {
+        const { selectedIndustry, selectedType, selectedPositioning, formerSelectedPositioning } =
+            this.state;
+        const industry = selectedIndustry?.label || "general";
+        const type = WEBSITE_TYPES[selectedType]?.name || "business";
+        const positioning = selectedPositioning || formerSelectedPositioning || "";
+        const catalog = {};
+        PALETTE_FONT_COMBOS.forEach((c, idx) => {
+            catalog[idx] = `${c.label} font (${c.headingsFont}), palette ${c.palette}${
+                c.dark ? " (dark)" : ""
+            }`;
+        });
+        const prompt = `For a ${industry} ${type} business with a ${positioning} positioning, recommend a style from this catalog:\n${JSON.stringify(
+            catalog
+        )}\n\nReturn ONLY a JSON object with:
+- "id": the numeric ID from the catalog
+- "reason": a short sentence mentioning the business context, like: "For a family restaurant with a cozy positioning, I'd recommend a playful font and warm colors to feel welcoming."`;
+        this.state.styleRecommendationLoading = true;
+        this.state.styleRecommendation = undefined;
+        try {
+            const response = await rpc("/html_editor/generate_text", {
+                prompt,
+                conversation_history: [],
+            });
+            if (this.isDestroyed) {
+                return;
+            }
+            const match = response?.match(/\{[\s\S]*\}/);
+            const parsed = match && JSON.parse(match[0]);
+            if (parsed) {
+                const combo = PALETTE_FONT_COMBOS[parsed.id];
+                if (parsed.reason) {
+                    this.state.styleRecommendation = parsed.reason;
+                }
+                this.state.styleRecommendationLoading = false;
+                if (combo) {
+                    this.state.aiRecommendedPalette = combo.palette;
+                    this.state.aiRecommendedHeadingsFont = combo.headingsFont;
+                    this.state.selectPalette(combo.palette, combo.headingsFont, combo.bodyFont);
+                }
+                return;
+            }
+        } catch {
+            // Silently fail — the user can still pick manually
+        }
+        if (this.isDestroyed) {
+            return;
+        }
+        this.state.styleRecommendationLoading = false;
+    }
+
+    async prefetchThemes() {
+        if (!this.state.themes.length) {
+            const themes = await getRecommendedThemes(this.orm, this.state);
+            if (themes.length) {
+                this.state.updateRecommendedThemes(themes);
+            }
+        }
+    }
+
+    get recommendedFontCombos() {
+        const colors = this.state.recommendedPalette;
+        if (!colors) {
+            return [];
+        }
+        const FONT_CLASSES = [
+            {
+                headingsFont: "Roboto",
+                bodyFont: "Inter",
+                label: "Modern",
+                description: "Clean & Efficient",
+            },
+            {
+                headingsFont: "Playfair Display",
+                bodyFont: "Source Sans Pro",
+                label: "Classic",
+                description: "Timeless & Refined",
+            },
+            {
+                headingsFont: "Dancing Script",
+                bodyFont: "Open Sans",
+                label: "Creative",
+                description: "Warm & Personal",
+            },
+            {
+                headingsFont: "Lobster",
+                bodyFont: "Roboto",
+                label: "Playful",
+                description: "Fun & Friendly",
+            },
+            {
+                headingsFont: "Oswald",
+                bodyFont: "Inter",
+                label: "Bold",
+                description: "Strong & Striking",
+            },
+        ];
+        return FONT_CLASSES.map((font) => ({
+            ...font,
+            palette: "recommendedPalette",
+            colors,
+            bgColor: colors.color3,
+            textColor: colors.color5,
+        }));
+    }
+
+    get paletteFontCombos() {
+        return getPaletteFontCombos(this.state.palettes);
+    }
+
+    onPaletteCardHover(ev) {
+        const paletteSelectionScreenEl = ev.currentTarget.closest(".o_palette_selection_screen");
+        if (ev.type === "mouseenter") {
+            paletteSelectionScreenEl.style.backgroundColor = ev.currentTarget.dataset.bgColor;
+            paletteSelectionScreenEl.style.setProperty(
+                "--o-palette-selection-text-color",
+                ev.currentTarget.dataset.textColor
+            );
+        } else {
+            paletteSelectionScreenEl.style.backgroundColor = "";
+            paletteSelectionScreenEl.style.removeProperty("--o-palette-selection-text-color");
+        }
     }
 
     uploadLogo() {
@@ -484,9 +630,16 @@ export class PaletteSelectionScreen extends Component {
         this.state.setRecommendedPalette(color1, color2);
     }
 
-    selectPalette(paletteName) {
-        this.state.selectPalette(paletteName);
-        this.props.navigate(ROUTES.featuresSelectionScreen);
+    selectPalette(paletteName, headingsFont, bodyFont) {
+        this.state.selectPalette(paletteName, headingsFont, bodyFont);
+        if (!this.state.themes.length) {
+            getRecommendedThemes(this.orm, this.state).then((themes) => {
+                if (themes.length) {
+                    this.state.updateRecommendedThemes(themes);
+                }
+            });
+        }
+        this.props.navigate(ROUTES.themeSelectionScreen);
     }
 
     /**
@@ -589,10 +742,11 @@ export class ApplyConfiguratorScreen extends Component {
                     // Here, the website service `goToWebsite` method is not
                     // used because the web client needs to be reloaded after
                     // the new modules have been installed.
+                    window.sessionStorage.setItem("website.first_configurator_edit", "1");
                     redirect(
                         `/odoo/action-website.website_preview?website_id=${encodeURIComponent(
                             resp.website_id
-                        )}`
+                        )}&enable_editor=1`
                     );
                 },
             });
@@ -605,10 +759,11 @@ export class ApplyConfiguratorScreen extends Component {
             industry_id: this.state.selectedIndustry.id,
             industry_name: this.state.selectedIndustry.label.toLowerCase(),
             selected_palette: selectedPalette,
+            selected_font: this.state.selectedFont,
+            selected_headings_font: this.state.selectedHeadingsFont,
             theme_name: themeName,
             website_purpose:
-                WEBSITE_PURPOSES[this.state.selectedPurpose || this.state.formerSelectedPurpose]
-                    .name,
+                this.state.selectedPositioning || this.state.formerSelectedPositioning || "general",
             website_type: WEBSITE_TYPES[this.state.selectedType].name,
             logo_attachment_id: this.state.logoAttachmentId,
         };
@@ -795,29 +950,43 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
             useRef("ThemePreview1"),
             useRef("ThemePreview2"),
             useRef("ThemePreview3"),
+            useRef("ThemePreview4"),
+            useRef("ThemePreview5"),
+            useRef("ThemePreview6"),
         ];
         this.extraThemesButtonRef = useRef("extraThemesButton");
         this.extraThemeSVGPreviews = [];
         for (let i = 0; i < this.maxNbrDisplayExtraThemes; i++) {
             this.extraThemeSVGPreviews.push(useRef(`ExtraThemePreview${i}`));
         }
-        onWillStart(async () => {
-            const themes = await getRecommendedThemes(this.orm, this.state);
-            if (!themes.length) {
-                await this.applyConfigurator("theme_default");
-            } else {
+        onMounted(async () => {
+            loadGoogleFonts();
+            if (!this.state.themes.length) {
+                const themes = await getRecommendedThemes(this.orm, this.state);
+                if (!themes.length) {
+                    await this.applyConfigurator("theme_default");
+                    return;
+                }
                 this.state.updateRecommendedThemes(themes);
             }
+            this.scalePreviewIframes();
         });
 
-        onMounted(() => {
-            this.blockUiDuringImageLoading(this.state.themes, this.themeSVGPreviews);
-        });
+        useLayoutEffect(
+            () => this.blockUiDuringImageLoading(this.state.themes, this.themeSVGPreviews),
+            () => [this.state.themes]
+        );
 
         useLayoutEffect(
             () =>
                 this.blockUiDuringImageLoading(this.state.extraThemes, this.extraThemeSVGPreviews),
             () => [this.state.extraThemes]
+        );
+
+        useExternalListener(window, "resize", () => this.scalePreviewIframes());
+        useLayoutEffect(
+            () => this.scalePreviewIframes(),
+            () => [this.state.themes, this.state.extraThemes]
         );
     }
 
@@ -834,6 +1003,23 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
         );
     }
 
+    getThemePreviewUrl(theme) {
+        const previewUrl = new URL("/website/configurator/preview", theme.preview_url);
+        const palette = this.state.selectedPalette || {};
+        const cleanColor = (value, fallback = "") => (value || fallback).replace(/^#/, "");
+        previewUrl.searchParams.set("color1", cleanColor(palette.color1));
+        previewUrl.searchParams.set("color2", cleanColor(palette.color2));
+        previewUrl.searchParams.set("color3", cleanColor(palette.color3));
+        previewUrl.searchParams.set("color4", cleanColor(palette.color4));
+        previewUrl.searchParams.set("color5", cleanColor(palette.color5));
+        previewUrl.searchParams.set("body_font", this.state.selectedFont || "Inter");
+        previewUrl.searchParams.set(
+            "heading_font",
+            this.state.selectedHeadingsFont || "Inter Tight"
+        );
+        return previewUrl.toString();
+    }
+
     /**
      * Transforms text svgs into svg elements and adds a loading effect that
      * blocks the UI during the loading of the images inside those svg elements.
@@ -842,17 +1028,30 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
      * @param {Array} themeSVGPreviews - A reference to the svg elements.
      */
     blockUiDuringImageLoading(themes, themeSVGPreviews) {
-        if (!themes.length) {
-            // There is no svg to transform
+        const themesWithSvg = themes
+            .map((theme, idx) => ({
+                theme,
+                previewEl: themeSVGPreviews[idx]?.el,
+            }))
+            .filter(
+                ({ theme, previewEl }) => theme.svg && previewEl && !previewEl.firstElementChild
+            );
+        if (!themesWithSvg.length) {
             return;
         }
         const proms = [];
         this.uiService.block({ delay: 700 });
-        themes.forEach((theme, idx) => {
+        const headingsFont = this.state.selectedHeadingsFont || "Inter Tight";
+        const bodyFont = this.state.selectedFont || "Inter";
+        themesWithSvg.forEach(({ theme, previewEl }) => {
             const svgEl = new DOMParser().parseFromString(
                 theme.svg,
                 "image/svg+xml"
             ).documentElement;
+            svgEl.classList.add("o_configurator_theme_preview_svg");
+            const styleEl = document.createElementNS("http://www.w3.org/2000/svg", "style");
+            styleEl.textContent = `@import url('${GOOGLE_FONTS_URL}'); .o_configurator_theme_preview_svg text, .o_configurator_theme_preview_svg tspan, .o_configurator_theme_preview_svg foreignObject, .o_configurator_theme_preview_svg foreignObject * { font-family: '${headingsFont}', '${bodyFont}', sans-serif !important; }`;
+            svgEl.insertBefore(styleEl, svgEl.firstChild);
             for (const imgEl of svgEl.querySelectorAll("image")) {
                 proms.push(
                     new Promise((resolve, reject) => {
@@ -873,13 +1072,51 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
                     })
                 );
             }
-            themeSVGPreviews[idx].el.appendChild(svgEl);
+            previewEl.appendChild(svgEl);
         });
-        // When all the images inside the svgs are loaded then remove the
-        // loading effect.
         Promise.allSettled(proms).then(() => {
             this.uiService.unblock();
         });
+    }
+
+    scalePreviewIframes() {
+        for (const iframe of document.querySelectorAll(
+            ".o_theme_selection_screen .o_configurator_theme_preview_iframe"
+        )) {
+            this.scalePreviewIframe(iframe);
+        }
+    }
+
+    scalePreviewIframe(iframe) {
+        if (!iframe) {
+            return;
+        }
+
+        const previewContainer = iframe.parentElement;
+        const availableWidth = previewContainer.clientWidth;
+        const availableHeight = previewContainer.clientHeight;
+
+        if (!availableWidth || !availableHeight) {
+            return;
+        }
+
+        const scale = Math.min(1, availableWidth / DESKTOP_PREVIEW_WIDTH);
+        const iframeHeight = Math.floor((availableHeight * 2) / scale);
+        const scrollDistance = Math.max(0, iframeHeight - availableHeight / scale);
+
+        iframe.style.setProperty("width", `${DESKTOP_PREVIEW_WIDTH}px`, "important");
+        iframe.style.setProperty("height", `${iframeHeight}px`, "important");
+        iframe.style.setProperty(
+            "--o-configurator-iframe-scroll-distance",
+            `${Math.floor(scrollDistance)}px`
+        );
+        iframe.style.setProperty("transform-origin", "top left");
+        iframe.style.setProperty("transform", `scale(${scale})`);
+        iframe.style.setProperty("flex", "0 0 auto", "important");
+    }
+
+    onPreviewIframeLoad(ev) {
+        this.scalePreviewIframe(ev.currentTarget);
     }
 
     async chooseTheme(themeName) {
@@ -901,10 +1138,6 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
         );
         this.state.extraThemesLoaded = true;
         this.uiService.unblock();
-    }
-
-    getExtraThemeName(idx) {
-        return this.state.extraThemes.length > idx && this.state.extraThemes[idx].name;
     }
 }
 
@@ -1002,11 +1235,26 @@ export class Store {
         this.logoAttachmentId = attachmentId;
     }
 
-    selectPalette(paletteName) {
+    selectPositioning(positioning) {
+        if (!positioning && this.selectedPositioning) {
+            this.formerSelectedPositioning = this.selectedPositioning;
+        }
+        this.selectedPositioning = positioning;
+    }
+
+    selectPalette(paletteName, headingsFont, bodyFont) {
+        const prevPalette = this.selectedPalette;
         if (paletteName === "recommendedPalette") {
             this.selectedPalette = this.recommendedPalette;
         } else {
             this.selectedPalette = this.palettes[paletteName];
+        }
+        this.selectedHeadingsFont = headingsFont || "Inter Tight";
+        this.selectedFont = bodyFont || "Inter";
+        if (this.selectedPalette !== prevPalette) {
+            this.themes = [];
+            this.extraThemes = [];
+            this.extraThemesLoaded = false;
         }
     }
 
@@ -1036,6 +1284,10 @@ export class Store {
             this.recommendedPalette = undefined;
         }
         this.selectedPalette = this.recommendedPalette;
+        if (this.recommendedPalette) {
+            this.selectedHeadingsFont = "Roboto";
+            this.selectedFont = "Inter";
+        }
     }
 
     updateRecommendedThemes(themes) {
@@ -1173,25 +1425,8 @@ export class Configurator extends Component {
             hitCountOrder: index,
         }));
 
-        // Load palettes from the current CSS
-        const palettes = {};
         const style = window.getComputedStyle(document.documentElement);
-
-        PALETTE_NAMES.forEach((paletteName) => {
-            const palette = {
-                name: paletteName,
-            };
-            for (let j = 1; j <= 5; j += 1) {
-                palette[`color${j}`] = getCSSVariableValue(
-                    `o-palette-${paletteName}-o-color-${j}`,
-                    style
-                );
-            }
-            CUSTOM_BG_COLOR_ATTRS.forEach((attr) => {
-                palette[attr] = getCSSVariableValue(`o-palette-${paletteName}-${attr}-bg`, style);
-            });
-            palettes[paletteName] = palette;
-        });
+        const palettes = getCSSPalettes(style, PALETTE_NAMES, CUSTOM_BG_COLOR_ATTRS);
 
         const localState = JSON.parse(sessionStorage.getItem(this.storageItemName));
         if (localState) {
@@ -1225,9 +1460,19 @@ export class Configurator extends Component {
             selectedType: undefined,
             selectedPurpose: undefined,
             formerSelectedPurpose: undefined,
+            positionings: [],
+            positioningsLoading: false,
+            selectedPositioning: undefined,
+            formerSelectedPositioning: undefined,
             selectedIndustry: undefined,
             selectedPalette: undefined,
+            selectedFont: undefined,
+            selectedHeadingsFont: undefined,
             recommendedPalette: undefined,
+            styleRecommendationLoading: false,
+            styleRecommendation: undefined,
+            aiRecommendedPalette: undefined,
+            aiRecommendedHeadingsFont: undefined,
             defaultColors: defaultColors,
             palettes: palettes,
             features: features,
@@ -1244,8 +1489,13 @@ export class Configurator extends Component {
             logoAttachmentId: state.logoAttachmentId,
             selectedIndustry: state.selectedIndustry,
             selectedPalette: state.selectedPalette,
+            selectedFont: state.selectedFont,
+            selectedHeadingsFont: state.selectedHeadingsFont,
             selectedPurpose: state.selectedPurpose,
             formerSelectedPurpose: state.formerSelectedPurpose,
+            positionings: state.positionings,
+            selectedPositioning: state.selectedPositioning,
+            formerSelectedPositioning: state.formerSelectedPositioning,
             selectedType: state.selectedType,
             recommendedPalette: state.recommendedPalette,
         });

@@ -63,7 +63,7 @@ export class ThemeTabPlugin extends Plugin {
     resources = {
         builder_actions: {
             CustomizeGrayAction,
-            ChangeColorPaletteAction,
+            ChangePaletteFontComboAction,
             EditCustomCodeAction,
             ConfigureApiKeyAction,
         },
@@ -299,13 +299,15 @@ export class CustomizeGrayAction extends BuilderAction {
         setBuilderCSSVariables(getHtmlStyle(this.document));
     }
 }
-export class ChangeColorPaletteAction extends CustomizeWebsiteVariableAction {
-    static id = "changeColorPalette";
+export class ChangePaletteFontComboAction extends CustomizeWebsiteVariableAction {
+    static id = "changePaletteFontCombo";
     static dependencies = ["customizeWebsite"];
+
     setup() {
         this.preview = false;
         this.dependencies.customizeWebsite.withCustomHistory(this);
     }
+
     async load() {
         const style = this.window.getComputedStyle(this.document.body);
         const hasCustomizedColors = getCSSVariableValue("has-customized-colors", style);
@@ -323,11 +325,33 @@ export class ChangeColorPaletteAction extends CustomizeWebsiteVariableAction {
         }
         return true;
     }
-    async apply(context) {
-        if (!context.loadResult) {
+
+    isApplied({ params: { mainParam: paletteVariable, headingsFont, bodyFont }, value }) {
+        const currentPalette =
+            this.dependencies.customizeWebsite.getWebsiteVariableValue(paletteVariable);
+        const currentHeadingsFont =
+            this.dependencies.customizeWebsite.getWebsiteVariableValue("headings-font");
+        const currentBodyFont = this.dependencies.customizeWebsite.getWebsiteVariableValue("font");
+        return (
+            (currentPalette === value || `'${currentPalette}'` === value) &&
+            currentHeadingsFont === headingsFont &&
+            currentBodyFont === bodyFont
+        );
+    }
+
+    async apply({
+        params: { mainParam: paletteVariable, headingsFont, bodyFont },
+        value,
+        loadResult,
+    }) {
+        if (!loadResult) {
             return;
         }
-        await super.apply(context);
+        await this.dependencies.customizeWebsite.customizeWebsiteVariables({
+            [paletteVariable]: value,
+            "headings-font": `'${headingsFont}'`,
+            font: `'${bodyFont}'`,
+        });
         setBuilderCSSVariables(getHtmlStyle(this.document));
     }
 }
