@@ -258,6 +258,7 @@ export class UseSuggestion {
         }
         const { type, suggestions } = this.suggestionService.searchSuggestions(this.search, {
             thread: this.thread,
+            composerType: this.comp.props.type,
         });
         if (!suggestions.length) {
             this.state.items = undefined;
@@ -282,6 +283,7 @@ export class UseSuggestion {
             await this.suggestionService.fetchSuggestions(this.search, {
                 thread: this.thread,
                 abortSignal: this.abortController.signal,
+                composerType: this.comp.props.type,
             });
         } catch (e) {
             this.lastFetchedSearch = null;
@@ -409,7 +411,7 @@ export function mapSuggestionsToOptions(type, suggestions, { thread } = {}) {
 export function makeMentionFromOption(option, { thread } = {}) {
     let inlineElement;
     if (option.partner) {
-        inlineElement = generatePartnerMentionElement(option.partner, thread);
+        inlineElement = generatePartnerMentionElement(option.partner, { thread });
     } else if (option.isSpecial) {
         inlineElement = generateSpecialMentionElement(option.label);
     } else if (option.role) {

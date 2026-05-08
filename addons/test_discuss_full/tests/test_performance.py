@@ -93,7 +93,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
     #       - search discuss_channel_member
     #       - search_fetch discuss_channel
     #   1: search_count discuss_channel_member (_add_has_unpinned_channels_to_store)
-    #   33: channel _to_store_defaults:
+    #   34: channel _to_store_defaults:
     #       - read group member (prefetch _compute_self_member_id from _compute_is_member)
     #       - read group member (_compute_invited_member_ids)
     #       - search discuss_channel_rtc_session
@@ -101,10 +101,10 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
     #       - search_fetch member (channel_member_ids)
     #       - search channel JOIN member (channel_name_member_ids)
     #       - fetch discuss_channel_member (manual prefetch)
-    #       16: member:
+    #       17: member:
     #           - search im_livechat_channel_member_history (livechat member type)
     #           - fetch im_livechat_channel_member_history (livechat member type)
-    #           12: partner:
+    #           13: partner:
     #               - fetch res_partner (partner)
     #                 [enterprise] search ai_agent (_compute_im_status ai override)
     #               - fetch res_users (_compute_im_status)
@@ -118,6 +118,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
     #               - fetch res_users_settings (livechat username)
     #               - fetch res_users (_read_format)
     #               - fetch res_country (livechat override)
+    #               - fetch res_partner (partner_share field)
     #           2: guest:
     #               - fetch mail_presence (_compute_im_status)
     #               - fetch mail_guest
@@ -157,7 +158,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
     #       - fetch user (author)
     #       - fetch discuss_call_history
     #       - select the current db snapshot
-    _query_count_discuss_channels = 61
+    _query_count_discuss_channels = 62
 
     def setUp(self):
         super().setUp()
@@ -436,6 +437,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                     "is_company": False,
                     "main_user_id": self.user_root.id,
                     "name": "OdooBot",
+                    "partner_share": False,
                     "tz": "Europe/Brussels",
                     "user_ids": [],
                     "write_date": fields.Datetime.to_string(self.partner_root.write_date),
@@ -1788,6 +1790,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "Ernest Employee",
+                "partner_share": False,
                 "tz": "Europe/Brussels",
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(user.partner_id.write_date),
@@ -1843,6 +1846,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "test2",
+                "partner_share": False,
                 "tz": False,
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(user.partner_id.write_date),
@@ -1858,6 +1862,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "test3",
+                "partner_share": False,
                 "tz": False,
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(self.users[3].partner_id.write_date),
@@ -1873,6 +1878,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "test12",
+                "partner_share": False,
                 "tz": False,
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(user.partner_id.write_date),
@@ -1888,6 +1894,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "test14",
+                "partner_share": False,
                 "tz": False,
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(user.partner_id.write_date),
@@ -1903,6 +1910,7 @@ class TestDiscussFullPerformance(HttpCase, MailCommon):
                 "main_user_id": user.id,
                 "mention_token": user.partner_id._get_mention_token(),
                 "name": "test15",
+                "partner_share": False,
                 "tz": False,
                 "user_ids": user.ids,
                 "write_date": fields.Datetime.to_string(user.partner_id.write_date),
