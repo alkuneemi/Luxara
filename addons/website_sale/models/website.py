@@ -139,12 +139,6 @@ class Website(models.Model):
         selection="_get_product_sort_mapping", required=True, default="website_sequence asc"
     )
 
-    shop_extra_field_ids = fields.One2many(
-        string="E-Commerce Extra Fields",
-        comodel_name="website.sale.extra.field",
-        inverse_name="website_id",
-    )
-
     product_page_container = fields.Selection(
         selection=[("unset", "Unset"), ("regular", "Regular"), ("fluid", "Full-width")],
         default="unset",
@@ -318,7 +312,7 @@ class Website(models.Model):
 
     def get_cta_data(self, website_purpose, website_type):
         cta_data = super().get_cta_data(website_purpose, website_type)
-        cta_data['shop_btn_href'] = '/shop'
+        cta_data["shop_btn_href"] = "/shop"
         return cta_data
 
     @api.model
@@ -914,7 +908,9 @@ class Website(models.Model):
         if not self.has_ecommerce_access():
             return result
         if search_type in ["products", "product_public_category", "all"]:
-            result.append(self.env["product.public.category"]._search_get_detail(self, order, options))
+            result.append(
+                self.env["product.public.category"]._search_get_detail(self, order, options)
+            )
         if search_type in ["products", "product_template", "all"]:
             result.append(self.env["product.template"]._search_get_detail(self, order, options))
         return result
@@ -1212,6 +1208,43 @@ class Website(models.Model):
         :rtype: dict
         """
         return json_scriptsafe.dumps(self._prepare_ecommerce_store_markup_data(), indent=2)
+
+    def _prepare_product_spec_groups(self, product_variant, product_template):
+        """Return product specs grouped by category for product page display."""
+        self.ensure_one()
+
+        WebsiteSaleExtraField = self.env["website.sale.extra.field"]
+        empty_attribute_lines = self.env["product.template.attribute.line"]
+        attribute_categories = product_template.valid_product_template_attribute_line_ids._prepare_categories_for_display()
+        extra_fields = WebsiteSaleExtraField.search([("website_id", "=", self.id)])
+        extra_field_values = extra_fields._get_values_for_display(product_variant, product_template)
+        visible_extra_fields_by_category = {}
+
+        for extra_field in extra_fields:
+            if extra_field not in extra_field_values:
+                continue
+            category = extra_field.category_id
+            visible_extra_fields_by_category.setdefault(category, WebsiteSaleExtraField)
+            visible_extra_fields_by_category[category] |= extra_field
+
+        spec_groups = []
+        for category, attribute_lines in attribute_categories.items():
+            spec_groups.append({
+                "category": category,
+                "attribute_lines": attribute_lines,
+                "extra_fields": visible_extra_fields_by_category.pop(
+                    category, WebsiteSaleExtraField
+                ),
+            })
+
+        for category, visible_extra_fields in visible_extra_fields_by_category.items():
+            spec_groups.append({
+                "category": category,
+                "attribute_lines": empty_attribute_lines,
+                "extra_fields": visible_extra_fields,
+            })
+
+        return {"spec_groups": spec_groups, "extra_field_values": extra_field_values}
 
     def _get_product_available_qty(self, product, **_kwargs):
         """Give the available quantity of a given product.

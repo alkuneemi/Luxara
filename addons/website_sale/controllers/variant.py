@@ -22,11 +22,9 @@ class WebsiteSaleVariantController(Controller):
 
         product_template = request.env["product.template"].browse(product_template_id)
 
+        combination_ptavs = request.env["product.template.attribute.value"].browse(combination)
         combination_info = product_template._get_combination_info(
-            combination=request.env["product.template.attribute.value"].browse(combination),
-            product_id=product_id,
-            add_qty=add_qty,
-            uom_id=uom_id,
+            combination=combination_ptavs, product_id=product_id, add_qty=add_qty, uom_id=uom_id
         )
         combination_info["currency_precision"] = combination_info["currency"].decimal_places
 
@@ -44,6 +42,27 @@ class WebsiteSaleVariantController(Controller):
             combination_info.pop(key)
 
         product = request.env["product.product"].browse(combination_info["product_id"])
+
+        specifications_template = None
+
+        if request.website.is_view_active("website_sale.accordion_specs_item"):
+            specifications_template = "website_sale.product_accordion"
+        elif request.website.is_view_active(
+            "website_sale.product_attributes_body"
+        ) or request.website.is_view_active("website_sale.product_attributes_top"):
+            specifications_template = "website_sale.product_spec_section"
+
+        if specifications_template:
+            combination_info["product_specifications"] = request.env["ir.ui.view"]._render_template(
+                specifications_template,
+                values={
+                    "combination": combination_ptavs,
+                    "product": product_template,
+                    "product_variant": product,
+                    "website": request.website,
+                },
+            )
+
         if product and product.id == product_id:
             combination_info["no_product_change"] = True
             return combination_info
