@@ -67,4 +67,17 @@ patch(ProductConfiguratorDialog.prototype, {
         return super.totalMessage(...arguments);
     },
 
+    async _setUnitOfMeasure(productTmplId, uomId) {
+        const product = this._findProduct(productTmplId);
+        if (product.uom.id === uomId) {
+            return false;
+        }
+        const result = await this._updateCombination(product, product.quantity, uomId);
+        product.price = parseFloat(result.price);
+        if (result.strikethrough_price !== undefined) {
+            product.strikethrough_price = result.strikethrough_price;
+        }
+        product.uom = product.available_uoms.find((uom) => uom.id === uomId);
+        return true;
+    },
 });
