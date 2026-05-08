@@ -14,7 +14,6 @@ import {
     tripleClick,
     undo,
 } from "../_helpers/user_actions";
-import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { QWebPlugin } from "@html_editor/others/qweb_plugin";
 
 const styleH1Bold = `h1 { font-weight: bold; }`;
@@ -56,7 +55,7 @@ test("should make qweb tag bold (1)", async () => {
         contentBefore: `<div><p t-out="'Test'" contenteditable="false">[Test]</p></div>`,
         stepFunction: bold,
         contentAfter: `<div>[<p t-out="'Test'" style="font-weight: bolder;">Test</p>]</div>`,
-        config: { Plugins: [...MAIN_PLUGINS, QWebPlugin] },
+        config: { includePlugins: [QWebPlugin] },
     });
 });
 
@@ -65,14 +64,14 @@ test("should make qweb tag bold (2)", async () => {
         contentBefore: `<div><p t-field="record.name" contenteditable="false">[Test]</p></div>`,
         stepFunction: bold,
         contentAfter: `<div>[<p t-field="record.name" style="font-weight: bolder;">Test</p>]</div>`,
-        config: { Plugins: [...MAIN_PLUGINS, QWebPlugin] },
+        config: { includePlugins: [QWebPlugin] },
     });
 });
 
 test("should make qweb tag bold and create a step even with partial selection inside contenteditable false", async () => {
     const { editor, el } = await setupEditor(
         `<div><p t-out="'Test'" contenteditable="false">T[e]st</p></div>`,
-        { config: { Plugins: [...MAIN_PLUGINS, QWebPlugin] } }
+        { config: { includePlugins: [QWebPlugin] } }
     );
     bold(editor);
     expect(getContent(el)).toBe(

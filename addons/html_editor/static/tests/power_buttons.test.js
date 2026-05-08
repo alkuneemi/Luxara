@@ -1,5 +1,4 @@
 import { Plugin } from "@html_editor/plugin";
-import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { closestElement } from "@html_editor/utils/dom_traversal";
 import { describe, expect, queryAllTexts, test } from "@odoo/hoot";
 import { click, pointerDown, press, tick, waitFor } from "@odoo/hoot-dom";
@@ -104,9 +103,11 @@ describe("visibility", () => {
         const tempP = document.createElement("p");
         tempP.textContent = placeholder;
         tempP.style.width = "fit-content";
-        const Plugins = [...MAIN_PLUGINS.filter((p) => p.id !== "powerbox"), TestPowerboxPlugin];
         const { el } = await setupEditor("<p>[]<br></p>", {
-            config: { Plugins },
+            config: {
+                includePlugins: [TestPowerboxPlugin],
+                excludePlugins: [PowerboxPlugin],
+            },
         });
         el.appendChild(tempP);
         const placeholderWidth = tempP.getBoundingClientRect().width;
@@ -356,7 +357,7 @@ describe("individual button availability", () => {
             };
         }
         const { el } = await setupEditor(`<p>[]<br></p><p class="hide_test_button"><br></p>`, {
-            config: { Plugins: [...MAIN_PLUGINS, TestPlugin] },
+            config: { includePlugins: [TestPlugin] },
         });
         expect(".o_we_power_buttons").toBeVisible();
         expect(".power_button.fa-bug").toBeVisible();

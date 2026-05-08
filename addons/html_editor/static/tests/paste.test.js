@@ -11,7 +11,6 @@ import { createBaseContainer } from "@html_editor/utils/base_container";
 import { expectElementCount } from "./_helpers/ui_expectations";
 import {
     EMBEDDED_COMPONENT_PLUGINS,
-    MAIN_PLUGINS,
     NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS,
 } from "@html_editor/plugin_sets";
 import { MAIN_EMBEDDINGS } from "@html_editor/others/embedded_components/embedding_sets";
@@ -3661,7 +3660,7 @@ describe("images", () => {
 });
 
 describe("youtube video", () => {
-    const config = { Plugins: [...MAIN_PLUGINS, ...NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS] };
+    const config = { includePlugins: NO_EMBEDDED_COMPONENTS_FALLBACK_PLUGINS };
     describe("range collapsed", () => {
         beforeEach(() => {
             onRpc("/html_editor/video_url/data", async (request) => {
@@ -3883,7 +3882,7 @@ describe("youtube video with embedded components", () => {
         });
     });
     const config = {
-        Plugins: [...MAIN_PLUGINS, ...EMBEDDED_COMPONENT_PLUGINS],
+        includePlugins: EMBEDDED_COMPONENT_PLUGINS,
         resources: { embedded_components: MAIN_EMBEDDINGS },
     };
     test("should embed a video on youtube URL paste", async () => {

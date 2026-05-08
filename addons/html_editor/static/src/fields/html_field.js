@@ -29,6 +29,7 @@ import { EditorVersionPlugin } from "@html_editor/core/editor_version_plugin";
 import { withSequence } from "@html_editor/utils/resource";
 import { fixInvalidHTML, instanceofMarkup } from "@html_editor/utils/sanitize";
 import { isHtmlContentSupported } from "@html_editor/core/selection_plugin";
+import { stripContrastColor } from "@html_editor/main/font/contrast_plugin";
 
 const HTML_FIELD_METADATA_ATTRIBUTES = ["data-last-history-steps"];
 
@@ -209,6 +210,7 @@ export class HtmlField extends Component {
             }
             const changeId = this.lastChangeId;
             const el = await this.getEditorContent();
+            stripContrastColor(el);
             const content = el.innerHTML;
             this.clearElementToCompare(el);
             const comparisonValue = el.innerHTML;
