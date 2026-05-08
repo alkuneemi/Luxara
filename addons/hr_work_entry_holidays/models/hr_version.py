@@ -17,9 +17,15 @@ class HrVersion(models.Model):
         else:
             return leave.work_entry_type_id
 
+    def _iter_interval_rc_leaves(self, intervals):
+        for interval in intervals:
+            if interval[2]:
+                for leave in interval[2]:
+                    yield interval[0], interval[1], leave
+
     def _get_more_vals_leave_interval(self, interval, leaves):
         result = super()._get_more_vals_leave_interval(interval, leaves)
-        for leave in leaves:
+        for leave in self._iter_interval_rc_leaves(leaves):
             if interval[0] >= leave[0] and interval[1] <= leave[1]:
                 if leave[2].holiday_id.id:
                     result.append(('leave_id', leave[2].holiday_id.id))
@@ -39,7 +45,11 @@ class HrVersion(models.Model):
 
         interval_start = interval[0].astimezone(pytz.utc).replace(tzinfo=None)
         interval_stop = interval[1].astimezone(pytz.utc).replace(tzinfo=None)
-        including_rcleaves = [l[2] for l in leaves if l[2] and interval_start >= l[2].date_from and interval_stop <= l[2].date_to]
+        including_rcleaves = [
+            l[2]
+            for l in self._iter_interval_rc_leaves(leaves)
+            if interval_start >= l[2].date_from and interval_stop <= l[2].date_to
+        ]
         including_global_rcleaves = [l for l in including_rcleaves if not l.holiday_id]
         including_holiday_rcleaves = [l for l in including_rcleaves if l.holiday_id]
         rc_leave = False
