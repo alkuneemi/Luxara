@@ -235,7 +235,7 @@ class StockMove(models.Model):
             elif move.rule_id.location_dest_from_rule:
                 location_dest = move.rule_id.location_dest_id
             elif move.is_scrap:
-                location_dest = move.company_id.scrap_location_id
+                location_dest = move.location_dest_id or move.company_id.scrap_location_id
             elif move.picking_type_id:
                 location_dest = move.picking_type_id.default_location_dest_id
             is_move_to_interco_transit = False
