@@ -2051,7 +2051,7 @@ class AccountEdiUBL(models.AbstractModel):
             return
 
         for key, xpaths in (
-            ('vat', [".//{*}CompanyID"]),
+            ('vat', [".//{*}CompanyID", ".//{*}PartyIdentification/{*}ID"]),
             ('phone', [".//{*}Telephone"]),
             ('name', [
                 ".//{*}RegistrationName",
@@ -2200,7 +2200,7 @@ class AccountEdiUBL(models.AbstractModel):
         company = collected_values['company']
         move_type = collected_values['invoice'].move_type
         if move_type in ('out_refund', 'in_invoice'):
-            partner = collected_values.get('customer')
+            partner = collected_values.get('customer_values', {}).get('customer') or collected_values.get('customer')
         elif move_type in ('out_invoice', 'in_refund'):
             partner = company.partner_id
         else:
