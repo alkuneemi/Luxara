@@ -6,6 +6,7 @@ import urllib.parse
 from odoo import api, fields, models, _
 from odoo.fields import Domain
 from odoo.addons.website.tools import text_from_html
+from odoo.addons.website.helpers.jsonld_builder import JsonLd
 from odoo.http import request
 from odoo.exceptions import AccessError, UserError
 from odoo.models import Query
@@ -870,3 +871,54 @@ class WebsiteSearchableMixin(models.AbstractModel):
             return False, value, 'html'
 
         return True, value, 'tags'
+
+
+class WebsiteStructuredDataMixin(models.AbstractModel):
+    _name = 'website.structured_data.mixin'
+    _description = 'Website Structured Data Mixin'
+
+    def get_json_ld(self, is_detail_page=False):
+        """Return the JSON-LD structured data for this record.
+        :param is_detail_page: whether the structured data is for a detail page
+        :return: string containing the JSON-LD structured data
+        :rtype: str (JSON-LD)
+        """
+        schema = self._build_structured_data(is_detail_page=is_detail_page)
+        # Breadcrumb
+        breadcrumb_items = self._get_breadcrumb_items(is_detail_page=is_detail_page)
+        schema.append(self._build_breadcrumb_schema(breadcrumb_items))
+        return JsonLd.render_structured_data(schema)
+
+    def _build_structured_data(self, is_detail_page=False):
+        """Return a list of JsonLd builders for this record.
+
+        Default implementation returns the Organization schema of the
+        current website.  Override in sub-models to append page-specific
+        schemas (BlogPosting, Product, BreadcrumbList, ...).
+
+        :param is_detail_page: whether the structured data is for a detail page
+        :return: list of JsonLd builders to be rendered in the page
+        :rtype: list[JsonLd]
+        """
+        website = self.env['website'].get_current_website()
+        return [website.organization_structured_data()]
+
+    def _get_breadcrumb_items(self, is_detail_page=False):
+        return [(self.env._("Home"), "/")]
+
+    def _build_breadcrumb_schema(self, items):
+        """Generic breadcrumb builder.
+
+        :param items: List of ``(name, url)`` tuples.
+        :return: BreadcrumbList schema, or ``None`` when no valid items.
+        :rtype: JsonLd | None
+        """
+        website = self.env['website'].get_current_website()
+        base_url = website.get_base_url()
+        item_jsonlds = []
+        for position, (name, url) in enumerate(items, start=1):
+            item = JsonLd("ListItem", {"position": position, "name": f"{name} | {website.name}", "item": f"{base_url}{url}"})
+            item_jsonlds.append(item)
+        breadcrumbs = JsonLd("BreadcrumbList")
+        breadcrumbs.add_nested({"itemListElement": item_jsonlds})
+        return breadcrumbs
