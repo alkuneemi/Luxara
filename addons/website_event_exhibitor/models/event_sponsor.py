@@ -212,25 +212,23 @@ class EventSponsor(models.Model):
         }
         return exhibitor_jsonld.set(schema_data)
 
-    def _get_exhibitor_breadcrumb_items(self, is_detail_page=False):
+    def _get_breadcrumb_items(self, is_detail_page=False):
         """Get breadcrumb items for the exhibitor."""
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
         event = self[0].event_id
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
         event_slug = self.env['ir.http']._slug(event)
         items = [
-            (website.name, base_url),
-            (self.env._("Events"), f"{base_url}/event"),
-            (event.name, f"{base_url}{event.website_url}"),
-            (self.env._("Exhibitors"), f"{base_url}/event/{event_slug}/exhibitors"),
+            (self.env._("Events"), "/event"),
+            (event.name, event.website_url),
+            (self.env._("Exhibitors"), f"/event/{event_slug}/exhibitors"),
         ]
         if is_detail_page:
-            items.append((self.name, f"{base_url}{self.website_url}"))
+            items.append((self.name, self.website_url))
         return items
 
     def _build_collection_page_schema(self):
         """ Build structured data for the exhibitors collection page.
-        :return: JsonLd object with CollectionPage schema
+        :return: JsonLd object of CollectionPage schema
         :rtype: JsonLd
         """
         event = self[0].event_id
@@ -262,12 +260,10 @@ class EventSponsor(models.Model):
         schemas = super()._build_structured_data()
         if not self:
             return schemas
-        breadcrumb_items = self._get_exhibitor_breadcrumb_items(is_detail_page)
-        breadcrumb_jsonld = self._build_breadcrumb_schema(breadcrumb_items)
         if is_detail_page:
-            schemas.extend([self._build_event_exhibitor_schema(), breadcrumb_jsonld])
+            schemas.append(self._build_event_exhibitor_schema())
             return schemas
-        schemas.extend([self._build_collection_page_schema(), breadcrumb_jsonld])
+        schemas.append(self._build_collection_page_schema())
         return schemas
 
     @api.model

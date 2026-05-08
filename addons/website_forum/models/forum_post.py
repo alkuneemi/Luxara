@@ -821,28 +821,23 @@ class ForumPost(models.Model):
     # WEBSITE
     # ----------------------------------------------------------------------
 
-    def _get_breadcrumb_items(self):
+    def _get_breadcrumb_items(self, is_detail_page=False):
         """Get the list of items to build the breadcrumb on website."""
-        self.ensure_one()
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
         forum_slug = self.env['ir.http']._slug(self.forum_id)
-        return [
-            (website.name, base_url),
-            (self.env._('Forums'), f"{base_url}/forum"),
-            (self.forum_id.name, f"{base_url}/forum/{forum_slug}"),
-            (self.name, base_url + self.website_url),
-        ]
+        items.extend([
+            (self.env._('Forums'), "/forum"),
+            (self.forum_id.name, f"/forum/{forum_slug}"),
+            (self.name, self.website_url),
+        ])
+        return items
 
     def _build_structured_data(self, is_detail_page=False):
         """Render structured data using the website_blog pattern."""
         schemas = super()._build_structured_data(is_detail_page=is_detail_page)
-        items = self._get_breadcrumb_items()
-        breadcrumb_jsonld = self._build_breadcrumb_schema(items)
         if is_detail_page:
             if forum_post_jsonld := self._build_forum_post_schema():
                 schemas.append(forum_post_jsonld)
-        schemas.append(breadcrumb_jsonld)
         return schemas
 
     def _build_forum_post_schema(self):

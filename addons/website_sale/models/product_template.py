@@ -1458,7 +1458,7 @@ class ProductTemplate(models.Model):
         }
         return JsonLd("CollectionPage", schema_data).add_nested(nested_schema_data)
 
-    def _get_breadcrumb_items(self, is_detail_page=False, category=None):
+    def _get_breadcrumb_items(self, is_detail_page=False):
         """Breadcrumb navigation items for shop and product pages.
 
         Generates a list of tuples (name, url) representing breadcrumb navigation.
@@ -1470,19 +1470,18 @@ class ProductTemplate(models.Model):
         :returns: List of (name, url) tuples representing breadcrumb trail
         :rtype: list[tuple[str, str]]
         """
-        website = self.env["website"].get_current_website()
-        base_url = website.get_base_url()
-        items = [
-            (website.name, base_url),
-            (self.env._("Shop"), f"{base_url}{SHOP_PATH}"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._("Shop"), SHOP_PATH))
+        if is_detail_page:
+            category = self.public_categ_ids
+        else:
+            category = self.public_categ_ids.browse(self.env.context.get('shop_category_id')).exists()
         if category:
             slug = self.env["ir.http"]._slug
             for cat in category.parents_and_self:
-                items.append((cat.name, f"{base_url}{SHOP_PATH}/category/{slug(cat)}"))
+                items.append((cat.name, f"{SHOP_PATH}/category/{slug(cat)}"))
         if is_detail_page:
-            self.ensure_one()
-            items.append((self.name, f"{base_url}{self.website_url}"))
+            items.append((self.name, self.website_url))
         return items
 
     def _build_structured_data(self, is_detail_page=False):
@@ -1502,13 +1501,10 @@ class ProductTemplate(models.Model):
         category = self.env["product.public.category"].browse(
             self.env.context.get("shop_category_id"),
         ).exists()
-        breadcrumb_jsonld = self._build_breadcrumb_schema(
-            self._get_breadcrumb_items(is_detail_page=is_detail_page, category=category),
-        )
         if is_detail_page:
-            schemas.extend([self._build_product_schema(), breadcrumb_jsonld])
+            schemas.append(self._build_product_schema())
             return schemas
-        schemas.extend([self._build_collectionpage_schema(category=category), breadcrumb_jsonld])
+        schemas.append(self._build_collectionpage_schema(category=category))
         return schemas
 
     def _get_ribbon(self, price_vals=None, auto_assign_ribbons=None, variant=None):

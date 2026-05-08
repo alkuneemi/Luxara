@@ -170,26 +170,18 @@ spirit. To be successful, you will have solid solving problem skills.''')
     def _build_structured_data(self, is_detail_page=False):
         """Render structured data for jobs listing and detail pages."""
         schemas = super()._build_structured_data(is_detail_page=is_detail_page)
-        items = self._get_breadcrumb_items(is_detail_page)
-        breadcrumb_jsonld = self._build_breadcrumb_schema(items)
         if is_detail_page:
-            self.ensure_one()
-            schemas.extend([self._build_job_post_schema(), breadcrumb_jsonld])
+            schemas.append(self._build_job_post_schema())
             return schemas
-        schemas.extend([self._build_collection_page_schema(), breadcrumb_jsonld])
+        schemas.append(self._build_collection_page_schema())
         return schemas
 
     def _get_breadcrumb_items(self, is_detail_page=False):
         """Return breadcrumb items for jobs listing and job detail pages."""
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
-        items = [
-            (website.name, base_url),
-            (self.env._("Jobs"), f"{base_url}/jobs"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._("Jobs"), "/jobs"))
         if is_detail_page:
-            self.ensure_one()
-            items.append((self.name, f"{base_url}{self.website_url}"))
+            items.append((self.name, self.website_url))
         return items
 
     def _build_job_post_schema(self):

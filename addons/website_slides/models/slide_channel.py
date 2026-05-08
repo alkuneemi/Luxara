@@ -1148,15 +1148,10 @@ class SlideChannel(models.Model):
         return course_data
 
     def _get_breadcrumb_items(self, is_detail_page=False):
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
-        items = [
-            (website.name, base_url),
-            (self.env._("Courses"), f"{base_url}/slides"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._("Courses"), "/slides"))
         if is_detail_page:
-            self.ensure_one()
-            items.append((self.name, f"{base_url}{self.website_url}"))
+            items.append((self.name, self.website_url))
         return items
 
     def _build_collection_page_schema(self):
@@ -1174,11 +1169,8 @@ class SlideChannel(models.Model):
 
     def _build_structured_data(self, is_detail_page=False):
         schemas = super()._build_structured_data()
-        items = self._get_breadcrumb_items(is_detail_page)
-        breadcrumb_jsonld = self._build_breadcrumb_schema(items)
         if is_detail_page:
-            self.ensure_one()
-            schemas.extend([self._build_slide_schema(), breadcrumb_jsonld])
+            schemas.append(self._build_slide_schema())
             return schemas
-        schemas.extend([self._build_collection_page_schema(), breadcrumb_jsonld])
+        schemas.append(self._build_collection_page_schema())
         return schemas

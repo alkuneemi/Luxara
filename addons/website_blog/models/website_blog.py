@@ -106,17 +106,13 @@ class BlogBlog(models.Model):
 
         return tag_by_blog
 
-    def _get_breadcrumb_items(self, is_detail_page=None):
+    def _get_breadcrumb_items(self, is_detail_page=False):
         """Return breadcrumb items for a blog page."""
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
-        item = [
-            (website.name, base_url),
-            (f"{self.env._('Blog Posts')} | {website.name}", f"{base_url}/blog"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._('Blog Posts'), "/blog"))
         if is_detail_page:
-            item.append((f"{self.name} | {website.name}", f"{base_url}{self.website_url}"))
-        return item
+            items.append((self.name, self.website_url))
+        return items
 
     def _build_blog_schema(self, blog_details=False):
         """Return the Blog schema for a single blog.
@@ -257,13 +253,15 @@ class BlogPost(models.Model):
         )
         return JsonLd("BlogPosting", schema_data).add_nested(nested_schema_data)
 
-    def _get_breadcrumb_items(self):
+    def _get_breadcrumb_items(self, is_detail_page=False):
         """Return breadcrumb items for a blog post page."""
-        self.ensure_one()
-        website = self.env['website'].get_current_website()
-        base_url = self.get_base_url()
-        items = self.blog_id._get_breadcrumb_items(self.blog_id)
-        items.append((f"{self.name} | {website.name}", f"{base_url}{self.website_url}"))
+        if is_detail_page:
+            blog = self.blog_id
+        else:
+            blog = self.blog_id.browse(self.env.context.get('blog_id'))
+        items = blog._get_breadcrumb_items(bool(blog))
+        if is_detail_page:
+            items.append((self.name, self.website_url))
         return items
 
     def _build_blog_post_schema(self):
@@ -309,22 +307,16 @@ class BlogPost(models.Model):
         """
         schemas = super()._build_structured_data()
         if is_detail_page:
-            self.ensure_one()
             schemas.extend([
                 self.blog_id._build_blog_schema(),
                 self._build_blog_post_schema(),
-                self._build_breadcrumb_schema(self._get_breadcrumb_items()),
             ])
             return schemas
         current_blog = self.env['blog.blog'].browse(self.env.context.get('blog_id')).exists()
         blogs = current_blog or self.mapped('blog_id')
-        breadcrumb_items = blogs._get_breadcrumb_items(bool(current_blog))
         for blog_record in blogs:
             schemas.append(blog_record._build_blog_schema())
-        schemas.extend([
-            self._to_structured_data_collectionpage(blog=current_blog),
-            self._build_breadcrumb_schema(breadcrumb_items)
-        ])
+        schemas.append(self._to_structured_data_collectionpage(blog=current_blog))
         return schemas
 
     def _to_structured_data_collectionpage(self, blog=None):

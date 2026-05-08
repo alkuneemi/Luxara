@@ -74,14 +74,10 @@ class ResPartner(models.Model):
         return partner_data
 
     def _get_breadcrumb_items(self, is_detail_page=False):
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
-        items = [
-            (website.name, base_url),
-            (f"{self.env._("Find Resellers")} | {website.name}", f"{base_url}/partners"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._("Find Resellers"), "/partners"))
         if is_detail_page:
-            items.append((f"{self.display_name} | {website.name}", f"{base_url}{self.website_url}"))
+            items.append((self.display_name, self.website_url))
         return items
 
     def _build_collectionpage_schema(self):
@@ -112,10 +108,8 @@ class ResPartner(models.Model):
         :rtype: List[JsonLd]
         """
         schemas = super()._build_structured_data()
-        items = self._get_breadcrumb_items(is_detail_page)
-        breadcrumb_jsonld = self._build_breadcrumb_schema(items)
         if is_detail_page:
-            schemas.extend([self._build_partner_schema(), breadcrumb_jsonld])
+            schemas.append(self._build_partner_schema())
             return schemas
-        schemas.extend([self._build_collectionpage_schema(), breadcrumb_jsonld])
+        schemas.append(self._build_collectionpage_schema())
         return schemas

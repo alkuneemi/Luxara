@@ -780,15 +780,11 @@ class EventEvent(models.Model):
         :returns: List of (label, url) tuples for breadcrumb trail
         :rtype: list[tuple[str, str]]
         """
-        website = self.env['website'].get_current_website()
-        base_url = website.get_base_url()
-        item = [
-            (website.name, base_url),
-            (f"{self.env._('Events')} | {website.name}", f"{base_url}/event"),
-        ]
+        items = super()._get_breadcrumb_items(is_detail_page=is_detail_page)
+        items.append((self.env._('Events'), "/event"))
         if is_detail_page:
-            item.append((f"{self.name} | {website.name}", f"{base_url}{self.website_url}"))
-        return item
+            items.append((self.name, self.website_url))
+        return items
 
     def _build_structured_data(self, is_detail_page=False):
         """Return rendered structured data for event list and detail pages.
@@ -798,13 +794,9 @@ class EventEvent(models.Model):
         :rtype: list[JsonLd]
         """
         schemas = super()._build_structured_data(is_detail_page=is_detail_page)
-        breadcrumb_jsonld = self._build_breadcrumb_schema(
-            self._get_breadcrumb_items(is_detail_page),
-        )
         if is_detail_page:
             if event_schema_jsonld := self._to_structured_data_event():
                 schemas.append(event_schema_jsonld)
-            schemas.append(breadcrumb_jsonld)
             return schemas
-        schemas.extend([self._to_structured_data_collectionpage(), breadcrumb_jsonld])
+        schemas.append(self._to_structured_data_collectionpage())
         return schemas

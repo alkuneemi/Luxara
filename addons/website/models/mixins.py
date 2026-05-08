@@ -883,7 +883,11 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
         :return: string containing the JSON-LD structured data
         :rtype: str (JSON-LD)
         """
-        return JsonLd.render_structured_data(self._build_structured_data(is_detail_page=is_detail_page))
+        schema = self._build_structured_data(is_detail_page=is_detail_page)
+        # Breadcrumb
+        breadcrumb_items = self._get_breadcrumb_items(is_detail_page=is_detail_page)
+        schema.append(self._build_breadcrumb_schema(breadcrumb_items))
+        return JsonLd.render_structured_data(schema)
 
     def _build_structured_data(self, is_detail_page=False):
         """Return a list of JsonLd builders for this record.
@@ -899,6 +903,9 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
         website = self.env['website'].get_current_website()
         return [website.organization_structured_data()]
 
+    def _get_breadcrumb_items(self, is_detail_page=False):
+        return [(self.env._("Home"), "/")]
+
     def _build_breadcrumb_schema(self, items):
         """Generic breadcrumb builder.
 
@@ -906,13 +913,12 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
         :return: BreadcrumbList schema, or ``None`` when no valid items.
         :rtype: JsonLd | None
         """
-        valid_items = [item for item in items if item is not None]
-        if not valid_items:
-            return None
-        list_items = []
-        for position, (name, url) in enumerate(valid_items, start=1):
-            item = JsonLd("ListItem", {"position": position, "name": name, "item": url})
-            list_items.append(item)
+        website = self.env['website'].get_current_website()
+        base_url = website.get_base_url()
+        item_jsonlds = []
+        for position, (name, url) in enumerate(items, start=1):
+            item = JsonLd("ListItem", {"position": position, "name": f"{name} | {website.name}", "item": f"{base_url}{url}"})
+            item_jsonlds.append(item)
         breadcrumbs = JsonLd("BreadcrumbList")
-        breadcrumbs.add_nested({"itemListElement": list_items})
+        breadcrumbs.add_nested({"itemListElement": item_jsonlds})
         return breadcrumbs
