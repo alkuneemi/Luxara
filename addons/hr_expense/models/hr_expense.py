@@ -295,6 +295,7 @@ class HrExpense(models.Model):
         check_company=True,
         help="Both price-included and price-excluded taxes will behave as price-included taxes for expenses.",
     )
+    active = fields.Boolean(default=True)
 
     # Security fields
     is_editable = fields.Boolean(string="Is Editable By Current User", compute='_compute_is_editable', readonly=True)
