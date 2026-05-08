@@ -1040,7 +1040,7 @@ class SaleOrder(models.Model):
 
         if self.website_id and request and request.is_frontend:
             # Use request lang as cart lang if request comes from frontend
-            return request.env.lang
+            return self.env.lang
 
         return res
 
