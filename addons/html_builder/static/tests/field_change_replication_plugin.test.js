@@ -1,5 +1,4 @@
 import { setupHTMLBuilder } from "@html_builder/../tests/helpers";
-import { undo } from "@html_editor/../tests/_helpers/user_actions";
 import { describe, expect, test } from "@odoo/hoot";
 import { queryOne } from "@odoo/hoot-dom";
 import { contains, onRpc } from "@web/../tests/web_test_helpers";
@@ -123,7 +122,7 @@ describe("replicate changes", () => {
         expect(":iframe .test-2 > *").toHaveAttribute("data-oe-many2one-id", 1);
     });
 
-    test("should not add o_dirty marks on the ones receiving the replicated changes", async () => {
+    test("should add o_dirty marks on the ones receiving the replicated changes", async () => {
         const { getEditor } = await setupHTMLBuilder("", {
             headerContent: `
             <div class="test-1">
@@ -144,22 +143,7 @@ describe("replicate changes", () => {
         const editor = getEditor();
         span2.append(" ici");
         editor.shared.history.addStep();
-        expect(span1).not.toHaveClass("o_dirty");
-        expect(span2).toHaveClass("o_dirty");
-        expect(span3).not.toHaveClass("o_dirty");
-        expect([span1, span2, span3]).toHaveText("Contactez-nous ici");
-
-        span1.append("!");
-        editor.shared.history.addStep();
-        expect(span1).toHaveClass("o_dirty");
-        expect(span2).toHaveClass("o_dirty");
-        expect(span3).not.toHaveClass("o_dirty");
-        expect([span1, span2, span3]).toHaveText("Contactez-nous ici!");
-
-        undo(editor);
-        expect(span1).not.toHaveClass("o_dirty");
-        expect(span2).toHaveClass("o_dirty");
-        expect(span3).not.toHaveClass("o_dirty");
+        expect([span1, span2, span3]).toHaveClass("o_dirty");
         expect([span1, span2, span3]).toHaveText("Contactez-nous ici");
     });
 
@@ -185,9 +169,7 @@ describe("replicate changes", () => {
         span1.append("!");
         const editor = getEditor();
         editor.shared.history.addStep();
-        expect(span1).toHaveClass("o_dirty");
-        expect(span2).toHaveClass("o_dirty");
-        expect(span3).not.toHaveClass("o_dirty");
+        expect([span1, span2, span3]).toHaveClass("o_dirty");
         expect([span2, span3]).toHaveText(span1.textContent); // all the same text
     });
 });

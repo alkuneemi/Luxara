@@ -92,6 +92,7 @@ export class FieldChangeReplicationPlugin extends Plugin {
             );
             if (targetEls.length) {
                 const cloneEl = sourceEl.cloneNode(true);
+                const hasDirtyOnClone = cloneEl.classList.contains("o_dirty");
                 this.dependencies.dom.removeSystemProperties(cloneEl);
                 this.dispatchTo("clean_for_save_handlers", { root: cloneEl });
                 for (const targetEl of targetEls) {
@@ -101,11 +102,13 @@ export class FieldChangeReplicationPlugin extends Plugin {
                         // text of the referenced translation must be used.
                         if (targetEl.innerText !== cloneEl.innerText) {
                             targetEl.innerText = cloneEl.innerText;
+                            targetEl.classList.toggle("o_dirty", hasDirtyOnClone);
                             touchedEls.add(targetEl);
                         }
                     } else {
                         if (targetEl.innerHTML !== cloneEl.innerHTML) {
                             targetEl.replaceChildren(...cloneEl.cloneNode(true).childNodes);
+                            targetEl.classList.toggle("o_dirty", hasDirtyOnClone);
                             touchedEls.add(targetEl);
                         }
                     }
