@@ -3885,7 +3885,8 @@ class BaseModel(metaclass=MetaModel):
         recompute_vals_before = {fname: [r[fname] for r in real_recs] for fname in recompute_fnames}
         for fname in recompute_fnames:
             protected = self.env._protected.get(self._fields[fname], ())
-            real_recs.browse(id_ for id_ in real_recs._ids if id_ not in protected).invalidate_recordset([fname])
+            unprotected_real_recs = real_recs.browse(id_ for id_ in real_recs._ids if id_ not in protected)
+            unprotected_real_recs.invalidate_recordset([fname])
         real_recs.modified([
             fname for fname in recompute_fnames
             if any(r[fname] != val_before for r, val_before in zip(real_recs, recompute_vals_before[fname], strict=True))
@@ -4138,7 +4139,13 @@ class BaseModel(metaclass=MetaModel):
         for inv_records, field_names in to_recompute:
             for fname in field_names:
                 protected = self.env._protected.get(self._fields[fname], ())
-                inv_records.browse(id_ for id_ in inv_records._ids if id_ not in protected).invalidate_recordset([fname])
+                if any(id_ in protected for id_ in inv_records._ids):
+                    _logger.warning(
+                        'protected inv_records: %s for field %s',
+                        self.browse(id_ for id_ in inv_records._ids if id_ in protected),
+                        self._fields[fname]
+                    )
+            inv_records.invalidate_recordset(field_names)
         for inv_records, field_names in to_recompute:
             inv_records.modified([
                 fname for fname in field_names
