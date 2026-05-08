@@ -160,6 +160,7 @@ class PaymentPortal(main.PaymentPortal):
             initial_amount = order_sudo.amount_total
             order_sudo._update_programs_and_rewards()
             order_sudo.validate_taxes_on_sales_order()  # re-applies taxcloud taxes if necessary
+            order_sudo._get_and_set_external_taxes_on_eligible_records()
             if order_sudo.currency_id.compare_amounts(initial_amount, order_sudo.amount_total):
                 raise ValidationError(
                     _(
