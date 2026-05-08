@@ -951,6 +951,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
             ('res_model_id', '=', 'purchase.order'), ('res_id', '=', multi_step_po.id),
         ])
         self.assertFalse(activity)
+<<<<<<< f90784aca53d2040d48ab84fdf5c42da62d4296a
 
     def test_merging_moves_of_negative_order_lines_update(self):
         """This tests that moves created by updating order_lines with negative quantities get merged
@@ -994,3 +995,22 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
             {'product_id': self.product_id_1.id, 'quantity': 7},
             {'product_id': self.product_id_1.id, 'quantity': 3}
         ])
+||||||| 574c8fbeba1872b2740872b22b469609a0b3620a
+=======
+
+    def test_retrieve_purchase_stock_dashboard(self):
+        """Tests that the OTD for the purchase order dashboard is based on the date without the time"""
+        now = fields.Datetime.now()
+        create_vals = [{
+            'partner_id': self.partner.id,
+            'order_line': [Command.create({
+                'product_id': self.product.id,
+                'date_planned': date,
+            })]
+        } for date in [now - timedelta(days=1), now - timedelta(seconds=30), now + timedelta(days=1)]]
+        pos = self.env['purchase.order'].create(create_vals)
+        pos.button_confirm()
+        pos.picking_ids.button_validate()
+        dashboard = self.env['purchase.order'].retrieve_dashboard()
+        self.assertEqual(dashboard['global']['otd'], '67 %')
+>>>>>>> 5f4abcfcbff2b807d4342853415d77b1ca95734d
