@@ -24,15 +24,27 @@ export class FieldChangeReplicationPlugin extends Plugin {
      * @param { import("@html_editor/core/history_plugin").HistoryMutationRecord[] } records
      */
     handleMutations(records) {
-        records
-            .filter((r) => !(r.type === "attributes" && r.attributeName.startsWith("data-oe-t")))
-            .map((r) =>
-                closestElement(r.target, "[data-oe-model], [data-oe-translation-source-sha]")
-            )
-            .filter(Boolean)
-            // Do not forward "unstyled" copies to other nodes.
-            .filter((fieldEl) => !fieldEl.classList.contains("o_translation_without_style"))
-            .forEach((fieldEl) => this.fieldsToReplicate.add(fieldEl));
+        const evictSubtree = (root) => {
+            for (const el of this.fieldsToReplicate) {
+                if (root.contains(el)) {
+                    this.fieldsToReplicate.delete(el);
+                }
+            }
+        };
+        for (const r of records) {
+            if (r.type === "childList") {
+                r.removedNodes.forEach(evictSubtree);
+            } else if (r.type === "attributes" && r.attributeName.startsWith("data-oe-t")) {
+                continue;
+            }
+            const fieldEl = closestElement(
+                r.target,
+                "[data-oe-model], [data-oe-translation-source-sha]"
+            );
+            if (fieldEl && !fieldEl.classList.contains("o_translation_without_style")) {
+                this.fieldsToReplicate.add(fieldEl);
+            }
+        }
     }
 
     /**
