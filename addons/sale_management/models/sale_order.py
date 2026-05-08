@@ -130,3 +130,52 @@ class SaleOrder(models.Model):
             if order.sale_order_template_id.mail_template_id:
                 order._send_order_notification_mail(order.sale_order_template_id.mail_template_id)
         return res
+
+    def action_create_quotation_template(self):
+        self.ensure_one()
+
+        template_vals = self._prepare_quotation_template_values()
+        new_template = self.env["sale.order.template"].create(template_vals)
+
+        # Assign the newly created template to the current SO
+        self.sale_order_template_id = new_template.id
+
+        return new_template.get_formview_action()
+
+    # === TOOLING METHODS ===#
+
+    def _prepare_quotation_template_values(self):
+        """
+        Prepare the dictionary of values to create a new quotation template from the current
+        order.
+
+        :return: `sale.order.template` create values
+        :rtype: dict
+        """
+        self.ensure_one()
+        template_lines = [
+            fields.Command.create(line._prepare_template_line_values()) for line in self.order_line
+        ]
+
+        return {
+            "name": self.env._("Template from %s", self.name),
+            "sale_order_template_line_ids": template_lines,
+            **self._prepare_template_order_values(),
+        }
+
+    def _prepare_template_order_values(self):
+        """
+        Prepare create values for a sale order template line from a sale order line.
+
+        Designed to be overridden by other modules to add extra fields.
+
+        :return: `sale.order.template` create values
+        :rtype: dict
+        """
+        self.ensure_one()
+        order_fields = ("note", "require_signature", "require_payment", "prepayment_percent")
+        return {
+            **self.read(order_fields)[0],
+            "company_id": self.company_id.id,
+            "journal_id": self.journal_id.id,
+        }

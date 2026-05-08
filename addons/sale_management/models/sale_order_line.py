@@ -116,19 +116,26 @@ class SaleOrderLine(models.Model):
         return super()._can_be_edited_on_portal() and self._is_line_optional()
 
     def _prepare_template_line_values(self):
-        """Prepare create values for a sale order template line from a sale order line.
+        """
+        Prepare create values for a sale order template line from a sale order line.
+
+        Designed to be overridden by other modules to add extra fields.
 
         :return: `sale.order.template.line` create values
         :rtype: dict
         """
         self.ensure_one()
+        line_fields = (
+            "sequence",
+            "name",
+            "product_uom_qty",
+            "display_type",
+            "is_optional",
+            "collapse_composition",
+            "collapse_prices",
+        )
         return {
-            "name": self.name,
-            "product_uom_qty": self.product_uom_qty,
-            "product_uom_id": self.product_uom_id.id,
-            "display_type": self.display_type,
-            "is_optional": self.is_optional,
+            **self.read(line_fields)[0],
             "product_id": self.product_id.id,
-            "collapse_composition": self.collapse_composition,
-            "collapse_prices": self.collapse_prices,
+            "product_uom_id": self.product_uom_id.id,
         }
