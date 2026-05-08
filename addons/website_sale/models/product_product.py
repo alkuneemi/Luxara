@@ -287,13 +287,11 @@ class ProductProduct(models.Model):
         return super()._get_main_uom()
 
     def _get_extra_tracking_values(self, **kwargs):
-        extra_tracking_values = {}
-        if (
-            kwargs.get('res_model') == self._name
-            and (res_id := kwargs.get('res_id'))
-        ):
-            extra_tracking_values['product_id'] = res_id
-        return extra_tracking_values
+        res_model = kwargs.get('res_model')
+        res_id = kwargs.get('res_id')
+        if res_model == self._name and res_id:
+            return {'res_model': res_model, 'res_id': res_id}
+        return {}
 
     def _is_sold_out(self):
         """Return whether the product is sold out (no available quantity).

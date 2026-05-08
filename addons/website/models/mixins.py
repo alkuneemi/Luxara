@@ -222,6 +222,11 @@ class WebsiteLocatedMixin(models.AbstractModel):
                 record.website_absolute_url = url_join(record.get_base_url(), record.website_url)
 
     def _get_extra_tracking_values(self, **kwargs):
+        res_model = kwargs.get('res_model')
+        res_id = kwargs.get('res_id')
+
+        if res_model == self._name and res_id:
+            return {'res_model': res_model, 'res_id': res_id}
         return {}
 
 

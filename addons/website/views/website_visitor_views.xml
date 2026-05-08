@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo><data>
+
+    <!-- Website visitor track views base -->
+    <record id="website_visitor_track_view_base_list" model="ir.ui.view">
+        <field name="name">website.track.view.base.list</field>
+        <field name="model">website.track</field>
+        <field name="arch" type="xml">
+            <list string="Visitor Views History" create="0" sample="1">
+                <field name="visitor_id"/>
+                <field name="res_id"/>
+                <field name="visit_datetime"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="website_visitor_track_view_base_graph" model="ir.ui.view">
+        <field name="name">website.track.view.base.graph</field>
+        <field name="model">website.track</field>
+        <field name="arch" type="xml">
+            <graph string="Visitor Views" sample="1">
+                <field name="res_id"/>
+            </graph>
+        </field>
+    </record>
+
     <!--page history-->
     <record id="website_visitor_page_view_tree" model="ir.ui.view">
         <field name="name">website.track.view.list</field>
@@ -8,6 +32,7 @@
             <list string="Visitor Page Views History" create="0">
                 <field name="visitor_id"/>
                 <field name="page_id"/>
+                <field name="res_id" optional="hide"/>
                 <field name="url"/>
                 <field name="visit_datetime"/>
             </list>
@@ -184,7 +209,7 @@
                             <field name="email"/>
                             <field name="mobile" class="o_force_ltr"/>
                             <field name="country_id" invisible="not country_id"/>
-                            <field name="lang_id"/>
+                            <field name="lang_id" readonly="1"/>
                         </group>
                         <group id="visits" string="Visits">
                             <field name="website_id" groups="website.group_multi_website"/>
@@ -281,6 +306,7 @@
             <list string="Visitor Views History" create="0" edit="0" sample="1">
                 <field name="visitor_id"/>
                 <field name="page_id"/>
+                <field name="res_id" optional="hide"/>
                 <field name="url"/>
                 <field name="visit_datetime"/>
             </list>
