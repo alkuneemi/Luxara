@@ -83,12 +83,12 @@ class ResPartner(models.Model):
                         normalized_country = 'IT'
                 # If the partner is from the EU, the country-code prefix of the VAT must be taken away
                 else:
+                    country_code, normalized_vat = self._split_vat(normalized_vat)
                     if not normalized_country:
-                        normalized_country = normalized_vat[:2].upper()
-                    normalized_vat = normalized_vat.removeprefix(normalized_country)
+                        normalized_country = country_code
             # If customer is from San Marino
             elif is_sm:
-                normalized_vat = normalized_vat if normalized_vat[:2].isdecimal() else normalized_vat[2:]
+                normalized_vat = self._split_vat(normalized_vat)[1]
 
         # If it has a codice fiscale (and no country), it's an Italian partner
         if not normalized_country and self.l10n_it_codice_fiscale:

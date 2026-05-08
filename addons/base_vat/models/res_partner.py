@@ -191,12 +191,6 @@ class ResPartner(models.Model):
             status = partner._check_vies_iap()
             partner._update_vies_status(status)
 
-    def _split_vat(self, vat):
-        vat_prefix, vat_number = vat[:2].upper(), vat[2:].replace(' ', '')
-        if not vat_prefix.isalpha():
-            return '', vat
-        return vat_prefix, vat_number
-
     @api.model
     def _get_iap_vies_credentials(self):
         """
@@ -347,7 +341,7 @@ class ResPartner(models.Model):
 
     def check_vat_al(self, vat):
         """Check Albania VAT number"""
-        number = stdnum.util.get_cc_module('al', 'vat').compact(vat)
+        number = self._split_vat(vat, 'al')[1]
         return len(number) == 10 and self._check_vat_al_re.match(number)
 
     def check_vat_jp(self, vat):
@@ -623,20 +617,13 @@ class ResPartner(models.Model):
         origin https://github.com/arthurdejong/python-stdnum/blob/master/stdnum/uy/rut.py
         FIXME Can be removed when python-stdnum does a new release. """
 
-        def compact(number):
-            """Convert the number to its minimal representation."""
-            number = clean(number, ' -').upper().strip()
-            if number.startswith('UY'):
-                return number[2:]
-            return number
-
         def calc_check_digit(number):
             """Calculate the check digit."""
             weights = (4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2)
             total = sum(int(n) * w for w, n in zip(weights, number))
             return str(-total % 11)
 
-        vat = compact(vat)
+        vat = self._split_vat(vat, 'UY')[1]
 
         return (
             vat.isdigit()  # InvalidFormat
@@ -791,8 +778,7 @@ class ResPartner(models.Model):
 
     def format_vat_hu(self, vat):
         """ We put the - back as we require it for the EDI and the different parts will make it clear to the user"""
-        stdnum_vat_fix_func = stdnum.util.get_cc_module('hu', 'vat').compact
-        vat = stdnum_vat_fix_func(vat)
+        vat = self._split_vat(vat, 'hu')[1]
         if self._check_tin_hu_companies_re.match(vat):
             vat = vat[:8] + '-' + vat[8] + '-' + vat[9] + vat[10]
         return vat

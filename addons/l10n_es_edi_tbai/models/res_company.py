@@ -168,8 +168,6 @@ class ResCompany(models.Model):
         if not self.vat:
             return False
 
-        vat = self.vat
-        if vat.startswith('ES'):
-            vat = vat[2:]
+        vat = self.env['res.partner']._split_vat(self.vat, 'ES')[1]
 
         return re.fullmatch(r"(\d{8}[TRWAGMYFPDXBNJZSQVHLCKE]|[XYZ]\d{7}[TRWAGMYFPDXBNJZSQVHLCKE]|E\d{7}[A-J0-9])", vat) or False

@@ -38,7 +38,7 @@ class AccountEdiXmlUBL21RS(models.AbstractModel):
         partner = vals['partner']
 
         vat_country, vat_number = partner._split_vat(partner.vat)
-        if vat_country.isnumeric():
+        if not vat_country:
             vat_country = 'RS'
             vat_number = partner.vat
 
