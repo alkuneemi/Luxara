@@ -75,6 +75,7 @@ export class FormOptionPlugin extends Plugin {
     static shared = [
         "prepareFormModel",
         "getModelsCache",
+        "getVisibilityConditionCache",
         "applyFormModel",
         "addHiddenField",
         "fetchAuthorizedFields",
@@ -222,6 +223,9 @@ export class FormOptionPlugin extends Plugin {
         this.fieldRecordsCache.invalidate();
         this.authorizedFieldsCache.invalidate();
         this.visibilityConditionCachedRecords.invalidate();
+    }
+    getVisibilityConditionCache() {
+        return this.visibilityConditionCachedRecords;
     }
     getModelsCache(formEl) {
         // Through a method so that it can be overridden.
@@ -1578,7 +1582,26 @@ export class SetFormCustomFieldValueListAction extends BuilderAction {
 
 export class SetDependencyValueListAction extends BuilderAction {
     static id = "setDependencyValueList";
+    static dependencies = ["websiteFormOption"];
 
+    setup() {
+        this.recordValue = [];
+    }
+    async prepare({ editingElement }) {
+        const dependencyEl = getDependencyEl(editingElement);
+        const containerEl = dependencyEl.closest(".s_website_form_field");
+        this.visibilityConditionCachedRecords =
+            this.dependencies.websiteFormOption.getVisibilityConditionCache();
+        if (containerEl.dataset.type === "record") {
+            const model = containerEl.dataset.model;
+            const idField = containerEl.dataset.idField || "id";
+            const displayNameField = containerEl.dataset.displayNameField || "display_name";
+            this.recordValue = await this.visibilityConditionCachedRecords.read(model, [
+                idField,
+                displayNameField,
+            ]);
+        }
+    }
     apply({ editingElement: fieldEl, value }) {
         const values = JSON.parse(value);
         const selectedList = values.filter(({ selected }) => selected).map(({ name }) => name);
@@ -1591,40 +1614,58 @@ export class SetDependencyValueListAction extends BuilderAction {
         if (!dependencyEl) {
             return;
         }
+        const containerEl = dependencyEl.closest(".s_website_form_field");
         const isSelect = dependencyEl.nodeName === "SELECT";
         const multipleInputsWrapper = dependencyEl.closest(".s_website_form_multiple");
-        let optionEls = [];
-        if (isSelect) {
-            optionEls = Array.from(dependencyEl.querySelectorAll("option"));
-        } else if (multipleInputsWrapper) {
-            optionEls = Array.from(multipleInputsWrapper.querySelectorAll(".s_website_form_input"));
+        let visibilityCondition = fieldEl.dataset.visibilityCondition;
+        try {
+            const parsed = JSON.parse(visibilityCondition);
+            // Accept parsed result only when it's NOT a string
+            if (typeof parsed !== "string") {
+                visibilityCondition = parsed;
+            }
+        } catch {
+            // keep original value
         }
-
-        const isSelected = (el) => {
-            let visibilityCondition = fieldEl.dataset.visibilityCondition;
-            try {
-                const parsed = JSON.parse(visibilityCondition);
-                // Accept parsed result only when it's NOT a string
-                if (typeof parsed !== "string") {
-                    visibilityCondition = parsed;
-                }
-            } catch {
-                // keep original value
+        const isSelected = (value) => {
+            if (!visibilityCondition) {
+                return false;
             }
-            if (visibilityCondition) {
-                return Array.isArray(visibilityCondition)
-                    ? visibilityCondition?.includes(el.value)
-                    : visibilityCondition === el.value;
-            }
-            return false;
+            return Array.isArray(visibilityCondition)
+                ? visibilityCondition?.includes(value.toString())
+                : visibilityCondition === value;
         };
-        const result = optionEls.map((el) => ({
-            id: el.value,
-            name: el.value,
-            display_name: isSelect ? el.textContent : el.labels[0]?.textContent || "",
-            undeletable: true,
-            selected: isSelected(el),
-        }));
+        let result = [];
+        if (isSelect || multipleInputsWrapper) {
+            let optionEls = [];
+            if (isSelect) {
+                optionEls = Array.from(dependencyEl.querySelectorAll("option"));
+            } else if (multipleInputsWrapper) {
+                optionEls = Array.from(
+                    multipleInputsWrapper.querySelectorAll(".s_website_form_input")
+                );
+            }
+            result = optionEls.map((el) => ({
+                id: el.value,
+                name: el.value,
+                display_name: isSelect ? el.textContent : el.labels[0]?.textContent || "",
+                undeletable: true,
+                selected: isSelected(el.value),
+            }));
+        } else if (containerEl.dataset.type === "record") {
+            const idField = containerEl.dataset.idField || "id";
+            const displayNameField = containerEl.dataset.displayNameField || "display_name";
+            result = this.recordValue.map((record) => {
+                const id = String(record[idField]);
+                return {
+                    id,
+                    name: id,
+                    display_name: record[displayNameField],
+                    undeletable: true,
+                    selected: isSelected(id),
+                };
+            });
+        }
         return JSON.stringify(result);
     }
 }

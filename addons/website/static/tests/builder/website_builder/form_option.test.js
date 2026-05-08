@@ -713,6 +713,63 @@ test("multiple conditional visiblity value for 'contains'", async () => {
     expect(fieldB).toHaveAttribute("data-visibility-condition", '["Option 1","Option 2"]');
 });
 
+test("contains conditional visiblity value for 'record' field", async () => {
+    onRpc("get_authorized_fields", () => ({}));
+    onRpc("hr.job", "search_read", () => [
+        {
+            id: "Option 1",
+            display_name: "Option 1",
+        },
+        {
+            id: "Option 2",
+            display_name: "Option 2",
+        },
+        {
+            id: "Option 3",
+            display_name: "Option 3",
+        },
+    ]);
+    await setupWebsiteBuilder(
+        `<section class="s_website_form">
+            <form data-model_name="mail.mail">
+                <div class="col-12 mb-0 py-2 s_website_form_field s_website_form_dnone" data-type="record" data-model="hr.job">
+                    <div class="row s_col_no_resize s_col_no_bgcolor">
+                        <label class="col-4 col-sm-auto s_website_form_label" style="width: 200px" for="recruitment7">
+                            <span class="s_website_form_label_content">Job</span>
+                        </label>
+                        <div class="col-sm">
+                            <input id="recruitment7" type="hidden" class="form-control s_website_form_input" name="id" value="3">
+                        </div>
+                    </div>
+                </div>
+                <div data-name="Field" class="s_website_form_field mb-3 col-12 s_website_form_custom d-none" data-type="char">
+                    <div class="row s_col_no_resize s_col_no_bgcolor">
+                        <label class="col-form-label col-sm-auto s_website_form_label" style="width: 200px" for="second">
+                            <span class="s_website_form_label_content">b</span>
+                        </label>
+                        <div class="col-sm">
+                            <input class="form-control s_website_form_input" type="text" name="b" id="second"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>`
+    );
+
+    const fieldB = ":iframe .s_website_form_field:has(input[name=b])";
+    await contains(fieldB).click();
+    // Change visibility condition to "contains".
+    await contains("[data-label='Visibility Rule'] button").click();
+    await contains("[data-action-value='conditional']").click();
+    await contains("button[id='hidden_condition_no_text_opt']").click();
+    await contains(".o_popover .dropdown-item:contains(Contains)").click();
+    expect(".form-switch input[data-id]").toHaveCount(3);
+    expect(fieldB).toHaveAttribute("data-visibility-condition", "Option 1");
+
+    await contains(".form-switch input[data-id='1']").click();
+    expect(fieldB).toHaveAttribute("data-visibility-condition", '["Option 1","Option 2"]');
+});
+
 describe("Many2one Field", () => {
     const addRecordButtonSelector =
         ".we-bg-options-container .o_select_menu button.o-hb-selectMany2X-toggle";
