@@ -25,6 +25,7 @@ export class PageDependencies extends Component {
         resIds: Array,
         resModel: String,
         mode: String,
+        onDependenciesLoaded: { type: Function, optional: true },
     };
 
     setup() {
@@ -41,7 +42,8 @@ export class PageDependencies extends Component {
             () => []
         );
         this.state = useState({
-            dependencies: {},
+            dependencies: null,
+            dependencyCount: 0,
         });
 
         onWillDestroy(async () => {
@@ -58,6 +60,9 @@ export class PageDependencies extends Component {
             this.props.resModel,
             await this.getResIds(),
         ]);
+        const totalDependencyCount = Object.values(this.state.dependencies).flat().length;
+        this.state.dependencyCount = totalDependencyCount;
+        this.props.onDependenciesLoaded?.(totalDependencyCount);
     }
 
     showDependencies() {
@@ -145,7 +150,13 @@ export class DeletePageDialog extends Component {
 
         this.state = useState({
             confirm: false,
+            showCheckbox: false,
         });
+        this.onDependenciesLoaded = (count) => {
+            this.state.showCheckbox = count > 0;
+            // To enable the delete button if there are no dependencies.
+            this.state.confirm = count === 0;
+        };
     }
 
     onConfirmCheckboxChange(checked) {
@@ -242,6 +253,7 @@ export class PagePropertiesDialog extends FormViewDialog {
             ...(this.isPage
                 ? {
                       buttonTemplate: "website.PagePropertiesDialogButtons",
+                      buttonDialogTemplate: "website.DeletePageButton",
                       clonePage: this.clonePage.bind(this),
                       deletePage: this.deletePage.bind(this),
                   }

@@ -150,6 +150,22 @@ registerWebsitePreviewTour(
             trigger: "a[data-menu-xmlid='website.menu_page_properties']",
             run: "click",
         },
+        // The next two steps check whether the delete button is present and
+        // whether clicking it opens the delete confirmation dialog.
+        {
+            content: "Click on delete button",
+            trigger: "button.o_form_button_delete",
+            run: "click",
+        },
+        {
+            content: "Verify loading state is shown while checking dependencies",
+            trigger: ".modal-body .fa-spinner",
+        },
+        {
+            content: "Verify and close delete confirmation dialog",
+            trigger: ".modal-header:has(.modal-title:contains('Delete Page')) button.btn-close",
+            run: "click",
+        },
         {
             content: "Enable the Parent Page Option",
             trigger: "div[name='has_parent_page'] input",

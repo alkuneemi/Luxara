@@ -15,7 +15,10 @@
 </t>
 
 <t t-name="website.PageDependencies">
-    <t t-if="!!Object.keys(this.state.dependencies).length">
+    <t t-if="this.state.dependencies === null">
+        <span class="text-muted"><i class="fa fa-spinner fa-spin me-1"/>Checking links...</span>
+    </t>
+    <t t-elif="this.state.dependencyCount > 0">
         <t t-if="this.props.mode === 'popover'">
             <t t-set="depTemplate">
                 <t t-call="{{ this.constructor.popoverTemplate }}"/>
@@ -25,7 +28,9 @@
             </div>
         </t>
         <t t-else="">
-            <p class="text-warning">We found these links:</p>
+            <p class="text-warning">
+                We found <t t-out="this.state.dependencyCount"/> occurrences linking to this page; before deleting it, make sure you update or remove all those links so your customers don't run into a 404 error page.
+            </p>
             <div t-foreach="this.state.dependencies" t-as="dependency" t-key="dependency" class="ml16 mb16">
                 <a class="collapsed" data-bs-toggle="collapse"
                 t-attf-aria-controls="collapseDependencies{{ dependency_index }}"
@@ -48,6 +53,9 @@
             </div>
         </t>
     </t>
+    <t t-else="">
+        <span class="text-success">No link found to this page, you are safe to delete.</span>
+    </t>
 </t>
 
 <t t-name="website.PageDependencies.Tooltip">
@@ -65,19 +73,17 @@
 
 <t t-name="website.DeletePageDialog">
     <WebsiteDialog title.translate="Delete Page" close="this.props.close">
-        <p t-if="this.props.resIds.length > 1">Ready to make these web pages disappear into thin air? Are you sure?<br/> They will be gone forever!<br/><br/>
-            <span class="text-warning">But before deleting, make sure you update all links referring to them. That way, your customers won't bump into the not-so-famous 404 error page.</span>
-        </p>
-        <p t-else="">Ready to make this web page disappear into thin air? Are you sure?<br/> It will be gone forever!<br/><br/>
-            <span class="text-warning">But before deleting, make sure you update all links referring to it. That way, your customers won't bump into the not-so-famous 404 error page.</span>
-        </p>  
-        <PageDependencies resIds="this.props.resIds" resModel="this.props.resModel" mode="'collapse'"/>
-        <CheckBox value="this.state.confirm" onChange.bind="this.onConfirmCheckboxChange">
-            <p class="text-warning">I am sure about this.</p>
-        </CheckBox>
+        <p t-if="this.props.resIds.length > 1">Ready to make these web pages disappear into thin air? Are you sure?<br/> They will be gone forever!</p>
+        <p t-else="">Ready to make this web page disappear into thin air? Are you sure?<br/> It will be gone forever!</p>
+        <PageDependencies resIds="this.props.resIds" resModel="this.props.resModel" mode="'collapse'" onDependenciesLoaded="this.onDependenciesLoaded"/>
+        <t t-if="this.state.showCheckbox">
+            <CheckBox value="this.state.confirm" onChange.bind="this.onConfirmCheckboxChange">
+                <span class="text-warning">I am sure about this.</span>
+            </CheckBox>
+        </t>
 
         <t t-set-slot="footer">
-            <button class="btn btn-danger" t-on-click="() => this.onClickDelete()"  t-att-disabled="!this.state.confirm">
+            <button class="btn btn-danger" t-on-click="() => this.onClickDelete()" t-att-disabled="!this.state.confirm">
                 Delete
             </button>
             <button class="btn btn-secondary" t-on-click="() => this.props.close()">
@@ -91,6 +97,12 @@
     <xpath expr="//button[hasclass('o_form_button_cancel')]" position="after">
         <button class="btn btn-link order-last ms-auto" t-on-click="this.props.clonePage"><i class="fa fa-fw fa-clone"/>Duplicate Page</button>
         <button class="btn btn-link order-last" t-on-click="this.props.deletePage"><i class="fa fa-fw fa-trash"/>Delete Page</button>
+    </xpath>
+</t>
+
+<t t-name="website.DeletePageButton" t-inherit="web.FormViewDialog.ToOne.buttons">
+    <xpath expr="//button[hasclass('o_form_button_cancel')]" position="after">
+        <button class="btn btn-danger ms-auto o_form_button_delete" t-on-click="this.props.deletePage"><i class="fa fa-fw fa-trash"/>Delete</button>
     </xpath>
 </t>
 
