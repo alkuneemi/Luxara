@@ -1294,7 +1294,8 @@ $-product-radius-map: (
         &:where(:not(
             .o_wsale_product_details_content_section_title,
             .o_wsale_product_details_content_section_price,
-            .o_wsale_product_details_content_section_accordion
+            .o_wsale_product_details_content_section_accordion,
+            .o_wsale_product_details_content_section_drop_inner_content
         )) {
             border-top: var(--o-wsale-product-details-section-border-width, #{$border-width}) solid $border-color;
             padding-top: var(--o-wsale-product-details-section-padding-top, #{map-get($spacers, 4)});

@@ -10,7 +10,7 @@ import { CARD_PARENT_HANDLERS } from "./utils";
 const special_cards_selector = `.s_card.s_timeline_card, div:is(${CARD_PARENT_HANDLERS}) > .s_card`;
 
 const so_snippet_addition_drop_in =
-    ":not(p).oe_structure:not(.oe_structure_solo), :not(.o_mega_menu):not(p)[data-oe-type=html], :not(p).oe_structure.oe_structure_solo:not(:has(> section:not(.s_snippet_group), > div:not(.o_hook_drop_zone)))";
+    ":not(p).oe_structure:not(.oe_structure_solo):not(.o_drop_inner_empty), :not(.o_mega_menu):not(p)[data-oe-type=html]:not(.o_drop_inner_empty), :not(p).oe_structure.oe_structure_solo:not(:has(> section:not(.s_snippet_group), > div:not(.o_hook_drop_zone))):not(.o_drop_inner_empty)";
 
 // TODO need to split by addons
 
@@ -39,7 +39,7 @@ export class DropZoneSelectorPlugin extends Plugin {
                     ].join(", ");
                 },
                 exclude: `${special_cards_selector}`,
-                dropIn: "nav, .row.o_grid_mode",
+                dropIn: "nav, .row.o_grid_mode, .o_drop_inner_empty",
                 get dropNear() {
                     return `p, h1, h2, h3, ul, ol, div:not(.o_grid_item_image) > img, div:not(.o_grid_item_image) > a, .btn, ${this.plugin
                         .getResource("so_content_addition_selectors")
