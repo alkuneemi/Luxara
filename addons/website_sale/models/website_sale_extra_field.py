@@ -25,4 +25,9 @@ class WebsiteSaleExtraField(models.Model):
 
     def _get_values_for_display(self, product_variant, product_template):
         record = product_variant.sudo() if product_variant else product_template.sudo()
-        return {ef: record[ef.name] for ef in self if record[ef.name]}
+        values = {}
+        for extra_field in self:
+            field_value = record[extra_field.name]
+            if field_value:
+                values[extra_field] = field_value
+        return values

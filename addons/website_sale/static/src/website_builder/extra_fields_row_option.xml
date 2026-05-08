@@ -2,9 +2,13 @@
 <templates xml:space="preserve">
 <t t-name="website_sale.ExtraFieldRowOption">
     <BuilderRow label.translate="Move to Category">
-        <BuilderSelect dataAttributeAction="'changeExtraFieldCategory'" preview="false">
-            <t t-foreach="this.state.availableCategories" t-as="category" t-key="category.id">
-                <BuilderSelectItem dataAttributeActionValue="`${category.id}`">
+        <BuilderSelect
+            action="'selectExtraFieldRowCategory'"
+            preview="false"
+            t-key="`row-category-${this.sharedState.optionState.rowCategoryId}`"
+        >
+            <t t-foreach="this.getAvailableCategories()" t-as="category" t-key="category.id">
+                <BuilderSelectItem actionValue="`${category.id}`">
                     <t t-out="category.name"/>
                 </BuilderSelectItem>
             </t>
@@ -12,24 +16,21 @@
         <t
             t-call="website_sale.CategoryCreateToggle"
             t-call-context="{
-                categoryCreateMode: this.state.categoryCreateMode,
-                onOpenCreateMode: () => {
-                    this.env.getEditingElement().__onCategoryCreated = this.onCategoryCreated.bind(this);
-                    this.setCategoryCreateMode(true);
-                },
+                categoryCreateMode: this.sharedState.optionState.rowCategoryCreateMode,
+                onOpenCreateMode: () => this.setCategoryCreateMode(true),
                 onCloseCreateMode: () => this.setCategoryCreateMode(false),
             }"
         />
     </BuilderRow>
 
-    <t t-if="this.state.categoryCreateMode">
+    <t t-if="this.sharedState.optionState.rowCategoryCreateMode">
         <t
             t-call="website_sale.CategoryCreateForm"
-            t-call-context="{createActionName: 'createCategory'}"
+            t-call-context="{createActionName: 'createRowCategory'}"
         />
     </t>
 
-    <t t-if="!this.state.categoryCreateMode">
+    <t t-if="!this.sharedState.optionState.rowCategoryCreateMode">
         <BuilderRow label.translate=" ">
             <BuilderButton
                 action="'changeExtraFieldCategory'"

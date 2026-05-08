@@ -10,41 +10,44 @@ export class ExtraFieldRowOption extends BaseOptionComponent {
 
     setup() {
         super.setup();
-        const { loadExtraFields, getCategories, getExtraFields } =
+        const { loadExtraFields, getCategories, getExtraFields, getState } =
             this.dependencies.extraFieldsOption;
 
         const editingElement = this.env.getEditingElement();
         const extraFieldId = parseInt(editingElement.dataset.extraFieldId);
+        getState().rowCategoryId = null;
 
         this.sharedState = useState({
             categories: getCategories(),
+            optionState: getState(),
         });
 
         this.state = useState({
-            availableCategories: [],
-            categoryCreateMode: false,
+            currentCategoryId: false,
         });
 
         onWillStart(async () => {
             await loadExtraFields();
-            const currentField = getExtraFields().find((ef) => ef.id === extraFieldId);
-            const currentCategoryId = currentField?.category_id?.[0] || false;
-            const available = getCategories().filter((c) => c.id !== currentCategoryId);
-            if (currentCategoryId) {
-                available.unshift({ id: "", name: "Others" });
-            }
-            this.state.availableCategories = available;
+            const currentExtraField = getExtraFields().find(
+                (extraField) => extraField.id === extraFieldId
+            );
+            const currentCategoryId = currentExtraField?.category_id?.[0] || false;
+            this.state.currentCategoryId = currentCategoryId;
         });
     }
 
     setCategoryCreateMode(value) {
-        this.state.categoryCreateMode = value;
+        this.sharedState.optionState.rowCategoryCreateMode = value;
     }
 
-    onCategoryCreated({ id, name }) {
-        this.env.getEditingElement().dataset.changeExtraFieldCategory = String(id);
-        this.state.availableCategories.push({ id, name });
-        this.setCategoryCreateMode(false);
+    getAvailableCategories() {
+        const available = this.sharedState.categories.filter(
+            (category) => category.id !== this.state.currentCategoryId
+        );
+        if (this.state.currentCategoryId) {
+            return [{ id: "", name: "Others" }, ...available];
+        }
+        return available;
     }
 }
 

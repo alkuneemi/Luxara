@@ -10,17 +10,17 @@ export class ExtraFieldsOption extends BaseOptionComponent {
 
     setup() {
         super.setup();
-        const { loadExtraFields, getExtraFields, getCategories } =
+        const { loadExtraFields, getExtraFields, getCategories, getState } =
             this.dependencies.extraFieldsOption;
 
         this.sharedState = useState({
             extraFields: getExtraFields(),
             categories: getCategories(),
+            optionState: getState(),
         });
 
         this.state = useState({
             fields: [],
-            categoryCreateMode: false,
         });
 
         onWillStart(async () => {
@@ -30,12 +30,14 @@ export class ExtraFieldsOption extends BaseOptionComponent {
     }
 
     setCategoryCreateMode(value) {
-        this.state.categoryCreateMode = value;
+        this.sharedState.optionState.categoryCreateMode = value;
     }
 
-    onCategoryCreated({ id, name }) {
-        this.env.getEditingElement().dataset.pendingCategoryId = String(id);
-        this.setCategoryCreateMode(false);
+    getAvailableFields() {
+        const selectedFieldIds = new Set(
+            this.sharedState.extraFields.map((extraField) => extraField.field_id[0])
+        );
+        return this.state.fields.filter((field) => !selectedFieldIds.has(field.id));
     }
 }
 

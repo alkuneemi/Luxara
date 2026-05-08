@@ -5,19 +5,23 @@
 
     <t
         t-set="availableFields"
-        t-value="this.state.fields.filter(f => !this.sharedState.extraFields.some(ef => ef.field_id[0] === f.id))"
+        t-value="this.getAvailableFields()"
     />
     <t t-set="allFieldsAdded" t-value="availableFields.length === 0"/>
 
     <BuilderRow label.translate="Add Field">
-        <BuilderSelect dataAttributeAction="'pendingFieldId'" preview="false">
+        <BuilderSelect
+            action="'selectExtraField'"
+            preview="false"
+            t-key="`field-${this.sharedState.optionState.fieldId}`"
+        >
             <t t-if="allFieldsAdded">
-                <BuilderSelectItem dataAttributeActionValue="''">
+                <BuilderSelectItem actionValue="''">
                     — All fields added —
                 </BuilderSelectItem>
             </t>
             <t t-foreach="availableFields" t-as="field" t-key="field.id">
-                <BuilderSelectItem dataAttributeActionValue="`${field.id}`">
+                <BuilderSelectItem actionValue="`${field.id}`">
                     <t t-out="field.field_description"/>
                 </BuilderSelectItem>
             </t>
@@ -25,10 +29,14 @@
     </BuilderRow>
 
     <BuilderRow label.translate="Category">
-        <BuilderSelect dataAttributeAction="'pendingCategoryId'" preview="false">
-            <BuilderSelectItem dataAttributeActionValue="''">Others</BuilderSelectItem>
+        <BuilderSelect
+            action="'selectExtraFieldCategory'"
+            preview="false"
+            t-key="`category-${this.sharedState.optionState.categoryId}`"
+        >
+            <BuilderSelectItem actionValue="''">Others</BuilderSelectItem>
             <t t-foreach="this.sharedState.categories" t-as="category" t-key="category.id">
-                <BuilderSelectItem dataAttributeActionValue="`${category.id}`">
+                <BuilderSelectItem actionValue="`${category.id}`">
                     <t t-out="category.name"/>
                 </BuilderSelectItem>
             </t>
@@ -36,24 +44,21 @@
         <t
             t-call="website_sale.CategoryCreateToggle"
             t-call-context="{
-                categoryCreateMode: this.state.categoryCreateMode,
-                onOpenCreateMode: () => {
-                    this.env.getEditingElement().__onCategoryCreated = this.onCategoryCreated.bind(this);
-                    this.setCategoryCreateMode(true);
-                },
+                categoryCreateMode: this.sharedState.optionState.categoryCreateMode,
+                onOpenCreateMode: () => this.setCategoryCreateMode(true),
                 onCloseCreateMode: () => this.setCategoryCreateMode(false),
             }"
         />
     </BuilderRow>
 
-    <t t-if="this.state.categoryCreateMode">
+    <t t-if="this.sharedState.optionState.categoryCreateMode">
         <t
             t-call="website_sale.CategoryCreateForm"
             t-call-context="{createActionName: 'createCategory'}"
         />
     </t>
 
-    <t t-if="!this.state.categoryCreateMode">
+    <t t-if="!this.sharedState.optionState.categoryCreateMode">
         <BuilderRow label.translate=" ">
             <BuilderButton
                 action="'addExtraField'"
@@ -93,7 +98,7 @@
 <t t-name="website_sale.CategoryCreateForm">
     <BuilderRow label.translate="Name" level="1">
         <BuilderTextInput
-            dataAttributeAction="'pendingNewCategoryName'"
+            action="'setExtraFieldCategoryName'"
             placeholder.translate="Category name..."
         />
     </BuilderRow>

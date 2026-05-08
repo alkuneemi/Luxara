@@ -10,18 +10,33 @@ class ExtraFieldsPlugin extends Plugin {
         "getExtraFields",
         "getCategories",
         "loadExtraFields",
+        "getState",
+        "createAndSelectCategory",
     ];
 
     _extraFields = reactive([]);
     _categories = reactive([]);
+    _state = reactive({
+        fieldId: false,
+        categoryId: false,
+        newCategoryName: "",
+        rowCategoryId: null,
+        categoryCreateMode: false,
+        rowCategoryCreateMode: false,
+    });
     _loadedExtraFields = null;
 
     resources = {
         builder_actions: {
             AddExtraFieldAction,
             CreateCategoryAction,
+            CreateRowCategoryAction,
             DeleteExtraFieldAction,
             ChangeExtraFieldCategoryAction,
+            SelectExtraFieldAction,
+            SelectExtraFieldCategoryAction,
+            SetExtraFieldCategoryNameAction,
+            SelectExtraFieldRowCategoryAction,
         },
     };
 
@@ -31,6 +46,10 @@ class ExtraFieldsPlugin extends Plugin {
 
     getCategories() {
         return this._categories;
+    }
+
+    getState() {
+        return this._state;
     }
 
     async loadExtraFields() {
@@ -68,6 +87,26 @@ class ExtraFieldsPlugin extends Plugin {
     clearLoadedExtraFields() {
         this._loadedExtraFields = null;
     }
+
+    async createAndSelectCategory({ selectedCategoryKey, createModeKey }) {
+        const state = this.getState();
+        const name = state.newCategoryName.trim();
+        if (!name) {
+            return;
+        }
+
+        const [newId] = await this.services.orm.create(
+            "product.attribute.category",
+            [{ name }]
+        );
+
+        this.getCategories().push({ id: newId, name });
+
+        state[selectedCategoryKey] = newId;
+        state.newCategoryName = "";
+        state[createModeKey] = false;
+        this.clearLoadedExtraFields();
+    }
 }
 
 class AddExtraFieldAction extends BuilderAction {
@@ -78,14 +117,19 @@ class AddExtraFieldAction extends BuilderAction {
         this.reload = {};
     }
 
-    async apply({ editingElement }) {
-        const fieldId = parseInt(editingElement.dataset.pendingFieldId);
-        const categoryId = parseInt(editingElement.dataset.pendingCategoryId) || false;
+    async apply() {
+        const state = this.dependencies.extraFieldsOption.getState();
+        const fieldId = state.fieldId;
+        const categoryId = state.categoryId || false;
 
-        if (!fieldId) return;
+        if (!fieldId) {
+            return;
+        }
 
         const extraFields = this.dependencies.extraFieldsOption.getExtraFields();
-        if (extraFields.some((ef) => ef.field_id[0] === fieldId)) return;
+        if (extraFields.some((extraField) => extraField.field_id[0] === fieldId)) {
+            return;
+        }
 
         const websiteId = this.services.website.currentWebsite.id;
         await this.services.orm.create(
@@ -93,6 +137,8 @@ class AddExtraFieldAction extends BuilderAction {
             [{ website_id: websiteId, field_id: fieldId, category_id: categoryId }]
         );
 
+        state.fieldId = false;
+        state.categoryId = false;
         this.dependencies.extraFieldsOption.clearLoadedExtraFields();
     }
 }
@@ -101,24 +147,23 @@ class CreateCategoryAction extends BuilderAction {
     static id = "createCategory";
     static dependencies = ["extraFieldsOption"];
 
-    async apply({ editingElement }) {
-        const name = (editingElement.dataset.pendingNewCategoryName || "").trim();
-        if (!name) return;
+    async apply() {
+        await this.dependencies.extraFieldsOption.createAndSelectCategory({
+            selectedCategoryKey: "categoryId",
+            createModeKey: "categoryCreateMode",
+        });
+    }
+}
 
-        const [newId] = await this.services.orm.create(
-            "product.attribute.category",
-            [{ name }]
-        );
+class CreateRowCategoryAction extends BuilderAction {
+    static id = "createRowCategory";
+    static dependencies = ["extraFieldsOption"];
 
-        const categories = this.dependencies.extraFieldsOption.getCategories();
-        categories.push({ id: newId, name });
-
-        delete editingElement.dataset.pendingNewCategoryName;
-
-        editingElement.__onCategoryCreated?.({ id: newId, name });
-        delete editingElement.__onCategoryCreated;
-
-        this.dependencies.extraFieldsOption.clearLoadedExtraFields();
+    async apply() {
+        await this.dependencies.extraFieldsOption.createAndSelectCategory({
+            selectedCategoryKey: "rowCategoryId",
+            createModeKey: "rowCategoryCreateMode",
+        });
     }
 }
 
@@ -132,6 +177,10 @@ class DeleteExtraFieldAction extends BuilderAction {
 
     async apply({ editingElement }) {
         const extraFieldId = parseInt(editingElement.dataset.extraFieldId);
+        if (!extraFieldId) {
+            return;
+        }
+
         await this.services.orm.unlink("website.sale.extra.field", [extraFieldId]);
         this.dependencies.extraFieldsOption.clearLoadedExtraFields();
     }
@@ -147,14 +196,89 @@ class ChangeExtraFieldCategoryAction extends BuilderAction {
 
     async apply({ editingElement }) {
         const extraFieldId = parseInt(editingElement.dataset.extraFieldId);
-        const categoryId = parseInt(editingElement.dataset.changeExtraFieldCategory) || false;
-        delete editingElement.dataset.changeExtraFieldCategory;
+        if (!extraFieldId) return;
+
+        const state = this.dependencies.extraFieldsOption.getState();
+        if (state.rowCategoryId === null) return;
+
         await this.services.orm.write(
             "website.sale.extra.field",
             [extraFieldId],
-            { category_id: categoryId }
+            { category_id: state.rowCategoryId || false }
         );
+
+        state.rowCategoryId = null;
         this.dependencies.extraFieldsOption.clearLoadedExtraFields();
+    }
+
+}
+
+class SelectExtraFieldAction extends BuilderAction {
+    static id = "selectExtraField";
+    static dependencies = ["extraFieldsOption"];
+
+    isApplied({ value }) {
+        const fieldId = this.dependencies.extraFieldsOption.getState().fieldId;
+        return String(fieldId || "") === String(value || "");
+    }
+
+    getValue() {
+        return String(this.dependencies.extraFieldsOption.getState().fieldId || "");
+    }
+
+    apply({ value }) {
+        this.dependencies.extraFieldsOption.getState().fieldId = parseInt(value) || false;
+    }
+}
+
+class SelectExtraFieldCategoryAction extends BuilderAction {
+    static id = "selectExtraFieldCategory";
+    static dependencies = ["extraFieldsOption"];
+
+    isApplied({ value }) {
+        const categoryId = this.dependencies.extraFieldsOption.getState().categoryId;
+        return String(categoryId || "") === String(value || "");
+    }
+
+    getValue() {
+        return String(this.dependencies.extraFieldsOption.getState().categoryId || "");
+    }
+
+    apply({ value }) {
+        this.dependencies.extraFieldsOption.getState().categoryId = parseInt(value) || false;
+    }
+}
+
+class SetExtraFieldCategoryNameAction extends BuilderAction {
+    static id = "setExtraFieldCategoryName";
+    static dependencies = ["extraFieldsOption"];
+
+    getValue() {
+        return this.dependencies.extraFieldsOption.getState().newCategoryName;
+    }
+
+    apply({ value }) {
+        this.dependencies.extraFieldsOption.getState().newCategoryName = value || "";
+    }
+}
+
+class SelectExtraFieldRowCategoryAction extends BuilderAction {
+    static id = "selectExtraFieldRowCategory";
+    static dependencies = ["extraFieldsOption"];
+
+    isApplied({ value }) {
+        const rowCategoryId = this.dependencies.extraFieldsOption.getState().rowCategoryId;
+        return rowCategoryId !== null && String(rowCategoryId || "") === String(value || "");
+    }
+
+    getValue() {
+        const rowCategoryId = this.dependencies.extraFieldsOption.getState().rowCategoryId;
+        return rowCategoryId === null ? "" : String(rowCategoryId || "");
+    }
+
+    apply({ value }) {
+        this.dependencies.extraFieldsOption.getState().rowCategoryId =
+            value === "" ? false : parseInt(value);
     }
 }
 
