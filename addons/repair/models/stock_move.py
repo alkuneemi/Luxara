@@ -19,6 +19,7 @@ class StockMove(models.Model):
         ('remove', 'Remove'),
         ('recycle', 'Recycle')
     ], 'Type', store=True, index=True)
+    invoice_line_id = fields.One2many('account.move.line', 'stock_move_id', 'Invoice Line', index='btree_not_null')
 
     @api.depends('repair_line_type')
     def _compute_forecast_information(self):
@@ -84,7 +85,7 @@ class StockMove(models.Model):
         return super()._unlink_if_draft_or_cancel()
 
     def unlink(self):
-        self._clean_repair_sale_order_line()
+        self._clean_repair_linked_lines()
         return super().unlink()
 
     @api.model_create_multi
@@ -111,6 +112,7 @@ class StockMove(models.Model):
         res._trigger_scheduler()
         confirmed_repair_moves = (res | other_repair_moves)
         confirmed_repair_moves._create_repair_sale_order_line()
+        confirmed_repair_moves._create_repair_invoice_line()
         return (confirmed_repair_moves | no_repair_moves)
 
     def write(self, vals):
@@ -121,23 +123,50 @@ class StockMove(models.Model):
             if not move.repair_id:
                 continue
             # checks vals update
-            if not move.sale_line_id and 'sale_line_id' not in vals and move.repair_line_type == 'add':
+            if ((not move.sale_line_id and 'sale_line_id' not in vals) or
+                (not move.invoice_line_id and 'invoice_line_id' not in vals)
+                and move.repair_line_type == 'add'):
                 moves_to_create_so_line |= move
-            if move.sale_line_id and ('repair_line_type' in vals or 'product_uom_qty' in vals):
+            if (move.sale_line_id or move.invoice_line_id) and ('repair_line_type' in vals or 'product_uom_qty' in vals or 'uom_id' in vals):
                 repair_moves |= move
 
         repair_moves._update_repair_sale_order_line()
+        repair_moves._update_repair_invoice_line()
         moves_to_create_so_line._create_repair_sale_order_line()
+        moves_to_create_so_line._create_repair_invoice_line()
         return res
 
     def action_add_from_catalog_repair(self):
         repair_order = self.env['repair.order'].browse(self.env.context.get('order_id'))
+        repair_order.service_catalog = False
         return repair_order.action_add_from_catalog()
 
     # Needed to also cancel the lastly added part
     def _action_cancel(self):
-        self._clean_repair_sale_order_line()
+        self._clean_repair_linked_lines
         return super()._action_cancel()
+
+    def _create_repair_invoice_line(self):
+        if not self:
+            return
+        invoice_lines_vals = []
+        for move in self:
+            if move.invoice_line_id or move.repair_line_type != 'add' or not move.repair_id.invoice_id:
+                continue
+            product_qty = move.product_uom_qty if move.repair_id.state != 'done' else move.quantity
+            invoice_lines_vals.append({
+                'move_id': move.repair_id.invoice_id.id,
+                'product_id': move.product_id.id,
+                'quantity': product_qty,
+                'product_uom_id': move.uom_id.id,
+                'stock_move_id': move.id,
+            })
+            if move.repair_id.under_warranty:
+                invoice_lines_vals[-1]['price_unit'] = 0.0
+            elif move.price_unit:
+                invoice_lines_vals[-1]['price_unit'] = move.price_unit
+
+        self.env['account.move.line'].create(invoice_lines_vals)
 
     def _create_repair_sale_order_line(self):
         if not self:
@@ -162,26 +191,44 @@ class StockMove(models.Model):
 
         self.env['sale.order.line'].create(so_line_vals)
 
-    def _clean_repair_sale_order_line(self):
-        self.filtered(
-            lambda m: m.repair_id and m.sale_line_id
-        ).mapped('sale_line_id').write({'product_uom_qty': 0.0})
+    def _clean_repair_linked_lines(self):
+        if self.repair_id.invoice_id:
+            self.filtered(
+                lambda m: m.repair_id and m.invoice_line_id
+            ).mapped('invoice_line_id').write({'quantity': 0.0})
+        else:
+            self.filtered(
+                lambda m: m.repair_id and m.sale_line_id
+            ).mapped('sale_line_id').write({'product_uom_qty': 0.0})
 
-    def _update_repair_sale_order_line(self):
-        if not self:
-            return
+    def _pre_update_repair_linked_lines(self):
         moves_to_clean = self.env['stock.move']
         moves_to_update = self.env['stock.move']
         for move in self:
             if not move.repair_id:
                 continue
-            if move.sale_line_id and move.repair_line_type != 'add':
+            if (move.sale_line_id or move.invoice_line_id) and move.repair_line_type != 'add':
                 moves_to_clean |= move
-            if move.sale_line_id and move.repair_line_type == 'add':
+            if (move.sale_line_id or move.invoice_line_id) and move.repair_line_type == 'add':
                 moves_to_update |= move
-        moves_to_clean._clean_repair_sale_order_line()
+        moves_to_clean._clean_repair_linked_lines()
+        return moves_to_update
+
+    def _update_repair_sale_order_line(self):
+        if not self.repair_id.sale_order_id:
+            return
+        moves_to_update = self._pre_update_repair_linked_lines()
         for sale_line, _ in groupby(moves_to_update, lambda m: m.sale_line_id):
             sale_line.product_uom_qty = sum(sale_line.move_ids.mapped('product_uom_qty'))
+            sale_line.product_uom_id = sale_line.move_ids.uom_id
+
+    def _update_repair_invoice_line(self):
+        if not self.repair_id.invoice_id or self.repair_id.invoice_id.state == 'posted':
+            return
+        moves_to_update = self._pre_update_repair_linked_lines()
+        for invoice_line, _ in groupby(moves_to_update, lambda m: m.invoice_line_id):
+            invoice_line.quantity = sum(invoice_line.stock_move_id.mapped('product_uom_qty'))
+            invoice_line.product_uom_id = invoice_line.stock_move_id.uom_id
 
     def _is_consuming(self):
         return super()._is_consuming() or (self.repair_id and self.repair_line_type == 'add')

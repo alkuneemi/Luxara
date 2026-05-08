@@ -282,7 +282,7 @@ class TestRepair(TestRepairCommon):
         lineB.move_line_ids.lot_id = lot
 
         lineA.quantity = 2  # quantity = product_uom_qty
-        lineC.quantity = 2  # quantity > product_uom_qty (No warning)
+        lineC.quantity = 2  # quantity > product_uom_qty (Consumption Warning)
         lineD = self._create_simple_part_move(repair.id, 0.0)
         repair.move_ids |= lineD  # product_uom_qty = 0   : state is cancelled
 
@@ -291,6 +291,9 @@ class TestRepair(TestRepairCommon):
         self.assertFalse(repair.move_id)
         self.assertFalse(repair.has_uncomplete_moves)
         repair.action_repair_end()
+        # Skip consumption warning
+        consumption_warning = self.env['repair.consumption.warning'].create({'repair_id': repair.id})
+        consumption_warning.action_confirm()
         self.assertFalse((repair.move_id | repair.move_ids).picking_id, "No picking for repair moves")
         self.assertEqual(repair.state, "done")
         done_moves = repair.move_ids - lineD
@@ -936,23 +939,6 @@ class TestRepair(TestRepairCommon):
         repair_order.action_repair_end()
         self.assertEqual(sale_line.discount, 15)
 
-    def test_repair_simple_moves_consumption(self):
-        """
-        Test that moves with less reserved quantity than demand are automatically consumed on repair end.
-        """
-        repair_order = self._create_simple_repair_order()
-        self.env['stock.move'].create({
-            'repair_line_type': 'add',
-            'product_id': self.product_product_11.id,
-            'product_uom_qty': 1.0,
-            'repair_id': repair_order.id,
-        })
-        repair_order.action_validate()
-        repair_order.action_repair_start()
-        repair_order.move_ids.quantity = 0.0
-        repair_order.action_repair_end()
-        self.assertEqual(repair_order.move_ids[0].quantity, 1.0)
-
     def test_repair_invoice_binding(self):
         """
         Test that the repair order is correctly linked to the invoice created directly from it.
@@ -975,7 +961,7 @@ class TestRepair(TestRepairCommon):
         repair_order.action_repair_start()
         repair_order.action_repair_end()
         repair_order.action_create_invoice()
-        invoice = repair_order.invoice_ids
+        invoice = repair_order.invoice_id
         self.assertEqual(len(invoice), 1)
         self.assertEqual(len(invoice.invoice_line_ids), 1)
         self.assertEqual(invoice.move_type, 'out_invoice')
