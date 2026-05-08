@@ -856,6 +856,7 @@ class TestLotValuation(TestStockValuationCommon):
         self.assertEqual(lot1.standard_price, 10)
         self.assertEqual(lot2.standard_price, 16)
 
+<<<<<<< 35ef84b9cd53a09b87165df1c4a17946d861acc0
         # not using _make_in_move to not a create a product.value linked to this move
         move = self.env['stock.move'].create({
             'product_id': lot_product.id,
@@ -876,3 +877,31 @@ class TestLotValuation(TestStockValuationCommon):
         move._action_done()
         self.assertEqual(lot1.standard_price, 10)
         self.assertEqual(lot_product.standard_price, 12)
+||||||| fb809564be9ae39f128be50f0b37da4d9d3ca139
+        # Second receipt for lot1 at same cost: lot price unchanged, product AVCO recalculated
+        self._make_in_move(self.product, 1, 10, lot_ids=[self.lot1])
+        self.assertEqual(self.lot1.standard_price, 10)
+        self.assertEqual(self.product.standard_price, 12)
+=======
+        # Second receipt for lot1 at same cost: lot price unchanged, product AVCO recalculated
+        self._make_in_move(self.product, 1, 10, lot_ids=[self.lot1])
+        self.assertEqual(self.lot1.standard_price, 10)
+        self.assertEqual(self.product.standard_price, 12)
+
+    def test_lot_valuation_at_date_fully_consumed_lot(self):
+        """
+        Stock report at date should show correct value for lot valuated
+        AVCO products even if the lot has been fully consumed.
+        """
+        now = fields.Datetime.now()
+        date_1 = now + timedelta(days=1)
+        date_2 = now + timedelta(days=2)
+
+        self._make_in_move(self.product, 10, 5, lot_ids=[self.lot1])
+        self.assertEqual(self.product.total_value, 50)
+        self.assertEqual(self.product.avg_cost, 5)
+
+        with freeze_time(date_2):
+            self._make_out_move(self.product, 10, lot_ids=[self.lot1])
+            self.assertEqual(self.product.with_context(to_date=date_1).total_value, 50)
+>>>>>>> 320cffc742b2f420b1c2403e59d18c7529a8b3c8
