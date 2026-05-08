@@ -376,3 +376,44 @@ class TestProgramWithCodeOperations(TestSaleCouponCommon):
         self.assertIn(reward_line, order.order_line, "Reward line should be re-used")
         self.assertEqual(order.amount_total, 50, "50% discount should be applied")
         self.assertEqual(coupon.points, 5, "50% discount reward should use 5 points")
+
+    def test_re_apply_not_claimed_coupon_code(self):
+        self.code_promotion_program_with_discount.reward_ids.discount = 10
+        self.immediate_promotion_program.write({
+            "program_type": "promo_code",
+            "applies_on": "current",
+            "trigger": "with_code",
+        })
+        self.immediate_promotion_program.rule_ids.write({
+            "mode": "with_code",
+            "code": "10%_discount",
+        })
+        self.immediate_promotion_program.reward_ids.reward_type = "discount"
+        self.immediate_promotion_program.reward_ids.discount = 10
+
+        order = self.empty_order
+        order.write({
+            "order_line": [
+                Command.create({
+                    "product_id": self.product_A.id,
+                    "name": "1 Product A",
+                    "product_uom": self.uom_unit.id,
+                    "product_uom_qty": 1.0,
+                })
+            ]
+        })
+        coupon_wizard = self.env["sale.loyalty.coupon.wizard"].create({
+            "order_id": order.id,
+            "coupon_code": "10%_discount",
+        })
+        reward_wizard_action = coupon_wizard.action_apply()
+        self.assertIn(
+            self.immediate_promotion_program.reward_ids.id,
+            reward_wizard_action["context"]["default_reward_ids"],
+        )
+        # retry the same code, should work since the reward is not claimed but discarded
+        reward_wizard_action = coupon_wizard.action_apply()
+        self.assertIn(
+            self.immediate_promotion_program.reward_ids.id,
+            reward_wizard_action["context"]["default_reward_ids"],
+        )
