@@ -275,6 +275,40 @@ export const WebsiteSale = publicWidget.Widget.extend(VariantMixin, cartHandlerM
     _getProductImageContainer: function () {
         return document.querySelector(this._getProductImageContainerSelector());
     },
+    /**
+     * Returns product images in their visual order.
+     *
+     * Reorders grid layout images from column-based DOM order to row-major
+     * order so zoom navigation matches what the user sees. Falls back to DOM
+     * order if no grid is detected.
+     *
+     * @private
+     * @param {HTMLElement} salePage
+     * @returns {HTMLImageElement[]}
+     */
+    _getSortedProductImages(salePage) {
+        const gridColumns = [...salePage.querySelectorAll(".o_wsale_product_page_grid_column")];
+        if (!gridColumns.length) {
+            return [...salePage.querySelectorAll(".product_detail_img")];
+        }
+
+        const columnImages = gridColumns.map((col) => [
+            ...col.querySelectorAll(".product_detail_img"),
+        ]);
+        const numCols = gridColumns.length;
+        const totalImages = parseInt(
+            salePage.querySelector(".o_wsale_product_images").dataset.imageAmount
+        );
+
+        const images = [];
+        for (let i = 0; i < totalImages; i++) {
+            const image = columnImages[i % numCols][Math.floor(i / numCols)];
+            if (image) {
+                images.push(image);
+            }
+        }
+        return images;
+    },
     _isEditorEnabled() {
         return document.body.classList.contains("editor_enable");
     },
@@ -319,7 +353,7 @@ export const WebsiteSale = publicWidget.Widget.extend(VariantMixin, cartHandlerM
         // Zoom on click
         if (salePage.dataset.ecomZoomClick) {
             // In this case we want all the images not just the ones that are "zoomables"
-            const images = salePage.querySelectorAll(".product_detail_img");
+            const images = this._getSortedProductImages(salePage);
             for (const image of images ) {
                 const handler = () => {
                     if (salePage.dataset.ecomZoomAuto) {
@@ -330,7 +364,7 @@ export const WebsiteSale = publicWidget.Widget.extend(VariantMixin, cartHandlerM
                         }
                     }
                     this.call("dialog", "add", ProductImageViewer, {
-                        selectedImageIdx: [...images].indexOf(image),
+                        selectedImageIdx: images.indexOf(image),
                         images,
                     });
                 };

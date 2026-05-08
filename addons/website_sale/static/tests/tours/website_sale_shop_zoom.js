@@ -50,3 +50,21 @@ registry.category("web_tour.tours").add('shop_zoom', {
         trigger: '.o_wsale_image_viewer',
     },
 ]});
+
+registry.category("web_tour.tours").add("shop_zoom_grid_image_order", {
+    steps: () => [
+        {
+            content: "check that the product page is in grid layout",
+            trigger: "#o-grid-product",
+        },
+        {
+            content: "click the top-right image in the grid (visually second position)",
+            trigger: ".o_wsale_product_page_grid_column:nth-child(2) .product_detail_img",
+            run: "click",
+        },
+        {
+            content: "verify the viewer opens at the second position (matching visual order)",
+            trigger: ".o_wsale_image_viewer_carousel li:nth-child(2).active",
+        },
+    ],
+});
