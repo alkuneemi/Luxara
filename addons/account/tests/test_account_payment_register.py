@@ -1921,6 +1921,11 @@ class TestAccountPaymentRegister(AccountTestInvoicingWithBanksCommon, PaymentCom
                         self.assertEqual(payments.company_id, expected_pmnt_comp)
                         invoices.line_ids.filtered(lambda l: l.display_type == 'payment_term').remove_move_reconcile()
 
+        # for the current company, make sure that its bank journal has a bank account with the company field set
+        bank_account = self.env.company.bank_ids[0]
+        bank_account.company_id = self.env.company
+        self.env.company.bank_journal_ids[0].bank_account_id = bank_account
+
         # create a new branch and other company
         self._create_company(name='New Branch', parent_id=self.env.company.id)
         branches = self.env.company.child_ids
