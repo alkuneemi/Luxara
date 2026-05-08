@@ -2,6 +2,7 @@ import { ancestors } from "@html_editor/utils/dom_traversal";
 import { Plugin } from "../plugin";
 import { debounce, throttleForAnimation } from "@web/core/utils/timing";
 import { couldBeScrollableX, couldBeScrollableY } from "@web/core/utils/scrolling";
+import { NATIVE_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 /**
  * @typedef {(() => void)[]} on_layout_geometry_change_handlers
@@ -59,7 +60,8 @@ export class PositionPlugin extends Plugin {
         };
         if (
             mutations.find((mutation) => {
-                const attribute = mutation.type === "attributes" && mutation.attributeName;
+                const attribute =
+                    mutation.type === NATIVE_MUTATION_TYPES.ATTRIBUTES && mutation.attributeName;
                 return attribute === "style" || (attribute === "class" && hasClassChange(mutation));
             })
         ) {

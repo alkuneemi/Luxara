@@ -2,6 +2,7 @@ import { Plugin } from "../plugin";
 import { isProtecting, isUnprotecting } from "../utils/dom_info";
 import { childNodes } from "../utils/dom_traversal";
 import { withSequence } from "@html_editor/utils/resource";
+import { NATIVE_MUTATION_TYPES } from "./dom_observer_plugin";
 
 const PROTECTED_SELECTOR = `[data-oe-protected="true"],[data-oe-protected=""]`;
 const UNPROTECTED_SELECTOR = `[data-oe-protected="false"]`;
@@ -37,7 +38,7 @@ export class ProtectedNodePlugin extends Plugin {
                 }
             },
         ],
-        is_mutation_savable_predicates: this.isMutationRecordSavable.bind(this),
+        is_mutation_savable_predicates: this.isMutationSavable.bind(this),
 
         /** Providers */
         removable_descendants_providers: this.filterDescendantsToRemove.bind(this),
@@ -105,26 +106,26 @@ export class ProtectedNodePlugin extends Plugin {
     }
 
     /**
-     * @param {import("./dom_observer_plugin").NativeMutation[]} records
+     * @param {import("./dom_observer_plugin").NativeMutation[]} mutations
      */
-    beforeFilteringMutationRecords(records) {
-        for (const record of records) {
-            if (record.type === "childList") {
-                if (record.target.nodeType !== Node.ELEMENT_NODE) {
+    beforeFilteringMutationRecords(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.type === NATIVE_MUTATION_TYPES.CHILD_LIST) {
+                if (mutation.target.nodeType !== Node.ELEMENT_NODE) {
                     return;
                 }
-                const addedNodes = record.addedNodes;
+                const addedNodes = mutation.addedNodes;
                 if (
-                    (this.protectedNodes.has(record.target) &&
-                        !record.target.matches(UNPROTECTED_SELECTOR)) ||
-                    record.target.matches(PROTECTED_SELECTOR)
+                    (this.protectedNodes.has(mutation.target) &&
+                        !mutation.target.matches(UNPROTECTED_SELECTOR)) ||
+                    mutation.target.matches(PROTECTED_SELECTOR)
                 ) {
                     for (const addedNode of addedNodes) {
                         this.protectNode(addedNode);
                     }
                 } else if (
-                    !this.protectedNodes.has(record.target) ||
-                    record.target.matches(UNPROTECTED_SELECTOR)
+                    !this.protectedNodes.has(mutation.target) ||
+                    mutation.target.matches(UNPROTECTED_SELECTOR)
                 ) {
                     for (const addedNode of addedNodes) {
                         this.unProtectNode(addedNode);
@@ -135,19 +136,19 @@ export class ProtectedNodePlugin extends Plugin {
     }
 
     /**
-     * @param {import("./dom_observer_plugin").NativeMutation} record
+     * @param {import("./dom_observer_plugin").NativeMutation} mutation
      * @return {boolean}
      */
-    isMutationRecordSavable(record) {
-        if (record.type === "childList") {
+    isMutationSavable(mutation) {
+        if (mutation.type === NATIVE_MUTATION_TYPES.CHILD_LIST) {
             if (
-                (this.protectedNodes.has(record.target) &&
-                    !record.target.matches(UNPROTECTED_SELECTOR)) ||
-                record.target.matches(PROTECTED_SELECTOR)
+                (this.protectedNodes.has(mutation.target) &&
+                    !mutation.target.matches(UNPROTECTED_SELECTOR)) ||
+                mutation.target.matches(PROTECTED_SELECTOR)
             ) {
                 return false;
             }
-        } else if (this.protectedNodes.has(record.target)) {
+        } else if (this.protectedNodes.has(mutation.target)) {
             return false;
         }
     }

@@ -16,6 +16,7 @@ import {
     toggleGridMode,
 } from "@html_builder/utils/grid_layout_utils";
 import { isElement } from "@html_editor/utils/dom_info";
+import { NATIVE_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 const gridItemSelector = ".row.o_grid_mode > div.o_grid_item";
 
@@ -78,12 +79,12 @@ export class GridLayoutPlugin extends Plugin {
 
     /**
      *
-     * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} record
+     * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} mutation
      * @returns {boolean | undefined}
      */
-    ignoreBackgroundGrid(record) {
-        if (record.type === "childList") {
-            const addedOrRemovedNode = record.addedNodes[0] || record.removedNodes[0];
+    ignoreBackgroundGrid(mutation) {
+        if (mutation.type === NATIVE_MUTATION_TYPES.CHILD_LIST) {
+            const addedOrRemovedNode = mutation.addedNodes[0] || mutation.removedNodes[0];
             // Do not record the addition/removal of the background grid.
             if (
                 addedOrRemovedNode &&

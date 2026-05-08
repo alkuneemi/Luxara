@@ -3,6 +3,7 @@ import { withSequence } from "@html_editor/utils/resource";
 import { uniqueId } from "@web/core/utils/functions";
 import { isZWS } from "@html_editor/utils/dom_info";
 import { _t } from "@web/core/l10n/translation";
+import { EDITOR_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 /** @typedef {import("plugins").CSSSelector} CSSSelector */
 /**
@@ -137,19 +138,25 @@ export class SavePlugin extends Plugin {
     /**
      * Handles the flag of the closest savable element to the mutation as dirty
      *
-     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} records - The observed mutations
+     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} mutations - The observed mutations
      */
-    handleMutations(records) {
+    handleMutations(mutations) {
         if (!this.canObserve) {
             return;
         }
-        for (const record of records) {
-            if (record.type === "attributes" && record.attributeName === "contenteditable") {
+        for (const mutation of mutations) {
+            if (
+                mutation.type === EDITOR_MUTATION_TYPES.ATTRIBUTES &&
+                mutation.attributeName === "contenteditable"
+            ) {
                 continue;
             }
-            let targetId = record.nodeId;
-            if (["add", "remove"].includes(record.type) && record.parentNodeId) {
-                targetId = record.parentNodeId;
+            let targetId = mutation.nodeId;
+            if (
+                [EDITOR_MUTATION_TYPES.ADD, EDITOR_MUTATION_TYPES.REMOVE].includes(mutation.type) &&
+                mutation.parentNodeId
+            ) {
+                targetId = mutation.parentNodeId;
             }
             let targetEl = this.dependencies.domReferenceMap.getNodeById(targetId);
             if (!targetEl.isConnected) {

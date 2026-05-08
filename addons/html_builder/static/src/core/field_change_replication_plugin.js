@@ -1,3 +1,4 @@
+import { EDITOR_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 import { Plugin } from "@html_editor/plugin";
 import { closestElement } from "@html_editor/utils/dom_traversal";
 import { withSequence } from "@html_editor/utils/resource";
@@ -24,14 +25,20 @@ export class FieldChangeReplicationPlugin extends Plugin {
     }
 
     /**
-     * @param { import("@html_editor/core/dom_observer_plugin").SerializedMutation[] } records
+     * @param { import("@html_editor/core/dom_observer_plugin").SerializedMutation[] } mutations
      */
-    handleMutations(records) {
-        records
-            .filter((r) => !(r.type === "attributes" && r.attributeName.startsWith("data-oe-t")))
-            .map((r) =>
+    handleMutations(mutations) {
+        mutations
+            .filter(
+                (m) =>
+                    !(
+                        m.type === EDITOR_MUTATION_TYPES.ATTRIBUTES &&
+                        m.attributeName.startsWith("data-oe-t")
+                    )
+            )
+            .map((m) =>
                 closestElement(
-                    this.dependencies.domReferenceMap.getNodeById(r.nodeId),
+                    this.dependencies.domReferenceMap.getNodeById(m.nodeId),
                     "[data-oe-model], [data-oe-translation-source-sha]"
                 )
             )

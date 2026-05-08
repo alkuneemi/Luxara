@@ -3,6 +3,7 @@ import { Plugin } from "@html_editor/plugin";
 import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { ProductsDesignPanel } from "./products_design_panel";
+import { EDITOR_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 export class ProductsDesignPanelPlugin extends Plugin {
     static id = "productsDesignPanel";
@@ -54,14 +55,14 @@ export class ProductsDesignPanelPlugin extends Plugin {
 
     /**
      * Handles the flag of the closest product savable element
-     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} records - The observed mutations
+     * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} mutations - The observed mutations
      */
-    handleMutations(records) {
-        for (const record of records) {
-            if (record.type === "attributes" && record.attributeName === "contenteditable") {
+    handleMutations(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.type === EDITOR_MUTATION_TYPES.ATTRIBUTES && mutation.attributeName === "contenteditable") {
                 continue;
             }
-            let targetEl = this.dependencies.domReferenceMap.getNodeById(record.nodeId);
+            let targetEl = this.dependencies.domReferenceMap.getNodeById(mutation.nodeId);
             if (!targetEl.isConnected) {
                 continue;
             }

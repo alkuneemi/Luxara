@@ -19,6 +19,7 @@ import {
 import { execCommand } from "./_helpers/userCommands";
 import { nodeToTree } from "@html_editor/utils/dom_info";
 import { HISTORY_COMMIT_TYPES } from "@html_editor/core/history_plugin";
+import { NATIVE_MUTATION_TYPES } from "../src/core/dom_observer_plugin";
 
 describe("reset", () => {
     test("should not add mutations in the current commit from the normalization when calling reset", async () => {
@@ -692,18 +693,18 @@ describe("destroy", () => {
             static dependencies = ["history", "dom"];
             static id = "test";
             resources = {
-                is_mutation_savable_predicates: this.isMutationRecordSavable.bind(this),
+                is_mutation_savable_predicates: this.isMutationSavable.bind(this),
             };
             /**
-             * @param {import("../src/core/dom_observer_plugin").NativeMutation} record
+             * @param {import("../src/core/dom_observer_plugin").NativeMutation} mutation
              * @returns {boolean | undefined}
              */
-            isMutationRecordSavable(record) {
+            isMutationSavable(mutation) {
                 if (
-                    record.type === "childList" &&
-                    record.addedNodes.length === 1 &&
-                    record.addedNodes[0].nodeType === Node.ELEMENT_NODE &&
-                    record.addedNodes[0].matches(".test")
+                    mutation.type === NATIVE_MUTATION_TYPES.CHILD_LIST &&
+                    mutation.addedNodes.length === 1 &&
+                    mutation.addedNodes[0].nodeType === Node.ELEMENT_NODE &&
+                    mutation.addedNodes[0].matches(".test")
                 ) {
                     expect.step("dispatch");
                     return false;

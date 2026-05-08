@@ -16,6 +16,7 @@ import {
 } from "../_helpers/user_actions";
 import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { QWebPlugin } from "@html_editor/others/qweb_plugin";
+import { EDITOR_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 const styleH1Bold = `h1 { font-weight: bold; }`;
 
@@ -85,7 +86,7 @@ test("should make qweb tag bold and create a commit even with partial selection 
     expect(historyCommits.length).toBe(2);
     const lastCommit = historyCommits.at(-1);
     expect(lastCommit.data.mutations.length).toBe(1);
-    expect(lastCommit.data.mutations[0].type).toBe("attributes");
+    expect(lastCommit.data.mutations[0].type).toBe(EDITOR_MUTATION_TYPES.ATTRIBUTES);
     expect(lastCommit.data.mutations[0].attributeName).toBe("style");
     expect(lastCommit.data.mutations[0].value).toBe("font-weight: bolder;");
 });

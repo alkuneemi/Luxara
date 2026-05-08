@@ -1,5 +1,6 @@
 import { registry } from "@web/core/registry";
 import { Plugin } from "@html_editor/plugin";
+import { EDITOR_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 export class AuthorAvatarSyncPlugin extends Plugin {
     static id = "authorAvatarSync";
@@ -7,14 +8,14 @@ export class AuthorAvatarSyncPlugin extends Plugin {
     /** @type {import("plugins").WebsiteResources} */
     resources = {
         /**
-         * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} records
+         * @param {import("@html_editor/core/dom_observer_plugin").SerializedMutation[]} mutations
          */
-        on_pending_mutations_staged_handlers: (records) => {
-            records
-                .filter((r) => r.type === "attributes" && r.attributeName === "data-oe-many2one-id")
-                .map((r) => ({...r, target: this.dependencies.domReferenceMap.getNodeById(r.nodeId)}))
-                .filter((r) => r.target.dataset.oeField === "author_id")
-                .forEach((r) => this.authorToUpdate.set(r.target.dataset.oeId, r.value));
+        on_pending_mutations_staged_handlers: (mutations) => {
+            mutations
+                .filter((m) => m.type === EDITOR_MUTATION_TYPES.ATTRIBUTES && m.attributeName === "data-oe-many2one-id")
+                .map((m) => ({...m, target: this.dependencies.domReferenceMap.getNodeById(m.nodeId)}))
+                .filter((m) => m.target.dataset.oeField === "author_id")
+                .forEach((m) => this.authorToUpdate.set(m.target.dataset.oeId, m.value));
         },
         on_pending_mutations_normalized_handlers: () => {
             const toUpdate = this.authorToUpdate;

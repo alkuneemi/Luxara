@@ -5,6 +5,7 @@ import { withSequence } from "@html_editor/utils/resource";
 import { selectElements } from "@html_editor/utils/dom_traversal";
 import { memoize } from "@web/core/utils/functions";
 import { renderToElement } from "@web/core/utils/render";
+import { NATIVE_MUTATION_TYPES } from "@html_editor/core/dom_observer_plugin";
 
 /**
  * @typedef { Object } EmbeddedComponentShared
@@ -57,7 +58,7 @@ export class EmbeddedComponentPlugin extends Plugin {
         attribute_mutation_value_processors: this.processAttributesMutationValue.bind(this),
 
         /** Predicates */
-        is_mutation_savable_predicates: this.isMutationRecordSavable.bind(this),
+        is_mutation_savable_predicates: this.isMutationSavable.bind(this),
 
         /** Selectors */
         move_node_whitelist_selectors: "[data-embedded]",
@@ -85,14 +86,14 @@ export class EmbeddedComponentPlugin extends Plugin {
     }
 
     /**
-     * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} record
+     * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} mutation
      * @returns {boolean | undefined}
      */
-    isMutationRecordSavable(record) {
+    isMutationSavable(mutation) {
         if (
-            this.nodeMap.get(record.target) &&
-            record.type === "attributes" &&
-            record.attributeName === "data-embedded-props"
+            this.nodeMap.get(mutation.target) &&
+            mutation.type === NATIVE_MUTATION_TYPES.ATTRIBUTES &&
+            mutation.attributeName === "data-embedded-props"
         ) {
             // This attribute is determined independently for each user
             // through `data-embedded-state` attribute mutations.

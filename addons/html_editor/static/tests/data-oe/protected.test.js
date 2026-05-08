@@ -13,6 +13,10 @@ import { Plugin } from "@html_editor/plugin";
 import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { execCommand } from "../_helpers/userCommands";
 import { expectElementCount } from "../_helpers/ui_expectations";
+import {
+    EDITOR_MUTATION_TYPES,
+    NATIVE_MUTATION_TYPES,
+} from "@html_editor/core/dom_observer_plugin";
 
 test("should ignore protected elements children mutations (true)", async () => {
     await testEditor({
@@ -297,7 +301,7 @@ test("should protect disconnected nodes", async () => {
     editor.shared.history.commit();
     const lastCommit = editor.shared.history.getCommits().at(-1);
     expect(lastCommit.data.mutations.length).toBe(1);
-    expect(lastCommit.data.mutations[0].type).toBe("remove");
+    expect(lastCommit.data.mutations[0].type).toBe(EDITOR_MUTATION_TYPES.REMOVE);
     expect(
         plugins.get("domReferenceMap").unserializeNode(lastCommit.data.mutations[0].serializedNode)
             .outerHTML
@@ -315,8 +319,8 @@ test("should not crash when changing attributes and removing a protecting anchor
     editor.shared.history.commit();
     const lastCommit = editor.shared.history.getCommits().at(-1);
     expect(lastCommit.data.mutations.length).toBe(2);
-    expect(lastCommit.data.mutations[0].type).toBe("attributes");
-    expect(lastCommit.data.mutations[1].type).toBe("remove");
+    expect(lastCommit.data.mutations[0].type).toBe(EDITOR_MUTATION_TYPES.ATTRIBUTES);
+    expect(lastCommit.data.mutations[1].type).toBe(EDITOR_MUTATION_TYPES.REMOVE);
     expect(
         plugins.get("domReferenceMap").unserializeNode(lastCommit.data.mutations[1].serializedNode)
             .outerHTML
@@ -475,7 +479,7 @@ test("moving a protected node at an unprotected location, only remove should be 
     expect(historyCommits.length).toBe(2);
     const lastCommit = historyCommits.at(-1);
     expect(lastCommit.data.mutations.length).toBe(1);
-    expect(lastCommit.data.mutations[0].type).toBe("add");
+    expect(lastCommit.data.mutations[0].type).toBe(EDITOR_MUTATION_TYPES.ADD);
     const domReferenceMapPlugin = plugins.get("domReferenceMap");
     expect(domReferenceMapPlugin.getNodeById(lastCommit.data.mutations[0].nodeId)).toBe(a);
     expect(getContent(el)).toBe(
@@ -515,7 +519,7 @@ test("moving an unprotected node at a protected location, only add should be ign
     expect(historyCommits.length).toBe(2);
     const lastCommit = historyCommits.at(-1);
     expect(lastCommit.data.mutations.length).toBe(1);
-    expect(lastCommit.data.mutations[0].type).toBe("remove");
+    expect(lastCommit.data.mutations[0].type).toBe(EDITOR_MUTATION_TYPES.REMOVE);
     const domReferenceMapPlugin = plugins.get("domReferenceMap");
     expect(domReferenceMapPlugin.getNodeById(lastCommit.data.mutations[0].nodeId)).toBe(a);
     expect(getContent(el)).toBe(
@@ -632,17 +636,17 @@ test("protected plugin is robust against other plugins which can filter mutation
     class FilterPlugin extends Plugin {
         static id = "filterPlugin";
         resources = {
-            is_mutation_savable_predicates: this.isMutationRecordSavable.bind(this),
+            is_mutation_savable_predicates: this.isMutationSavable.bind(this),
         };
         /**
-         * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} record
+         * @param {import("@html_editor/core/dom_observer_plugin").NativeMutation} mutation
          * @returns {boolean | undefined}
          */
-        isMutationRecordSavable(record) {
+        isMutationSavable(mutation) {
             if (
-                record.type === "childList" &&
-                record.removedNodes.length === 1 &&
-                record.removedNodes[0] === a
+                mutation.type === NATIVE_MUTATION_TYPES.CHILD_LIST &&
+                mutation.removedNodes.length === 1 &&
+                mutation.removedNodes[0] === a
             ) {
                 // Artificially hide the removal of `a` node
                 return false;
