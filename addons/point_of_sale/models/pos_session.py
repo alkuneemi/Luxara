@@ -1793,6 +1793,8 @@ class PosSession(models.Model):
         }
 
     def try_cash_in_out(self, _type, amount, reason, partner_id, extras):
+        if not self.env.user._has_cash_move_permission():
+            raise AccessError(_("You don't have the access rights to perform a cash in/out."))
         sign = 1 if _type == 'in' else -1
         sessions = self.filtered('cash_journal_id')
         if not sessions:
@@ -1803,7 +1805,7 @@ class PosSession(models.Model):
             for session in sessions
         ]
 
-        self.env['account.bank.statement.line'].with_context(no_retrieve_partner=True).create(vals_list)
+        self.env['account.bank.statement.line'].sudo().with_context(no_retrieve_partner=True).create(vals_list)
 
     def delete_cash_in_out(self, absl_id, partner_id):
         if not self.env.user.has_group('account.group_account_basic'):
