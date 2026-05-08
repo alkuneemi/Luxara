@@ -2193,6 +2193,7 @@ Please change the quantity done or the rounding precision in your settings.""",
         if moves_todo:
             moves_todo._check_quantity()
             moves_todo._action_synch_order()
+            moves_todo._inverse_description_picking()
         return moves_todo
 
     def _action_synch_order(self):
