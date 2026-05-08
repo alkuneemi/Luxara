@@ -18,9 +18,6 @@ export class CustomizeTab extends Component {
         this.state = useState({
             hasContent: true,
         });
-        this.customizeComponent = useState(
-            this.env.editor.shared.customizeTab.getCustomizeComponent()
-        );
         useVisibilityObserver("content", (hasContent) => {
             this.state.hasContent = hasContent;
         });
