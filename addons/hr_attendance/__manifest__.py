@@ -38,6 +38,7 @@ actions(Check in/Check out) performed by them.
     'assets': {
         'web.assets_backend': [
             'hr_attendance/static/src/**/*.js',
+            'hr_attendance/static/src/fields/*.scss',
             'hr_attendance/static/src/**/*.xml',
             'hr_attendance/static/src/scss/views/*.scss',
             # Don't include dark mode files in light mode
