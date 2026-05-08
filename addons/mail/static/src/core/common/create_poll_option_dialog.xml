@@ -2,8 +2,18 @@
 <templates xml:space="preserve">
     <t t-name="mail.CreatePollOptionDialog">
         <div class="o-mail-CreatePollOptionDialog d-flex gap-2 mb-3">
-            <div class=" input-group">
-                <button class="btn btn-outline-secondary" type="button" t-custom-ref="picker"><i class="fa fa-lg fa-smile-o"/></button>
+            <div class="input-group">
+                <Dropdown t-if="this.props.model.emoji" menuClass="'bg-body border border-secondary rounded-3 py-1 shadow-sm'">
+                    <button class="o-mail-CreatePollOptionDialog-emoji btn btn-outline-secondary d-flex align-items-center justify-content-center p-0" type="button" t-custom-ref="picker" t-on-click.capture="(ev) => this.onClickAddEmoji(ev, 'dropdown')">
+                        <span class="fs-2 d-flex align-items-center justify-content-center w-100 h-100 lh-1" t-out="this.props.model.emoji"/>
+                        <div class="o-mail-CreatePollOptionDialog-editEmoji position-absolute opacity-0"><i class="fa fa-pencil"/></div>
+                    </button>
+                    <t t-set-slot="content">
+                        <DropdownItem onSelected="() => this.onClickAddEmoji(undefined, 'open')" tag="'button'">Replace Emoji</DropdownItem>
+                        <DropdownItem class="'text-danger'" onSelected="() => this.onClickRemoveEmoji()" tag="'button'">Remove Emoji</DropdownItem>
+                    </t>
+                </Dropdown>
+                <button t-else="" class="o-mail-CreatePollOptionDialog-emoji btn btn-outline-secondary p-0" type="button" t-custom-ref="picker" t-on-click="() => this.onClickAddEmoji()"><i class="fa fa-lg fa-smile-o"/></button>
                 <input type="text" t-custom-model="this.props.model.label" class="form-control rounded" placeholder="Type your option" t-custom-ref="root"/>
             </div>
             <button t-if="this.props.deletable" class="btn btn-primary" title="Delete option" t-on-click="this.props.onClickRemove"><i class="fa fa-trash"/></button>

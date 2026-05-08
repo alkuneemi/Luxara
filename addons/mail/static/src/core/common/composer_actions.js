@@ -153,12 +153,12 @@ registerComposerAction("add-canned-response", {
             .getSupportedDelimiters(composer.targetThread)
             .find(([delimiter]) => delimiter === "::"),
     icon: "fa fa-file-text-o",
-    name: _t("Insert a Canned response"),
+    name: _t("Insert Canned Response"),
     onSelected: ({ owner }, ev) => owner.onClickInsertCannedResponse(ev),
     sequence: 5,
 });
-registerComposerAction("start-poll", {
-    name: _t("Start a poll"),
+registerComposerAction("create-poll", {
+    name: _t("Create Poll"),
     icon: "oi oi-view-cohort",
     condition: ({ composer, store }) => {
         if (!store.self_user || store.self_user.share) {

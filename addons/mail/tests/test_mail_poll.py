@@ -20,7 +20,7 @@ class TestMailPoll(MailCommon, HttpCase):
             "/mail/poll/create",
             {
                 "duration": 1,
-                "option_labels": ["Burger", "Pizza", "Tacos"],
+                "options": [{"label": "Burger"}, {"label": "Pizza"}, {"label": "Tacos"}],
                 "question": "What is your favorite food?",
                 "thread_id": self.test_record.id,
                 "thread_model": self.test_record._name,
@@ -51,7 +51,7 @@ class TestMailPoll(MailCommon, HttpCase):
             {
                 "allow_multiple_options": True,
                 "duration": 1,
-                "option_labels": ["Burger", "Pizza", "Tacos"],
+                "options": [{"label": "Burger"}, {"label": "Pizza"}, {"label": "Tacos"}],
                 "question": "What is your favorite food?",
                 "thread_id": self.test_record.id,
                 "thread_model": self.test_record._name,
@@ -73,7 +73,7 @@ class TestMailPoll(MailCommon, HttpCase):
             {
                 "allow_multiple_options": True,
                 "duration": 1,
-                "option_labels": ["Burger", "Pizza", "Tacos"],
+                "options": [{"label": "Burger"}, {"label": "Pizza"}, {"label": "Tacos"}],
                 "question": "What is your favorite food?",
                 "thread_id": channel.id,
                 "thread_model": "discuss.channel",
@@ -136,7 +136,7 @@ class TestMailPoll(MailCommon, HttpCase):
             "/mail/poll/create",
             {
                 "duration": 1,
-                "option_labels": ["foo", "bar", "baz"],
+                "options": [{"label": "Burger"}, {"label": "Pizza"}, {"label": "Tacos"}],
                 "question": "???",
                 "thread_id": channel.id,
                 "thread_model": channel._name,
@@ -158,7 +158,7 @@ class TestMailPoll(MailCommon, HttpCase):
             "/mail/poll/create",
             {
                 "duration": 0,
-                "option_labels": ["Burger", "Pizza", "Tacos"],
+                "options": [{"label": "Burger"}, {"label": "Pizza"}, {"label": "Tacos"}],
                 "question": "What is your favorite food?",
                 "thread_id": self.test_record.id,
                 "thread_model": self.test_record._name,

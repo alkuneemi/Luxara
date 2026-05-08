@@ -1,4 +1,14 @@
 .o-mail-PollResult {
     max-width: 500px;
     background-color: var(--mail-Poll-bgColor, $o-view-background-color);
+    --mail-PollResult-emojiWrapper-bg: rgba(0, 0, 0, 0.06);
+    --mail-PollResult-emojiWrapper-border: rgba(0, 0, 0, 0.08);
+    --mail-PollResult-emojiWrapper-size: #{(map-get($spacers, 4) + map-get($spacers, 5) + map-get($spacers, 2)) / 2};
+
+    .o-mail-PollResult-emojiWrapper {
+        width: var(--mail-PollResult-emojiWrapper-size);
+        height: var(--mail-PollResult-emojiWrapper-size);
+        background-color: var(--mail-PollResult-emojiWrapper-bg);
+        border: 1px solid var(--mail-PollResult-emojiWrapper-border);
+    }
 }

@@ -6,7 +6,7 @@ import { Component } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { EmojiPicker } from "@web/core/emoji_picker/emoji_picker";
 import { rpc } from "@web/core/network/rpc";
-import { useAutofocus, useService } from "@web/core/utils/hooks";
+import { useAutofocus } from "@web/core/utils/hooks";
 
 export class CreatePollDialog extends Component {
     static template = "mail.CreatePollDialog";
@@ -22,7 +22,6 @@ export class CreatePollDialog extends Component {
             question: "",
             submitted: false,
         });
-        this.orm = useService("orm");
     }
 
     onClickAddOption() {
@@ -40,7 +39,9 @@ export class CreatePollDialog extends Component {
         }
         await rpc("/mail/poll/create", {
             allow_multiple_options: this.state.allowMultipleOptions,
-            option_labels: this.state.options.map(({ label }) => label).filter(Boolean),
+            options: this.state.options
+                .filter(({ label }) => label)
+                .map(({ emoji, label }) => ({ emoji, label: label.trim() })),
             duration: parseInt(this.state.duration),
             question: this.state.question,
             thread_id: this.props.thread.id,
