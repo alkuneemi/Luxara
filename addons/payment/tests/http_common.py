@@ -1,7 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from contextlib import contextmanager
-from unittest.mock import patch
 
 from lxml import etree, objectify
 
@@ -150,11 +149,7 @@ class PaymentHttpCommon(PaymentCommon, HttpCase):
         return self._make_http_get_request(url, route_kwargs)
 
     def _get_portal_pay_context(self, **route_kwargs):
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            response = self._portal_pay(**route_kwargs)
+        response = self._portal_pay(**route_kwargs)
 
         self.assertEqual(response.status_code, 200)
 
@@ -174,11 +169,7 @@ class PaymentHttpCommon(PaymentCommon, HttpCase):
         return self._make_http_get_request(url, {})
 
     def _get_portal_payment_method_context(self):
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            response = self._portal_payment_method()
+        response = self._portal_payment_method()
 
         self.assertEqual(response.status_code, 200)
 

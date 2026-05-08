@@ -66,28 +66,20 @@ class TestPaymentProvider(PaymentCommon):
         """Test that a published provider is always available to all users."""
         for user in (self.public_user, self.portal_user):
             self.env = self.env(user=user)
-            with patch(
-                "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-                return_value=self.provider,
-            ):
-                compatible_providers = (
-                    self
-                    .env["payment.provider"]
-                    .sudo()
-                    ._get_compatible_providers(self.company.id, self.partner.id, self.amount)
-                )
+            compatible_providers = (
+                self
+                .env["payment.provider"]
+                .sudo()
+                ._get_compatible_providers(self.company.id, self.partner.id, self.amount)
+            )
             self.assertIn(self.provider, compatible_providers)
 
     def test_unpublished_provider_compatible_with_internal_user(self):
         """Test that an unpublished provider is still available to internal users."""
         self.provider.is_published = False
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_unpublished_provider_not_compatible_with_non_internal_user(self):
@@ -110,13 +102,9 @@ class TestPaymentProvider(PaymentCommon):
             "name": "Provider Branch Company",
             "parent_id": self.provider.company_id.id,
         })
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                branch_company.id, self.partner.id, self.amount
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            branch_company.id, self.partner.id, self.amount
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_compatible_with_available_countries(self):
@@ -124,13 +112,9 @@ class TestPaymentProvider(PaymentCommon):
         belgium = self.env.ref("base.be")
         self.provider.available_country_ids = [Command.set([belgium.id])]
         self.partner.country_id = belgium
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_with_unavailable_countries(self):
@@ -149,13 +133,9 @@ class TestPaymentProvider(PaymentCommon):
         self.provider.available_country_ids = [Command.clear()]
         belgium = self.env.ref("base.be")
         self.partner.country_id = belgium
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_minimum_amount_is_zero(self):
@@ -164,13 +144,9 @@ class TestPaymentProvider(PaymentCommon):
         self.provider.minimum_amount = 0
         currency = self.provider.main_currency_id.id
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=currency
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=currency
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_payment_above_minimum_amount(self):
@@ -178,13 +154,9 @@ class TestPaymentProvider(PaymentCommon):
         amount."""
         self.provider.minimum_amount = self.amount - 10
         currency = self.provider.main_currency_id.id
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=currency
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=currency
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_when_payment_below_minimum_amount(self):
@@ -204,13 +176,9 @@ class TestPaymentProvider(PaymentCommon):
         self.provider.maximum_amount = 0.0
         currency = self.provider.main_currency_id.id
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=currency
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=currency
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_payment_below_maximum_amount(self):
@@ -219,13 +187,9 @@ class TestPaymentProvider(PaymentCommon):
         self.provider.maximum_amount = self.amount + 10.0
         currency = self.provider.main_currency_id.id
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=currency
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=currency
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_when_payment_above_maximum_amount(self):
@@ -234,90 +198,60 @@ class TestPaymentProvider(PaymentCommon):
         self.provider.maximum_amount = self.amount - 10.0
         currency = self.provider.main_currency_id.id
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.env["payment.provider"]._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=currency
-            )
+        compatible_providers = self.env["payment.provider"]._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=currency
+        )
         self.assertNotIn(self.provider, compatible_providers)
 
     def test_provider_compatible_with_available_currencies(self):
         """Test that the provider is compatible with its available currencies."""
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=self.currency_euro.id
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=self.currency_euro.id
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_with_unavailable_currencies(self):
         """Test that the provider is not compatible with a currency that is not available."""
         # Make sure the list of available currencies is not empty.
         self.provider.available_currency_ids = [Command.unlink(self.currency_usd.id)]
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=self.currency_usd.id
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=self.currency_usd.id
+        )
         self.assertNotIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_no_available_currencies_set(self):
         """Test that the provider is always compatible when no available currency is set."""
         self.provider.available_currency_ids = [Command.clear()]
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, currency_id=self.currency_euro.id
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, currency_id=self.currency_euro.id
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_tokenization_forced(self):
         """Test that the provider is compatible when it allows tokenization while it is forced by
         the calling module."""
         self.provider.allow_tokenization = True
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, force_tokenization=True
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, force_tokenization=True
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_when_tokenization_forced(self):
         """Test that the provider is not compatible when it does not allow tokenization while it
         is forced by the calling module."""
         self.provider.allow_tokenization = False
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, force_tokenization=True
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, force_tokenization=True
+        )
         self.assertNotIn(self.provider, compatible_providers)
 
     def test_provider_compatible_when_tokenization_required(self):
         """Test that the provider is compatible when it allows tokenization while it is required by
         the payment context (e.g., when paying for a subscription)."""
         self.provider.allow_tokenization = True
-        with (
-            patch(
-                "odoo.addons.payment.models.payment_provider.PaymentProvider._is_tokenization_required",
-                return_value=True,
-            ),
-            patch(
-                "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-                return_value=self.provider,
-            ),
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider._is_tokenization_required",
+            return_value=True,
         ):
             compatible_providers = self.provider._get_compatible_providers(
                 self.company.id, self.partner.id, self.amount
@@ -328,15 +262,9 @@ class TestPaymentProvider(PaymentCommon):
         """Test that the provider is not compatible when it does not allow tokenization while it
         is required by the payment context (e.g., when paying for a subscription)."""
         self.provider.allow_tokenization = False
-        with (
-            patch(
-                "odoo.addons.payment.models.payment_provider.PaymentProvider._is_tokenization_required",
-                return_value=True,
-            ),
-            patch(
-                "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-                return_value=self.provider,
-            ),
+        with patch(
+            "odoo.addons.payment.models.payment_provider.PaymentProvider._is_tokenization_required",
+            return_value=True,
         ):
             compatible_providers = self.provider._get_compatible_providers(
                 self.company.id, self.partner.id, self.amount
@@ -347,26 +275,18 @@ class TestPaymentProvider(PaymentCommon):
         """Test that the provider is compatible when it allows express checkout while it is an
         express checkout flow."""
         self.provider.allow_express_checkout = True
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, is_express_checkout=True
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, is_express_checkout=True
+        )
         self.assertIn(self.provider, compatible_providers)
 
     def test_provider_not_compatible_with_express_checkout(self):
         """Test that the provider is not compatible when it does not allow express checkout while
         it is an express checkout flow."""
         self.provider.allow_express_checkout = False
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            compatible_providers = self.provider._get_compatible_providers(
-                self.company.id, self.partner.id, self.amount, is_express_checkout=True
-            )
+        compatible_providers = self.provider._get_compatible_providers(
+            self.company.id, self.partner.id, self.amount, is_express_checkout=True
+        )
         self.assertNotIn(self.provider, compatible_providers)
 
     def test_availability_report_covers_all_reasons(self):
@@ -415,19 +335,15 @@ class TestPaymentProvider(PaymentCommon):
 
         # Get compatible providers to generate their availability report.
         report = {}
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=providers,
-        ):
-            self.env["payment.provider"]._get_compatible_providers(
-                self.company_id,
-                self.partner.id,
-                self.amount,
-                currency_id=self.currency_usd.id,
-                force_tokenization=True,
-                is_express_checkout=True,
-                report=report,
-            )
+        self.env["payment.provider"]._get_compatible_providers(
+            self.company_id,
+            self.partner.id,
+            self.amount,
+            currency_id=self.currency_usd.id,
+            force_tokenization=True,
+            is_express_checkout=True,
+            report=report,
+        )
 
         # Compare the generated providers report with the expected one.
         expected_providers_report = {

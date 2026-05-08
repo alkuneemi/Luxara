@@ -167,16 +167,12 @@ class TestFlows(AccountPaymentCommon, PaymentHttpCommon):
         # Must be authenticated before making an http resqest
         self.authenticate('TestUser', 'Odoo@123')
         overdue_url = self._build_url('/my/invoices/overdue')
+        resp = self._make_http_get_request(overdue_url, {})
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            resp = self._make_http_get_request(overdue_url, {})
-            # Validate the response status code
-            self.assertEqual(resp.status_code, 200)
+        # Validate the response status code
+        self.assertEqual(resp.status_code, 200)
 
-            tx_context = self._get_payment_context(resp)
+        tx_context = self._get_payment_context(resp)
 
         # Validate the transaction context amount and payment_reference
         self.assertEqual(tx_context.get('amount'), invoice.amount_total)

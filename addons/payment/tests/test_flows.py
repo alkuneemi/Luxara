@@ -236,7 +236,6 @@ class TestFlows(PaymentHttpCommon):
 
         # Pay without a partner specified (but logged) --> pay with the partner of current user.
         self.authenticate(self.portal_user.login, self.portal_user.login)
-
         tx_context = self._get_portal_pay_context(**route_values)
         self.assertEqual(tx_context["partner_id"], self.portal_partner.id)
 
@@ -334,11 +333,7 @@ class TestFlows(PaymentHttpCommon):
         token_b = self._create_token(provider_id=provider_b.id)
 
         # User must see both tokens and compatible payment methods.
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=provider_b,
-        ):
-            payment_context = self._get_portal_payment_method_context()
+        payment_context = self._get_portal_payment_method_context()
         self.assertEqual(payment_context["partner_id"], self.partner.id)
         self.assertIn(token.id, payment_context["token_ids"])
         self.assertIn(token_b.id, payment_context["token_ids"])

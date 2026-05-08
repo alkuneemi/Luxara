@@ -616,7 +616,9 @@ class PaymentProvider(models.Model):
         # Search compatible providers with the base domain.
         providers = self.env["payment.provider"].search([
             *self.env["payment.provider"]._check_company_domain(company_id),
+            "|",
             ("module_state", "=", "installed"),
+            ("module_id", "=", False),
         ])
         payment_utils.add_to_report(report, providers)
 

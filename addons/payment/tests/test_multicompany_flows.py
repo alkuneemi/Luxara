@@ -1,5 +1,4 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from unittest.mock import patch
 
 from odoo.fields import Command
 from odoo.tests import tagged
@@ -49,11 +48,7 @@ class TestMultiCompanyFlows(PaymentHttpCommon):
         # Pay in company B
         route_values["company_id"] = self.company_b.id
 
-        with patch(
-            "odoo.addons.payment.models.payment_provider.PaymentProvider.search",
-            return_value=self.provider,
-        ):
-            payment_context = self._get_portal_pay_context(**route_values)
+        payment_context = self._get_portal_pay_context(**route_values)
         for key, val in payment_context.items():
             if key in route_values:
                 if key == "access_token":
