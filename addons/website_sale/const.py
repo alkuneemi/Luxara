@@ -425,3 +425,5 @@ GMC_SUPPORTED_UOM = {
 GMC_BASE_MEASURE = re.compile(r"(?P<base_count>\d+)?\s*(?P<base_unit>[a-z]+)")
 
 SHOP_PATH = "/shop"
+
+MAX_EXPANDED_FILTER_SECTIONS = 4
