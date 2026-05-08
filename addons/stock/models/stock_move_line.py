@@ -264,18 +264,35 @@ class StockMoveLine(models.Model):
             excluded_smls = set(smls.ids)
             if package.package_type_id:
                 best_loc = smls.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls, products=smls.product_id, locations=locations)._get_putaway_strategy(self.env['product.product'], package=package)
+<<<<<<< 922e2190fd1f76ad5673dcf50c59a7e9449cf16b
                 smls.location_dest_id = best_loc
+||||||| cb52cd045a76136529b60af66da45116d46a5ca4
+                smls.location_dest_id = smls.package_level_id.location_dest_id = best_loc
+=======
+                smls.package_level_id.filtered(lambda pl: pl.location_dest_id != best_loc).location_dest_id = best_loc
+>>>>>>> 2a2030f1fd973849f8d826ed3073ad764776aabf
             elif package:
                 used_locations = set()
                 for sml in smls:
                     if len(used_locations) > 1:
                         break
-                    sml.location_dest_id = sml.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls, locations=locations)._get_putaway_strategy(sml.product_id, quantity=sml.quantity)
+                    putaway_loc_id = sml.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls, locations=locations)._get_putaway_strategy(sml.product_id, quantity=sml.quantity)
+                    if putaway_loc_id != sml.location_dest_id:
+                        sml.location_dest_id = putaway_loc_id
                     excluded_smls.discard(sml.id)
                     used_locations.add(sml.location_dest_id)
                 if len(used_locations) > 1:
                     for move, grouped_smls in smls.grouped('move_id').items():
                         grouped_smls.location_dest_id = move.location_dest_id
+<<<<<<< 922e2190fd1f76ad5673dcf50c59a7e9449cf16b
+||||||| cb52cd045a76136529b60af66da45116d46a5ca4
+                else:
+                    smls.package_level_id.location_dest_id = smls.location_dest_id
+=======
+                else:
+                    smls_location_dest_id = smls.location_dest_id
+                    smls.package_level_id.filtered(lambda pl: pl.location_dest_id != smls_location_dest_id).location_dest_id = smls_location_dest_id
+>>>>>>> 2a2030f1fd973849f8d826ed3073ad764776aabf
             else:
                 for sml in smls:
                     putaway_loc_id = sml.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls)._get_putaway_strategy(
