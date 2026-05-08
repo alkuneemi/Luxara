@@ -57,6 +57,8 @@ class TestPosEdi(TestEsEdiTbaiCommonGipuzkoa, CommonPosEsEdiTest):
 
     def test_tbai_refund_pos_order(self):
         self.ten_dollars_with_10_incl.product_variant_id.lst_price = 100
+        self.pos_config_usd.order_backend_seq_id.write({'number_next': 1})
+
         order, _ = self.create_backend_pos_order({
             'line_data': [
                 {'product_id': self.ten_dollars_with_10_incl.product_variant_id.id}
@@ -79,6 +81,11 @@ class TestPosEdi(TestEsEdiTbaiCommonGipuzkoa, CommonPosEsEdiTest):
 
         self.assertEqual(pos_refund.state, 'paid')
         self.assertEqual(pos_refund.l10n_es_tbai_state, 'sent')
+
+        orig_num = order.l10n_es_tbai_post_document_id._get_tbai_sequence_and_number()[1]
+        refund_num = pos_refund.l10n_es_tbai_post_document_id._get_tbai_sequence_and_number()[1]
+        self.assertEqual(orig_num, '000001')
+        self.assertEqual(refund_num, '000002')
 
     def test_tbai_refund_invoiced_pos_order(self):
         self.ten_dollars_with_10_incl.product_variant_id.lst_price = 100
