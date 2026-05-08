@@ -89,6 +89,10 @@ class CloudStorageAttachmentMigration(models.Model):
         if config['limit_time_real_cron'] and config['limit_time_real_cron'] > 0:
             limit_time_real = config['limit_time_real_cron']
         # use half of the time limit to mitigate the timeout problem
+        log_msg = f'Starting cloud storage migration with timeout {limit_time_real // 2} seconds'
+        if max_batch_file_size:
+            log_msg += f' and max batch file size {max_batch_file_size} bytes'
+        _logger.info(log_msg)
         end_time = limit_time_real // 2 + time.monotonic()
 
         check_model = []
@@ -154,28 +158,40 @@ class CloudStorageAttachmentMigration(models.Model):
 
             if not attachment:
                 commit_min_attachment_id(max_attachment_id)
+                _logger.info('Cloud storage migration fully completed')
                 return
 
-            total_file_size += attachment.file_size
-            if max_batch_file_size and total_file_size >= max_batch_file_size:
+            file_size = attachment.file_size
+            if max_batch_file_size and total_file_size + file_size >= max_batch_file_size:
                 if first_attachment:
                     # skip in case attachment.file_size > max_batch_file_size
                     commit_min_attachment_id(attachment.id)
+                _logger.info('Max batch file size reached with total file size %s', total_file_size)
                 break
             first_attachment = False
+            total_file_size += file_size
 
             # commit before migration to upload the file only once even if it causes timeout
             commit_min_attachment_id(attachment.id)
 
             try:
                 attachment._migrate_local_to_cloud_storage(session)
+<<<<<<< 5f34b2f0a20d7b4072f7bf3aa948d5bb1a19906a
                 self.env['ir.cron']._commit_progress(0)  # progress already recorded via ``commit_min_attachment_id``
                 _logger.info('uploaded attachment %s to cloud storage', attachment.id)
+||||||| d73e5662a0af7c549008661f743ba5d51f765339
+                self.env.cr.commit()
+                _logger.info('uploaded attachment %s to cloud storage', attachment.id)
+=======
+                self.env.cr.commit()
+                _logger.info('uploaded attachment %s (%s bytes) to cloud storage', attachment.id, file_size)
+>>>>>>> 8bc3392deaa26a87f9614fabbbaebea5c068dfac
             except Exception as e:  # noqa: BLE001
-                _logger.warning('Failed to upload attachment %s to cloud storage: %s', attachment.id, e)
+                _logger.warning('Failed to upload attachment %s (%s bytes) to cloud storage: %s', attachment.id, file_size, e)
                 self.env.cr.rollback()
 
             if end_time < time.monotonic():
+                _logger.info('Timeout reached for cloud storage migration')
                 break
 
         cron._trigger()
