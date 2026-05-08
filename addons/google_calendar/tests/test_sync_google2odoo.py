@@ -2571,3 +2571,37 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         self.assertEqual(len(events), 3, "The new recurrence must have three events.")
         check_organizer_as_single_attendee(self, recurrence, self.organizer_user)
         self.assertGoogleAPINotCalled()
+
+    @patch_api
+    def test_attendee_not_dropped_when_other_email_matches_alias(self):
+        """ Ensure no attendees are dropped when one Google attendee's email matches a mail alias """
+        alias_domain = self.env['mail.alias.domain'].create({'name': 'test-alias.example.com'})
+        model_id = self.env['ir.model']._get('calendar.event').id
+        alias = self.env['mail.alias'].create({
+            'alias_name': 'calendar-events',
+            'alias_model_id': model_id,
+            'alias_domain_id': alias_domain.id,
+        })
+        alias_email = alias.alias_full_name  # 'calendar-events@test-alias.example.com'
+
+        partner_a = self.env['res.partner'].create({'name': 'Partner A', 'email': 'partner.a@example.com'})
+        partner_b = self.env['res.partner'].create({'name': 'Partner B', 'email': 'partner.b@example.com'})
+
+        google_id = 'test_alias_attendee_sync'
+        self.env['calendar.event']._sync_google2odoo(GoogleEvent([{
+            'id': google_id,
+            'summary': 'Test Alias Attendee',
+            'updated': self.now,
+            'organizer': {'email': partner_a.email},
+            'attendees': [
+                {'email': partner_a.email, 'responseStatus': 'accepted'},
+                {'email': alias_email, 'responseStatus': 'accepted', 'self': True},
+                {'email': partner_b.email, 'responseStatus': 'needsAction'},
+            ],
+            'reminders': {'useDefault': True},
+            'start': {'dateTime': '2020-01-13T16:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'end': {'dateTime': '2020-01-13T17:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'visibility': 'public',
+        }]))
+        event = self.env['calendar.event'].search([('google_id', '=', google_id)])
+        self.assertIn(partner_b, event.partner_ids, "partner_b must not be dropped when another attendee email matches an alias")

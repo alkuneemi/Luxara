@@ -198,23 +198,24 @@ class Meeting(models.Model):
             existing_attendees = event.attendee_ids
         attendees_by_emails = {tools.email_normalize(a.email): a for a in existing_attendees}
         partners = self._get_sync_partner(emails)
-        for attendee in zip(emails, partners, google_attendees):
-            email = attendee[0]
+        partners_by_email = {p.email_normalized: p for p in partners}
+        for ga in google_attendees:
+            email = ga.get('email')
             if email in attendees_by_emails:
                 # Update existing attendees
-                attendee_commands += [(1, attendees_by_emails[email].id, {'state': attendee[2].get('responseStatus')})]
+                attendee_commands += [(1, attendees_by_emails[email].id, {'state': ga.get('responseStatus')})]
             else:
                 # Create new attendees
-                if attendee[2].get('self'):
+                if ga.get('self'):
                     partner = self.env.user.partner_id
-                elif attendee[1]:
-                    partner = attendee[1]
+                elif partners_by_email.get(tools.email_normalize(email)):
+                    partner = partners_by_email[tools.email_normalize(email)]
                 else:
                     continue
-                attendee_commands += [(0, 0, {'state': attendee[2].get('responseStatus'), 'partner_id': partner.id})]
+                attendee_commands += [(0, 0, {'state': ga.get('responseStatus'), 'partner_id': partner.id})]
                 partner_commands += [(4, partner.id)]
-                if attendee[2].get('displayName') and not partner.name:
-                    partner.name = attendee[2].get('displayName')
+                if ga.get('displayName') and not partner.name:
+                    partner.name = ga.get('displayName')
         for odoo_attendee in attendees_by_emails.values():
             # Remove old attendees but only if it does not correspond to the current user.
             email = tools.email_normalize(odoo_attendee.email)
