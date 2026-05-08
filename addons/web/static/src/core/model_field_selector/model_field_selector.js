@@ -45,6 +45,9 @@ export class ModelFieldSelector extends Component {
                     this.props.update(this.newPath, fieldInfo);
                 }
             },
+            // `useOverlayServiceOffset` offsets all MassMailingIframe overlay sequences
+            // by +1000 (default 50 → 1050). Use 1051 to render above them.
+            sequence: 1051,
         });
         this.keepLast = new KeepLast();
         this.state = useState({ isInvalid: false, displayNames: [] });
