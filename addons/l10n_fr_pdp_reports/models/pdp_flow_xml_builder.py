@@ -37,8 +37,7 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
     _description = 'Flow 10 XML Builder'
 
     @api.model
-    def _build_payload(self, flow):
-        valid_moves = flow.move_ids - flow.error_move_ids
+    def _build_payload(self, flow, valid_moves):
         if not valid_moves:
             return False
 
@@ -50,13 +49,7 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
         if flow.report_type == 'transaction':
             self._add_transacitons(document, flow, valid_moves)  # TB-2
         else:
-            summaries = {}
-            for move in valid_moves:
-                summary, partials = self._get_payments_summary_and_partials(move)
-                summaries[move] = summary
-                partials += partials
-
-            self._add_payments(document, flow, valid_moves, summaries)  # TB-3
+            self._add_payments(document, flow, valid_moves)  # TB-3
 
         xml = dict_to_xml(
             node=document,
@@ -65,7 +58,7 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
         payload = base64.b64encode(
             etree.tostring(xml, pretty_print=True, xml_declaration=True, encoding='UTF-8')
         )
-        return payload, partials
+        return payload
 
     @api.model
     def _add_report_header(self, document, flow):
@@ -110,35 +103,54 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
         return b2c_moves, b2bi_moves
 
     @api.model
-    def _add_payments(self, document, flow, moves, summaries):
-        b2c_moves, b2bi_moves = self._split_moves_by_transaction_type(flow, moves)
-
-        def get_payment_node(move, summary, is_b2bi):
-            for payment_aml, subtotals in summary:
-                node = {
-                    **({
-                        'InvoiceId': {'_text': move.name},
-                        'IssueDate': {'_text': self._format_date(move.date)},
-                    } if is_b2bi else {}),
-                    'Payment': {
-                        'Date': {'_text': self._format_date(payment_aml.date)},
-                        'SubTotals': [],
-                    }
+    def _add_payments(self, document, flow, moves):
+        def get_payment_node(date, subtotals, transaction=None):
+            node = {
+                **({
+                    'InvoiceId': {'_text': transaction.name},
+                    'IssueDate': {'_text': self._format_date(transaction.date)},
+                } if transaction else {}),
+                'Payment': {
+                    'Date': {'_text': self._format_date(date)},
+                    'SubTotals': [],
                 }
-                for tax_subtotal in subtotals:
-                    node['Payment']['SubTotals'].append({
-                        'TaxPercent': {'_text': tax_subtotal['tax'].amount},
-                        'CurrencyCode': 'EUR',
-                        'Amount': {'_text': tax_subtotal['tax_amount']},
-                    })
+            }
+            for tax_subtotal in subtotals:
+                node['Payment']['SubTotals'].append({
+                    'TaxPercent': {'_text': tax_subtotal['tax'].amount},
+                    'CurrencyCode': 'EUR',
+                    'Amount': {'_text': tax_subtotal['tax_amount']},
+                })
             return node
 
-        invoices = [
-            get_payment_node(move, summaries[move], is_b2bi=True) for move in b2bi_moves
-        ]
-        transactions = [
-            get_payment_node(move, summaries[move], is_b2bi=False) for move in b2c_moves
-        ]
+        b2c_payments, b2bi_payments = self._split_moves_by_transaction_type(flow, moves)
+
+        b2bi_matched_transactions_map = defaultdict(set)
+        for payment in b2bi_payments:
+            b2bi_matched_transactions_map[payment._l10n_fr_pdp_get_matched_transaction()].append(payment)
+        invoices = []
+        for transaction, payments in b2bi_matched_transactions_map.items():
+            summary = self._get_payments_summary(transaction, payments)  # {payment: (subtotals, transaction)}
+            for payment, (subtotals, transaction) in summary.items():
+                invoices.append(
+                    get_payment_node(payment.date, subtotals, transaction)
+                )
+
+        b2c_matched_transactions_map = defaultdict(set)
+        for payment in b2c_payments:
+            b2c_matched_transactions_map[payment._l10n_fr_pdp_get_matched_transaction()].append(payment)
+        transactions = []
+        dates = defaultdict(dict)
+        for transaction, payments in b2c_matched_transactions_map.items():
+            summary = self._get_payments_summary(transaction, payments)  # {payment: (subtotals, transaction)}
+            for payment, (subtotals, _transaction) in summary.items():
+                for subtotal in subtotals:
+                    dates[payment.date][subtotal['tax']] += subtotals['amount']
+
+        for date, subtotals in dates.items():
+            transactions.append(
+                get_payment_node(date, [{'tax':tax, 'amount':amount} for tax, amount in subtotals.itmes()])
+            )
 
         if invoices or transactions:
             document['PaymentsReport'] = {
@@ -151,36 +163,29 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
             }
 
     @api.model
-    def _get_payments_summary_and_partials(self, move):
+    def _get_payments_summary(self, transaction, payments):
         tax_summary = self._get_tax_summary(
-            move.line_ids,
+            transaction.line_ids,
             line_validation_function=(
-                None if move._is_downpayment()
+                None if transaction._is_downpayment()
                 else lambda line: any(tax.tax_exigibility == 'on_payment' for tax in line.tax_ids)  # TODO change to is linked to caba move ?
             ),
         )
-        move_amount_total = move.amount_total_signed
-        payments = []
-        partial_ids = []
-        for partial in move._get_all_reconciled_invoice_partials():
+        move_amount_total = transaction.amount_total_signed
+        # summary = []
+        summary = {}
+        for payment in payments:
             subtotals = []
-            aml = partial.get('aml')
-            if not self._is_payment_partial_aml(partial.get('aml')):
-                continue
-            partial_ids.append(partial['partial_id'])
-            partial_amount = aml.move_id.amount_total_signed
-
+            partial_amount = payment.amount_total_signed
             partial_to_move_ratio = partial_amount / move_amount_total if move_amount_total else 0
-
             for tax, subtotal in tax_summary['subtotals'].items():
                 subtotals.append({
                     'tax': tax,
                     'tax_amount': (subtotal['tax_amount'] + subtotal['taxable_amount']) * partial_to_move_ratio,
                 })
+            summary[payment] = (subtotals, transaction)
 
-            payments.append((aml, subtotals))
-
-        return payments, partial_ids
+        return summary
 
     @api.model
     def _is_payment_partial_aml(self, aml):
@@ -191,7 +196,6 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
     def _add_transacitons(self, document, flow, moves):
         b2c_moves, b2bi_moves = self._split_moves_by_transaction_type(flow, moves)
         b2bi_invoices = []
-        error_move_ids = []
         # B2BI
         for move in b2bi_moves:
             is_purchase = move.is_purchase_document(include_receipts=False)
@@ -204,23 +208,21 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
                 'CurrencyCode': {'_text': move.currency_id.name},
                 'DueDate': {'_text': self._format_date(move.invoice_date_due or move.date)},
             }
-            if any((
-                self._invoice_add_due_date_type_code(invoice, move),
-                self._invoice_add_notes(invoice, move),
-                self._invoice_add_business_process(invoice, move),
-                self._invoice_add_referenced_documents(invoice, move),
-                self._invoice_add_partner_vals(document, seller, 'Seller'),
-                self._invoice_add_partner_vals(document, buyer, 'Buyer'),
-                self._invoice_add_seller_tax_representative(invoice, move),
-                self._invoice_add_delivery_vals(invoice, move),
-                self._invoice_add_invoice_period(invoice, move, flow),
-                self._invoice_add_allowance_charges(invoice, move, seller, buyer),
-                self._invoice_add_monetary_total(invoice, move),
-                self._invoice_add_tax_sub_total(invoice, move, seller, buyer),
-                self._invoice_add_lines(invoice, move),
-            )):
-                error_move_ids.append(move.id)
-                continue
+
+            self._invoice_add_due_date_type_code(invoice, move),
+            self._invoice_add_notes(invoice, move),
+            self._invoice_add_business_process(invoice, move),
+            self._invoice_add_referenced_documents(invoice, move),
+            self._invoice_add_partner_vals(document, seller, 'Seller'),
+            self._invoice_add_partner_vals(document, buyer, 'Buyer'),
+            self._invoice_add_seller_tax_representative(invoice, move),
+            self._invoice_add_delivery_vals(invoice, move),
+            self._invoice_add_invoice_period(invoice, move, flow),
+            self._invoice_add_allowance_charges(invoice, move, seller, buyer),
+            self._invoice_add_monetary_total(invoice, move),
+            self._invoice_add_tax_sub_total(invoice, move, seller, buyer),
+            self._invoice_add_lines(invoice, move),
+
             b2bi_invoices.append(invoice)
 
         # B2C
@@ -258,8 +260,6 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
                 'Invoice': b2bi_invoices,
                 'Transactions': b2c_agregates,
             }
-
-        return error_move_ids
 
     @api.model
     def _invoice_add_due_date_type_code(self, invoice, move):
@@ -397,15 +397,14 @@ class PdpFlow10XMLBuilder(models.AbstractModel):
                 **({'CountrySubentity': {'_text': move.partner_shipping_id.state_id}} if move.partner_shipping_id.state_id else {}),
                 'CountryId': {'_text': move.partner_shipping_id.country_id.code},
             }
-            errors = []
-            for key, message in MOVE_ERRORS['delivery'].items():
-                if not location[key]['_text']:
-                    errors.append(_(message))
+            # errors = []
+            # for key, message in MOVE_ERRORS['delivery'].items():
+            #     if not location[key]['_text']:
+            #         errors.append(_(message))
             invoice['Delivery'] = {
                 'Date': {'_text': self._format_date(move.date)},
                 'Location': location,
             }
-            return errors
 
     @api.model
     def _invoice_add_seller_tax_representative(self, invoice, seller):

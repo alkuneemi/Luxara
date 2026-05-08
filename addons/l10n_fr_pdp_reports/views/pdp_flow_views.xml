@@ -5,7 +5,7 @@
         <field name="model">l10n.fr.pdp.reports.flow</field>
         <field name="arch" type="xml">
             <list string="EDI exports" create="0">
-                <field name="name" string="Reference"/>
+                <field name="name" />
                 <field name="period_start" string="Start date"/>
                 <field name="period_end" string="End date"/>
                 <field name="due_date" optional="hide"/>
@@ -45,11 +45,6 @@
                             class="btn-primary"
                             string="Send"
                             invisible="state not in ['ready', 'pending', 'error']"/>
-                    <button name="action_create_rectificative_flow"
-                            type="object"
-                            class="btn-secondary"
-                            string="Create Rectificative"
-                            invisible="state not in ['completed', 'sent']"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Sent" bg_color="text-bg-success"
@@ -64,15 +59,8 @@
                                 invisible="report_type == 'payment' or not move_ids">
                             <field name="move_ids" string="Invoices" widget="statinfo"/>
                         </button>
-                        <button type="object"
-                                name="action_view_payments"
-                                class="oe_stat_button"
-                                icon="fa-university"
-                                invisible="report_type != 'payment'">
-                            <field name="payment_move_count" string="Payments" widget="statinfo"/>
-                        </button>
                     </div>
-                    <div class="alert alert-warning" role="alert" invisible="not error_move_ids or period_status == 'open'">
+                    <div class="alert alert-warning" role="alert" invisible="not error_moves_count or period_status == 'open'">
                         <span>
                             Some invoices were excluded because of validation errors.
                             <button type="object" name="action_view_error_moves" class="btn-link">View invoices</button>
@@ -80,7 +68,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="name" string="Reference" readonly="1"/>
+                            <field name="name" readonly="1"/>
                             <field name="report_type" string="Type" readonly="1"/>
                             <field name="state" string="Status" readonly="1"/>
                             <field name="transmission_type" string="Transmission type"
@@ -167,7 +155,7 @@
         <field name="res_model">account.move</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('l10n_fr_pdp_status', '=', 'error')]</field>
-        <field name="context">{'search_default_group_by_move_type': 1, 'group_by': ['l10n_fr_pdp_initial_flow_id']}</field>
+        <field name="context">{'search_default_group_by_move_type': 1, 'group_by': ['l10n_fr_pdp_original_flow_id']}</field>
     </record>
 
     <!-- Menu structure: Reporting > France > E-reporting -->

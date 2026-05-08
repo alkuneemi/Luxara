@@ -126,8 +126,8 @@
                         string="Group By Invoice Month"
                         context="{'group_by': 'invoice_date:month'}"/>
                 <filter name="l10n_fr_pdp_group_by_flow"
-                        string="Group By Initial PDP Flow"
-                        context="{'group_by': 'l10n_fr_pdp_initial_flow_id'}"/>
+                        string="Group By Original PDP Flow"
+                        context="{'group_by': 'l10n_fr_pdp_original_flow_id'}"/>
             </xpath>
         </field>
     </record>

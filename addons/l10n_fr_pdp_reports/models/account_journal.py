@@ -28,7 +28,7 @@ class AccountJournal(models.Model):
             )
             if not flow:
                 return False, False, False
-            has_errors = flow.state == 'error' or bool(flow.error_move_ids)
+            has_errors = flow.state == 'error' or flow.error_moves_count
             return flow.due_date, format_date(self.env, flow.due_date), has_errors
 
         # Compute PDP data per company
