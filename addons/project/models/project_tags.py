@@ -87,7 +87,21 @@ class ProjectTags(models.Model):
                 ) AS project_tasks_tags
             )""", project_id=self.env.context['project_id'])
             tags += self.search_fetch(Domain('id', 'in', tag_sql) & domain, ['display_name'], limit=limit)
-        elif self.env.context.get('use_user_history'):
+        if self.env.context.get('todo_project_id'):
+            # Prioritize tags explicitly linked to the project
+            tag_sql = SQL("""
+                (SELECT DISTINCT project_tags.id
+                FROM (
+                    SELECT rel.project_tags_id AS id
+                    FROM project_project_project_tags_rel AS rel
+                    JOIN project_project AS project
+                        ON project.id = rel.project_project_id
+                        AND project.id = %(project_id)s
+                    LIMIT 1000
+                ) AS project_tags)
+            """, project_id=self.env.context['todo_project_id'])
+            tags += self.search_fetch(Domain('id', 'in', tag_sql) & domain, ['display_name'], limit=limit)
+        if self.env.context.get('use_user_history'):
             # optimisation for large projects, we look first for tags present on the last 1000 tasks of said project.
             # when not enough results are found, we complete them with a fallback on a regular search
             tag_sql = SQL("""
