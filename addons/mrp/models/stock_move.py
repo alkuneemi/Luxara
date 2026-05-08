@@ -77,8 +77,17 @@ class StockMoveLine(models.Model):
                 move_line._log_message(production, move_line, 'mrp.track_production_move_template', vals)
         return super(StockMoveLine, self).write(vals)
 
+    def _get_aggregated_description(self, aggregated_properties):
+        return aggregated_properties['move'].description_bom_line if aggregated_properties['move'].description_bom_line else ""
+
+    def _get_aggregated_line_key(self, move, product, uom, description):
+        bom_desc = move._fields.get('description_bom_line') and move.description_bom_line or ''
+        line_key = f"{product.id}_{product.display_name}_{description + bom_desc or ''}_{uom.id}_{move.product_packaging_id or ''}"
+        return line_key
+
     def _get_aggregated_properties(self, move_line=False, move=False):
         aggregated_properties = super()._get_aggregated_properties(move_line, move)
+        aggregated_properties['description'] += self._get_aggregated_description(aggregated_properties)
         bom = aggregated_properties['move'].bom_line_id.bom_id
         aggregated_properties['bom'] = bom or False
         aggregated_properties['line_key'] += f'_{bom.id if bom else ""}'
