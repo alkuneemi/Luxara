@@ -2240,6 +2240,11 @@ class SaleOrder(models.Model):
 
         return sol._get_discounted_price()
 
+    def _get_vat_label(self):
+        """ Return the VAT label to be displayed on the portal and reports."""
+        self.ensure_one()
+        return self.env['account.move'].get_record_vat_label(self)
+
     #=== TOOLING ===#
 
     def _is_readonly(self):

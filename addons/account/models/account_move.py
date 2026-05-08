@@ -6249,6 +6249,17 @@ class AccountMove(models.Model):
             return self.company_id.account_discount_income_allocation_id
         return None
 
+    def _get_vat_label(self):
+        """ Return the VAT label to be displayed on the portal and reports."""
+        self.ensure_one()
+        return self.get_record_vat_label(self)
+
+    def get_record_vat_label(self, record):
+        """ Extracts the VAT label from provided record"""
+        if record and 'company_id' in record._fields:
+            return record.company_id.account_fiscal_country_id.vat_label
+        return None
+
     # -------------------------------------------------------------------------
     # TOOLING
     # -------------------------------------------------------------------------
