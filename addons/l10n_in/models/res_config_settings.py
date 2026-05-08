@@ -1,4 +1,4 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
 from odoo.tools.sql import column_exists, create_column
 from odoo.tools import SQL
@@ -71,6 +71,16 @@ class ResConfigSettings(models.TransientModel):
     module_l10n_in_reports = fields.Boolean("GST E-Filing & Matching")
     module_l10n_in_edi = fields.Boolean("Indian Electronic Invoicing")
     module_l10n_in_ewaybill = fields.Boolean("Indian Electronic Waybill")
+
+    @api.depends('country_code')
+    def _compute_force_restrictive_audit_trail_reason(self):
+        super()._compute_force_restrictive_audit_trail_reason()
+        for config in self:
+            if config.country_code == 'IN':
+                config.force_restrictive_audit_trail_reason = self.env._(
+                    "Once enabled, the Audit Trail cannot be disabled for companies in India, "
+                    "in accordance with the requirements of the Ministry of Corporate Affairs, Government of India."
+                )
 
     def set_values(self):
         super().set_values()

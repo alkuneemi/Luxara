@@ -205,6 +205,7 @@ class ResConfigSettings(models.TransientModel):
     # Audit trail
     restrictive_audit_trail = fields.Boolean(string='Restricted Audit Trail', related='company_id.restrictive_audit_trail', readonly=False)
     force_restrictive_audit_trail = fields.Boolean(string='Forced Audit Trail', related='company_id.force_restrictive_audit_trail', readonly=False)
+    force_restrictive_audit_trail_reason = fields.Char(compute='_compute_force_restrictive_audit_trail_reason')
 
     # Autopost of bills
     autopost_bills = fields.Boolean(related='company_id.autopost_bills', readonly=False)
@@ -215,6 +216,11 @@ class ResConfigSettings(models.TransientModel):
         # except countries that are not in Europe
         for config in self:
             config.is_account_peppol_eligible = config.country_code in PEPPOL_LIST
+
+    def _compute_force_restrictive_audit_trail_reason(self):
+        # To be overridden by localizations that require a restrictive audit trail for legal compliance reasons,
+        # in which case the reason should be explained in the returned string.
+        self.force_restrictive_audit_trail_reason = False
 
     def set_values(self):
         super().set_values()

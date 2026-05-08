@@ -343,8 +343,13 @@
                             </setting>
                         </block>
                         <block title="Reporting" id="account_reports_settings" groups="account.group_account_user" invisible="not module_account_reports">
-                            <setting string="Restrictive Audit Trail" company_dependent="1" invisible="force_restrictive_audit_trail" help="As soon as a journal item is involved, changes to the account, partner, journal entry or journal item are logged. You can then not delete those records anymore">
+                            <setting string="Restrictive Audit Trail" company_dependent="1"
+                                help="As soon as a journal item is involved, changes to the account, partner, journal entry or
+                                      journal item are logged. You can then not delete those records anymore">
                                 <field name="restrictive_audit_trail"/>
+                                <div class="alert alert-info" role="alert" invisible="not (restrictive_audit_trail and force_restrictive_audit_trail_reason)">
+                                    <field name="force_restrictive_audit_trail_reason" class="w-auto"/>
+                                </div>
                             </setting>
                         </block>
                         <field name="is_account_peppol_eligible" invisible="1"/>
