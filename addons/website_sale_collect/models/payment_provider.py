@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.website_sale_collect import const
@@ -10,6 +10,12 @@ class PaymentProvider(models.Model):
     _inherit = "payment.provider"
 
     custom_mode = fields.Selection(selection_add=[("on_site", "Pay on site")])
+
+    def _get_code(self):
+        """Override to allow the post processing of transactions to create payments."""
+        if self.code == "custom" and self.custom_mode == "on_site":
+            return "on_site"
+        return super()._get_code()
 
     # === CRUD METHODS === #
 
@@ -24,12 +30,23 @@ class PaymentProvider(models.Model):
 
     @api.model
     def _get_compatible_providers(
-        self, company_id, *args, sale_order_id=None, website_id=None, report=None, **kwargs
+        self,
+        company_id,
+        partner_id,
+        amount,
+        *args,
+        sale_order_id=None,
+        website_id=None,
+        report=None,
+        **kwargs,
     ):
         """Override of payment to exclude on-site payment providers if the delivery method is not
-        pick up in store.
+        pick up in store, or if the amount is not greater than or equal to the order remaining
+        balance.
 
-        :param int company_id: The company to which providers must belong, as a `res.company` id
+        :param int company_id: The company to which providers must belong, as a `res.company` id.
+        :param int partner_id: The partner making the payment, as a `res.partner` id.
+        :param float amount: The amount to pay. `0` for validation transactions.
         :param int sale_order_id: The sale order to be paid, if any, as a `sale.order` id
         :param int website_id: The provided website, as a `website` id
         :param dict report: The availability report.
@@ -38,28 +55,37 @@ class PaymentProvider(models.Model):
         """
         compatible_providers = super()._get_compatible_providers(
             company_id,
+            partner_id,
+            amount,
             *args,
             sale_order_id=sale_order_id,
             website_id=website_id,
             report=report,
             **kwargs,
         )
-        order = self.env["sale.order"].browse(sale_order_id).exists()
 
-        # Show on-site payment providers only if in-store delivery methods exist and the order
-        # contains physical products.
-        if order.carrier_id.delivery_type != "in_store" or not any(
+        reason = None
+        order = self.env["sale.order"].browse(sale_order_id).exists()
+        currency = order.currency_id
+
+        if not order:
+            reason = self.env._("in-store is only allowed if a sales order exists")
+        elif order.carrier_id.delivery_type != "in_store" or not any(
             product.type == "consu" for product in order.order_line.product_id
         ):
+            # Show on-site payment providers only if in-store delivery methods exist and the order
+            # contains physical products.
+            reason = self.env._("no in-store delivery methods available")
+        elif currency.compare_amounts(amount, order.amount_remaining) < 0:
+            reason = self.env._("in-store not allowed to pay less than the order remaining balance")
+
+        if reason:
             unfiltered_providers = compatible_providers
             compatible_providers = compatible_providers.filtered(
                 lambda p: p.code != "custom" or p.custom_mode != "on_site"
             )
             payment_utils.add_to_report(
-                report,
-                unfiltered_providers - compatible_providers,
-                available=False,
-                reason=_("no in-store delivery methods available"),
+                report, unfiltered_providers - compatible_providers, available=False, reason=reason
             )
 
         return compatible_providers

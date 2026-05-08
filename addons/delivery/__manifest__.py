@@ -11,6 +11,7 @@ The system is able to add and compute the shipping line.
 """,
     "depends": ["sale", "payment_custom"],
     "data": [
+        "data/account_payment_method_data.xml",
         "data/delivery_data.xml",
         "data/payment_method_data.xml",
         "data/payment_provider_data.xml",  # Depends on `payment_method_cash_on_delivery`.
@@ -27,6 +28,7 @@ The system is able to add and compute the shipping line.
         "views/sale_order_views.xml",
         "wizard/res_config_settings_views.xml",
         "wizard/choose_delivery_carrier_views.xml",
+        "wizard/pay_on_delivery_views.xml",
     ],
     "demo": ["data/delivery_demo.xml"],
     "assets": {"web.assets_frontend": ["delivery/static/src/**/*"]},
