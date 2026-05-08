@@ -258,11 +258,20 @@ export function setActiveProperties(fieldEl, field) {
     if (input) {
         // textarea value has no attribute,  date/datetime timestamp property is formated
         field.value = input.getAttribute("value") || input.value;
+        if (input.hasAttribute("minLength")) {
+            field.minLength = parseInt(input.getAttribute("minLength"));
+        }
+        if (input.hasAttribute("maxLength")) {
+            field.maxLength = parseInt(input.getAttribute("maxLength"));
+        }
     } else if (field.type === "boolean") {
         field.value = !!fieldEl.querySelector('input[type="checkbox"][checked]');
     } else if (fileInputEl) {
         field.maxFilesNumber = fileInputEl.dataset.maxFilesNumber;
         field.maxFileSize = fileInputEl.dataset.maxFileSize;
+        if (fileInputEl.hasAttribute("accept")) {
+            field.accept = fileInputEl.getAttribute("accept");
+        }
     } else if (selectInputEl) {
         const emptyOptionEl = selectInputEl.querySelector(".s_website_form_empty_option");
         field.allowEmpty = !!emptyOptionEl;
