@@ -407,16 +407,7 @@ class HrLeave(models.Model):
 
     def _get_overlapping_contracts(self):
         self.ensure_one()
-        domain = Domain.AND([
-            Domain('employee_id', '=', self.employee_id.id),
-            Domain('contract_date_start', '<=', self.date_to),
-            Domain.OR([
-                Domain('contract_date_end', '>=', self.date_from),
-                Domain('contract_date_end', '=', False),
-            ])
-        ])
-        versions = self.env['hr.version'].sudo().search(domain)
-        return versions.filtered(lambda v: v._is_overlapping_period(self.date_from.date(), self.date_to.date()))
+        return self.employee_id._get_contracts(date_from, date_to, use_latest_version=True)[self.employee_id.id]
 
     @api.constrains('date_from', 'date_to')
     def _check_contracts(self):

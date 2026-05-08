@@ -2100,10 +2100,11 @@ class HrEmployee(models.Model):
         Returns the versions of the employee between date_from and date_to
         that have at least 1 day in contract during that period
         """
-        return self.version_ids.filtered_domain([
-            ('contract_date_start', '!=', False), ('contract_date_start', '<=', date_to),
-            '|', ('contract_date_end', '>=', date_from), ('contract_date_end', '=', False),
-        ])
+        versions = self.env['hr.version']
+        overlapping_contracts = self._get_contracts(date_from, date_to, use_latest_version=True)
+        for employee in self:
+            versions |= overlapping_contracts[employee.id]
+        return versions
 
     # ---------------------------------------------------------
     # Messaging
