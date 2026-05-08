@@ -542,6 +542,20 @@ export class PaletteSelectionScreen extends Component {
         return getPaletteFontCombos(this.state.palettes);
     }
 
+    onPaletteCardHover(ev) {
+        const paletteSelectionScreenEl = ev.currentTarget.closest(".o_palette_selection_screen");
+        if (ev.type === "mouseenter") {
+            paletteSelectionScreenEl.style.backgroundColor = ev.currentTarget.dataset.bgColor;
+            paletteSelectionScreenEl.style.setProperty(
+                "--o-palette-selection-text-color",
+                ev.currentTarget.dataset.textColor
+            );
+        } else {
+            paletteSelectionScreenEl.style.backgroundColor = "";
+            paletteSelectionScreenEl.style.removeProperty("--o-palette-selection-text-color");
+        }
+    }
+
     uploadLogo() {
         this.logoInputRef.el.click();
     }

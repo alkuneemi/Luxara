@@ -215,6 +215,21 @@
         }
 
         &.o_palette_selection_screen {
+            --o-palette-selection-text-color: inherit;
+
+            transition: background-color 0.55s ease;
+
+            .o_palette_selection_intro {
+                & h1 , .text-muted {
+                    color: var(--o-palette-selection-text-color) !important;
+                    transition: color 0.55s ease;
+                }
+
+                .text-muted {
+                    opacity: 0.75;
+                }
+            }
+
             @include media-breakpoint-up(lg) {
                 .o_palette_card_container {
                     flex: 0 0 20%;
@@ -227,11 +242,9 @@
                 box-shadow: 0 0 0 1px map-get($grays, '200');
 
                 &:hover, &:focus-visible, &.selected {
-                    box-shadow: 0 0 0 1px #FFF, 0 0 0 3px map-get($theme-colors, "primary")
-                }
-
-                &.ai_recommended {
-                    box-shadow: 0 0 15px 5px rgba(255, 255, 0, 0.75);
+                    box-shadow: 0 0 0 1px #FFF, 0 0 0 3px map-get($theme-colors, "primary");
+                    transform: translateY(-1px);
+                    transition: transform 0.22s cubic-bezier(0.22,1,0.36,1);
                 }
             }
         }

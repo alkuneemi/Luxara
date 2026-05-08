@@ -130,8 +130,8 @@
                 <div class="o_palettes_container w-100 o_configurator_show_fast">
                     <input type="file" class="logo_selection_input" t-on-change="this.changeLogo" style="display:none" name="logo_selection" t-custom-ref="logoSelectionInput" accept="image/*"/>
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div>
-                            <h1 class="mb-0"><b>Choose</b> your Style</h1>
+                        <div class="o_palette_selection_intro">
+                            <h1 class="mb-0">Choose your <b>Style</b></h1>
                             <p class="text-muted mb-0 o_configurator_show" t-if="this.state.styleRecommendationLoading">Thinking<span class="o_thinking_dots"/></p>
                             <p class="text-muted mb-0 o_configurator_show_fast" t-if="!this.state.styleRecommendationLoading and this.state.styleRecommendation" t-out="this.state.styleRecommendation"/>
                         </div>
@@ -152,25 +152,17 @@
                         </t>
                     </div>
                     <div class="row g-3">
-                        <t t-foreach="this.recommendedFontCombos" t-as="combo" t-key="'rec_' + combo_index">
+                        <t t-foreach="this.recommendedFontCombos.concat(this.paletteFontCombos)" t-as="combo" t-key="combo.palette + '_' + combo.headingsFont + '_' + combo.bodyFont">
+                            <t t-set="isAiRecommended" t-value="this.state.aiRecommendedHeadingsFont == combo.headingsFont and this.state.aiRecommendedPalette == combo.palette"/>
                             <div class="o_palette_card_container col-md-3 col-6">
-                                <button t-attf-class="palette_card o_btn_reset w-100 rounded overflow-hidden d-flex align-items-center p-3 {{this.state.getSelectedPaletteName() == combo.palette and this.state.selectedHeadingsFont == combo.headingsFont ? 'selected' : ''}} {{this.state.aiRecommendedHeadingsFont == combo.headingsFont and this.state.aiRecommendedPalette == combo.palette ? 'ai_recommended' : ''}}"
-                                     t-on-click="() => this.selectPalette(combo.palette, combo.headingsFont, combo.bodyFont)" t-attf-style="background-color: {{combo.bgColor}}">
-                                    <div class="flex-grow-1 text-start pe-2 overflow-hidden">
-                                        <h2 class="fw-bold text-truncate mb-0" t-attf-style="font-family: '{{combo.headingsFont}}', sans-serif; color: {{combo.textColor}}; line-height: 1.2;" t-out="combo.label"/>
-                                        <div class="text-truncate" t-attf-style="font-family: '{{combo.bodyFont}}', sans-serif; color: {{combo.textColor}}; margin: 0; font-size: 12px; line-height: 1.3;" t-out="combo.description"/>
-                                    </div>
-                                    <div class="d-flex gap-1 flex-shrink-0">
-                                        <div t-attf-style="background-color: {{combo.colors.color1}}; width: 26px; height: 26px; border-radius: 4px;"/>
-                                        <div t-attf-style="background-color: {{combo.colors.color2}}; width: 26px; height: 26px; border-radius: 4px;"/>
-                                    </div>
-                                </button>
-                            </div>
-                        </t>
-                        <t t-foreach="this.paletteFontCombos" t-as="combo" t-key="combo_index">
-                            <div class="o_palette_card_container col-md-3 col-6">
-                                <button t-attf-class="palette_card o_btn_reset w-100 rounded overflow-hidden d-flex align-items-center p-3 {{this.state.getSelectedPaletteName() == combo.palette and this.state.selectedHeadingsFont == combo.headingsFont ? 'selected' : ''}} {{this.state.aiRecommendedHeadingsFont == combo.headingsFont and this.state.aiRecommendedPalette == combo.palette ? 'ai_recommended' : ''}}"
-                                     t-on-click="() => this.selectPalette(combo.palette, combo.headingsFont, combo.bodyFont)" t-attf-style="background-color: {{combo.bgColor}}">
+                                <button t-attf-class="palette_card o_btn_reset position-relative w-100 rounded overflow-hidden d-flex align-items-center p-3 {{this.state.getSelectedPaletteName() == combo.palette and this.state.selectedHeadingsFont == combo.headingsFont ? 'selected' : ''}} {{isAiRecommended ? 'ai_recommended' : ''}}"
+                                     t-on-click="() => this.selectPalette(combo.palette, combo.headingsFont, combo.bodyFont)"
+                                     t-on-mouseenter="this.onPaletteCardHover"
+                                     t-on-mouseleave="this.onPaletteCardHover"
+                                     t-att-data-bg-color="combo.bgColor"
+                                     t-att-data-text-color="combo.textColor"
+                                     t-attf-style="background-color: {{combo.bgColor}}">
+                                    <i t-if="isAiRecommended" class="fa fa-check-circle text-info position-absolute top-0 end-0 m-1"/>
                                     <div class="flex-grow-1 text-start pe-2 overflow-hidden">
                                         <h2 class="fw-bold text-truncate mb-0" t-attf-style="font-family: '{{combo.headingsFont}}', sans-serif; color: {{combo.textColor}}; line-height: 1.2;" t-out="combo.label"/>
                                         <div class="text-truncate" t-attf-style="font-family: '{{combo.bodyFont}}', sans-serif; color: {{combo.textColor}}; margin: 0; font-size: 12px; line-height: 1.3;" t-out="combo.description"/>
