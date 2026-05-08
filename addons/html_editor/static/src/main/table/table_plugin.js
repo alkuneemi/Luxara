@@ -115,6 +115,7 @@ export class TablePlugin extends Plugin {
                 isAvailable: isHtmlContentSupported,
             },
         ],
+        toolbar_groups: withSequence(25, { id: "table" }),
 
         /** Providers */
         toolbar_namespace_providers: [

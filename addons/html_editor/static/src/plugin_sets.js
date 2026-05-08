@@ -79,6 +79,7 @@ import { StylePlugin } from "./core/style_plugin";
 import { ContentEditablePlugin } from "./core/content_editable_plugin";
 import { SelectionPlaceholderPlugin } from "./main/selection_placeholder_plugin";
 import { ResizePlugin } from "./main/resize_plugin";
+import { TableBorderPlugin } from "./main/table/table_border_plugin";
 
 export const CORE_PLUGINS = [
     BaseContainerPlugin,
@@ -123,6 +124,7 @@ export const MAIN_PLUGINS = [
     MediaUrlPastePlugin,
     StarPlugin,
     TablePlugin,
+    TableBorderPlugin,
     TableAlignPlugin,
     TableUIPlugin,
     TabulationPlugin,
