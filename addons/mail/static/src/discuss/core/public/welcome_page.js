@@ -1,16 +1,16 @@
-import { useLayoutEffect, useState, useSubEnv } from "@web/owl2/utils";
 import { CallPreview } from "@mail/discuss/call/common/call_preview";
+import { AvatarStack } from "@mail/discuss/core/common/avatar_stack";
 
-import { Component, markup } from "@odoo/owl";
+import { Component } from "@odoo/owl";
 
 import { browser } from "@web/core/browser/browser";
 import { useService } from "@web/core/utils/hooks";
-import { _t } from "@web/core/l10n/translation";
+import { useLayoutEffect, useState, useSubEnv } from "@web/owl2/utils";
 
 export class WelcomePage extends Component {
     static props = ["proceed?"];
     static template = "mail.WelcomePage";
-    static components = { CallPreview };
+    static components = { AvatarStack, CallPreview };
 
     cameraPermissionOnMountChecked = false;
 
@@ -72,25 +72,12 @@ export class WelcomePage extends Component {
         );
     }
 
-    get noActiveParticipants() {
-        return !this.store.discuss.thread.channel.hasRtcSessionActive;
-    }
-
-    get subtitle() {
-        return _t(
-            "%(open_tag_1)swith%(close_tag_1)s %(open_tag_2)s%(company_name)s%(close_tag_2)s",
-            {
-                open_tag_1: markup`<span class="text-muted">`,
-                close_tag_1: markup`</span>`,
-                open_tag_2: markup`<span>`,
-                close_tag_2: markup`</span>`,
-                company_name: this.store.companyName,
-            }
-        );
+    get channel() {
+        return this.store.discuss.thread.channel;
     }
 
     get showCallPreview() {
-        return this.store.discuss.thread.channel.default_display_mode === "video_full_screen";
+        return this.channel.default_display_mode === "video_full_screen";
     }
 
     /** @param {{ microphone?: boolean, camera?: boolean }} settings */
