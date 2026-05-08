@@ -22,11 +22,17 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     website_id = fields.Many2one(
-        help="Website through which this order was placed for eCommerce orders.",
+        help="Website linked to this order",
         comodel_name="website",
         readonly=True,
     )
 
+    is_ecommerce_order = fields.Boolean(
+        string="Is eCommerce Order",
+        readonly=True,
+        help="Technical field indicating this order was created from the eCommerce flow.",
+        default=False,
+    )
     cart_recovery_email_sent = fields.Boolean(string="Cart recovery email already sent")
     shop_warning = fields.Char(string="Warning")
 
@@ -202,6 +208,8 @@ class SaleOrder(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if self.env.context.get("website_sale_is_ecommerce"):
+                vals["is_ecommerce_order"] = True
             if vals.get("website_id"):
                 website = self.env["website"].browse(vals["website_id"])
                 if "company_id" in vals:
@@ -1023,6 +1031,12 @@ class SaleOrder(models.Model):
             self.env["ir.cron"]._commit_progress(processed=1)
 
     # === TOOLING ===#
+
+    def _compute_access_url(self):
+        super()._compute_access_url()
+        for order in self:
+            if order.website_id:
+                order.access_url = f"{order.get_base_url()}/my/orders/{order.id}"
 
     def _is_anonymous_cart(self):
         """Return whether the cart was created by the public user and no address was added yet.
