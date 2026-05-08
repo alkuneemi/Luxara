@@ -131,6 +131,7 @@ export class TablePlugin extends Plugin {
         resizing_parameters: [
             {
                 resizableElementsSelector: "td, th",
+                resizeTargetSelector: "col",
                 parentContainerSelector: "table",
                 allowedEdges: ["left", "right"],
                 minSize: 33,
