@@ -346,9 +346,9 @@ body {
                 > header #o_main_nav {
                     padding-left: 0;
                     padding-right: 0;
-                    
+
                     @if ($-header-template == "search") {
-                        & > div, 
+                        & > div,
                         & > .o_header_hide_on_scroll > .container {
                             padding-left: 0;
                             padding-right: 0;
@@ -1785,7 +1785,7 @@ header {
             // When the header should only have a bottom border, only take the
             // first value of the variable 'menu-border-width' to behave as if
             // the input only accepted one number.
-            $-menu-border-bottom-width: nth($-menu-border-width, 1); 
+            $-menu-border-bottom-width: nth($-menu-border-width, 1);
             border: o-website-value('menu-border-style') o-color('menu-border-color') !important;
             border-width: 0 0 $-menu-border-bottom-width 0 !important;
 
@@ -3525,4 +3525,10 @@ img.o_image_popup {
     .carousel-item {
         transition: none;
     }
+}
+
+*:has(> .stretched-link:focus-visible) {
+    outline: auto;
+    outline-color: black;
+    outline-offset: 2px;
 }
