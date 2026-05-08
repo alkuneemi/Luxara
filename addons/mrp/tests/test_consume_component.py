@@ -494,9 +494,9 @@ class TestConsumeComponent(TestConsumeComponentCommon):
         ])
         mo.action_clear_lot_producing_ids()
         self.assertRecordValues(mo.move_raw_ids, [
-            {'quantity': 0.0, 'picked': False},
-            {'quantity': 0.0, 'picked': False},
-            {'quantity': 0.0, 'picked': False},
+            {'quantity': 3.0, 'picked': False},
+            {'quantity': 2.0, 'picked': False},
+            {'quantity': 1.0, 'picked': False},
         ])
 
     def test_consume_post_confirmation_reservation(self):
