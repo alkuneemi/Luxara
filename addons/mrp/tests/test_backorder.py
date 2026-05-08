@@ -764,7 +764,7 @@ class TestMrpProductionBackorder(TestMrpCommon):
         - Ask (backorder=yes) + Never => only the ask is backordered
         - Always + Ask (backorder=no) => only the always is backordered
         - Ask (backorder=no) + Never => neither is backordered
-        In every case, we also include a MO Produce All (i.e. `qty_producing` untouched, so all produced)
+        In every case, we also include an MO 'Close Production' (i.e. `qty_producing` untouched, so all produced)
         and a fully produced (i.e. `qty_producing`=`product_qty`) to ensure they are always correctly passed
         as MOs that are done, but not backordered (i.e. their priority should be removed when done)
         """

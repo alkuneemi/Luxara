@@ -235,15 +235,30 @@
                     <field name="show_lock" invisible="1"/>
                     <field name="show_produce" invisible="1"/>
                     <field name="show_produce_all" invisible="1"/>
-                    <button name="button_mark_done" invisible="not move_raw_ids or not show_produce" string="Produce" type="object" class="oe_highlight" data-hotkey="g"/>
-                    <button name="button_mark_done" invisible="not move_raw_ids or not show_produce_all" string="Produce All" type="object" class="oe_highlight" data-hotkey="g"/>
-                    <button name="button_mark_done" invisible="move_raw_ids or not show_produce" string="Produce" type="object" class="oe_highlight" data-hotkey="g"
-                            confirm="There are no components to consume. Are you still sure you want to continue?"/>
-                    <button name="button_mark_done" invisible="move_raw_ids or not show_produce_all" string="Produce All" type="object" class="oe_highlight" data-hotkey="g"
-                            confirm="There are no components to consume. Are you still sure you want to continue?"/>
+                    <button name="button_mark_done" type="object" string="Produce" class="oe_highlight"
+                            invisible="not move_raw_ids or not show_produce" data-hotkey="g"/>
+                    <button name="button_mark_done" type="object" string="Close Production" class="oe_highlight"
+                            invisible="not move_raw_ids or not show_produce_all" context="{'close_production': True, 'skip_backorder': True}" data-hotkey="g"/>
+
+                    <button name="button_mark_done" type="object" string="Produce" class="oe_highlight"
+                            invisible="move_raw_ids or not show_produce"
+                            confirm="There are no components to consume. Are you still sure you want to continue?" data-hotkey="g"/>
+                    <button name="button_mark_done" type="object" string="Close Production" class="oe_highlight"
+                            invisible="move_raw_ids or not show_produce_all" context="{'close_production': True, 'skip_backorder': True}"
+                            confirm="There are no components to consume. Are you still sure you want to continue?" data-hotkey="g"/>
+
+                    <!-- 'Close Production' becomes a secondary button if 'Produce' is displayed. -->
+                    <button name="button_mark_done" type="object" string="Close Production"
+                            invisible="not move_raw_ids or not show_produce" context="{'close_production': True, 'skip_backorder': True}" data-hotkey="g"/>
+                    <button name="button_mark_done" type="object" string="Close Production"
+                            invisible="move_raw_ids or not show_produce" context="{'close_production': True, 'skip_backorder': True}"
+                            confirm="There are no components to consume. Are you still sure you want to continue?" data-hotkey="g"/>
+
                     <button name="action_confirm" invisible="state != 'draft'" string="Confirm" type="object" class="oe_highlight" data-hotkey="q"/>
-                    <button name="button_plan" invisible="state not in ('confirmed', 'progress', 'to_close') or is_planned" type="object" string="Plan" class="oe_highlight" data-hotkey="z"/>
+                    <button name="button_plan" type="object" string="Plan" class="oe_highlight"
+                            invisible="state not in ('confirmed', 'progress', 'to_close') or is_planned or qty_producing" data-hotkey="z"/>
                     <button name="button_unplan" type="object" string="Unplan" invisible="not is_planned or state in ['cancel', 'done']" data-hotkey="z"/>
+
                     <button name="action_start"  type="object" string="Start" invisible="state != 'confirmed'"/>
                     <button name="action_assign" invisible="state in ('draft', 'done', 'cancel') or not reserve_visible" string="Check availability" type="object" data-hotkey="c"/>
                     <button name="do_unreserve" type="object" string="Unreserve" invisible="not unreserve_visible" data-hotkey="w"/>
@@ -346,10 +361,12 @@
                             <div class="o_row g-0 d-flex" name="qty">
                                 <div invisible="state == 'draft'" class="o_row flex-grow-1">
                                     <label for="qty_producing" string="Quantity" class="d-none d-touch-block"/>
-                                    <field name="qty_producing" class="text-start text-truncate" readonly="state == 'cancel' or (state == 'done' and is_locked) or product_tracking=='serial'" force_save="1"/>
+                                    <field name="qty_producing" widget="external_placeholder_float_field" placeholder="product_qty" class="text-start text-truncate"
+                                           readonly="state == 'cancel' or (state == 'done' and is_locked) or product_tracking=='serial'" force_save="1"/>
                                     /
                                 </div>
-                                <field name="product_qty" class="oe_inline text-start text-truncate" invisible="state not in ('draft', 'done')" readonly="state != 'draft'" style="width:auto!important"/>
+                                <field name="product_qty" class="oe_inline text-start text-truncate"
+                                       invisible="state not in ('draft', 'done')" readonly="state != 'draft'" style="width:auto!important"/>
                                 <button type="action" name="%(mrp.action_change_production_qty)d"
                                     context="{'default_mo_id': id}" class="oe_link oe_inline" style="margin: 0px; padding: 0px;" invisible="state in ('draft', 'done', 'cancel') or not id">
                                     <field name="product_qty" class="oe_inline" readonly="state != 'draft'"/>
