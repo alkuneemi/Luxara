@@ -22,8 +22,11 @@ class PosSelfKiosk(http.Controller):
                         },
                         "base_url": request.env['pos.session'].get_base_url(),
                         "db": request.env.cr.dbname,
-                    }
-                }
+                    },
+                    'self_ordering_mode': pos_config.self_ordering_mode,
+                    'pos_config_id': pos_config.id,
+                    'pos_session_id': pos_config.current_session_id.id if pos_config.has_active_session else False,
+                },
             )
 
     @http.route("/pos-self/data/<config_id>", type='jsonrpc', auth='public', website=True)
