@@ -1,0 +1,29 @@
+.s_dynamic[data-s_dynamic_snippet-vcss="001"] {
+    // TODO Dynamic snippet loading style: Temporarily disabled in preview mode
+    // since it needs interactions to be available.
+    body:not(.editor_enable) #wrap &:not(.o_check_scroll_position) {
+        &.o_dynamic_snippet_loading {
+            section:not(.s_dynamic_snippet_holder) {
+                display: none !important;
+            }
+            .s_dynamic_snippet_holder {
+                display: block !important;
+            }
+        }
+        &:not(.o_dynamic_snippet_loading):has(.dynamic_snippet_template:empty) {
+            display: none !important;
+        }
+    }
+    [data-url] {
+        cursor: pointer;
+    }
+    img {
+        object-fit: scale-down;
+    }
+
+    &.s_dynamic_snippet_cover_left {
+        .s_dynamic_snippet_content_position {
+            flex-direction: row-reverse;
+        }
+    }
+}
