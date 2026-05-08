@@ -3545,6 +3545,7 @@ class AccountMoveLine(models.Model):
             for line in direct_children_lines:
                 result.append({
                     'name': line.name,
+                    'product_id': line.product_id if line.display_type == 'product' else False,
                     'taxes': [tax.tax_label for tax in line.tax_ids if tax.tax_label] if not self.collapse_prices else [],
                     'price_subtotal': line.price_subtotal,
                     'price_total': line.price_total,
@@ -3580,6 +3581,7 @@ class AccountMoveLine(models.Model):
                     for line in subsection_line | lines_for_tax_group:
                         result.append({
                             'name': line.name,
+                            'product_id': line.product_id if line.display_type == 'product' else False,
                             'taxes': tax_labels if line == subsection_line else [],
                             'price_subtotal': subtotal if line == subsection_line else line.price_subtotal,
                             'price_total': total if line == subsection_line else line.price_total,
