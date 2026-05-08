@@ -269,11 +269,15 @@ export class GraphRenderer extends Component {
      */
     formatValue(value, measure, allIntegers = true) {
         const largeNumber = Math.abs(value) >= 1000;
-        const widget = this.model.metaData.fieldAttrs[measure]?.widget
-        let options = this.model.metaData.fieldAttrs[measure]?.options
+        const fieldAttrs = this.model.metaData.fieldAttrs[measure] ?? {};
+        const fieldInfo = {
+            options: fieldAttrs.options ?? {},
+            attrs: fieldAttrs,
+        };
+        const widget = fieldAttrs.widget;
         if (widget) {
             const formatter = formatters.get(widget);
-            options = formatter.extractOptions ? formatter.extractOptions({ options }) : {};
+            const options = formatter.extractOptions ? formatter.extractOptions(fieldInfo) : {};
             return formatter(value, options);
         }
         if (allIntegers && !largeNumber) {
