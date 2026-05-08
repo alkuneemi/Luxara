@@ -1,9 +1,10 @@
-import { Message } from "@mail/core/common/message";
-import { convertBrToLineBreak } from "@mail/utils/common/format";
-
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { rpc } from "@web/core/network/rpc";
 import { patch } from "@web/core/utils/patch";
+import { useLayoutEffect, useRef } from "@web/owl2/utils";
+
+import { Message } from "@mail/core/common/message";
+import { convertBrToLineBreak } from "@mail/utils/common/format";
 
 Message.components = { ...Message.components, DropdownItem };
 
@@ -11,6 +12,18 @@ patch(Message.prototype, {
     setup() {
         super.setup(...arguments);
         this.state.editRating = false;
+        this.state.showFullBody = false;
+        this.state.isBodyClamped = false;
+        this.richBodyRef = useRef("reviewRichBody");
+        useLayoutEffect((el) => {
+            if (el) {
+                this.state.isBodyClamped = el.scrollHeight > el.clientHeight;
+            }
+        }, () => [this.richBodyRef.el]);
+    },
+
+    toggleBodyExpand() {
+        this.state.showFullBody = !this.state.showFullBody;
     },
 
     get isEditing() {

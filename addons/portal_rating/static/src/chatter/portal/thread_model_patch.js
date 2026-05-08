@@ -5,8 +5,8 @@ import { patch } from "@web/core/utils/patch";
 patch(Thread.prototype, {
     setup() {
         super.setup();
-        this.selectedRating;
-    }, 
+        this.selectedRating = false;
+    },
 
     getFetchParams() {
         const params = super.getFetchParams(...arguments);

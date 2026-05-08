@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="mail.Thread.loadOlder" t-inherit-mode="extension">
+        <button position="replace">
+            <t t-if="this.env.displayRating">
+                <div class="o-portal-review-load-more d-flex align-items-center gap-2 px-2">
+                    <hr class="o-discuss-separator flex-grow-1"/>
+                    <button
+                        class="btn btn-light"
+                        t-on-click="this.onClickLoadOlder"
+                        t-custom-ref="load-older"
+                    >
+                        Load More
+                    </button>
+                    <hr class="o-discuss-separator flex-grow-1"/>
+                </div>
+            </t>
+            <button
+                t-else=""
+                class="btn btn-link"
+                t-att-class="{ 'opacity-0': !this.state.mountedAndLoaded }"
+                t-on-click="this.onClickLoadOlder"
+                t-custom-ref="load-older"
+            >
+                Load More
+            </button>
+        </button>
+    </t>
+</templates>
