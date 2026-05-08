@@ -173,6 +173,19 @@ class SaleOrder(models.Model):
                     vals['company_id'] = website.company_id.id
         return super().create(vals_list)
 
+    def write(self, vals):
+        if 'company_id' in vals:
+            company = self.env['res.company'].browse(vals['company_id'])
+            for order in self:
+                if order.website_id and order.website_id.company_id.id != company.id:
+                    raise UserError(_(
+                        "The company of the website you are trying to sell from (%(website_company)s)"
+                        " is different than the one you want to use (%(company)s)",
+                        website_company=order.website_id.company_id.name,
+                        company=company.name,
+                    ))
+        return super().write(vals)
+
     #=== ACTION METHODS ===#
 
     def action_preview_sale_order(self):
