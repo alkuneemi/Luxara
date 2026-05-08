@@ -77,16 +77,37 @@
         <field name="inherit_id" ref="hr_recruitment.crm_case_tree_view_job"/>
         <field name="mode">extension</field>
         <field name="arch" type="xml">
+            <field name="create_date" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="email_from" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="partner_phone" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="priority" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="job_id" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="categ_ids" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
+            <field name="availability" position="attributes">
+                <attribute name="optional">show</attribute>
+            </field>
             <field name="kanban_state" position="after">
                 <field name="matching_score" string="Matching" widget="progressbar" options="{'overflow_class': 'bg-success'}" invisible="not matching_score" column_invisible="context.get('default_talent_pool_ids', False)"/>
+            </field>
+            <field name="priority" position="after">
+                <field name="matching_skill_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
+                <field name="missing_skill_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="show"/>
             </field>
             <xpath expr="//list" position="inside">
                 <field name="current_applicant_skill_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide" string="Skills"/>
             </xpath>
-            <field name="priority" position="after">
-                <field name="matching_skill_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
-                <field name="missing_skill_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
-            </field>
         </field>
     </record>
 
