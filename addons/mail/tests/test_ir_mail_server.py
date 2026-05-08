@@ -6,6 +6,7 @@ from unittest.mock import patch
 from odoo.addons.mail.tests.common import MailCommon
 from odoo.tests import tagged, users
 from odoo.tools import config, mute_logger
+from odoo import exceptions
 
 
 @tagged('mail_server')
@@ -311,3 +312,28 @@ class TestIrMailServer(MailCommon):
             message_from='"specific_user" <test@custom_domain.com>',
             from_filter='random.domain',
         )
+
+    def test_domain_check_name(self):
+        """ Test invalid character constraints on domain name """
+
+        base_vals = {
+            'bounce_alias': 'bounce.test',
+            'catchall_alias': 'catchall.test',
+            'company_ids': [(4, self.env.ref('base.user_admin').company_id.id)],
+            'default_from': 'notifications.test',
+            'sequence': 1,
+        }
+
+        # Test preventing accented characters
+        with self.assertRaises(exceptions.ValidationError):
+            self.env['mail.alias.domain'].create({
+                **base_vals,
+                'name': 'tést.mycompany.com',
+            })
+
+        # Test preventing uppercase characters
+        with self.assertRaises(exceptions.ValidationError):
+            self.env['mail.alias.domain'].create({
+                **base_vals,
+                'name': 'Test.mycompany.com',
+            })
