@@ -9,28 +9,36 @@ title stay editable after a save (see SOCIAL_MEDIA_TITLE_CONTENTEDITABLE).
     <div t-attf-class="s_social_media text-start o_not_editable #{_classes}" contenteditable="false">
         <h4 class="s_social_media_title d-none" contenteditable="true">Social Media</h4>
         <a href="#" class="s_social_media_facebook" target="_blank" aria-label="Facebook">
-            <i class="fa fa-facebook rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-facebook rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">Facebook</span>
         </a>
         <a href="#" class="s_social_media_twitter" target="_blank" aria-label="X">
-            <i class="fa fa-twitter rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-twitter rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">Twitter</span>
         </a>
         <a href="#" class="s_social_media_linkedin" target="_blank" aria-label="LinkedIn">
-            <i class="fa fa-linkedin rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-linkedin rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">LinkedIn</span>
         </a>
         <a href="#" class="s_social_media_youtube" target="_blank" aria-label="YouTube">
-            <i class="fa fa-youtube-play rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-youtube-play rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">YouTube</span>
         </a>
         <a href="#" class="s_social_media_instagram" target="_blank" aria-label="Instagram">
-            <i class="fa fa-instagram rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-instagram rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">Instagram</span>
         </a>
         <a href="#" class="s_social_media_github" target="_blank" aria-label="GitHub">
-            <i class="fa fa-github rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-github rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">GitHub</span>
         </a>
         <a href="#" class="s_social_media_tiktok" target="_blank" aria-label="TikTok">
-            <i class="fa fa-tiktok rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-tiktok rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">TikTok</span>
         </a>
         <a href="#" class="s_social_media_discord" target="_blank" aria-label="Discord">
-            <i class="fa fa-discord rounded shadow-sm o_editable_media small_social_icon"/>
+            <i class="fa fa-discord rounded o_editable_media small_social_icon bg-o-color-3"/>
+            <span class="text-capitalize">Discord</span>
         </a>
     </div>
 </template>

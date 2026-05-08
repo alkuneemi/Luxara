@@ -3,31 +3,34 @@
     user-select: none;
     // Default icon size used by the builder RangeWithNumberInput control
     // Inherit to icons so the option panel reads 40px initially
-    --fa-icon-size: 40px;
+    --social-icon-size: 40px;
+    --social-text-size: var(--body-font-size);
     $-size: map-get($spacers, 5);
     > * {
         display: inline-block;
         vertical-align: middle;
     }
-    .s_share_title {
-        margin: 0 .4rem 0 0;
-    }
+
     a {
         i.fa, .social_media_img {
-            display: flex;
+            display: inline-flex;
             justify-content: center;
             align-items: center;
+            // Prevent background-color applied by default on icons with rounded class
+            // Without this, it would be impossible to remove completely the background color
+            background-color: inherit;
+
             // Custom size via builder RangeWithNumberInput control
             &.o_sm_custom_size {
                 // Always scale the icon glyph size, regardless of layout
                 // Keep roughly the default 16px glyph for a 40px disk (0.4 ratio)
-                font-size: calc(var(--fa-icon-size) * 0.4) !important;
+                font-size: calc(var(--social-icon-size) * 0.4) !important;
             }
             // For non-stack layouts, also control the visual container
             &.o_sm_custom_size:not(.fa-stack) {
-                width: var(--fa-icon-size) !important;
-                height: var(--fa-icon-size) !important;
-                line-height: var(--fa-icon-size) !important;
+                width: var(--social-icon-size) !important;
+                height: var(--social-icon-size) !important;
+                line-height: var(--social-icon-size) !important;
             }
             &[class*="o_cc"] {
                 background-color: var(--o-cc-bg);
@@ -42,8 +45,25 @@
             }
         }
         margin: .2rem;
+
+        > span {
+            display: none;
+            // Responsive font-size
+            font-size: clamp(calc(var(--social-text-size) * 0.4), calc(var(--social-text-size) * 0.4 + 2vw), var(--social-text-size));
+            padding-right: calc(var(--social-text-size) * 0.25);
+        }
+
+        i.d-none ~ span {
+            display: inline;
+        }
     }
     &:not(.no_icon_color) {
+        .fa {
+            // Prevent bg-o-color-* classes from overriding the "Brand Color"
+            // when the option is checked
+            color: inherit;
+        }
+
         .s_share_facebook {
             &, &:hover, &:focus {
                 @extend .text-facebook;
