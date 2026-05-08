@@ -1,8 +1,13 @@
 import { OrderDetailsDialog } from "@point_of_sale/app/screens/ticket_screen/order_details_dialog/order_details_dialog";
+import { useFloorPlanStore } from "@pos_restaurant/app/hooks/floor_plan_hook";
 import { patch } from "@web/core/utils/patch";
 import { _t } from "@web/core/l10n/translation";
 
 patch(OrderDetailsDialog.prototype, {
+    setup() {
+        super.setup();
+        this.floorPlanStore = useFloorPlanStore();
+    },
     getOrderFields() {
         const order = this.props.order;
         const fields = super.getOrderFields();
@@ -41,5 +46,14 @@ patch(OrderDetailsDialog.prototype, {
         );
 
         return fields;
+    },
+
+    get duration() {
+        const order = this.props.order;
+        if (!order.table_id) {
+            return null;
+        }
+        const end = order.state === "draft" ? new Date() : order.date_order;
+        return this.floorPlanStore.formatDuration(order.create_date, end);
     },
 });

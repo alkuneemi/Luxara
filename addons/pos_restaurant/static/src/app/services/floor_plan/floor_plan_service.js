@@ -263,6 +263,27 @@ export class FloorPlanStore extends Reactive {
         return new FloorTable(data);
     }
 
+    formatDuration(start, end) {
+        if (!start) {
+            return false;
+        }
+        const startDate = start.toJSDate?.() ?? new Date(start);
+        const endDate = end?.toJSDate?.() ?? new Date(end);
+        const totalMinutes = Math.floor((endDate - startDate) / 60000);
+        if (totalMinutes <= 0) {
+            return false;
+        }
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        if (!hours) {
+            return _t("%s'", minutes);
+        }
+        if (!minutes) {
+            return _t("%sh", hours);
+        }
+        return _t("%sh%s'", hours, minutes);
+    }
+
     addFloor(name, history = true) {
         const storeOldData = this.historySnapShot();
         const floor = this.createFloor({ name: name });
