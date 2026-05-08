@@ -418,8 +418,9 @@ export class ComboPage extends Component {
     }
 
     addToCart() {
+        const productTemplate = this.props.productTemplate;
         this.selfOrder.addToCart(
-            this.props.productTemplate,
+            productTemplate,
             this.state.qty,
             "",
             {},
@@ -427,6 +428,17 @@ export class ComboPage extends Component {
             this.getComboSelection()
         );
 
+        const historyState = history.state || {};
+        if (productTemplate.pos_optional_product_ids.length && !historyState.redirectPage) {
+            this.router.navigate("optional_product", { id: productTemplate.id });
+            return;
+        }
+
+        const optionalProductQtys = historyState.state?.optionalProductQtys;
+        if (optionalProductQtys) {
+            optionalProductQtys[productTemplate.id] =
+                (optionalProductQtys[productTemplate.id] || 0) + this.state.qty;
+        }
         this.goBack();
     }
 
@@ -440,6 +452,10 @@ export class ComboPage extends Component {
     }
 
     goBack() {
+        if (history.state?.redirectPage) {
+            const { redirectPage, params, state } = history.state;
+            return this.router.navigate(redirectPage, params, state);
+        }
         this.router.navigate("product_list");
     }
 
@@ -457,15 +473,4 @@ export class ComboPage extends Component {
     formatProductName(product) {
         return formatProductName(product);
     }
-
-    /*
-     // TODO
-     get editableProductLine() {
-        const order = this.selfOrder.currentOrder;
-        return !(
-            this.selfOrder.editedLine &&
-            this.selfOrder.editedLine.uuid &&
-            order.lastChangesSent[this.selfOrder.editedLine.uuid]
-        );
-    }*/
 }

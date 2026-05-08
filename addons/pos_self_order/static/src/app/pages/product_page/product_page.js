@@ -154,10 +154,23 @@ export class ProductPage extends Component {
             this.state.selectedValues[this.productTemplate.id]?.getAllCustomValues()
         );
 
+        const historyState = history.state || {};
+        if (this.productTemplate.pos_optional_product_ids.length && !historyState.redirectPage) {
+            return this.router.navigate("optional_product", { id: this.productTemplate.id });
+        }
+
+        const qtys = historyState.state?.optionalProductQtys;
+        if (qtys) {
+            qtys[this.productTemplate.id] = (qtys[this.productTemplate.id] || 0) + this.state.qty;
+        }
         this.goBack();
     }
 
     goBack() {
+        if (history.state?.redirectPage) {
+            const { redirectPage, params, state } = history.state;
+            return this.router.navigate(redirectPage, params, state);
+        }
         this.router.navigate("product_list");
     }
 
