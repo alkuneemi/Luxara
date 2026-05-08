@@ -375,11 +375,41 @@ class WebsiteSale(payment_portal.PaymentPortal):
         if search:
             post["search"] = search
 
+        tax_display = website.show_line_subtotals_tax_selection
+        sale_tax = request.fiscal_position.map_tax(website.company_id.account_sale_tax_id.sudo())
+        default_tax = sale_tax.amount if tax_display == "tax_included" and sale_tax else 0.0
+
+        if tax_display == "tax_included" and default_tax:
+            # Convert the boundaried to tax-excluded for internal processing
+            tax_factor = 1 + default_tax / 100
+            currency_rounding = website.currency_id.rounding
+            min_price_filtered = (
+                float_round(
+                    min_price / tax_factor,
+                    precision_rounding=currency_rounding,
+                    rounding_method="DOWN",
+                )
+                if min_price
+                else 0
+            )
+            max_price_filtered = (
+                float_round(
+                    max_price / tax_factor,
+                    precision_rounding=currency_rounding,
+                    rounding_method="UP",
+                )
+                if max_price
+                else 0
+            )
+        else:
+            min_price_filtered = min_price
+            max_price_filtered = max_price
+
         options = self._get_search_options(
             category=category,
             attribute_value_dict=attribute_value_dict,
-            min_price=min_price,
-            max_price=max_price,
+            min_price=min_price_filtered,
+            max_price=max_price_filtered,
             conversion_rate=conversion_rate,
             display_currency=website.currency_id,
             extra_domain=Domain.OR([
@@ -411,6 +441,10 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 )
             )
             available_min_price, available_max_price = request.env.execute_query(sql)[0]
+
+            if tax_display == "tax_included" and default_tax:
+                available_min_price *= 1 + default_tax / 100
+                available_max_price *= 1 + default_tax / 100
 
             if min_price or max_price:
                 # The if/else condition in the min_price / max_price value assignment
