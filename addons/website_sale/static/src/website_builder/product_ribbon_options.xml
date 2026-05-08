@@ -3,7 +3,7 @@
     <t t-name="website_sale.ProductsRibbonOptionPlugin" name="Product ribbon options">
         <BuilderRow label.translate="Ribbon">
             <BuilderSelect
-                action="'setRibbon'"
+                action="domState.variantMode ? 'setVariantRibbon' : 'setTemplateRibbon'"
                 t-key="this.count.value"
                 className="'o_wsale_ribbon_select'"
                 t-on-click="() => this.state.ribbonEditMode = false"
@@ -37,7 +37,7 @@
             <BuilderButton
                 t-if="!this.state.ribbonEditMode"
                 title.translate="Create"
-                action="'createRibbon'"
+                action="domState.variantMode ? 'createVariantRibbon' : 'createTemplateRibbon'"
                 className="'fa fa-plus text-success border-0'"
                 style="'background-color: transparent !important;'"
                 preview="false"
