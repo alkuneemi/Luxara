@@ -19,8 +19,8 @@ registerWebsitePreviewTour("website_seo_notification", {}, () => [
         run: "click",
     },
     {
-        content: "Click on Use this template",
-        trigger: ".o_page_template .o_button_area:not(:visible)",
+        content: "Click on 'Add Blank'",
+        trigger: "button[data-action='add_blank_page']",
         run: "click",
     },
     {

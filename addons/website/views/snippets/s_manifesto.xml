@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_manifesto" name="Manifesto">
+    <section class="s_manifesto pt64 pb64">
+        <div class="container">
+            <div class="row">
+                <div class="o_colored_level col-lg-4">
+                    <div class="overflow-hidden">
+                        <h3 class="h5-fs">Our features</h3>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-4">
+                    <p>01.</p>
+                    <h3 class="h5-fs">Performance</h3>
+                    <p>Speed and efficiency ensure tasks are completed quickly and resources are used optimally, enhancing productivity and satisfaction.</p>
+                    <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4 o_colored_level">
+                    <p>02.</p>
+                    <h3 class="h5-fs">Clarity</h3>
+                    <p>Speed and efficiency ensure tasks are completed quickly and resources are used optimally, enhancing productivity and satisfaction.</p>
+                    <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-4 offset-lg-4">
+                    <p>03.</p>
+                    <h3 class="h5-fs">Assistance</h3>
+                    <p>Speed and efficiency ensure tasks are completed quickly and resources are used optimally, enhancing productivity and satisfaction.</p>
+                    <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="o_colored_level col-lg-4">
+                    <p>04.</p>
+                    <h3 class="h5-fs">Iterations</h3>
+                    <p>Speed and efficiency ensure tasks are completed quickly and resources are used optimally, enhancing productivity and satisfaction.</p>
+                    <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>

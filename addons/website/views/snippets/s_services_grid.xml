@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_services_grid" name="Services Grid">
+    <section class="s_services_grid pt64 pb64">
+        <div class="container">
+            <h2 class="h3-fs">Our Services</h2>
+            <p class="lead">We offer a wide range of services to meet your needs.</p>
+            <div class="row">
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Reliability</h3>
+                    <p>Consistent performance and uptime ensure efficient, reliable service with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Efficiency</h3>
+                    <p>We ensure efficient, reliable service with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Quality</h3>
+                    <p>We ensure high quality service with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Innovation</h3>
+                    <p>We ensure innovation with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Reliability</h3>
+                    <p>We ensure reliable service with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <p><img src="/web/image/website.s_cover_default_image" class="img img-fluid rounded" alt=""/></p>
+                    <h3 class="h5-fs">Reliability</h3>
+                    <p>We ensure reliable service with minimal interruptions and quick response times.</p>
+                    <div class="s_hr pt32 pb32">
+                        <hr class="w-100 mx-auto"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>

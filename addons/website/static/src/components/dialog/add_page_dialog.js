@@ -136,11 +136,6 @@ class AddPageTemplatePreview extends Component {
             }
             // Adjust styles.
             const styleEl = document.createElement("style");
-            // Prevent successive resizes.
-            const fullHeight = getComputedStyle(document.querySelector(".o_action_manager")).height;
-            const threeQuarterHeight = `${Math.round((3 * parseInt(fullHeight)) / 4)}px`;
-            // This is kept for compatibility
-            const halfHeight = `${Math.round(parseInt(fullHeight) / 2)}px`;
             const css = `
                 html, body {
                     /* Needed to prevent scrollbar to appear on chrome */
@@ -165,14 +160,21 @@ class AddPageTemplatePreview extends Component {
                         height: fit-content !important;
                     }
                 }
-                section.o_half_screen_height {
-                    min-height: ${halfHeight} !important;
-                }
+                section.o_full_screen_height,
+                section.o_half_screen_height,
                 section.o_three_quarter_height {
-                    min-height: ${threeQuarterHeight} !important;
+                    height: unset !important;
+                    min-height: unset !important;
                 }
                 section.o_full_screen_height {
-                    min-height: ${fullHeight} !important;
+                    aspect-ratio: 16 / 9;
+                }
+                section.o_three_quarter_height {
+                    aspect-ratio: 6 / 3;
+                }
+                /* This is kept for compatibility */
+                section.o_half_screen_height {
+                    aspect-ratio: 8 / 3;
                 }
                 section[data-snippet="s_three_columns"] .figure-img[style*="height:50vh"] {
                     /* In Travel theme. */
@@ -232,6 +234,7 @@ class AddPageTemplatePreview extends Component {
                 const innerWidth = wrapEl.getBoundingClientRect().width;
                 const ratio = outerWidth / innerWidth;
                 iframeEl.height = Math.round(innerHeight);
+                iframeEl.style.transform = `scale(${ratio})`;
                 previewEl.style.setProperty("height", `${Math.round(innerHeight * ratio)}px`);
                 // Sometimes the final height is not ready yet.
                 setTimeout(adjustHeight, 50);
@@ -303,6 +306,10 @@ class AddPageTemplatePreviews extends Component {
             type: Array,
             element: Object,
         },
+        singleColumn: {
+            type: Boolean,
+            optional: true,
+        },
     };
     static components = {
         AddPageTemplateBlank,
@@ -321,7 +328,7 @@ class AddPageTemplatePreviews extends Component {
     }
 
     get columns() {
-        const result = [[], [], []];
+        const result = [[], [], [], []];
         let currentColumnIndex = 0;
         for (const template of this.props.templates) {
             result[currentColumnIndex].push(template);
@@ -354,15 +361,12 @@ class AddPageTemplates extends Component {
                     Component: AddPageTemplatePreviews,
                     title: _t("Loading..."),
                     isPreloading: true,
-                    props: {
-                        id: "basic",
-                        title: _t("Basic"),
-                        // Blank and 5 preloading boxes.
-                        templates: [{ isBlank: true }, {}, {}, {}, {}, {}],
-                    },
+                    id: "loading",
+                    props: { templates: [] },
                 },
             ],
-            activePageId: "basic",
+            activePageId: "loading",
+            mobileSelectedPageId: null,
         });
         this.pages = undefined;
 
@@ -375,7 +379,7 @@ class AddPageTemplates extends Component {
                 ) {
                     this.state.activePageId = this.props.defaultTemplateId;
                 } else {
-                    this.state.activePageId = this.state.pages[0]?.props.id;
+                    this.state.activePageId = this.state.pages[0]?.id;
                 }
             });
         });
@@ -403,9 +407,6 @@ class AddPageTemplates extends Component {
         }
 
         const newPageTemplates = await loadTemplates;
-        newPageTemplates[0].templates.unshift({
-            isBlank: true,
-        });
         const pages = [];
         for (const template of newPageTemplates) {
             pages.push({
@@ -422,7 +423,25 @@ class AddPageTemplates extends Component {
     onTabListBtnClick(id) {
         this.state.activePageId = id;
         const tabEl = this.tabsRef.el.querySelector(`[data-id=${id}]`);
-        this.props.onTemplatePageChanged(tabEl.dataset.id === "basic" ? "" : tabEl.textContent);
+        this.props.onTemplatePageChanged(tabEl.textContent);
+    }
+
+    addBlankPage() {
+        this.env.addPage();
+    }
+
+    get selectedMobilePage() {
+        return this.state.pages.find((p) => p.id === this.state.mobileSelectedPageId);
+    }
+
+    onMobileCategoryClick(id) {
+        this.state.mobileSelectedPageId = id;
+        const tabEl = this.tabsRef.el?.querySelector(`[data-id="${id}"]`);
+        this.props.onTemplatePageChanged(tabEl?.textContent?.trim() || "");
+    }
+
+    onMobileBack() {
+        this.state.mobileSelectedPageId = null;
     }
 
     onTabListBtnKeydown(ev) {

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_projects_list" name="Projects List">
+    <section class="s_projects_list">
+        <div class="container">
+            <h2 class="h5-fs">Recent<br/>Projects</h2>
+            <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                <hr class="w-100 mx-auto"/>
+            </div>
+            <div class="o_text_columns o-contenteditable-false">
+                <div class="row">
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs">LUMEN</h3>
+                    </div>
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs" style="text-align: end;"><span class="base-fs">Design &amp; Development</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                <hr class="w-100 mx-auto"/>
+            </div>
+            <div class="o_text_columns o-contenteditable-false">
+                <div class="row">
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs">ECHO</h3>
+                    </div>
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs" style="text-align: end;"><span class="base-fs">UX/UI &amp; Strategy</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                <hr class="w-100 mx-auto"/>
+            </div>
+            <div class="o_text_columns o-contenteditable-false">
+                <div class="row">
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs">FORM™</h3>
+                    </div>
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs" style="text-align: end;"><span class="base-fs">Interaction &amp; Code</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                <hr class="w-100 mx-auto"/>
+            </div>
+            <div class="o_text_columns o-contenteditable-false">
+                <div class="row">
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs">KINETIC</h3>
+                    </div>
+                    <div class="col-6 o-contenteditable-true o_colored_level">
+                        <h3 class="display-1-fs" style="text-align: end;"><span class="base-fs">Design &amp; Development</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="s_hr pt32 pb32" data-snippet="s_hr" data-name="Separator">
+                <hr class="w-100 mx-auto"/>
+            </div>
+        </div>
+    </section>
+</template>
+
+</odoo>

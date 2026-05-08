@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="s_features_bento" name="Features Bento">
+    <section class="s_features_bento pt64 pb64">
+        <div class="container">
+            <h2 class="display-3-fs" style="text-align: center;">Our commitments</h2>
+            <p class="lead" style="text-align: center;">We know each project is different but here is a list of what you can expect by working with our team of experts.<br/>We promise we'll craft something great together.</p>
+            <div class="row o_grid_mode" data-row-count="9" style="gap: 16px;">
+                <div class="o_grid_item o_grid_item_image g-height-8 rounded-4 g-col-lg-4 col-lg-4" data-name="Block" style="z-index: 1; grid-area: 2 / 5 / 10 / 9; --grid-item-padding-y: 0px; --grid-item-padding-x: 0px;">
+                    <img src="/web/image/website.s_shape_image_default_image" alt="" class="img img-fluid mx-auto"/>
+                </div>
+                <div class="o_grid_item o_cc o_cc2 g-height-4 justify-content-end rounded-4 g-col-lg-4 col-lg-4" data-name="Block" style="--grid-item-padding-y: 20px; --grid-item-padding-x: 20px; z-index: 2; grid-area: 2 / 1 / 6 / 5;">
+                    <h4>Clients first</h4>
+                    <p>Unwavering dedication<br/>for partnersseeking a trusted ally.</p>
+                </div>
+                <div class="o_grid_item o_cc o_cc2 g-height-4 justify-content-end rounded-4 g-col-lg-4 col-lg-4" data-name="Block" style="--grid-item-padding-y: 20px; --grid-item-padding-x: 20px; z-index: 3; grid-area: 6 / 1 / 10 / 5;">
+                    <h4>Clear objectives</h4>
+                    <p>Defined milestones for teams<br/>striving to achieve measurable success.</p>
+                </div>
+                <div class="o_grid_item o_cc o_cc2 justify-content-end rounded-4 g-col-lg-4 col-lg-4 g-height-4" data-name="Block" style="--grid-item-padding-y: 20px; --grid-item-padding-x: 20px; z-index: 4; grid-area: 2 / 9 / 6 / 13;">
+                    <h4>Long-term oriented</h4>
+                    <p>Strategic planning for businesses<br/>focused on sustainable growth.</p>
+                </div>
+                <div class="o_grid_item o_cc o_cc2 justify-content-end rounded-4 o_colored_level g-col-lg-4 col-lg-4 g-height-4" data-name="Block" style="--grid-item-padding-y: 20px; --grid-item-padding-x: 20px; z-index: 5; grid-area: 6 / 9 / 10 / 13;">
+                    <h4>Transparent pricing</h4>
+                    <p>Straightforward rates for clients<br/>seeking complete financial clarity.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+<!-- Assets -->
+<asset id="website.s_features_bento_000_scss" name="Features Bento 000 SCSS" active="False">
+    <bundle>web.assets_frontend</bundle>
+    <path>website/static/src/snippets/s_features_bento/000.scss</path>
+</asset>
+
+</odoo>
