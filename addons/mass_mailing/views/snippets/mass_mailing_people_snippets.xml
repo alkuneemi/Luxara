@@ -3,7 +3,7 @@
     <section class="s_company_team o_mail_snippet_general pt16 pb16" data-vxml="001">
         <div class="container">
             <div class="ms-3">
-                <h3>Meet our team</h3>
+                <h2>Meet our team</h2>
                 <p class="lead">Dedicated professionals driving our success</p>
             </div>
             <div class="row">
@@ -307,12 +307,12 @@
                             data-mimetype="image/png"
                             data-shape="html_builder/geometric_round/geo_round_circle"/>
                     </div>
-                    <h1 style="text-align: center"><font style="color: white">Julian Thorne</font></h1>
+                    <h2 style="text-align: center"><font style="color: white">Julian Thorne</font></h2>
                     <p style="text-align: center"><font style="color: white">Head of Design</font></p>
                 </div>
                 <div class="col-md-6 col-12">
                     <p style="text-align: center">New Blog post</p>
-                    <h1 style="text-align: center">The Joy of Coming Home</h1>
+                    <h2 style="text-align: center">The Joy of Coming Home</h2>
                     <p style="text-align: center">A love letter to the space you call your own.</p>
                     <p style="text-align: center"><a href="#" class="btn btn-secondary">Read Now</a></p>
                 </div>

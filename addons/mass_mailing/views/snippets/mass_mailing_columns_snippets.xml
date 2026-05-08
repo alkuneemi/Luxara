@@ -9,7 +9,7 @@
                             <img class="card-img-top o_editable_media" src="/web/image/mass_mailing.s_three_columns_default_image_1" alt=""/>
                         </div>
                         <div class="card-body">
-                            <h3 class="card-title" style="font-size: 18px;">Feature One</h3>
+                            <h2 class="card-title" style="font-size: 18px;">Feature One</h2>
                             <p class="card-text">Adapt these three columns to fit your design need. To duplicate, delete or move columns, select the column and use the top icons to perform your action.</p>
                         </div>
                     </div>
@@ -20,7 +20,7 @@
                             <img class="card-img-top o_editable_media" src="/web/image/mass_mailing.s_three_columns_default_image_2" alt=""/>
                         </div>
                         <div class="card-body">
-                            <h3 class="card-title" style="font-size: 18px;">Feature Two</h3>
+                            <h2 class="card-title" style="font-size: 18px;">Feature Two</h2>
                             <p class="card-text">To add a fourth column, reduce the size of these three columns using the right icon of each block. Then, duplicate one of the columns to create a new one as a copy.</p>
                         </div>
                     </div>
@@ -31,7 +31,7 @@
                             <img class="card-img-top o_editable_media" src="/web/image/mass_mailing.s_three_columns_default_image_3" alt=""/>
                         </div>
                         <div class="card-body">
-                            <h3 class="card-title" style="font-size: 18px;">Feature Three</h3>
+                            <h2 class="card-title" style="font-size: 18px;">Feature Three</h2>
                             <p class="card-text">Delete the above image or replace it with a picture that illustrates your message. Click on the picture to change its <em>rounded corner</em> style.</p>
                         </div>
                     </div>
@@ -312,7 +312,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6 col-12 pt16 pb16">
-                    <h1>Features showcase</h1>
+                    <h2>Features showcase</h2>
                     <p>A features section highlights your product's key attributes, engaging visitors and boosting conversions.</p>
                     <div class="row">
                         <div class="col-md-2 col-2">
@@ -409,6 +409,134 @@
                     <span class="fa fa-flag bg-light rounded p-3 mb-3" contenteditable="false"/>
                     <h2>Scalability</h2>
                     <p>Growth capability is a system's ability to scale and adapt, meeting increasing demands and evolving needs for long-term success.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+<template id="s_products_grid" name="Products Grid">
+    <section class="s_products_grid o_mail_snippet_general o_cc o_cc2 pt48 pb48">
+        <div class="container">
+            <h2 style="text-align: center;"><span class="display-1-fs">Our products</span></h2>
+            <p style="text-align: center;">Our products are carefully selected to meet your needs.<br/>We offer a wide range of products to choose from.</p>
+            <p style="text-align: center;"><br/></p>
+            <div class="row">
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_1" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Nordic Chair</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_2" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Linen Sofa</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_3" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Oak Drawer</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 pb24">
+                    <div class="mb-3 o_not_editable">
+                        <img src="/web/image/mass_mailing.set_catalog_square_md_4" class="img img-fluid o_editable_media" alt="" style="width: 100% !important; border-radius: 16px !important;"/>
+                    </div>
+                    <div class="s_rating o_mail_snippet_general pt0 pb16" style="padding: 0 15px;" data-vcss="001" data-vxml="001" data-icon="fa-star" data-snippet="s_rating" data-name="Rating">
+                        <h3 class="s_rating_title">Loft Table</h3>
+                        <div class="s_rating_icons o_not_editable">
+                            <span class="s_rating_active_icons" style="color: #f3cc00;">
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                                <i class="fa fa-star" role="presentation"></i>
+                            </span>
+                            <span class="s_rating_inactive_icons" style="color: var(--border-color);"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+<template id="s_bento_blocks" name="Bento Blocks">
+    <section class="s_bento_blocks o_mail_snippet_general pt32 pb32 o_colored_level bg-o-color-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento card">
+                        <p style="text-align: center;">
+                            <img class="img-fluid o_editable_media" src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                        </p>
+                        <h3 style="text-align: center;">Feature One</h3>
+                        <p style="text-align: center;">Highlight one key benefit in a single sentence.</p>
+                        <p class="mb-3" style="text-align: center;">Add a second line for details or pricing.</p>
+                        <p class="mb-2" style="text-align: center;"><a class="btn btn-lg btn-primary" href="#">Get started</a></p>
+                        <p class="mb-0" style="text-align: center;"><a href="#">Discover more</a></p>
+                    </div>
+                </div>
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento card">
+                        <p style="text-align: center;">
+                            <img class="img-fluid o_editable_media" src="/mass_mailing/static/src/img/snippets_demo/set_catalog_square_md_1.webp" alt="" style="width: 30% !important; border-radius: 16px !important;"/>
+                        </p>
+                        <h3 style="text-align: center;">Feature Two</h3>
+                        <p style="text-align: center;">Use this block for an offer, update, or new release.</p>
+                        <p style="text-align: center;">Keep it short so it reads well on mobile.</p>
+                        <p style="text-align: center;"><a class="btn btn-lg btn-primary" href="#">Learn more</a></p>
+                        <p style="text-align: center;"><a href="#">See all options</a></p>
+                    </div>
+                </div>
+                <div class="col-md-12 col-12 pb24">
+                    <div class="o_cc o_cc2 o_colored_level bg-o-color-4" style="border-radius: 16px !important; padding: 24px;" data-name="Bento callout">
+                        <h3 style="text-align: center;">Need a quick summary?</h3>
+                        <p style="text-align: center;">Use this call-out to reinforce the main message and drive one clear action.</p>
+                        <p style="text-align: center;"><a class="btn btn-lg btn-secondary" href="#">Explore everything</a></p>
+                    </div>
                 </div>
             </div>
         </div>
