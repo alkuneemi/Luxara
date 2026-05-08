@@ -8,7 +8,8 @@ class StockMove(models.Model):
     _inherit = 'stock.move'
 
     def _get_analytic_distribution(self):
-        distribution = self.raw_material_production_id.project_id._get_analytic_distribution()
+        production = self.raw_material_production_id
+        distribution = production.project_id._get_analytic_distribution()
         return distribution or super()._get_analytic_distribution()
 
     def _prepare_analytic_line_values(self, account_field_values, amount, unit_amount):
