@@ -15,7 +15,11 @@ def _post_init_hook(env):
 
 def _create_product_value(env):
     product_vals_list = []
-    products = env['product.product'].search([('type', '=', 'consu')])
+    products = env['product.product'].search_fetch(
+        domain=[('type', '=', 'consu')], 
+        field_names=['standard_price', 'product_tmpl_id']
+    )
+    products.product_tmpl_id.fetch(['company_id', 'uom_id'])
     for company in env['res.company'].search([]):
         products = products.with_company(company)
         product_vals_list += [
