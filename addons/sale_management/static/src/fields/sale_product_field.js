@@ -1,4 +1,4 @@
-import { SaleOrderLineProductField } from '@sale/js/sale_product_field';
+import { SaleOrderLineProductField } from '@sale/js/sale_product_field/sale_product_field';
 import { patch } from '@web/core/utils/patch';
 
 patch(SaleOrderLineProductField.prototype, {

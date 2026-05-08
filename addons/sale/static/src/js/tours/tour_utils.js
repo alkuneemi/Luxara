@@ -42,7 +42,7 @@ export function addProduct(productName, rowNumber=1) {
     return [
         {
             content: `Add product ${productName}`,
-            trigger: 'button:contains("Add a product")',
+            trigger: 'button:contains("Add Line")',
             run: 'click',
         },
         {

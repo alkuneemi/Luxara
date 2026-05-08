@@ -10,12 +10,12 @@ import { x2ManyCommands } from "@web/core/orm_service";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { uuid } from "@web/core/utils/strings";
-import { ComboConfiguratorDialog } from "./combo_configurator_dialog/combo_configurator_dialog";
-import { ProductCombo } from "./models/product_combo";
-import { ProductConfiguratorDialog } from "./product_configurator_dialog/product_configurator_dialog";
-import { getLinkedSaleOrderLines, serializeComboItem, getSelectedCustomPtav } from "./sale_utils";
+import { ComboConfiguratorDialog } from "../combo_configurator_dialog/combo_configurator_dialog";
+import { ProductCombo } from "../models/product_combo";
+import { ProductConfiguratorDialog } from "../product_configurator_dialog/product_configurator_dialog";
+import { getLinkedSaleOrderLines, serializeComboItem, getSelectedCustomPtav } from "../sale_utils";
 
-async function applyProduct(record, product) {
+export async function applyProduct(record, product) {
     // handle custom values & no variants
     const customAttributesCommands = [
         x2ManyCommands.set([]),  // Command.clear isn't supported in static_list/_applyCommands
@@ -71,8 +71,8 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
         this.wasCombo = false;
         let isMounted = false;
         useLayoutEffect(value => {
-            if (!isMounted) {
-                isMounted = true;
+                if (!isMounted) {
+                    isMounted = true;
             } else if (value && this.isInternalUpdate) {
                 // we don't want to trigger product update when update comes from an external sources,
                 // such as an onchange, or the product configuration dialog itself
@@ -132,8 +132,13 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
     get sectionAndNoteClasses() {
         return {
             ...super.sectionAndNoteClasses,
-            "text-warning":
-                !this.isSectionOrSubSection && !this.isNote() && !this.productName && !this.isDownpayment,
+            "text-warning": (
+                !this.isSectionOrSubSection
+                && !this.isNote()
+                && !this.productName
+                && !this.isDownpayment
+                && this.props.show_label_warning
+            ),
         };
     }
 
@@ -219,9 +224,9 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
         }
     }
 
-    _openGridConfigurator(edit = false) {} // sale_product_matrix
+    _openGridConfigurator(edit = false) { } // sale_product_matrix
 
-    async _onProductUpdate() {} // event_booth_sale, event_sale, sale_renting
+    async _onProductUpdate() { } // event_booth_sale, event_sale, sale_renting
 
     onEditConfiguration() {
         if (this.isCombo) {
@@ -318,7 +323,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
             .filter(Boolean);
         if (preselectedComboItems.length === comboChoices.length) {
             return this.handleComboSave(
-                { 'quantity' : remainingData.quantity },
+                { 'quantity': remainingData.quantity },
                 preselectedComboItems,
                 edit,
                 hasOptionalProducts

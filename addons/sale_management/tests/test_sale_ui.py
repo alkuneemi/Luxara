@@ -50,7 +50,9 @@ class TestSaleFlowTourPostInstall(TestSaleCommon, HttpCase):
         sale_user = self.env["res.users"].create({
             "name": "Super Sale Woman",
             "login": "SuperSaleWoman",
-            "group_ids": [Command.set([self.ref("sales_team.group_sale_salesman")])],
+            "group_ids": [
+                Command.set([self.ref("sales_team.group_sale_salesman"), self.ref("uom.group_uom")])
+            ],
         })
         # create and confirm a sale order to populate the list view
         sale_order = (

@@ -3,15 +3,13 @@ import {
     sectionAndNoteFieldOne2Many,
     SectionAndNoteListRenderer,
 } from "@account/components/section_and_note_fields_backend/section_and_note_fields_backend";
-import { ProductNameAndDescriptionListRendererMixin } from "@product/product_name_and_description/product_name_and_description";
 import { registry } from "@web/core/registry";
-import { patch } from "@web/core/utils/patch";
 
 export class ProductLabelSectionAndNoteListRender extends SectionAndNoteListRenderer {
     setup() {
         super.setup();
         this.descriptionColumn = "name";
-        this.productColumns = ["product_id", "product_template_id"];
+        this.productColumns = ["product_id"];
         this.conditionalColumns = ["product_id", "quantity", "product_uom_id"];
     }
 
@@ -32,9 +30,8 @@ export class ProductLabelSectionAndNoteListRender extends SectionAndNoteListRend
                 column["optional"] = "show";
                 if (isBill && column["name"] === "product_id" && !isSelfBilling) {
                     column["optional"] = "hide";
-                }
-                else if (isInvoice && !isSaleInstalled) {
-                    column["optional"] =  "hide";
+                } else if (isInvoice && !isSaleInstalled) {
+                    column["optional"] = "hide";
                 }
             }
             return column;
@@ -48,16 +45,37 @@ export class ProductLabelSectionAndNoteListRender extends SectionAndNoteListRend
         }
         // The isCellReadonly method from the ListRenderer is used to determine the classes to apply to the cell.
         // We need this override to make sure some readonly classes are not applied to the cell if it is still editable.
-        let isReadonly = super.isCellReadonly(column, record);
+        const isReadonly = super.isCellReadonly(column, record);
         return (
             isReadonly
             && (["cancel", "posted"].includes(record.evalContext.parent.state)
             || record.evalContext.parent.locked)
         )
     }
-}
 
-patch(ProductLabelSectionAndNoteListRender.prototype, ProductNameAndDescriptionListRendererMixin);
+    getCellTitle(column, record) {
+        // When using this list renderer, we don't want the product_id cell to have a tooltip with its label.
+        if (this.productColumns.includes(column.name)) {
+            return;
+        }
+        return super.getCellTitle(column, record);
+    }
+
+    getActiveColumns() {
+        let activeColumns = super.getActiveColumns();
+        const productCol = activeColumns.find((col) => this.productColumns.includes(col.name));
+        const labelCol = activeColumns.find((col) => col.name === this.descriptionColumn);
+
+        if (productCol && labelCol) {
+            activeColumns = activeColumns.filter((col) => !this.productColumns.includes(col.name));
+            this.titleField = this.descriptionColumn;
+        } else if (productCol) {
+            this.titleField = productCol.name;
+        }
+
+        return activeColumns;
+    }
+}
 
 export class ProductLabelSectionAndNoteOne2Many extends SectionAndNoteFieldOne2Many {
     static components = {

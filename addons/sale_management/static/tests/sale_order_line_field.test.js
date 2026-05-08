@@ -418,7 +418,7 @@ test("Selecting a section template should append its section and lines to the or
         resId: 1,
     });
 
-    await contains("button:contains(Add a Section)").click();
+    await contains("button:contains(Add Section)").click();
     expect(".o_section_templates_dropdown").toBeVisible();
 
     await contains("span.o-dropdown-item:contains(Section Template 1)").click();

@@ -4,15 +4,8 @@ import {
     productLabelSectionAndNoteOne2Many,
     ProductLabelSectionAndNoteOne2Many,
 } from '@account/components/product_label_section_and_note_field/product_label_section_and_note_field_o2m';
-import {
-    listSectionAndNoteText,
-    ListSectionAndNoteText,
-    sectionAndNoteFieldOne2Many,
-    sectionAndNoteText,
-    SectionAndNoteText,
-} from '@account/components/section_and_note_fields_backend/section_and_note_fields_backend';
+import { sectionAndNoteFieldOne2Many } from "@account/components/section_and_note_fields_backend/section_and_note_fields_backend";
 import { registry } from '@web/core/registry';
-import { CharField } from '@web/views/fields/char/char_field';
 
 function getComboRecords(listRecords, record) {
     const comboRecords = [];
@@ -64,9 +57,10 @@ function getComboRecords(listRecords, record) {
 export class SaleOrderLineListRenderer extends ProductLabelSectionAndNoteListRender {
     static recordRowTemplate = 'sale.ListRenderer.RecordRow';
 
-    setup(){
+    setup() {
         super.setup();
         this.priceColumns.push('discount');
+        this.productColumns.push("product_template_id");
 
         useSubEnv({
             shouldCollapse: this.shouldCollapse.bind(this),
@@ -81,22 +75,10 @@ export class SaleOrderLineListRenderer extends ProductLabelSectionAndNoteListRen
         return [this.titleField, ...this.props.aggregatedFields, 'product_uom_qty', 'discount'];
     }
 
-    /**
-     * Product description widget logic
-     */
-    getCellTitle(column, record) {
-        // When using this list renderer, we don't want the product_id cell to have a tooltip with
-        // its label.
-        if (column.name === 'product_id' || column.name === 'product_template_id') {
-            return;
-        }
-        return super.getCellTitle(column, record);
-    }
-
     getActiveColumns() {
         let activeColumns = super.getActiveColumns();
-        let productTmplCol = activeColumns.find((col) => col.name === 'product_template_id');
-        let productCol = activeColumns.find((col) => col.name === 'product_id');
+        const productTmplCol = activeColumns.find((col) => col.name === 'product_template_id');
+        const productCol = activeColumns.find((col) => col.name === 'product_id');
 
         if (productCol && productTmplCol) {
             // Hide the template column if the variant one is enabled.
@@ -232,28 +214,3 @@ export const saleOrderLineOne2Many = {
 };
 
 registry.category('fields').add('sol_o2m', saleOrderLineOne2Many);
-
-export class SaleOrderLineText extends SectionAndNoteText {
-    get componentToUse() {
-        return this.props.record.data.product_type === 'combo' ? CharField : super.componentToUse;
-    }
-}
-
-export class ListSaleOrderLineText extends ListSectionAndNoteText {
-    get componentToUse() {
-        return this.props.record.data.product_type === 'combo' ? CharField : super.componentToUse;
-    }
-}
-
-export const saleOrderLineText = {
-    ...sectionAndNoteText,
-    component: SaleOrderLineText,
-};
-
-export const listSaleOrderLineText = {
-    ...listSectionAndNoteText,
-    component: ListSaleOrderLineText,
-};
-
-registry.category('fields').add('sol_text', saleOrderLineText);
-registry.category('fields').add('list.sol_text', listSaleOrderLineText);
