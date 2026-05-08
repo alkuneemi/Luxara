@@ -285,6 +285,29 @@ class PurchaseOrderLine(models.Model):
         location_final = self.location_final_id or self.order_id._get_final_location_record()
         if location_final and location_final._child_of(location_dest):
             location_dest = location_final
+        # Align the new move with an open pending move on the same picking
+        # so ``_merge_moves`` can absorb a negative leftover produced on a
+        # quantity decrease, instead of letting ``_action_confirm`` convert
+        # it into a spurious return. Two fields are realigned:
+        #
+        # * ``location_dest_id``: the user may have rerouted the pending
+        #   move to a sub-location of the final destination (e.g. a
+        #   reception bay), and the merge would otherwise fail on this
+        #   distinct field.
+        # * ``price_unit``: the unit price on the line may have been edited
+        #   between the creation of the pending move and this call (e.g.
+        #   external integrations writing ``product_qty`` and ``price_unit``
+        #   in separate calls), and the merge would otherwise fail on this
+        #   distinct field.
+        candidate = self.move_ids.filtered(
+            lambda m: m.picking_id == picking
+            and m.state not in ('done', 'cancel')
+            and not m._is_purchase_return()
+        )[:1]
+        if candidate:
+            if candidate.location_dest_id and location_final and candidate.location_dest_id._child_of(location_final):
+                location_dest = candidate.location_dest_id
+            price_unit = candidate.price_unit
         date_planned = self.date_planned or self.order_id.date_planned
         return {
             # truncate to 2000 to avoid triggering index limit error
