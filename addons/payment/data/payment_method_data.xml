@@ -734,6 +734,28 @@
         />
     </record>
 
+    <record id="payment_method_bimpli_cado" model="payment.method">
+        <field name="name">Bimpli CADO</field>
+        <field name="code">bimpli_cado</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/bimpli_cado.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.fr'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                     ])]"
+        />
+    </record>
+
     <record id="payment_method_blik" model="payment.method">
         <field name="name">BLIK</field>
         <field name="code">blik</field>
@@ -1001,6 +1023,28 @@
         <field name="supported_country_ids"
                eval="[Command.set([
                          ref('base.be'),
+                         ref('base.fr'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                     ])]"
+        />
+    </record>
+
+    <record id="payment_method_cetelem" model="payment.method">
+        <field name="name">Cetelem 3x/4x</field>
+        <field name="code">cetelem</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/cetelem.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
                          ref('base.fr'),
                      ])]"
         />
@@ -1456,6 +1500,28 @@
         <field name="supported_country_ids"
                eval="[Command.set([
                          ref('base.nl'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                     ])]"
+        />
+    </record>
+
+    <record id="payment_method_illicado" model="payment.method">
+        <field name="name">Illicado</field>
+        <field name="code">illicado</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/illicado.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                         ref('base.fr'),
                      ])]"
         />
         <field name="supported_currency_ids"
@@ -2117,6 +2183,29 @@
         />
     </record>
 
+    <record id="payment_method_mealvouchers" model="payment.method">
+        <field name="name">Mealvouchers</field>
+        <field name="code">mealvouchers</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/mealvouchers.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                        ref('base.be'),
+                        ref('base.fr'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                     ])]"
+        />
+    </record>
+
     <record id="payment_method_multibanco" model="payment.method">
         <field name="name">Multibanco</field>
         <field name="code">multibanco</field>
@@ -2223,6 +2312,60 @@
         <field name="supported_currency_ids"
                eval="[Command.set([
                          ref('base.INR'),
+                     ])]"
+        />
+    </record>
+
+    <record id="payment_method_oneybrandedgiftcard" model="payment.method">
+        <field name="name">OneyBrandedGiftCard</field>
+        <field name="code">oneybrandedgiftcard</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/oneybrandedgiftcard.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                        ref('base.fr'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                        ])]"
+        />
+    </record>
+
+    <record id="payment_method_oney_3x-4x" model="payment.method">
+        <field name="name">Oney 3x-4x</field>
+        <field name="code">oney3x-4x</field>
+        <field name="sequence">1000</field>
+        <field name="active">False</field>
+        <field name="image" type="bytes" file="payment/static/img/oney3x_4x.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_manual_capture">none</field>
+        <field name="support_refund">none</field>
+        <field name="supported_country_ids"
+               eval="[Command.set([
+                        ref('base.be'),
+                        ref('base.hu'),
+                        ref('base.pt'),
+                        ref('base.fr'),
+                        ref('base.it'),
+                        ref('base.ro'),
+                        ref('base.de'),
+                        ref('base.pl'),
+                        ref('base.es'),
+                     ])]"
+        />
+        <field name="supported_currency_ids"
+               eval="[Command.set([
+                         ref('base.EUR'),
+                         ref('base.HUF'),
+                         ref('base.RON'),
                      ])]"
         />
     </record>
