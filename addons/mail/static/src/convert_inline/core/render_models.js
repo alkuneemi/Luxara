@@ -78,6 +78,9 @@ export function assignDefaultElementOptions(options = {}, defaultOptions = {}) {
     return newOptions;
 }
 
+/**
+ * @abstract
+ */
 export class LayoutModel {
     static template = xml``;
     refToAttributes = new ObjectMap();
@@ -98,6 +101,14 @@ export class LayoutModel {
         for (const [ref, options] of Object.entries(refs)) {
             this.setAttributes(options, ref);
         }
+    }
+
+    get ancestorTag() {
+        return "";
+    }
+
+    get descendantTag() {
+        return "";
     }
 
     get template() {
@@ -154,6 +165,14 @@ export class ElementLayout extends LayoutModel {
         this.tag = tag;
     }
 
+    get ancestorTag() {
+        return this.tag;
+    }
+
+    get descendantTag() {
+        return this.tag;
+    }
+
     getStyleInfo() {
         return this.refToStyleInfo.get("root");
     }
@@ -186,33 +205,6 @@ export class CommentNodeLayout {
         const comment = document.createComment(this.content);
         fragment.append(comment);
         return fragment;
-    }
-}
-
-/**
- * TODO EGGMAIL: remove/move/adapt ?
- */
-
-export class LayoutTable extends LayoutModel {
-    rows = [];
-
-    addRow(row) {
-        this.rows.push(row);
-    }
-}
-
-export class LayoutRow extends LayoutModel {
-    cells = [];
-
-    addCell(cell) {
-        this.cells.push(cell);
-    }
-}
-
-export class LayoutCell extends LayoutModel {
-    constructor({ childNodes = [] } = {}) {
-        super(...arguments);
-        this.childNodes = childNodes;
     }
 }
 
@@ -286,10 +278,20 @@ export class EmailNode {
         return this.referenceNodes.push(referenceNode);
     }
 
+    /**
+     * The referenceNode that was used first to define what this EmailNode
+     * represents. It is often the most relevant when considering positioning in
+     * the parent.
+     */
     get firstReferenceNode() {
         return this.referenceNodes.at(0);
     }
 
+    /**
+     * The referenceNode that was used last to define what this EmailNode
+     * represents. It is often the most relevant when considering children
+     * positioning.
+     */
     get lastReferenceNode() {
         return this.referenceNodes.at(-1);
     }

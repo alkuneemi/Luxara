@@ -3,6 +3,7 @@ import { Plugin } from "../plugin";
 import { zip } from "@web/core/utils/arrays";
 import { DIMENSIONS } from "../hooks";
 import { Analysis, ElementLayout, EmailNode } from "../core/render_models";
+import { HybridFluidCell, HybridFluidEmptyCell, HybridFluidRow } from "./hybrid_fluid_models";
 
 const { DESKTOP, MOBILE } = DIMENSIONS;
 // Prevent the last inline-block element from wrapping to the next line due
@@ -57,10 +58,12 @@ export class HybridFluidStrategyPlugin extends Plugin {
     // Objective here is to make sure that every child of the row is classified as a CELL,
     // be it a child itself becomes a CELL, or 1+ children are wrapped in a CELL
     // BTW the row node itself can become multiple row in some circumstances
+    // TODO EGGMAIL: WORKING HERE
     addSyntheticEmailNode(emailNode) {
-        // TODO EGGMAIL: arbitrary choice to take the last referenceNode to motivate
+        if (!emailNode.analysis.facts.isHybridFluidContainer) {
+            return;
+        }
         const referenceNode = emailNode.lastReferenceNode;
-        const parent = emailNode.parent;
         const desktopBlock = this.getLayoutBlock(referenceNode, DESKTOP);
         const rows = [];
         // TODO EGGMAIL: some values for text-align are not supported
@@ -74,21 +77,20 @@ export class HybridFluidStrategyPlugin extends Plugin {
             },
         };
         for (const band of desktopBlock.bands) {
-            const rowAnalysis = new EmailNode({
-                // TODO EGGMAIL: currently oversimplified layout, add tracking of positioning values.
-                layout: new ElementLayout({ tag: "div" }),
+            const rowEmailNode = new EmailNode({
+                layout: new HybridFluidRow(),
                 analysis: new Analysis({
                     facts: { isHybridFluidRow: true },
                 }),
             });
-            rows.push(rowAnalysis);
+            rows.push(rowEmailNode);
             let prevCluster;
             if (band.clusters.length > 0) {
                 prevCluster = band.clusters[0];
                 const isLast = band.clusters.length === 1;
                 if (!this.isZero(desktopBlock.padding.left)) {
                     const offsetWidth = desktopBlock.padding.left;
-                    rowAnalysis.appendChild(
+                    rowEmailNode.appendChild(
                         this.buildCellWithOffset(
                             emailNode,
                             offsetWidth,
@@ -98,7 +100,7 @@ export class HybridFluidStrategyPlugin extends Plugin {
                         )
                     );
                 } else {
-                    rowAnalysis.appendChild(
+                    rowEmailNode.appendChild(
                         this.buildCell(emailNode, prevCluster, styleContext, isLast)
                     );
                 }
@@ -108,21 +110,21 @@ export class HybridFluidStrategyPlugin extends Plugin {
                 const gap = this.gapX(prevCluster.rect, cluster.rect);
                 const isLast = i === band.clusters.length - 1;
                 if (gap > 0) {
-                    rowAnalysis.appendChild(
+                    rowEmailNode.appendChild(
                         this.buildCellWithOffset(emailNode, gap, cluster, styleContext, isLast)
                     );
                 } else {
-                    rowAnalysis.appendChild(
+                    rowEmailNode.appendChild(
                         this.buildCell(emailNode, prevCluster, styleContext, isLast)
                     );
                 }
                 prevCluster = cluster;
             }
             if (!this.isZero(desktopBlock.padding.right)) {
-                rowAnalysis.appendChild(this.buildEmptyCell(desktopBlock.padding.right));
+                rowEmailNode.appendChild(this.buildEmptyCell(desktopBlock.padding.right));
             }
         }
-        parent.spliceChildren(parent.children.indexOf(emailNode), 1, ...rows);
+        emailNode.spliceChildren(0, emailNode.children.length, ...rows);
     }
 
     analyzeElementLayout({ layout, analysis }, { referenceNode }) {
@@ -131,9 +133,13 @@ export class HybridFluidStrategyPlugin extends Plugin {
         }
         Object.assign(analysis.parsingFacts, {
             canMerge: false,
-            addSyntheticEmailNode: true,
+            needSyntheticEmailNode: true,
         });
-        analysis.facts.isHybridFluidRow = true;
+        // TODO EGGMAIL: add a generic "isContainer" fact. a "container" should
+        // be a flexible node that can become e.g. a table for MSO, and can
+        // be merged with its parent if they also are a container and there
+        // is no positioning consideration between the 2
+        analysis.facts.isHybridFluidContainer = true;
         layout.pluginIds.add(HybridFluidStrategyPlugin.id);
     }
 
@@ -170,79 +176,79 @@ export class HybridFluidStrategyPlugin extends Plugin {
      * Evaluate which children in emailNode are related to a given cluster
      * of nodes
      */
-    getClusterAnalysis(emailNode, cluster) {
+    getClusterEmailNodes(emailNode, cluster) {
         const range = this.getNodeClusterRange(cluster.nodes.at(0), cluster.nodes.at(-1));
-        const clusterAnalysis = [];
-        for (const childAnalysis of emailNode.children) {
+        const clusterEmailNodes = [];
+        for (const childEmailNode of emailNode.children) {
             if (
-                childAnalysis.referenceNodes.length &&
-                range.comparePoint(childAnalysis.firstReferenceNode, 0) === 0
+                childEmailNode.referenceNodes.length &&
+                range.comparePoint(childEmailNode.firstReferenceNode, 0) === 0
             ) {
-                clusterAnalysis.push(childAnalysis);
+                clusterEmailNodes.push(childEmailNode);
             }
         }
-        return clusterAnalysis;
+        return clusterEmailNodes;
     }
 
     buildCell(emailNode, cluster, styleContext, isLast = false) {
-        const clusterAnalysis = this.getClusterAnalysis(emailNode, cluster);
+        const clusterEmailNodes = this.getClusterEmailNodes(emailNode, cluster);
         const clusterWidth = cluster.rect.width - (isLast ? ZOOM_WIDTH_CORRECTION : 0);
-        const cellAnalysis = new EmailNode({
-            // TODO EGGMAIL: currently oversimplified layout, to elaborate?
-            layout: new ElementLayout({ tag: "div" }),
+        const refs = {
+            root: { style: { "max-width": `${clusterWidth}px` } },
+            styleContext,
+        };
+        const cellEmailNode = new EmailNode({
+            layout: new HybridFluidCell({ refs }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,
-                    // TODO EGGMAIL: move refs in layout?
-                    refs: {
-                        root: { style: { "max-width": `${clusterWidth}px` } },
-                        styleContext,
-                    },
+                    // TODO EGGMAIL: evaluate what positioning facts should be shared
+                    // and how
                 },
             }),
         });
-        for (const child of clusterAnalysis) {
-            cellAnalysis.appendChild(child);
+        for (const child of clusterEmailNodes) {
+            cellEmailNode.appendChild(child);
         }
-        return cellAnalysis;
+        return cellEmailNode;
     }
 
     buildEmptyCell(width) {
+        const refs = {
+            root: { style: { "max-width": `${width}px` } },
+        };
         return new EmailNode({
-            layout: new ElementLayout({ tag: "div" }),
+            layout: new HybridFluidEmptyCell({ refs }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,
-                    isEmpty: true,
-                    refs: {
-                        root: { style: { "max-width": `${width}px` } },
-                    },
+                    // TODO EGGMAIL: evaluate what positioning facts should be shared
+                    // and how
                 },
             }),
         });
     }
 
     buildCellWithOffset(emailNode, offsetWidth, cluster, styleContext, isLast = false) {
-        // TODO EGGMAIL: should a cell + offset be considered differently from a normal cell?
-        // It behaves like a row inside a row.
         const clusterWidth = cluster.rect.width - (isLast ? ZOOM_WIDTH_CORRECTION : 0);
-        const offsetAnalysis = this.buildEmptyCell(offsetWidth);
-        const cellAnalysis = this.buildCell(emailNode, cluster, styleContext);
-        const cellWithOffsetAnalysis = new EmailNode({
-            layout: new ElementLayout({ tag: "div" }),
+        const offsetEmailNode = this.buildEmptyCell(offsetWidth);
+        const cellEmailNode = this.buildCell(emailNode, cluster, styleContext);
+        const refs = {
+            root: { style: { "max-width": `${offsetWidth + clusterWidth}px` } },
+        };
+        const cellWithOffsetEmailNode = new EmailNode({
+            layout: new ElementLayout({ refs }),
             analysis: new Analysis({
                 facts: {
                     isHybridFluidCell: true,
-                    isCellWithOffset: true,
-                },
-                refs: {
-                    root: { style: { "max-width": `${offsetWidth + clusterWidth}px` } },
+                    // TODO EGGMAIL: evaluate what positioning facts should be shared
+                    // and how
                 },
             }),
         });
-        cellWithOffsetAnalysis.appendChild(offsetAnalysis);
-        cellWithOffsetAnalysis.appendChild(cellAnalysis);
-        return cellWithOffsetAnalysis;
+        cellWithOffsetEmailNode.appendChild(offsetEmailNode);
+        cellWithOffsetEmailNode.appendChild(cellEmailNode);
+        return cellWithOffsetEmailNode;
     }
 }
 

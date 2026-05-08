@@ -123,7 +123,7 @@ export class RenderPlugin extends Plugin {
                 emailNode.analysis.parsingFacts.canMerge = false;
             }
         }
-        if (emailNode.analysis.parsingFacts.needSyntheticEmailNode) {
+        if (emailNode.analysis.parsingFacts.addSyntheticEmailNode) {
             this.syntheticEmailNodeContainers.add(emailNode);
         }
         for (const childNode of childNodes ?? []) {
@@ -138,7 +138,7 @@ export class RenderPlugin extends Plugin {
      */
     mergeElementLayout(parentLayout, childLayout) {
         const mergedLayout = new ElementLayout({
-            tag: childLayout.tag || parentLayout.tag || "DIV",
+            tag: childLayout.ancestorTag || parentLayout.ancestorTag || "DIV",
         });
         mergedLayout.setAttributes(parentLayout.refs.root);
         mergedLayout.setAttributes(childLayout.refs.root);

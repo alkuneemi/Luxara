@@ -1,12 +1,6 @@
-import {
-    assignDefaultElementOptions,
-    LayoutCell,
-    LayoutModel,
-    LayoutRow,
-} from "../core/render_models";
+import { assignDefaultElementOptions, ElementLayout, LayoutModel } from "../core/render_models";
 
-export class HybridFluidRow extends LayoutRow {
-    static template = "mail.HybridFluidRow";
+export class HybridFluidRow extends ElementLayout {
     constructor(options = {}) {
         const refs = options.refs ?? {};
         options.refs = refs;
@@ -26,10 +20,7 @@ export class HybridFluidRow extends LayoutRow {
     }
 }
 
-export class HybridFluidCellWithOffset extends LayoutModel {
-    static template = "mail.HybridFluidCellWithOffset";
-    cell;
-    offset;
+export class HybridFluidCellWithOffset extends ElementLayout {
     constructor(options = {}) {
         const refs = options.refs ?? {};
         options.refs = refs;
@@ -40,8 +31,6 @@ export class HybridFluidCellWithOffset extends LayoutModel {
             },
         });
         super(options);
-        this.cell = options.cell;
-        this.offset = options.offset;
         this.setAttributes({
             classNames: "o-ci-hybrid-fluid-cell-with-offset",
             style: {
@@ -52,7 +41,7 @@ export class HybridFluidCellWithOffset extends LayoutModel {
     }
 }
 
-export class HybridFluidCell extends LayoutCell {
+export class HybridFluidCell extends LayoutModel {
     static template = "mail.HybridFluidCell";
     constructor(options = {}) {
         const refs = options.refs ?? {};
@@ -79,6 +68,14 @@ export class HybridFluidCell extends LayoutCell {
             },
         });
     }
+
+    get ancestorTag() {
+        return "DIV";
+    }
+
+    get descendantTag() {
+        return "DIV";
+    }
 }
 
 export class HybridFluidEmptyCell extends HybridFluidCell {
@@ -89,5 +86,9 @@ export class HybridFluidEmptyCell extends HybridFluidCell {
                 height: 0,
             },
         });
+    }
+
+    get isEmpty() {
+        return true;
     }
 }

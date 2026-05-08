@@ -17,7 +17,7 @@ export class TableStrategyPlugin extends Plugin {
         if (analysis.isFrozen || !this.detectTableLayout(referenceNode)) {
             return;
         }
-        if (parentEmailNode.layout.tag === "TABLE") {
+        if (parentEmailNode.layout.descendantTag === "TABLE") {
             analysis.parsingFacts.canParentMerge = true;
         }
         analysis.parsingFacts.canMerge = false;

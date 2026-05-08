@@ -2,6 +2,10 @@ import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
 import { StyleInfoMap } from "./style_models";
 
+/**
+ * TODO EGGMAIL: decide what to do about the styleSheet (it should be in the
+ * head, but the head is generated in python)
+ */
 export class DynamicStyleSheetPlugin extends Plugin {
     static id = "dynamicStyleSheet";
     static shared = ["addToStyleSheet"];
