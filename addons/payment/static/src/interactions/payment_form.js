@@ -1,5 +1,6 @@
 import { browser } from '@web/core/browser/browser';
 import { ConfirmationDialog } from '@web/core/confirmation_dialog/confirmation_dialog';
+import { loadJS } from '@web/core/assets';
 import { _t } from '@web/core/l10n/translation';
 import { rpc, RPCError } from '@web/core/network/rpc';
 import { registry } from '@web/core/registry';
@@ -147,6 +148,68 @@ export class PaymentForm extends Interaction {
     }
 
     // #=== DOM MANIPULATION ===#
+    /**
+     * Update the visibility of wallet payment methods (Apple Pay, Google Pay)
+     * based on browser and device support.
+     *
+     * Supported wallets are shown; unsupported ones are hidden and disabled.
+     * @private
+     * @return {void}
+     */
+    async _updateWalletsVisibility() {
+        const applePayInput = this.el.querySelector('input[data-payment-method-code="apple_pay"]');
+        if (applePayInput) {
+            const optionContainer = applePayInput.closest('[name="o_payment_option"]');
+            if (optionContainer && this.isApplePaySupported()) {
+                optionContainer.classList.remove('d-none');
+            }
+        }
+
+        const googlePayInput = this.el.querySelector(
+            'input[data-payment-method-code="google_pay"]'
+        );
+        if(googlePayInput){
+            const scriptURL = "https://pay.google.com/gp/p/js/pay.js";
+            await loadJS(scriptURL)
+            if (window.google?.payments) {
+                const optionContainer = googlePayInput.closest('[name="o_payment_option"]');
+                if (optionContainer && (await this.isGooglePaySupported())) {
+                    optionContainer.classList.remove('d-none');
+                }
+            }
+        }
+    }
+
+    isApplePaySupported() {
+        return Boolean(window.ApplePaySession?.canMakePayments());
+    }
+
+    async isGooglePaySupported(){
+        if (!window.google?.payments?.api) {
+            throw new Error("SDK not initialized");
+        }
+        try {
+            const paymentsClient = new window.google.payments.api.PaymentsClient(
+                { environment: 'TEST' }
+            );
+
+            const response = await paymentsClient.isReadyToPay({
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: [{
+                    type: 'CARD',
+                    parameters: {
+                        allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                        allowedCardNetworks: ['MASTERCARD', 'VISA']
+                    }
+                }]
+            });
+
+            return response.result === true;
+        } catch {
+            return false;
+        }
+    }
 
     /**
      * Check if the submit button can be enabled and do it if so.
