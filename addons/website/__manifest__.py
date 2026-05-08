@@ -448,7 +448,7 @@
             ('remove', 'website/static/src/builder/**/*.edit.*'),
         ],
         'html_builder.iframe_add_dialog': [
-            'website/static/src/snippets/**/*.preview.scss',
+            'website/static/src/**/*.preview.scss',
         ],
     },
     'configurator_snippets': {

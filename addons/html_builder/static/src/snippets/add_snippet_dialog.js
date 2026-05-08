@@ -11,7 +11,7 @@ import { useChildRef } from "@web/core/utils/hooks";
 import { SnippetViewer } from "./snippet_viewer";
 
 /**
- * @typedef {((arg: { iframe: HTMLIFrameElement }) => void)[]} snippet_preview_dialog_stylesheets_processors
+ * @typedef {((arg: { iframe: HTMLIFrameElement }) => void)[]} snippet_preview_dialog_iframe_processors
  * @typedef {string[]} snippet_preview_dialog_bundles
  */
 
@@ -116,7 +116,7 @@ export class AddSnippetDialog extends Component {
             }
             return loadBundle(bundleName, loadOptions);
         };
-        this.props.editor.processThrough("snippet_preview_dialog_stylesheets_processors", {
+        this.props.editor.processThrough("snippet_preview_dialog_iframe_processors", {
             iframe: this.iframeRef.el,
         });
         const editorPreviewAssetsBundles = this.props.editor.getResource(

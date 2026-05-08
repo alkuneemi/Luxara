@@ -68,7 +68,6 @@ import { omit } from "@web/core/utils/objects";
 
 /**
  * @typedef {((containers: BuilderOptionContainer[]) => void)[]} on_current_options_containers_changed_handlers
- * @typedef {((newTargetEl: HTMLElement) => void)[]} on_will_restore_containers_handlers
  *
  * @typedef {((el: HTMLElement) => [] | BuilderButtonDescriptor[])[]} options_container_top_buttons_providers
  *
@@ -96,6 +95,8 @@ import { omit } from "@web/core/utils/objects";
  * @typedef {CSSSelector[]} no_parent_containers
  * @typedef {((el: HTMLElement) => boolean | undefined)[]} should_keep_overlay_options_predicates
  * @typedef {{[key: string]: string}[]} builder_options_render_context
+ * @typedef {((scrollDestination: HTMLElement) => HTMLElement)[]} scroll_destination_processors
+ * @typedef {((targetEl: HTMLElement) => void)[]} on_target_revealed_handlers
  */
 /**
  * @typedef {((
@@ -178,6 +179,13 @@ export class BuilderOptionsPlugin extends Plugin {
                 });
             }
             return buttons;
+        },
+        on_target_revealed_handlers: (targetEl) => {
+            targetEl = this.processThrough("scroll_destination_processors", targetEl);
+            if (!isElementInViewport(targetEl)) {
+                // Firefox mis-scrolls with block "center" on tall snippets; keep "start".
+                targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
         },
     };
 
@@ -543,13 +551,8 @@ export class BuilderOptionsPlugin extends Plugin {
                 targetEl = nextTarget;
             }
             if (targetEl) {
-                this.trigger("on_will_restore_containers_handlers", targetEl);
+                this.trigger("on_target_revealed_handlers", targetEl);
                 this.updateContainers(targetEl, { forceUpdate: true });
-                // Scroll to the target if not visible.
-                if (!isElementInViewport(targetEl)) {
-                    // Firefox mis-scrolls with block "center" on tall snippets; keep "start".
-                    targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
             } else {
                 this.deactivateContainers();
             }

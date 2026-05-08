@@ -46,7 +46,6 @@ import { isSmallInteger } from "@html_builder/utils/utils";
 import { localization } from "@web/core/l10n/localization";
 import { formatDate } from "@web/core/l10n/dates";
 import { getParsedDataFor } from "@website/js/utils";
-import { isTargetVisible } from "@html_builder/core/visibility_plugin";
 import { nodeSize } from "@html_editor/utils/position";
 
 /**
@@ -129,13 +128,13 @@ export class FormOptionPlugin extends Plugin {
                 const model = models?.find((model) => model.model === modelName);
                 const fieldName = getFieldName(el);
                 return model
-                        ? _t(
-                              'The field "%(fieldName)s" is mandatory for the action "%(actionName)s".',
-                              { fieldName, actionName: model.website_form_label }
-                          )
-                        : _t("The field “%(fieldName)s” is mandatory for the selected action.", {
-                              fieldName,
-                          });
+                    ? _t(
+                          'The field "%(fieldName)s" is mandatory for the action "%(actionName)s".',
+                          { fieldName, actionName: model.website_form_label }
+                      )
+                    : _t("The field “%(fieldName)s” is mandatory for the selected action.", {
+                          fieldName,
+                      });
             }
         },
         builder_actions: {
@@ -1323,7 +1322,7 @@ export class SetLabelTextAction extends BuilderAction {
 }
 export class SelectLabelsPositionAction extends BuilderAction {
     static id = "selectLabelsPosition";
-    static dependencies = ["websiteFormOption"];
+    static dependencies = ["websiteFormOption", "visibility"];
     setup() {
         this.fieldSelector = ".s_website_form_field:not(.s_website_form_dnone)";
     }
@@ -1332,7 +1331,9 @@ export class SelectLabelsPositionAction extends BuilderAction {
     }
     apply({ editingElement: formEl, value, loadResult: fields }) {
         for (const fieldEl of formEl.querySelectorAll(this.fieldSelector)) {
-            const fieldClassName = !isTargetVisible(fieldEl) ? fieldEl.className : "";
+            const fieldClassName = this.dependencies.visibility.isElementHidden(fieldEl)
+                ? fieldEl.className
+                : "";
             const field = getActiveField(fieldEl, { fields });
             field.formatInfo.labelPosition = value;
             field.formatInfo.labelInvisible = value === "none";

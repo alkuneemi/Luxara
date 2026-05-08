@@ -43,7 +43,7 @@ registerWebsitePreviewTour(
         },
         {
             content: "Click on the popup snippet in the list of invisible elements.",
-            trigger: ".o_we_invisible_root_parent",
+            trigger: ".o_we_invisible_root_parent i.fa-eye-slash",
             run: "click",
         },
         {
