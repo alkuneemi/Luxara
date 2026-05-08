@@ -74,18 +74,15 @@ class SaleOrder(models.Model):
 
     @api.depends('picking_ids', 'picking_ids.state')
     def _compute_delivery_status(self):
-        for order in self:
-            if not order.picking_ids or all(p.state == 'cancel' for p in order.picking_ids):
-                order.delivery_status = False
-            elif all(p.state in ['done', 'cancel'] for p in order.picking_ids):
-                order.delivery_status = 'full'
-            elif any(p.state == 'done' for p in order.picking_ids) and any(
-                    l.qty_delivered for l in order.order_line):
-                order.delivery_status = 'partial'
-            elif any(p.state == 'done' for p in order.picking_ids):
-                order.delivery_status = 'started'
-            else:
-                order.delivery_status = 'pending'
+        super()._compute_delivery_status()
+        for order in self.filtered('picking_ids'):
+            outgoing_pickings = order.picking_ids.filtered(
+                lambda picking: (picking.move_ids[0].location_final_id.location_id or picking.move_ids[0].location_final_id).usage == 'customer'
+            )
+            if order.delivery_status == 'partial' and all(picking.state in ('done', 'cancel') for picking in outgoing_pickings):
+                order.delivery_status = "full"
+            elif order.delivery_status == 'pending' and any(picking.state == 'done' for picking in outgoing_pickings):
+                order.delivery_status = "started"
 
     @api.depends('picking_policy')
     def _compute_expected_date(self):
