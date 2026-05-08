@@ -177,6 +177,7 @@
                 <field name="workcenter_id"/>
                 <field name="production_id"/>
                 <field name="product_id"/>
+                <field name="production_lot_producing_id"/>
                 <field name="product_variant_attributes"/>
                 <field name="move_raw_ids" string="Component" filter_domain="[('move_raw_ids.product_id', 'ilike', self)]"/>
                 <filter string="To Do" name="ready" domain="[('state', '=', 'ready')]"/>
@@ -335,8 +336,8 @@
                 <field name="product_tracking" invisible="1"/>
                 <field name="product_id" invisible="1"/>
                 <div invisible="not has_conflicts" class="h5 alert alert-warning text-center" role="alert">
-                    This work order is planned at the same time as other work orders in this work center
-                    <button name="%(action_mrp_workorder_workcenter)d" icon="oi-arrow-right" type="action" string="View Planning" class="btn-link"
+                    Scheduling conflicts in the work center.
+                    <button name="%(action_mrp_workorder_workcenter)d" icon="oi-arrow-right" type="action" string="View Work Orders" class="btn-link"
                         context="{'search_default_workcenter_id': workcenter_id}"
                     />
                 </div>
