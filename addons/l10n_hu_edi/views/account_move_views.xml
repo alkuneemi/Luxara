@@ -21,7 +21,7 @@
                         name="l10n_hu_edi_button_update_status"
                         type="object"
                         groups="account.group_account_invoice"
-                        invisible="not l10n_hu_edi_state"/>
+                        invisible="not (l10n_hu_edi_state or l10n_hu_edi_attachment)"/>
             </xpath>
 
             <xpath expr="//sheet" position="before">
