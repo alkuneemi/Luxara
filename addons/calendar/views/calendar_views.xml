@@ -129,7 +129,7 @@
                             <field name="stop_date" required="allday" invisible="1"/>
                             <field name="stop" required="not allday" invisible="1" />
                             <field name="unavailable_partner_ids" invisible="1" /> <!-- this field will be used in many2many_attendees widget -->
-                            <field name="allday" widget="boolean_toggle" force_save="1" options="{'autosave': False}" readonly="not user_can_edit"/>
+                            <field name="allday" widget="boolean_toggle" force_save="1" readonly="not user_can_edit"/>
                             <field name="duration" widget="float_time" string="Duration" invisible="allday" readonly="(id and recurrency) or not user_can_edit"/>
                             <field name="location" placeholder="Online Meeting" readonly="not user_can_edit"/>
                             <label for="videocall_location" class="opacity-100"/>
@@ -220,7 +220,7 @@
                                     <field name="alarm_ids" widget="many2many_tags" options="{'no_quick_create': True, 'on_tag_click': 'open_form'}" readonly="not user_can_edit"/>
                                     <field name="recurrence_id" invisible="1" />
                                     <field name="rrule_type" invisible="1" />
-                                    <field name="recurrency" widget="boolean_toggle" options="{'autosave': False}" readonly="not user_can_edit"/>
+                                    <field name="recurrency" widget="boolean_toggle" readonly="not user_can_edit"/>
                                     <field name="rrule_type_ui" invisible="not recurrency" required="recurrency" readonly="not user_can_edit"/>
                                     <label for="interval" class="fw-bold text-900" invisible="not recurrency or rrule_type_ui != 'custom'"/>
                                     <div class="d-flex gap-1" invisible="not recurrency or rrule_type_ui != 'custom'">
