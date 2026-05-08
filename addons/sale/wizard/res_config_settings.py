@@ -70,6 +70,9 @@ class ResConfigSettings(models.TransientModel):
     downpayment_account_active = fields.Boolean(
         related="downpayment_account_id.active", string="Down payment Account Active"
     )
+    show_sale_line_numbers = fields.Boolean(
+        string="Line Numbers", related="company_id.show_sale_line_numbers", readonly=False
+    )
 
     # Modules
     module_delivery = fields.Boolean("Delivery Methods")

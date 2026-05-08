@@ -1,0 +1,68 @@
+.o_field_widget[name="order_line"] {
+    th[data-name="visual_line_no"] {
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+
+        .o_resize {
+            display: none !important;
+        }
+    }
+    table tbody {
+        counter-reset: sale_line_counter;
+    }
+    tr.o_data_row:not(.o_is_line_section):not(.o_is_line_subsection):not(.o_is_line_note):not(.text-muted):not(.d-none) {
+
+        td[name="visual_line_no"] {
+            position: relative;
+            vertical-align: top;
+
+            width: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+
+            padding: 8px 4.8px !important;
+            text-align: left;
+            box-sizing: border-box;
+
+            &::before {
+                counter-increment: sale_line_counter;
+                content: counter(sale_line_counter);
+            }
+
+            > * {
+                display: none !important;
+            }
+        }
+    }
+
+    &:has(th[data-name="visual_line_no"]:not(.d-none)){
+        tr.o_data_row.o_is_line_section:not(.d-none),
+        tr.o_data_row.o_is_line_subsection:not(.d-none) {
+            td.o_handle_cell + td {
+                position: relative;
+
+                /*29px (number cell width) + 8px + 4.8px(native padding) = 41.8px */
+                padding-left: 41.8px !important;
+
+                &::before {
+                    counter-increment: sale_line_counter;
+                    content: counter(sale_line_counter);
+
+                    position: absolute;
+                    left: 0;
+                    top: 1px;
+                    bottom: 0;
+
+                    width: 29px;
+                    padding: 8px 4.8px;
+                    box-sizing: border-box;
+
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: flex-start;
+                }
+            }
+        }
+    }
+}
