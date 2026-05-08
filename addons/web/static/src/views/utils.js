@@ -310,3 +310,59 @@ export function computeAggregatedValue(values, aggregator) {
     }
     throw new Error(`Invalid aggregator '${aggregator}'`);
 }
+
+export async function generateImageVariants({
+    data,
+    src,
+    type,
+    name,
+    sizes = [1920, 1024, 512, 256, 128],
+    fillStyle = "transparent",
+    smoothing = true,
+    smoothingQuality = "high",
+    webpName = name,
+    jpegName = name.replace(/\.webp$/, ".jpg"),
+    webpDescription = (size, isOriginal) => (isOriginal ? "" : `resize: ${size}`),
+    jpegDescription = () => "format: jpeg",
+}) {
+    const image = document.createElement("img");
+    image.src = src || `data:${type};base64,${data}`;
+    await new Promise((resolve) => image.addEventListener("load", resolve));
+    const originalSize = Math.max(image.width, image.height);
+    const allSizes = [originalSize, ...sizes].filter((size, i) => i === 0 || size < originalSize);
+    const variants = [];
+    for (const size of allSizes) {
+        const ratio = size / originalSize;
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width * ratio;
+        canvas.height = image.height * ratio;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = fillStyle;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = smoothing;
+        if (smoothingQuality) {
+            ctx.imageSmoothingQuality = smoothingQuality;
+        }
+        ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+        const isOriginal = size === originalSize;
+        variants.push({
+            images: [
+                {
+                    name: webpName,
+                    description: webpDescription(size, isOriginal),
+                    datas: isOriginal
+                        ? data || canvas.toDataURL("image/webp").split(",")[1]
+                        : canvas.toDataURL("image/webp").split(",")[1],
+                    mimetype: "image/webp",
+                },
+                {
+                    name: jpegName,
+                    description: jpegDescription(size, isOriginal),
+                    datas: canvas.toDataURL("image/jpeg").split(",")[1],
+                    mimetype: "image/jpeg",
+                },
+            ],
+        });
+    }
+    return variants;
+}

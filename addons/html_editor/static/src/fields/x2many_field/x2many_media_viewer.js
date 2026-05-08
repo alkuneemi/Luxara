@@ -1,5 +1,6 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { generateImageVariants } from "@web/views/utils";
 import { X2ManyField, x2ManyField } from "@web/views/fields/x2many/x2many_field";
 import { getVideoUrl } from "@html_editor/utils/url";
 import { useChildSubEnv } from "@odoo/owl";
@@ -69,64 +70,21 @@ export class X2ManyMediaViewer extends X2ManyField {
                 // Upon change, make sure to verify whether the same change needs
                 // to be applied on both sides.
                 // Generate alternate sizes and format for reports.
+                const variants = await generateImageVariants({
+                    data: attachment.datas,
+                    type: attachment.mimetype,
+                    name: attachment.name.replace(/\.[^/.]+$/, ".webp"),
+                    sizes: [1024, 512, 256, 128],
+                    jpegName: attachment.name.replace(/\.[^/.]+$/, ".jpg"),
+                    jpegDescription: (size) => `resize: ${size} - format: jpeg`,
+                    fillStyle: "transparent",
+                    smoothing: false,
+                    smoothingQuality: null,
+                });
+                await this.orm.call("ir.attachment", "create_unique_batch", [variants]);
                 const image = document.createElement("img");
                 image.src = `data:${attachment.mimetype};base64,${attachment.datas}`;
                 await new Promise((resolve) => image.addEventListener("load", resolve));
-
-                const originalSize = Math.max(image.width, image.height);
-                const smallerSizes = [1024, 512, 256, 128].filter((size) => size < originalSize);
-                let referenceId = undefined;
-
-                for (const size of [originalSize, ...smallerSizes]) {
-                    const ratio = size / originalSize;
-                    const canvas = document.createElement("canvas");
-                    canvas.width = image.width * ratio;
-                    canvas.height = image.height * ratio;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(
-                        image,
-                        0,
-                        0,
-                        image.width,
-                        image.height,
-                        0,
-                        0,
-                        canvas.width,
-                        canvas.height
-                    );
-
-                    // WebP format
-                    const webpData = canvas.toDataURL("image/webp").split(",")[1];
-                    const [resizedId] = await this.orm.call("ir.attachment", "create_unique", [
-                        [
-                            {
-                                name: attachment.name.replace(/\.[^/.]+$/, ".webp"),
-                                description: size === originalSize ? "" : `resize: ${size}`,
-                                datas: webpData,
-                                res_id: referenceId,
-                                res_model: "ir.attachment",
-                                mimetype: "image/webp",
-                            },
-                        ],
-                    ]);
-
-                    referenceId = referenceId || resizedId;
-
-                    // JPEG format for compatibility
-                    const jpegData = canvas.toDataURL("image/jpeg").split(",")[1];
-                    await this.orm.call("ir.attachment", "create_unique", [
-                        [
-                            {
-                                name: attachment.name.replace(/\.[^/.]+$/, ".jpg"),
-                                description: `resize: ${size} - format: jpeg`,
-                                datas: jpegData,
-                                res_id: resizedId,
-                                res_model: "ir.attachment",
-                                mimetype: "image/jpeg",
-                            },
-                        ],
-                    ]);
-                }
                 const canvas = document.createElement("canvas");
                 canvas.width = image.width;
                 canvas.height = image.height;

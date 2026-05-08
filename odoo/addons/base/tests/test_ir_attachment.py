@@ -282,6 +282,35 @@ class TestIrAttachment(TransactionCaseWithUserDemo):
             )
             self.assertEqual(patch_file_read.call_count, 0)
 
+    def test_16_create_unique_batch(self):
+        """
+        Verify batch supports in-batch res_id references
+        """
+        IrAttachment = self.env['ir.attachment']
+        variants = [
+            {
+                'images': [{
+                    'name': 'file1',
+                    'datas': self.blob1_b64,
+                    'mimetype': 'image/webp',
+                }],
+            },
+            {
+                'images': [{
+                    'name': 'file2',
+                    'datas': self.blob2_b64,
+                    'mimetype': 'image/webp',
+                }],
+            },
+        ]
+        ids = IrAttachment.create_unique_batch(variants)
+        attachments = IrAttachment.browse(ids)
+        self.assertEqual(
+            attachments[1].res_id,
+            attachments[0].id,
+            "res_id should link to first created attachment"
+        )
+
 
 class TestPermissions(TransactionCaseWithUserDemo):
     def setUp(self):

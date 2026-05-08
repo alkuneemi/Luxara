@@ -6,6 +6,7 @@ import { isImageCorsProtected } from "@html_editor/utils/image";
 import { TABS } from "@html_editor/main/media/media_dialog/media_dialog";
 import { WebsiteConfigAction, PreviewableWebsiteConfigAction } from "@website/builder/plugins/customize_website_plugin";
 import { BuilderAction } from "@html_builder/core/builder_action";
+import { generateImageVariants } from "@web/views/utils";
 import wSaleUtils from "@website_sale/js/website_sale_utils";
 
 class ProductPageOptionPlugin extends Plugin {
@@ -235,66 +236,31 @@ export class BaseProductPageAction extends BuilderAction {
             return;
         }
         // Generate alternate sizes and format for reports.
-        const imgEl = document.createElement("img");
-        imgEl.src = imageEl.src;
-        await new Promise((resolve) => imgEl.addEventListener("load", resolve));
-        const originalSize = Math.max(imgEl.width, imgEl.height);
-        const smallerSizes = [1920, 1024, 512, 256, 128].filter((size) => size < originalSize);
         const extension = attachment.name.match(/\.(jpe?|pn)g$/i)?.[0] ?? ".jpeg";
         const webpName = attachment.name.replace(extension, ".webp");
         const format = extension.substr(1).toLowerCase().replace(/^jpg$/, "jpeg");
         const mimetype = `image/${format}`;
-        let referenceId = undefined;
-        for (const size of [originalSize, ...smallerSizes]) {
-            const ratio = size / originalSize;
-            const canvas = document.createElement("canvas");
-            canvas.width = imgEl.width * ratio;
-            canvas.height = imgEl.height * ratio;
-            const ctx = canvas.getContext("2d");
-            ctx.fillStyle = "transparent";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(
-                imgEl,
-                0,
-                0,
-                imgEl.width,
-                imgEl.height,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-            const [resizedId] = await this.services.orm.call("ir.attachment", "create_unique", [
-                [
-                    {
-                        name: webpName,
-                        description: size === originalSize ? "" : `resize: ${size}`,
-                        datas: canvas.toDataURL("image/webp").split(",")[1],
-                        res_id: referenceId,
-                        res_model: "ir.attachment",
-                        mimetype: "image/webp",
-                    },
-                ],
-            ]);
-            if (size === originalSize) {
-                attachment.original_id = attachment.id;
-                attachment.id = resizedId;
-                attachment.image_src = `/web/image/${resizedId}-autowebp/${attachment.name}`;
-                attachment.mimetype = "image/webp";
-            }
-            referenceId = referenceId || resizedId; // Keep track of original.
-            await this.services.orm.call("ir.attachment", "create_unique", [
-                [
-                    {
-                        name: attachment.name,
-                        description: `format: ${format}`,
-                        datas: canvas.toDataURL(mimetype).split(",")[1],
-                        res_id: resizedId,
-                        res_model: "ir.attachment",
-                        mimetype: mimetype,
-                    },
-                ],
-            ]);
+        let originalWebpId = false;
+        const variants = await generateImageVariants({
+            src: imageEl.src,
+            type: mimetype,
+            name: webpName,
+            sizes: [1920, 1024, 512, 256, 128],
+            jpegName: attachment.name,
+            jpegDescription: () => `format: ${format}`,
+            fillStyle: "transparent",
+            smoothing: false,
+            smoothingQuality: null,
+        });
+        const attachmentIds = await this.services.orm.call("ir.attachment", "create_unique_batch", [
+            variants,
+        ]);
+        originalWebpId = attachmentIds[0];
+        if (originalWebpId) {
+            attachment.original_id = attachment.id;
+            attachment.id = originalWebpId;
+            attachment.image_src = `/web/image/${originalWebpId}-autowebp/${attachment.name}`;
+            attachment.mimetype = "image/webp";
         }
     }
 }
