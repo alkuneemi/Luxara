@@ -147,8 +147,8 @@ export class SocialMediaOptionPlugin extends Plugin {
             { selector: ".s_share > a > *", target: ".s_share" },
         ],
         replace_media_dialog_params_processors: this.applyMediaDialogParams.bind(this),
-        is_step_reversible_predicates: (step) => {
-            if (step.extraStepInfos?.prefill) {
+        is_commit_reversible_predicates: (commit) => {
+            if (commit.data.areSocialMediaLinksPrefilled) {
                 return false;
             }
         },

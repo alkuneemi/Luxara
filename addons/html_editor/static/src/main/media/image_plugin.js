@@ -212,12 +212,12 @@ export class ImagePlugin extends Plugin {
 
         /** Handlers */
         on_selectionchange_handlers: withSequence(READ, this.updateImageParams.bind(this)),
-        on_undone_handlers: this.updateImageParams.bind(this),
-        on_redone_handlers: this.updateImageParams.bind(this),
+        on_history_commit_undone_handlers: this.updateImageParams.bind(this),
+        on_history_commit_redone_handlers: this.updateImageParams.bind(this),
         on_will_save_media_dialog_handlers: async (elements) => {
             for (const element of elements) {
                 if (element && element.tagName === "IMG") {
-                    this.resetImageTransformation(element, { addStep: false });
+                    this.resetImageTransformation(element, { commit: false });
                 }
             }
         },
@@ -268,7 +268,7 @@ export class ImagePlugin extends Plugin {
             }
         }
         targetedImg.classList.add(`p-${size}`);
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
     resizeImage({ size } = {}) {
         const targetedImg = this.getTargetedImage();
@@ -276,7 +276,7 @@ export class ImagePlugin extends Plugin {
             return;
         }
         targetedImg.style.width = size || "";
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     setImageShape(className, { excludeClasses = [] } = {}) {
@@ -290,7 +290,7 @@ export class ImagePlugin extends Plugin {
             }
         }
         targetedImg.classList.toggle(className);
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     previewImage() {
@@ -327,7 +327,7 @@ export class ImagePlugin extends Plugin {
             targetedImg.remove();
             cursors.restore();
             fillEmpty(blockEl);
-            this.dependencies.history.addStep();
+            this.dependencies.history.commit();
         }
     }
 
@@ -371,7 +371,7 @@ export class ImagePlugin extends Plugin {
                     const img = this.document.createElement("IMG");
                     img.setAttribute("src", url);
                     this.dependencies.dom.insert(img);
-                    this.dependencies.history.addStep();
+                    this.dependencies.history.commit();
                 },
             };
         }
@@ -384,10 +384,10 @@ export class ImagePlugin extends Plugin {
         }
         targetedImg.setAttribute("alt", description);
         targetedImg.setAttribute("title", tooltip);
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
-    resetImageTransformation(image, { addStep = true } = {}) {
+    resetImageTransformation(image, { commit = true } = {}) {
         const stylePropertiesToRemove = [
             "transform",
             "transform-box",
@@ -399,8 +399,8 @@ export class ImagePlugin extends Plugin {
         for (const styleProperty of stylePropertiesToRemove) {
             image.style.removeProperty(styleProperty);
         }
-        if (addStep) {
-            this.dependencies.history.addStep();
+        if (commit) {
+            this.dependencies.history.commit();
         }
     }
 
@@ -411,7 +411,7 @@ export class ImagePlugin extends Plugin {
             title: _t("Transform the picture (click twice to reset transformation)"),
             getTargetedImage: this.getTargetedImage.bind(this),
             resetImageTransformation: this.resetImageTransformation.bind(this),
-            addStep: this.dependencies.history.addStep.bind(this),
+            commit: this.dependencies.history.commit.bind(this),
             document: this.document,
             editable: this.editable,
             activeTitle: _t("Click again to reset transformation"),

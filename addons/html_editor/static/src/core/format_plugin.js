@@ -257,7 +257,7 @@ export class FormatPlugin extends Plugin {
         const targetedNodes = this.dependencies.selection.getTargetedNodes();
         this.removeFormats(Object.keys(formatsSpecs), targetedNodes);
         this.trigger("on_all_formats_removed_handlers");
-        this.dependencies.history.addStep();
+        this.dependencies.history.commit();
     }
 
     removeFontSizeFormat(el) {
@@ -330,7 +330,7 @@ export class FormatPlugin extends Plugin {
 
     formatSelection(formatName, options) {
         if (this._formatSelection(formatName, options) && !options?.removeFormat) {
-            this.dependencies.history.addStep();
+            this.dependencies.history.commit();
         }
     }
 
@@ -535,7 +535,7 @@ export class FormatPlugin extends Plugin {
             this.dependencies.selection.setSelection(newSelection, { normalize: false });
             return true;
         }
-        // To ensure history step is added when overrides apply formatting.
+        // To ensure history commit is added when overrides apply formatting.
         // @see formatSelection
         return !!formattedNodes.size;
     }

@@ -487,7 +487,7 @@ export function isEmbeddedComponent(node) {
 
 /**
  * A "protected" node will have its mutations filtered and not be registered
- * in an history step. Some editor features like selection handling, command
+ * in an history commit. Some editor features like selection handling, command
  * hint, toolbar, tooltip, etc. are also disabled. Protected roots have their
  * data-oe-protected attribute set to either "" or "true". If the closest parent
  * with a data-oe-protected attribute has the value "false", it is not
@@ -959,3 +959,26 @@ export function isRedundantElement(node) {
 
 // Selector for QWeb-specific attributes
 export const PROTECTED_QWEB_SELECTOR = "[t-esc], [t-raw], [t-out], [t-field]";
+
+/**
+ * @typedef {import("@html_editor/core/dom_reference_map_plugin").Tree} Tree
+ *
+ * @param {Tree} tree
+ * @returns {Node[]}
+ */
+export function treeToNodes(tree) {
+    return [tree.node, ...tree.children.flatMap(treeToNodes)];
+}
+
+/**
+ * @typedef {import("@html_editor/core/dom_reference_map_plugin").Tree} Tree
+ *
+ * @param {Node} node
+ * @returns {Tree}
+ */
+export function nodeToTree(node) {
+    return {
+        node,
+        children: childNodes(node).map(nodeToTree),
+    };
+}
