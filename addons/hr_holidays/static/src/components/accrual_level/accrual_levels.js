@@ -44,7 +44,8 @@ export class AccrualLevels extends Component {
     }
 
     getFullDay(day) {
-        return luxon.DateTime.fromFormat(day, "c", {
+        // Add 1 to match ISO (1=Mon, 7=Sun)
+        return luxon.DateTime.fromFormat((+day + 1).toString(), "c", {
             locale: this.env.model.config.context.lang.replace("_","-")}).toLocaleString({ weekday: "long" });
     }
 
