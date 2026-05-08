@@ -28,6 +28,8 @@ export const seoContext = reactive({
     defaultTitle: "",
     updatedAlts: [],
     brokenLinks: [],
+    generated: false,
+    altAttributes: [],
 });
 
 const LINK_CHECK_BASE_OPTIONS = {
@@ -170,12 +172,23 @@ const getSeo = async (self, onlyKeywords = false) => {
 
     const keywords = extractKeywords();
     if (keywords.length) {
-        self.seoContext.keywords = keywords;
+        self.seoContext.keywords.push(...keywords.filter((kw) => !self.seoContext.keywords.includes(kw)));
     }
     if (!onlyKeywords) {
         self.seoContext.title = htmlToTextContentInline(self.seoContext.defaultTitle);
         self.seoContext.description = extractDescription();
+        self.seoContext.altAttributes.forEach(async (img) => {
+            const response = await fetch(img.src);
+            const contentDisposition = response.headers.get("Content-Disposition");
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (filenameMatch[1]) {
+                    img.alt = filenameMatch[1];
+                }
+            }
+        });
     }
+    self.seoContext.generated = true;
 };
 
 class MetaImage extends Component {
@@ -422,6 +435,11 @@ class MetaKeywords extends Component {
 
         this.maxKeywords = 10;
 
+        this.translatedStrings = {
+            keywordsTooltip: _t("You should use max 10 unique keywords, keeping them highly relevant to the content. Too many or irrelevant keywords can hurt your SEO."),
+            removeAllKeywordsButton: _t("Remove all keywords"),
+        };
+
         onWillStart(async () => {
             this.languages = await rpc("/website/get_languages");
             this.state.language = this.getLanguage();
@@ -451,7 +469,7 @@ class MetaKeywords extends Component {
 
     addKeyword(keyword) {
         keyword = keyword.replaceAll(/,\s*/gi, " ").trim();
-        if (keyword && !this.isFull && !this.seoContext.keywords.includes(keyword)) {
+        if (keyword && !this.seoContext.keywords.includes(keyword)) {
             this.seoContext.keywords.push(keyword);
             this.state.keyword = "";
         }
@@ -459,6 +477,14 @@ class MetaKeywords extends Component {
 
     removeKeyword(keyword) {
         this.seoContext.keywords = this.seoContext.keywords.filter((kw) => kw !== keyword);
+        if (!this.seoContext.keywords.length) {
+            this.seoContext.generated = false;
+        }
+    }
+
+    removeAllKeywords() {
+        this.seoContext.keywords = [];
+        this.seoContext.generated = false;
     }
 }
 
@@ -767,7 +793,6 @@ export class SeoChecks extends Component {
         } = this.website.currentWebsite;
         this.object = seoObject || mainObject;
         this.state = useState({
-            altAttributes: [],
             checkingLinks: false,
             checkedLinks: false,
             counterLinks: 0,
@@ -775,7 +800,7 @@ export class SeoChecks extends Component {
         });
         this.imgUpdated = this.imgUpdated.bind(this);
         onWillStart(async () => {
-            this.state.altAttributes = await this.getAltAttributes();
+            this.seoContext.altAttributes = await this.getAltAttributes();
             this.seoContext.updatedAlts = [];
         });
         onMounted(() => {
@@ -785,7 +810,7 @@ export class SeoChecks extends Component {
 
     imgUpdated(img) {
         img.updated = true;
-        this.seoContext.updatedAlts = this.state.altAttributes.filter((img) => img.updated);
+        this.seoContext.updatedAlts = this.seoContext.altAttributes.filter((img) => img.updated);
     }
 
     async getAltAttributes() {
