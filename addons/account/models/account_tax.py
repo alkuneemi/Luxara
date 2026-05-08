@@ -4396,13 +4396,28 @@ class AccountTax(models.Model):
         return {'criteria': criteria}
 
     @api.model
-    def _import_retrieve_tax(self, search_plan, company, tax_values_list):
+    def _import_retrieve_tax(self, search_plan, company, tax_values_list, restrict_to_company_countries=False):
         cache = self.env.cr.cache.setdefault('retrieved_tax_map', {})
 
         static_domain = expression.OR([
             [*self._check_company_domain(company), ('company_id', '!=', False)],
             [('company_id', '=', False)],
         ])
+
+        if restrict_to_company_countries:
+            # Limit tax search to countries relevant to the company: no-country taxes,
+            # the company's fiscal country, and countries covered by fiscal positions.
+            # This prevents picking up taxes from unrelated countries.
+            allowed_country_ids = (
+                [False]
+                + company.account_fiscal_country_id.ids
+                + company.fiscal_position_ids.country_id.ids
+            )
+            static_domain = expression.AND([
+                static_domain,
+                [('country_id', 'in', allowed_country_ids)]
+            ])
+
         for tax_values in tax_values_list:
             tax_domain = [
                ('amount_type', '=', tax_values['amount_type']),

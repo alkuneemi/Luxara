@@ -2736,6 +2736,61 @@ class AccountEdiUBL(models.AbstractModel):
             AccountTax._import_retrieve_tax_from_price_include_exclude,
         ]
 
+    def _import_ubl_align_taxes(self, company, collected_values, tax_values_list):
+        # Collect unique countries from all resolved taxes.
+        found_tax_countries = self.env['res.country']
+        for tv in tax_values_list:
+            if (tax := tv.get('tax')) and tax.country_id:
+                found_tax_countries |= tax.country_id
+
+        # If all taxes belong to a single foreign country, infer the matching
+        # foreign-VAT fiscal position. This covers the case where a company with
+        # a foreign fiscal position (e.g. LU company registered for VAT in BE)
+        # imports a vendor bill from that country and the fiscal position has not
+        # yet been set from partner-matching.
+        if (
+            len(found_tax_countries) == 1
+            and company.account_fiscal_country_id
+            and found_tax_countries != company.account_fiscal_country_id
+            and 'fiscal_position_id' not in collected_values['to_write']
+        ):
+            fiscal_position = company.fiscal_position_ids.filtered(
+                lambda fp: fp.country_id == found_tax_countries and fp.foreign_vat
+            )[:1]
+            if fiscal_position:
+                collected_values['to_write']['fiscal_position_id'] = fiscal_position.id
+
+        elif len(found_tax_countries) > 1 and 'fiscal_position_id' not in collected_values['to_write']:
+            # Taxes resolved to multiple countries (cache inconsistency across tax categories).
+            # Find the unique foreign-VAT fiscal position covering one of the found countries,
+            # set it, and align all taxes to that fiscal position's country.
+            fiscal_position_candidates = company.fiscal_position_ids.filtered(
+                lambda fp: fp.foreign_vat and fp.country_id in found_tax_countries
+            )
+            if len(fiscal_position_candidates) == 1:
+                fiscal_position = fiscal_position_candidates
+                collected_values['to_write']['fiscal_position_id'] = fiscal_position.id
+                fiscal_position_country = fiscal_position.country_id
+                eq_cache = {}
+                for tv in tax_values_list:
+                    tax = tv.get('tax')
+                    if tax and tax.country_id and tax.country_id != fiscal_position_country:
+                        key = (tax.amount, tax.amount_type, tax.type_tax_use)
+                        if key not in eq_cache:
+                            eq_cache[key] = self.env['account.tax'].search([
+                                ('company_id', 'in', [company.id, False]),
+                                ('country_id', '=', fiscal_position_country.id),
+                                ('amount', '=', tax.amount),
+                                ('amount_type', '=', tax.amount_type),
+                                ('type_tax_use', '=', tax.type_tax_use),
+                            ], limit=1)
+                        if equivalent := eq_cache[key]:
+                            tv['tax'] = equivalent
+            else:
+                collected_values['logs'].append(_(
+                    "Could not determine a unique fiscal position for taxes spanning multiple countries."
+                ))
+
     def _import_ubl_invoice_retrieve_taxes(self, collected_values):
         company = collected_values['company']
         logs = collected_values['logs']
@@ -2751,7 +2806,10 @@ class AccountEdiUBL(models.AbstractModel):
             search_plan=self._import_ubl_retrieve_taxes_search_plan(collected_values),
             company=company,
             tax_values_list=tax_values_list,
+            restrict_to_company_countries=True
         )
+
+        self._import_ubl_align_taxes(company, collected_values, tax_values_list)
 
         # Taxes at the document line level.
         for line_collected_values in lines_collected_values:
