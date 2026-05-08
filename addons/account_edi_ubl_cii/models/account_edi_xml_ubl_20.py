@@ -791,6 +791,11 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             'ubl20_invoice_name_required': self._check_required_fields(invoice, 'name'),
             'ubl20_invoice_date_required': self._check_required_fields(invoice, 'invoice_date'),
         })
+        if any(
+            base_line['special_type'] == 'global_discount' and base_line['tax_details']['total_excluded_currency'] >= 0
+            for base_line in vals['base_lines']
+        ):
+            constraints.update({'ubl20_discount_line_must_be_negative': _("Discount lines must have a negative amount to be exported as an allowance.")})
         return constraints
 
     def _export_invoice(self, invoice, convert_fixed_taxes=True):
@@ -1073,8 +1078,11 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         }
 
     def _is_document_allowance_charge(self, base_line):
-        """ Whether the base line should be treated as a document-level AllowanceCharge. """
-        return base_line['special_type'] == 'early_payment'
+        """
+        Whether the base line should be treated as a document-level AllowanceCharge.
+        Only EPD and Global discounts are handled for now
+        """
+        return base_line['special_type'] in ('global_discount', 'early_payment')
 
     # -------------------------------------------------------------------------
     # EXPORT: account.move specific templates
