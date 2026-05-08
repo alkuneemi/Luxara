@@ -1,7 +1,7 @@
 import { FontPlugin } from "@html_editor/main/font/font_plugin";
 
 const excludedPowerboxCommands = ["setTagHeading1", "setTagHeading2", "setTagHeading3"];
-const excludedFontItems = ["h1", "h2", "h3"];
+const excludedFontItems = ["h1", "h2", "h3", "h4", "h5", "h6"];
 
 export class ForumFontPlugin extends FontPlugin {
     resources = {
