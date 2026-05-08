@@ -4,12 +4,14 @@ import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { View } from "@web/views/view";
 import { ControlPanel } from "@web/search/control_panel/control_panel";
+import { user } from "@web/core/user";
 
 import { ForecastedButtons } from "./forecasted_buttons";
 import { ForecastedDetails } from "./forecasted_details";
 import { ForecastedHeader } from "./forecasted_header";
 import { ForecastedWarehouseFilter } from "./forecasted_warehouse_filter";
-import { Component, onWillStart } from "@odoo/owl";
+import { ForecastedProductVariantFilter } from "./forecasted_product_variant_filter";
+import { Component, markup, onWillStart } from "@odoo/owl";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 
 export class StockForecasted extends Component {
@@ -18,6 +20,7 @@ export class StockForecasted extends Component {
         ControlPanel,
         ForecastedButtons,
         ForecastedWarehouseFilter,
+        ForecastedProductVariantFilter,
         ForecastedHeader,
         View,
         ForecastedDetails,
@@ -36,22 +39,30 @@ export class StockForecasted extends Component {
             this.reloadReport();
         }
         this.warehouses = useState([]);
+        this.variants = useState([]);
 
         onWillStart(this._getReportValues);
+    }
+
+    get warehouseId() {
+        return this.context.warehouse_id;
+    }
+
+    get variantId() {
+        return this.context.variant_id;
     }
 
     async _getReportValues() {
         await this._getResModel();
         const isTemplate = !this.resModel || this.resModel === 'product.template';
         this.reportModelName = `stock.forecasted_product_${isTemplate ? "template" : "product"}`;
-        this.warehouses.splice(0, this.warehouses.length);
-        this.warehouses.push(...await this.orm.searchRead('stock.warehouse', [],['id', 'name', 'code']));
-        if (!this.context.warehouse_id) {
-            this.updateWarehouse(this.warehouses[0].id);
+        await this._loadWarehouses();
+        if (this.context.has_variants) {
+            await this._loadVariants();
         }
         const reportValues = await this.orm.call(this.reportModelName, "get_report_values", [], {
             context: this.context,
-            docids: [this.productId],
+            docids: [this.variantId || this.productId],
         });
         this.docs = {
             ...reportValues.docs,
@@ -62,7 +73,8 @@ export class StockForecasted extends Component {
     }
 
     async _getResModel(){
-        this.resModel = this.context.active_model || this.context.params?.active_model;
+        const active_model = this.context.active_model || this.context.params?.active_model;
+        this.resModel = this.variantId ? "product.product" : active_model;
         //Following is used as a fallback when the forecast is not called by an action but through browser's history
         if (!this.resModel) {
             let resModel = this.props.action.res_model;
@@ -85,9 +97,48 @@ export class StockForecasted extends Component {
         }
     }
 
+    async _loadWarehouses() {
+        const warehouses = await this.orm.searchRead(
+            "stock.warehouse",
+            [["company_id", "=", user.activeCompany.id]],
+            ["id", "name", "code"]
+        );
+        this.warehouses =
+            warehouses.length > 1
+                ? [{ id: 0, name: _t("All Warehouses") }, ...warehouses]
+                : warehouses;
+
+        // If no warehouse is selected by the user, set a default.
+        if (this.warehouseId === undefined) {
+            this.updateWarehouse(this.warehouses[0].id);
+        }
+    }
+
+    async _loadVariants() {
+        const variants = await this.orm.searchRead(
+            "product.product",
+            [["product_tmpl_id", "=", this.productId]],
+            ["id", "display_name"]
+        );
+        this.variants = [{ id: 0, display_name: _t("All Variants") }, ...variants];
+
+        // If no variant is selected by the user, set a default.
+        if (this.variantId === undefined) {
+            this.updateVariant(this.variants[0].id);
+        }
+    }
+
     async updateWarehouse(id) {
-        const hasPreviousValue = this.context.warehouse_id !== undefined;
+        const hasPreviousValue = this.warehouseId !== undefined;
         this.context.warehouse_id = id;
+        if (hasPreviousValue) {
+            await this.reloadReport();
+        }
+    }
+
+    async updateVariant(id) {
+        const hasPreviousValue = this.variantId !== undefined;
+        this.context.variant_id = id;
         if (hasPreviousValue) {
             await this.reloadReport();
         }
@@ -105,21 +156,34 @@ export class StockForecasted extends Component {
         return this.action.doAction(actionRequest, options);
     }
 
+    get selectedWarehouseIds() {
+        if (this.warehouseId === 0) {
+            return this.warehouses
+                .filter((warehouse) => warehouse.id > 0)
+                .map((warehouse) => warehouse.id);
+        }
+        return [this.warehouseId];
+    }
+
     get graphDomain() {
         const domain = [
             ["state", "=", "forecast"],
-            ["warehouse_id", "=", this.context.warehouse_id],
+            ["warehouse_id", "in", this.selectedWarehouseIds],
         ];
         if (this.resModel === "product.template") {
             domain.push(["product_tmpl_id", "=", this.productId]);
         } else if (this.resModel === "product.product") {
-            domain.push(["product_id", "=", this.productId]);
+            const productId =
+                this.context.active_model === "product.template" ? this.variantId : this.productId;
+            domain.push(["product_id", "=", productId]);
         }
         return domain;
     }
 
     get graphInfo() {
-        return { noContentHelp: _t("Try to add some incoming or outgoing transfers.") };
+        return {
+            noContentHelp: markup(`<span class="text-muted">${_t("No History Yet")}</span>`),
+        };
     }
 
     async openView(resModel, view, resId=false, domain = false) {
