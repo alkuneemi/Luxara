@@ -59,6 +59,7 @@ BTREE_INDEX_IGNORE_MODELS = {  # model._name
     'mrp.workcenter.productivity',
     'mrp.workcenter.productivity.loss',
     'payment.provider',
+    'pos.config',
     'pos.payment.method',
     'pos.preset',
     'pos.printer',
@@ -82,6 +83,7 @@ BTREE_INDEX_IGNORE_FIELDS = {
     'mail.message.res_id': 'mail_message_model_res_id_idx',  # usually accessed with `model` in the domain
     'mail.presence.guest_id': 'mail_presence_guest_unique',
     'mail.presence.user_id': 'mail_presence_user_unique',
+    'res.users.company_id': None,  # only linted for auth_totp.wizard, not needed.
 }
 
 
@@ -107,7 +109,7 @@ class TestIndexMeta(TransactionCase):
             if field_name not in model_class._fields:
                 missing_fields.append(field_full_name)
                 continue
-            if table_object not in model_class._table_objects:
+            if table_object is not None and table_object not in model_class._table_objects:
                 missing_table_objects.append(table_object)
 
         if missing_fields or missing_table_objects:
@@ -181,6 +183,34 @@ class TestIndex(TransactionCase):
             or (field._modules and all('test' in module for module in field._modules))
         )
 
+    def get_traversed_fields(self, field: Field, full: bool = False) -> Iterator[Field]:
+
+        def _get_traversed_fields(field: Field, visited: set[Field], full: bool) -> Iterator[Field]:
+            assert field.related is not None
+
+            model_name = field.model_name
+
+            related_segments = field.related.split('.')
+            if not full:
+                related_segments = related_segments[:-1]
+
+            for segment_name in related_segments:
+                segment_field = self.registry[model_name]._fields[segment_name].base_field
+                if segment_field in visited:
+                    continue
+                visited.add(segment_field)
+
+                yield segment_field
+
+                if segment_field.related and not segment_field.store:
+                    # For non-stored related fields, the entire related path needs to be indexed,
+                    # including the last segment.
+                    yield from _get_traversed_fields(segment_field, visited, full=True)
+
+                model_name = segment_field.comodel_name
+
+        yield from _get_traversed_fields(field, visited=set(), full=full)
+
     def test_index_on_one2many_inverse(self):
         """Ensure btree indexes are enforced on the stored inverse fields of One2many relations."""
         fields_to_index = set()
@@ -204,38 +234,6 @@ class TestIndex(TransactionCase):
         Ensure btree indexes are enforced on the fields
         that serve as a 'path' for the value of a related field.
         """
-
-        def get_traversed_fields(
-            field: Field,
-            visited: set[Field] | None = None,
-            full: bool = False,
-        ) -> Iterator[Field]:
-            assert field.related is not None
-
-            if visited is None:
-                visited: set = set()
-
-            model_name = field.model_name
-
-            related_segments = field.related.split('.')
-            if not full:
-                related_segments = related_segments[:-1]
-
-            for segment_name in related_segments:
-                segment_field = self.registry[model_name]._fields[segment_name].base_field
-                if segment_field in visited:
-                    continue
-                visited.add(segment_field)
-
-                yield segment_field
-
-                if segment_field.related and not segment_field.store:
-                    # For non-stored related fields, the entire related path needs to be indexed,
-                    # including the last segment.
-                    yield from get_traversed_fields(segment_field, visited, full=True)
-
-                model_name = segment_field.comodel_name
-
         fields_to_index: dict[str, set[str]] = defaultdict(set)
 
         for model in self.registry.values():
@@ -243,7 +241,7 @@ class TestIndex(TransactionCase):
                 if not field.related:
                     continue
 
-                for segment_field in get_traversed_fields(field):
+                for segment_field in self.get_traversed_fields(field):
                     # If the segment_field.type is:
                     # - 'one2many' -> covered by `test_enforce_index_on_one2many_inverse`
                     # - 'many2many' -> already indexed with a compositive index by default
@@ -261,6 +259,72 @@ class TestIndex(TransactionCase):
             msg = (
                 "The following fields should be indexed with a btree index,\n"
                 "as they are used as a path segment for a related field:\n"
+                "- if the field is sparse -> 'btree_not_null'\n"
+                "- if the field is Required or low fraction of False/NULL values -> True or 'btree'\n"
+                "- if not sure -> 'btree_not_null':\n%s" % "\n".join(field_lines)
+            )
+            self.fail(msg)
+
+    def test_index_on_transitive_dependency(self):
+        """
+        Ensure btree indexes are enforced on many2one fields traversed in
+        @api.depends paths of computed stored fields.
+
+        For @api.depends("corecord_id.another_corecord_id.name"), both
+        `corecord_id` and `another_corecord_id` must be indexed.
+        A direct dependency such as @api.depends("corecord_id") is ignored.
+        """
+
+        def get_transitive_depends(field: Field) -> Iterator[tuple[Field, str]]:
+            for depend_def in self.registry.field_depends.get(field, ()):
+                *segments, _leaf = depend_def.split(".")
+                if not segments:
+                    continue
+
+                model_name = field.model_name
+                for segment_name in segments:
+                    segment_field = self.registry[model_name]._fields[segment_name].base_field
+
+                    if segment_field.related and not segment_field.store:
+                        yield from (
+                            (traversed_field, depend_def)
+                            for traversed_field in self.get_traversed_fields(segment_field, full=True)
+                        )
+                    else:
+                        yield segment_field, depend_def
+
+                    model_name = segment_field.comodel_name
+
+        fields_to_index: dict[str, set[str]] = defaultdict(set)
+
+        for model_class in self.registry.values():
+            for field in model_class._fields.values():
+                if (
+                    # impactful mostly during the flush of compute-stored fields
+                    not (field.compute and field.store)
+                    # already covered by `test_index_on_related_field_path`
+                    or field.related
+                ):
+                    continue
+
+                for segment_field, depend_def in get_transitive_depends(field):
+                    if (
+                        segment_field.type == "many2one"
+                        and not segment_field.inverse  # `inverse` is used instead of searching
+                        and not self.should_ignore(segment_field)
+                    ):
+                        fields_to_index[str(segment_field)].add(
+                            f"{field} (via @api.depends({depend_def!r}))"
+                        )
+
+        if fields_to_index:
+            field_lines = [
+                f'{segment} (used by: {", ".join(sorted(sources))})'
+                for segment, sources in sorted(fields_to_index.items())
+            ]
+            msg = (
+                "The following fields should be indexed with a btree index,\n"
+                "as they are used as transitive path segments in @api.depends:\n"
                 "- if the field is sparse -> 'btree_not_null'\n"
                 "- if the field is Required or low fraction of False/NULL values -> True or 'btree'\n"
                 "- if not sure -> 'btree_not_null':\n%s" % "\n".join(field_lines)

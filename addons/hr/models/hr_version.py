@@ -182,7 +182,7 @@ class HrVersion(models.Model):
     company_country_id = fields.Many2one('res.country', string="Company country",
                                          related='company_id.country_id', readonly=True)
     country_code = fields.Char(related='company_country_id.code', depends=['company_country_id'], readonly=True)
-    employee_type_id = fields.Many2one('hr.employee.type', "Employee Type", tracking=1,
+    employee_type_id = fields.Many2one('hr.employee.type', "Employee Type", tracking=1, index=True,
                                        groups="hr.group_hr_manager")
     additional_note = fields.Text(string='Additional Note', groups="hr.group_hr_user", tracking=1)
 
