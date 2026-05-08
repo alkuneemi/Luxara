@@ -133,10 +133,10 @@
                             invisible="not show_allocation"
                             groups="stock.group_reception_report"/>
                     </div>
-                    <div class="oe_title">
+                    <div class="oe_title mw-100">
                         <h1 class="o_outlined d-flex align-items-center gap-2">
                             <field name="priority" widget="priority"/>
-                            <field name="name"/>
+                            <field name="name" class="overflow-hidden text-nowrap"/>
                         </h1>
                     </div>
                     <group>
