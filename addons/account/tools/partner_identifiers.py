@@ -759,6 +759,20 @@ IDENTIFIERS_METADATA = {
         'category': 'TIN',
         'countries': ['XI'],
     },
+    'TR_MERSIS': {
+        'label': _lt('Mersis Number'),
+        'scheme': 'MERSISNO',
+        'countries': ['TR'],
+    },
+    'TR_TICARET_SICIL': {
+        'label': _lt('Trade Registry Number'),
+        'scheme': 'TICARETSICILNO',
+        'countries': ['TR'],
+    },
+    'TR_SUBE': {
+        'label': _lt('Branch Number'),
+        'countries': ['TR'],
+    },
     # Keep international identifiers at the end of the dict
     'DUNS': {
         'sequence': 100,
