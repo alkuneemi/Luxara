@@ -224,4 +224,28 @@ export class AttendeeCalendarModel extends CalendarModel {
         }
         return normalizedRecord;
     }
+
+    openCancelWizard(resId, recordData, partnerIds, fallback, fallbackArguments, nextAction) {
+        if (user.isAdmin || user.userId === recordData.user_id.id) {
+            if (!recordData.is_draft && (recordData.recurrency || !(partnerIds.length === 1 && partnerIds[0] === user.partnerId))) {
+                this.orm
+                    .call("calendar.event", "action_open_delete_wizard", [
+                        resId,
+                        recordData.current_attendee.id,
+                        nextAction,
+                    ])
+                    .then((action) => {
+                        this.actionService.doAction(action);
+                    });
+            } else {
+                fallback(...fallbackArguments);
+            }
+        } else if (recordData.current_attendee && recordData.current_status !== "declined") {
+            this.orm
+                .call("calendar.attendee", "do_decline", [recordData.current_attendee.id])
+                .then(() => {
+                    this.actionService.doAction("soft_reload");
+                });
+        }
+    };
 }
