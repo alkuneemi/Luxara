@@ -18,13 +18,12 @@ registry.category("web_tour.tours").add("CustomerDisplayTourOnlinePayment", {
             CustomerDisplay.postMessage(CustomerDisplay.ORDER_IS_FINALIZED, "order is finalized"),
             negateStep(Dialog.is()),
             {
-                content: "Check that we are now on the 'Thank you' screen",
-                trigger: "div:contains('Thank you.')",
-                run: "click",
+                content: "Check that we are now on the feedback screen",
+                trigger: ".feedback-summary",
             },
             CustomerDisplay.postMessage(CustomerDisplay.NEW_ORDER, "new order"),
             {
-                trigger: "div:contains('Welcome.')",
+                trigger: "div:contains('Welcome')",
             },
             Order.doesNotHaveLine({}),
             CustomerDisplay.amountIs("Total", "0.00"),

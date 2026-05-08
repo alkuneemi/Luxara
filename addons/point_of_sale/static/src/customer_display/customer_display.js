@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "@web/owl2/utils";
-import { Component, whenReady } from "@odoo/owl";
+import { Component, useEffect, whenReady } from "@odoo/owl";
 import { OdooLogo } from "@point_of_sale/app/components/odoo_logo/odoo_logo";
 import { MainComponentsContainer } from "@web/core/main_components_container";
 import { session } from "@web/session";
@@ -7,10 +7,11 @@ import { useService } from "@web/core/utils/hooks";
 import { mountComponent } from "@web/env";
 import { BadgeTag } from "@web/core/tags_list/badge_tag";
 import { useTime } from "@point_of_sale/app/hooks/time_hook";
+import { FeedbackPaymentSummary } from "@point_of_sale/app/components/feedback_payment_summary/feedback_payment_summary";
 
 export class CustomerDisplay extends Component {
     static template = "point_of_sale.CustomerDisplay";
-    static components = { OdooLogo, MainComponentsContainer, BadgeTag };
+    static components = { OdooLogo, MainComponentsContainer, BadgeTag, FeedbackPaymentSummary };
     static props = [];
 
     setup() {
@@ -25,6 +26,24 @@ export class CustomerDisplay extends Component {
                 ?.querySelector(".orderline.selected")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
+
+        useEffect(
+            (theme) => {
+                if (!theme) {
+                    return;
+                }
+                const params = new URLSearchParams(location.search);
+                const currentTheme = params.get("theme") || "light";
+
+                if (currentTheme !== theme) {
+                    const searchParams = new URLSearchParams(window.location.search);
+                    searchParams.set("theme", theme);
+
+                    window.location.search = searchParams.toString(); // triggers reload to apply theme
+                }
+            },
+            () => [this.order.displayTheme]
+        );
     }
 
     get qrPaymentData() {
