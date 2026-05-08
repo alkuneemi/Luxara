@@ -1,6 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.tests.common import tagged, TransactionCase
+from datetime import timedelta
+from freezegun import freeze_time
+
+from odoo import Command, fields
+from odoo.addons.mail.tools.discuss import Store
+from odoo.tests.common import tagged, TransactionCase, new_test_user
 
 
 @tagged('at_install', '-post_install')  # LEGACY at_install
@@ -82,3 +87,95 @@ class TestResUsers(TransactionCase):
                 user.sudo().res_users_settings_id,
                 "No res.users.settings record must be created for '%s' users." % (username)
             )
+
+    def _create_user_for_meeting_status(self):
+        return new_test_user(
+            self.env,
+            login='meeting_status_%s' % self._testMethodName,
+            name='Meeting Status %s' % self._testMethodName,
+        )
+
+    def _create_event_for_meeting_status(self, user, start, stop, privacy='public'):
+        return self.env['calendar.event'].create({
+            'name': 'Meeting Status %s' % self._testMethodName,
+            'start': start,
+            'stop': stop,
+            'show_as': 'busy',
+            'privacy': privacy,
+            'allday': False,
+            'attendee_ids': [Command.create({
+                'partner_id': user.partner_id.id,
+                'state': 'accepted',
+            })],
+        })
+
+    def _get_main_user_store_values(self, user):
+        store_data = Store().add(user.partner_id, "_store_partner_fields")._build_result()
+        user_values = next(
+            (values for values in store_data.get("res.users", []) if values["id"] == user.id),
+            None,
+        )
+        self.assertTrue(user_values, "The store should contain values for the partner main user.")
+        return user_values
+
+    @freeze_time("2026-05-05")
+    def test_meeting_status_sent_for_appropriate_event(self):
+        user = self._create_user_for_meeting_status()
+        now = fields.Datetime.now()
+        event = self._create_event_for_meeting_status(
+            user,
+            start=now - timedelta(minutes=30),
+            stop=now + timedelta(hours=1),
+        )
+        user_values = self._get_main_user_store_values(user)
+        self.assertIn(
+            'in_meeting_until',
+            user_values,
+            "in_meeting_until should be sent in main user fields when all meeting conditions are met.",
+        )
+        self.assertEqual(
+            fields.Datetime.to_datetime(user_values['in_meeting_until']),
+            event.stop,
+            "Stored in_meeting_until should match the meeting stop datetime.",
+        )
+
+    @freeze_time("2026-05-05")
+    def test_meeting_status_for_private_event(self):
+        user = self._create_user_for_meeting_status()
+        now = fields.Datetime.now()
+        self._create_event_for_meeting_status(
+            user,
+            start=now - timedelta(minutes=30),
+            stop=now + timedelta(hours=1),
+            privacy='private',
+        )
+        self.assertFalse(
+            user.in_meeting_until,
+            "in_meeting_until should not be set for private events.",
+        )
+        user_values = self._get_main_user_store_values(user)
+        self.assertNotIn(
+            'in_meeting_until',
+            user_values,
+            "in_meeting_until should not be sent in main user fields for private events.",
+        )
+
+    @freeze_time("2026-05-05")
+    def test_meeting_status_before_meeting_start(self):
+        user = self._create_user_for_meeting_status()
+        now = fields.Datetime.now()
+        self._create_event_for_meeting_status(
+            user,
+            start=now + timedelta(minutes=30),
+            stop=now + timedelta(hours=1, minutes=30),
+        )
+        self.assertFalse(
+            user.in_meeting_until,
+            "in_meeting_until should not be set before the meeting start.",
+        )
+        user_values = self._get_main_user_store_values(user)
+        self.assertNotIn(
+            'in_meeting_until',
+            user_values,
+            "in_meeting_until should not be sent in main user fields before meeting start.",
+        )
