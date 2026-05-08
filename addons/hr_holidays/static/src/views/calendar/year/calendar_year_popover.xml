@@ -16,4 +16,31 @@
             </t>
         </t>
     </t>
+
+    <t t-name="hr_holidays.CalendarYearPopover.record">
+        <a href="#"
+            t-on-click.prevent="() => this.onRecordClick(record)"
+            t-attf-style="{{ this.getRecordStyle(record) }}"
+            t-attf-class="o_cw_popover_link d-flex align-items-center gap-2 {{ this.getRecordClass(record) }} {{record.startHour ? 'o_event_dot' : 'o_event_allday'}}"
+            t-att-data-id="record.id"
+            t-att-data-title="record.title">
+            <span t-if="record.startHour"><t t-out="record.startHour" /></span>
+            <span class="d-flex align-items-center gap-2 w-100">
+                <i area-hidden="true" t-if="record.titleIcon" t-attf-class="me-1 {{record.titleIcon}}"/>
+                <span class="o_event_title text-truncate" style="max-width: 200px;" t-att-title="record.title">
+                    <t t-out="record.title"/>
+                </span>
+                <span t-if="record.stateLabel"
+                    t-attf-class="badge rounded-pill px-2 py-1 flex-shrink-0 {{
+                        record.rawRecord.state === 'confirm' ? 'bg-warning text-white' :
+                        record.rawRecord.state === 'refuse' ? 'bg-danger text-white' :
+                        record.rawRecord.state === 'validate1' ? 'bg-warning text-white' :
+                        record.rawRecord.state === 'validate' ? 'bg-success text-white' :
+                        'bg-secondary'
+                    }}">
+                    <t t-out="record.stateLabel"/>
+                </span>
+            </span>
+        </a>
+    </t>
 </templates>

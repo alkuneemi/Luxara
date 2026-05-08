@@ -38,6 +38,14 @@ export class TimeOffCalendarModel extends CalendarModel {
             result.requestDateFromPeriod = rawRecord.request_date_from_period;
             result.requestDateToPeriod = rawRecord.request_date_to_period;
         }
+        const states = {
+            confirm: "To Approve",
+            refuse: "Refused",
+            validate1: "Second Approval",
+            validate: "Approved",
+            cancel: "Cancelled",
+        };
+        if (rawRecord.state) result.stateLabel = states[rawRecord.state];
         return result;
     }
 

@@ -404,7 +404,16 @@ class HrEmployee(models.Model):
             'has_accrual_allocation': self.env['hr.work.entry.type'].has_accrual_allocation(),
             'allocation_data': self.env['hr.work.entry.type'].get_allocation_data_request(target_date, False),
             'allocation_request_amount': self.get_allocation_requests_amount(),
+            'allocation_request_days': self.get_allocation_requests_days(),
         }
+
+    @api.model
+    def get_allocation_requests_days(self):
+        employee = self._get_contextual_employee()
+        allocations = self.env['hr.leave.allocation']._read_group(
+            [('employee_id', '=', employee.id), ('state', '=', 'confirm')], [], ['number_of_days:sum'],
+        )
+        return allocations[0][0] if allocations else 0.0
 
     @api.model
     def get_allocation_requests_amount(self):

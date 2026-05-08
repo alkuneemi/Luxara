@@ -23,12 +23,16 @@
                     holidayStatusId="holiday[3]"
                     employeeId="this.props.employeeId"/>
             </t>
-            <div t-if="this.state.allocationRequests" class="o_timeoff_card py-3">
-                <strong class="o_timeoff_name">Pending Requests</strong>
-                <span t-on-click="this.openPendingRequests"
-                    class="o_timeoff_duration text-primary cursor-pointer">
-                    <t t-out="this.state.allocationRequests"/>
-                </span>
+            <div t-if="this.state.allocationRequests" class="o_timeoff_card text-primary">
+                <div class="o_timeoff_card_inner" t-on-click="this.openNewAllocation">
+                    <span class="o_timeoff_duration">
+                        <t t-out="this.state.allocationRequestDays"/>
+                    </span>
+                    <div class="o_timeoff_card_text">
+                        <span class="o_timeoff_name">Pending Allocations</span>
+                        <span class="o_timeoff_validity">New Request</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

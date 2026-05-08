@@ -3,6 +3,7 @@ import { TimeOffCard } from "./time_off_card";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { DateTimeInput } from "@web/core/datetime/datetime_input";
 import { Component, onWillStart } from "@odoo/owl";
+import { useNewAllocationRequest } from "@hr_holidays/views/hooks";
 
 export class TimeOffDashboard extends Component {
     static components = { TimeOffCard, DateTimeInput };
@@ -12,11 +13,13 @@ export class TimeOffDashboard extends Component {
     setup() {
         this.orm = useService("orm");
         this.actionService = useService("action");
+        this.newAllocRequest = useNewAllocationRequest();
         this.state = useState({
             date: luxon.DateTime.now(),
             today: luxon.DateTime.now(),
             holidays: [],
             allocationRequests: 0,
+            allocationRequestDays: 0,
         });
         useBus(this.env.timeOffBus, "update_dashboard", async () => {
             await this.loadDashboardData();
@@ -48,6 +51,7 @@ export class TimeOffDashboard extends Component {
         )
         this.state.holidays = dashboardData['allocation_data'];
         this.state.allocationRequests = dashboardData['allocation_request_amount'];
+        this.state.allocationRequestDays = dashboardData['allocation_request_days'];
         this.hasAccrualAllocation = dashboardData['has_accrual_allocation'];
         this.hasFutureAllocation = dashboardData['has_future_allocation'];
     }
@@ -65,5 +69,11 @@ export class TimeOffDashboard extends Component {
             context: this.getContext(),
         });
         this.actionService.doAction(action);
+    }
+
+    async openNewAllocation() {
+        await this.newAllocRequest({
+            employeeId: this.props.employeeId,
+        });
     }
 }
