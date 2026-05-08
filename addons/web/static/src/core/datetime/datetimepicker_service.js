@@ -450,10 +450,10 @@ export const datetimePickerService = {
                         );
                         saveAndClose();
                     },
-                    onSelect: (value, unit) => {
+                    onSelect: (value, unit, shouldApply) => {
                         value &&= markRaw(value);
                         updateValue(value, unit, "picker");
-                        if (!pickerProps.range && pickerProps.type === "date") {
+                        if (shouldApply) {
                             saveAndClose();
                         }
                     },
@@ -475,11 +475,10 @@ export const datetimePickerService = {
                             }
                         }
                     }
-
-                    shouldFocus = true;
                 });
                 const popover = createPopover(DateTimePickerPopover, {
                     useBottomSheet: isBottomSheet(),
+                    setActiveElement: false,
                     async onClose() {
                         const abort = updateValueFromInputs();
                         if (abort) {
