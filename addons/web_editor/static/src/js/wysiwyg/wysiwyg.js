@@ -2851,8 +2851,27 @@ export class Wysiwyg extends Component {
         const $delay_translation = $('.o_delay_translation');
         $delay_translation.removeClass('o_delay_translation');
 
-        $('.o_editable')
-            .removeClass('o_editable o_is_inline_editable o_editable_date_field_linked o_editable_date_field_format_changed');
+        const editorClassesToStrip = [
+            'o_editable',
+            'o_is_inline_editable',
+            'o_editable_date_field_linked',
+            'o_editable_date_field_format_changed',
+        ];
+        const strippedEditorClasses = [];
+        for (const node of $(editorClassesToStrip.join(", ")).toArray()) {
+            const removedClasses = editorClassesToStrip.filter(className => node.classList.contains(className));
+            if (!removedClasses.length) {
+                continue;
+            }
+            node.classList.remove(...removedClasses);
+            strippedEditorClasses.push([node, removedClasses]);
+        }
+
+
+        const restoreEditorClasses = () =>
+            strippedEditorClasses.forEach((node, removedClasses) =>
+                node.classList.add(...removedClasses)
+            );
 
         const saveElementFuncName = this.options.enableTranslation
             ? '_saveTranslationElement'
@@ -2915,6 +2934,7 @@ export class Wysiwyg extends Component {
                                 placement: 'auto',
                             })
                             .popover('show');
+                        restoreEditorClasses();
                         reject();
                     });
                 });
