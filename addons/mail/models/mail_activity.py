@@ -302,25 +302,42 @@ class MailActivity(models.Model):
                 self.env[model].browse(res_ids).message_subscribe(partner_ids=pids)
 
         # send notifications about activity creation
-        todo_activities = activities.filtered(lambda act: act.active and act.date_deadline <= fields.Date.today() and act.user_id)
-        if todo_activities:
-            for user, user_activities in todo_activities.grouped('user_id').items():
-                user._bus_send("mail.activity/updated", {"activity_created": True, "count_diff": len(user_activities)})
+        for user, count_diff in activities._get_activity_count_diff_by_user().items():
+            user._bus_send("mail.activity/updated", {"activity_created": True, "count_diff": count_diff})
         return activities
 
-    def write(self, vals):
+    def _get_activity_count_diff_by_user(self):
         today = fields.Date.today()
+        activities = self.filtered(lambda act: act.active and act.date_deadline <= today and act.user_id)
+        if not activities:
+            return {}
 
-        def get_user_todo_activity_count(activities):
-            return {
-                user: len(user_activities.filtered(lambda a: a.active and a.date_deadline <= today))
-                for user, user_activities in activities.grouped('user_id').items()
-                if user
-            }
+        result = defaultdict(int)
+        grouped_by_record = activities.grouped(lambda a: (a.res_model_id, a.res_id, a.user_id))
+        user_ids, model_ids, res_ids = (set() for _ in range(3))
+        for (res_model_id, res_id, user_id), acts in grouped_by_record.items():
+            if not res_model_id:
+                result[user_id] = len(acts)
+            else:
+                user_ids.add(user_id.id)
+                model_ids.add(res_model_id.id)
+                res_ids.add(res_id)
+        if user_ids:
+            domain = [('id', 'not in', activities.ids),
+                ('date_deadline', '<=', today),
+                ('user_id', 'in', user_ids),
+                ('res_model_id', 'in', model_ids),
+                ('res_id', 'in', res_ids)]
+            already_existing = set(activities.env['mail.activity']._read_group(domain=domain, groupby=['res_model_id', 'res_id', 'user_id']))
+            for (res_model_id, res_id, user_id), act in grouped_by_record.items():
+                if res_model_id and (res_model_id, res_id, user_id) not in already_existing:
+                    result[user_id] += 1
+        return result
 
+    def write(self, vals):
         original_user_todo_activity_count = None
         if 'date_deadline' in vals or 'active' in vals or 'user_id' in vals:
-            original_user_todo_activity_count = get_user_todo_activity_count(self)
+            original_user_todo_activity_count = self._get_activity_count_diff_by_user()
 
         new_user_activities = self.env['mail.activity']
         if vals.get('user_id'):
@@ -342,7 +359,7 @@ class MailActivity(models.Model):
 
         # update activity counter
         if original_user_todo_activity_count is not None:
-            new_user_todo_activity_count = get_user_todo_activity_count(self)
+            new_user_todo_activity_count = self._get_activity_count_diff_by_user()
             for user in new_user_todo_activity_count.keys() | original_user_todo_activity_count.keys():
                 count_diff = new_user_todo_activity_count.get(user, 0) - original_user_todo_activity_count.get(user, 0)
                 if count_diff > 0:
@@ -353,10 +370,8 @@ class MailActivity(models.Model):
         return res
 
     def unlink(self):
-        todo_activities = self.filtered(lambda act: act.active and act.date_deadline <= fields.Date.today() and act.user_id)
-        if todo_activities:
-            for user, user_activities in todo_activities.grouped('user_id').items():
-                user._bus_send("mail.activity/updated", {"activity_deleted": True, "count_diff": -len(user_activities)})
+        for user, count_diff in self._get_activity_count_diff_by_user().items():
+            user._bus_send("mail.activity/updated", {"activity_deleted": True, "count_diff": -count_diff})
         return super().unlink()
 
     @api.model
