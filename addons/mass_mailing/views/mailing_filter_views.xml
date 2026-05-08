@@ -7,8 +7,8 @@
            <search string="Mailing Filters">
                 <field name="name"/>
                 <field name="mailing_model_id"/>
-                <filter string="My Filters"
-                        name="filter_saved_by_me"
+                <filter string="My Lists"
+                        name="list_saved_by_me"
                         domain="[('create_uid', '=', uid)]"
                         help="Filters saved by me"/>
                 <group>
@@ -24,12 +24,69 @@
         <field name="name">mailing.filter.view.list</field>
         <field name="model">mailing.filter</field>
         <field name="arch" type="xml">
-            <list string="Mailing filters" sample="1">
+            <list string="Mailing filters" sample="1" js_class="dynamic_list_list_view">
                 <field name="name"/>
                 <field name="create_uid" string="Saved by" widget="many2one_avatar_user"/>
                 <field name="mailing_model_id" string="Recipients"/>
                 <field name="mailing_domain" string="Domain" optional="hide"/>
             </list>
+        </field>
+    </record>
+
+    <record id="mailing_filter_view_kanban" model="ir.ui.view">
+        <field name="name">mailing.filter.view.kanban</field>
+        <field name="model">mailing.filter</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile o_kanban_mailing_list" js_class="dynamic_list_kanban_view"
+                    action="action_view_recipients" type="object" highlight_color="color">
+                <field name="active"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex gap-1 flex-row justify-content-between align-items-center flex-wrap">
+                            <div class="col-lg-3 col-sm-6 col-12 py-0 my-auto">
+                                <span class="d-inline-block w-100 text-truncate fs-2 fw-normal lh-sm" t-att-title="record.name.value">
+                                    <field name="name"/>
+                                </span>
+                            </div>
+                            <div class="col-lg-1 col-6 my-auto d-flex">
+                                <div class="d-flex flex-row justify-content-start">
+                                    <button title="View Recipients" name="action_view_recipients" type="object"
+                                        class="o_mailing_list_kanban_button o_mailing_list_kanban_big_nb text-primary fw-bold">
+                                        <i class="fa fa-bolt me-1" aria-hidden="true"/>
+                                    </button>
+                                    <button title="View Recipients" name="action_view_recipients" type="object"
+                                        class="o_mailing_list_kanban_button fs-4 lh-1 text-start ms-2">
+                                        <field name="mailing_model_id"/> <br/>Dynamic List
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="o_mailing_list_kanban_stats order-4 order-lg-3 col-lg-5 col-sm-12 col-12 py-0 my-3 my-sm-auto d-flex justify-content-sm-between justify-content-start flex-wrap">
+                                <a t-attf-class="me-sm-0 me-3 fs-4 fw-light lh-1 text-truncate #{record.mailing_count.value == 0 ? 'text-muted pe-none' : ''}" tabindex="-1"
+                                    name="action_view_mailings" type="object">
+                                    <field name="mailing_count" class="fw-normal"/>
+                                    <br/>
+                                    <i class="fa fa-paper-plane-o me-1" aria-hidden="true"/> <span class="text-muted">Mailings</span>
+                                </a>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-name="menu" t-if="!selection_mode">
+                        <div class="d-flex flex-column">
+                            <a role="menuitem" class="dropdown-item oe_kanban_action" type="open" href="#">Edit</a>
+                            <hr class="my-1"/>
+                            <a role="menuitem" class="dropdown-item oe_kanban_action" name="action_send_mailing" type="object">New Mailing</a>
+                            <hr class="my-1"/>
+                            <a role="menuitem" class="dropdown-item oe_kanban_action" name="action_archive" href="#" type="object" t-if="record.active.raw_value">Archive</a>
+                            <a role="menuitem" class="dropdown-item oe_kanban_action" name="action_unarchive" type="object" t-if="!record.active.raw_value">Unarchive</a>
+                            <a role="menuitem" class="dropdown-item oe_kanban_action" name="unlink" type="object" href="#">Delete</a>
+                            <hr class="my-1 mb-2"/>
+                            <div t-if="widget.editable" role="menuitem" aria-haspopup="true">
+                                <field name="color" widget="kanban_color_picker"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -54,24 +111,31 @@
                                options="{'model': 'mailing_model_name'}"
                                invisible="not mailing_model_id"/>
                     </group>
+                    <group>
+                        <field name="color" widget="color_picker"/>
+                    </group>
                 </sheet>
+                <footer>
+                    <button string="Save" type="object" name="action_view_recipients" class="btn-primary"/>
+                    <button class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
             </form>
         </field>
     </record>
 
     <record id="mailing_filter_action" model="ir.actions.act_window">
-        <field name="name">Favorite Filters</field>
+        <field name="name">Dynamic Lists</field>
         <field name="res_model">mailing.filter</field>
-        <field name="view_mode">list,form</field>
-        <field name="context">{'search_default_filter_saved_by_me': 1}
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_list_saved_by_me': 1}
         </field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No saved filter yet!
+                Create a Dnamic List
             </p><p>
-                While designing the mailing, you can define the rules to filter recipients.
-                To save the same criteria for future use, you can add it to the favorite list
-                by clicking on <i class="fa fa-floppy-o text-warning"></i> icon next to "Recipients".
+                Dynamic lists are smart lists that update themselves.
+                Define your rules to automatically target recipients who match specific conditions.
+                e.g., "Recent shoppers" or "B2B leads in Canada"
             </p>
         </field>
     </record>
