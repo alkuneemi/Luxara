@@ -1,13 +1,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import Command
+from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from odoo.addons.sale.tests.common import SaleCommon
+from odoo.addons.website_sale.tests.common import WebsiteSaleCommon
 
 
 @tagged('post_install', '-at_install')
-class TestSaleOrder(SaleCommon):
+class TestSaleOrder(SaleCommon, WebsiteSaleCommon):
 
     def test_delivery_methods_match_order_company(self):
         company_1 = self.env['res.company'].create({'name': 'Test Company 1'})
@@ -57,3 +59,9 @@ class TestSaleOrder(SaleCommon):
         available_dms = sale_order._get_delivery_methods()
         self.assertIn(delivery_1, available_dms)
         self.assertNotIn(delivery_2, available_dms)
+
+    def test_change_company_on_sale_order(self):
+        company = self.env['res.company'].create({'name': 'Test Company'})
+        self.cart.action_confirm()
+        with self.assertRaises(UserError):
+            self.cart.write({'company_id': company.id})
