@@ -21,8 +21,7 @@ export class PosConfig extends models.ServerModel {
         // We can read everything since its only related to the current test.
         const orderIds = this.env["pos.order"].search_read([], ["id"]).map((order) => order.id);
         return {
-            deleted_record_ids: {},
-            dynamic_records: {
+            records: {
                 ...this.env["pos.order"].read_pos_data(orderIds, [], configId),
             },
         };

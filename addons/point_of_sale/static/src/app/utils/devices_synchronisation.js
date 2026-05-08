@@ -92,8 +92,7 @@ export default class DevicesSynchronisation {
      * and synchronize the records with other devices.
      */
     async readDataFromServer() {
-        const serverOpenOrders = this.pos.getOpenOrders().filter((o) => o.isSynced);
-        const { domain, recordIds } = this.constructOrdersDomain(serverOpenOrders);
+        const { domain, recordIds } = this.constructOrdersDomain();
         let response = {};
         try {
             response = await this.pos.data.call("pos.config", "read_config_open_orders", [
@@ -111,8 +110,8 @@ export default class DevicesSynchronisation {
             return;
         }
 
-        if (Object.keys(response.dynamic_records).length) {
-            const missing = await this.pos.data.missingRecursive(response.dynamic_records);
+        if (Object.keys(response.records).length) {
+            const missing = await this.pos.data.missingRecursive(response.records);
             const { dynamicR, staticR } = Object.entries(missing).reduce(
                 (acc, [model, records]) => {
                     if (this.dynamicModels.has(model)) {
@@ -136,10 +135,6 @@ export default class DevicesSynchronisation {
                     order.session_id = session;
                 }
             }
-        }
-
-        if (Object.keys(response.deleted_record_ids).length) {
-            this.processDeletedRecords(response.deleted_record_ids);
         }
     }
 
@@ -192,6 +187,7 @@ export default class DevicesSynchronisation {
             const serverRecs = records.filter((r) => r.isSynced);
             const ids = serverRecs.map((r) => r.id);
             const config = this.pos.config;
+            const session = this.pos.session;
             const domains = [];
 
             if (ids.length === 0 && model !== "pos.order") {
@@ -227,10 +223,18 @@ export default class DevicesSynchronisation {
             if (model === "pos.order") {
                 domain = Domain.or([
                     domain,
-                    new Domain([
-                        ["id", "not in", ids],
-                        ["state", "=", "draft"],
-                        ["config_id", "in", [config.id, ...config.raw.trusted_config_ids]],
+                    Domain.and([
+                        new Domain([
+                            ["id", "not in", ids],
+                            ["config_id", "in", [config.id, ...config.raw.trusted_config_ids]],
+                        ]),
+                        Domain.or([
+                            new Domain([["state", "=", "draft"]]),
+                            new Domain([
+                                ["state", "=", "cancel"],
+                                ["session_id", "=", session.id],
+                            ]),
+                        ]),
                     ]),
                 ]);
 

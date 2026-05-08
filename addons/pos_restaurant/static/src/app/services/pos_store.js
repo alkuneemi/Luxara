@@ -375,6 +375,12 @@ patch(PosStore.prototype, {
 
         return false;
     },
+    async afterOrderDeletion(order) {
+        await super.afterOrderDeletion(...arguments);
+        if (this.removeOrderShouldRedirect(this.selectedOrder, true)) {
+            this.navigate("FloorScreen");
+        }
+    },
     removeOrder(order) {
         const orderRemoved = super.removeOrder(...arguments);
         if (this.removeOrderShouldRedirect(order, orderRemoved)) {
@@ -388,7 +394,8 @@ patch(PosStore.prototype, {
             hasBeenRemoved &&
             wasCurrentOrder &&
             this.config.module_pos_restaurant &&
-            this.router.state.current !== "TicketScreen"
+            this.router.state.current !== "TicketScreen" &&
+            this.router.state.current !== "FloorScreen"
         );
     },
     async closingSessionNotification(data) {

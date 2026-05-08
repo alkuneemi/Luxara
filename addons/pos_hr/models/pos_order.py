@@ -17,5 +17,11 @@ class PosOrder(models.Model):
             else:
                 order.cashier = order.user_id.name
 
+    def _get_cashier(self):
+        self.ensure_one()
+        if self.employee_id:
+            return self.employee_id._get_related_partners()
+        return super()._get_cashier()
+
     def _prepare_pos_log(self, body):
         return super()._prepare_pos_log(body) + Markup("<br/>") + _("Cashier %s", self.cashier)

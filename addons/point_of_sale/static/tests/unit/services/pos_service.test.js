@@ -1,5 +1,5 @@
 import { test, expect, describe } from "@odoo/hoot";
-import { getFilledOrder, setupPosEnv, createPaymentLine } from "../utils";
+import { getFilledOrder, setupPosEnv, createPaymentLine, dialogActions } from "../utils";
 import { definePosModels } from "../data/generate_model_definitions";
 import { ConnectionLostError } from "@web/core/network/rpc";
 import {
@@ -9,6 +9,7 @@ import {
 import { prepareRoundingVals } from "../accounting/utils";
 import { getService, patchWithCleanup } from "@web/../tests/web_test_helpers";
 import { localization } from "@web/core/l10n/localization";
+import { click } from "@odoo/hoot-dom";
 const { DateTime } = luxon;
 
 definePosModels();
@@ -331,19 +332,34 @@ describe("pos_store.js", () => {
         const order1 = await getFilledOrder(store);
         await store.syncAllOrders();
         await store.deleteOrders([order1]);
-        expect(store.models["pos.order"].getBy("uuid", order1.uuid)).toBeEmpty();
+        const deletedOrder1 = store.models["pos.order"].getBy("uuid", order1.uuid);
+        expect(deletedOrder1).not.toBeEmpty();
+        expect(deletedOrder1.state).toBe("cancel");
+
+        const order2 = await getFilledOrder(store);
+        await store.deleteOrders([order2]);
+        const deletedOrder2 = store.models["pos.order"].getBy("uuid", order2.uuid);
+        expect(deletedOrder2).toBeEmpty();
     });
 
     test("deleteOrders multiple orders", async () => {
         const store = await setupPosEnv();
+        const order1 = await getFilledOrder(store);
+        await store.syncAllOrders();
         await getFilledOrder(store);
         store.addNewOrder();
+
         let openOrders = store.getOpenOrders();
-        expect(openOrders.length).toBe(2);
+        expect(openOrders.length).toBe(3);
         const deletedOrders = await store.deleteOrders(openOrders);
         expect(deletedOrders).toBe(true);
         openOrders = store.getOpenOrders();
         expect(openOrders.length).toBe(0);
+
+        const orders = store.models["pos.order"].getAll();
+        expect(orders.length).toBe(1);
+        expect(orders[0].uuid).toBe(order1.uuid);
+        expect(orders[0].state).toBe("cancel");
     });
 
     test("productsToDisplay", async () => {
@@ -488,10 +504,20 @@ describe("pos_store.js", () => {
 
     test("onDeleteOrder", async () => {
         const store = await setupPosEnv();
-        const order = store.addNewOrder();
-        const deletedOrder = await store.onDeleteOrder(order);
-        expect(order.uiState.displayed).toBe(false);
-        expect(deletedOrder).toBe(true);
+        const order1 = store.addNewOrder();
+        const result1 = await store.onDeleteOrder(order1);
+        expect(store.models["pos.order"].getBy("uuid", order1.uuid)).toBeEmpty();
+        expect(result1).toBe(true);
+
+        const order2 = await getFilledOrder(store);
+        await store.syncAllOrders();
+        const steps = [() => click(".btn-primary")]; // Confirm deletion because of existing orderlines
+        const action = async () => await store.onDeleteOrder(order2);
+        const result2 = await dialogActions(action, steps);
+        const deletedOrder2 = store.models["pos.order"].getBy("uuid", order2.uuid);
+        expect(deletedOrder2).not.toBeEmpty();
+        expect(deletedOrder2.state).toBe("cancel");
+        expect(result2).toBe(true);
     });
 
     test("setNextOrderRefs", async () => {
