@@ -307,3 +307,39 @@ class TestWorkeEntryHolidaysWorkEntry(TestWorkEntryHolidaysBase):
         self.assertEqual(1, len(leave_work_entry))
         self.assertTrue(leave_work_entry.work_entry_type_id == self.work_entry_type_leave)
         self.assertEqual(2.0, leave_work_entry.duration)
+
+    def test_work_entries_overlap_work_leaves_same_interval(self):
+        work_entry_type_offsite = self.env['hr.work.entry.type'].create({
+            'name': 'Offsite Work',
+            'is_leave': True,
+            'code': 'WORKTEST300',
+        })
+        leave_offsite_type = self.env['hr.leave.type'].create({
+            'name': 'Offsite Work',
+            'time_type': 'other',
+            'requires_allocation': False,
+            'allow_request_on_top': True,
+            'work_entry_type_id': work_entry_type_offsite.id,
+        })
+        remote = self.env['hr.leave'].create({
+            'name': 'remote1',
+            'employee_id': self.richard_emp.id,
+            'holiday_status_id': self.leave_remote_type.id,
+            'request_date_from': date(2015, 11, 2),
+            'request_date_to': date(2015, 11, 6),
+        })
+        offsite = self.env['hr.leave'].create({
+            'name': 'offsite1',
+            'employee_id': self.richard_emp.id,
+            'holiday_status_id': leave_offsite_type.id,
+            'request_date_from': date(2015, 11, 3),
+            'request_date_to': date(2015, 11, 3),
+        })
+        (remote | offsite).action_approve()
+
+        work_entries = self.richard_emp.generate_work_entries(self.start.date(), self.end.date())
+
+        worked_leave_work_entries = work_entries.filtered(
+            lambda we: we.work_entry_type_id in (self.work_entry_type_remote | work_entry_type_offsite)
+        )
+        self.assertEqual(5, len(worked_leave_work_entries))
