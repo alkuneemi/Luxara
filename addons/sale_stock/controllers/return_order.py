@@ -1,0 +1,118 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+import json
+from collections import defaultdict
+
+from odoo.exceptions import AccessError, MissingError
+from odoo.http import request, route
+from odoo.http.stream import content_disposition
+
+from odoo.addons.sale.controllers import portal as sale_portal
+
+
+class CustomerPortal(sale_portal.CustomerPortal):
+
+    @route(
+        "/return/order/content",
+        type="jsonrpc", auth="user", readonly=True
+    )
+    def return_order_content(self, order_id, access_token):
+        """Prepare return details of order depending on deliveries.
+
+        :param int order_id: The order for which we are preparing return content.
+        :param str access_token: The access token used to authenticate the request.
+        :return: A dict containing a list of returnable lines vals depending on deliveries.
+        :rtype: dict.
+        """
+        try:
+            sale_order = self._document_check_access(
+                "sale.order", order_id, access_token=access_token
+            )
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+
+        return_data = {
+            "company_name": sale_order.company_id.name,
+            "currency_id": sale_order.currency_id.id,
+            "warehouse_address": sale_order.warehouse_id.partner_id.address,
+            "returnable_lines": [],
+            "return_reasons": [{
+                "id": reason.id,
+                "name": reason.name,
+            } for reason in request.env["return.reason"].search([])],
+        }
+        for line in sale_order.order_line:
+            if not line._is_returnable():
+                continue
+            common_line_vals = {
+                "name": line.product_id.with_context(display_default_code=False).display_name,
+                "price": line.price_unit,
+                "product_id": line.product_id.id,
+            }
+            for move in line.move_ids:
+                picking = move.picking_id
+                if not (picking.picking_type_code == "outgoing" and picking.state == "done"):
+                    continue
+                returned_qty = sum(
+                    rm.quantity for rm in move.returned_move_ids if rm.state == "done"
+                )
+                remaining_delivered_qty = move.quantity - returned_qty
+                if remaining_delivered_qty:
+                    return_data["returnable_lines"].append({
+                        **common_line_vals,
+                        **picking._get_return_details(),
+                        "remaining_delivered_qty": remaining_delivered_qty,
+                        "lot_name": ", ".join(move.lot_ids.mapped("name")),
+                    })
+
+        return return_data
+
+    @route("/my/orders/<int:order_id>/download_return_label", type="http", auth="user")
+    def return_order_dowload_label(
+        self, order_id, access_token=False, picking_details="", return_reason=""
+    ):
+        """Render a PDF summarizing product returns per picking.
+
+        Each picking is rendered on a separate page, listing the returned products along with the
+        selected return reason.
+
+        :param int order_id: The order for which we are preparing return content.
+        :param str access_token: The access token used to authenticate the request.
+        :param dict[int, list[tuple[int, float]]] picking_details: Mapping of picking IDs
+            to a list of (product_id, returned_quantity) tuples.
+        :param str return_reason: Selected return reason id in string.
+        :return: PDF document as binary content.
+        :rtype: bytes
+        """
+        try:
+            sale_order = self._document_check_access(
+                "sale.order", int(order_id), access_token=access_token
+            )
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+
+        picking_details = json.loads(picking_details)
+        qty_by_delivery = defaultdict(dict)
+        for picking_id, products in picking_details.items():
+            picking_id = int(picking_id)
+            for product_id, qty in products:
+                qty_by_delivery[picking_id][product_id] = qty
+
+        return_data = {
+            "wh_address_id": sale_order.warehouse_id.partner_id,
+            "qty_by_delivery": qty_by_delivery,
+            "return_reason": self.env["return.reason"].browse(int(return_reason)),
+        }
+        pdf = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
+            "sale_stock.action_report_return_label",
+            list(qty_by_delivery.keys()), data=return_data,
+        )[0]
+
+        pdfhttpheaders = [
+            ("Content-Disposition", content_disposition(
+                f"Return - {sale_order.name}.pdf", "inline"
+            )),
+            ("Content-Type", "application/pdf"),
+            ("Content-Length", len(pdf)),
+        ]
+        return request.make_response(pdf, headers=pdfhttpheaders)
