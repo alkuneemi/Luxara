@@ -525,6 +525,21 @@ class IrAttachment(models.Model):
         return ret_attachments
 
     @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        # Prevent returning currest resId when in the ir.attachment form
+        # to prevent circular attachments.
+        ctx = self.env.context
+        current_record_id = ctx.get('current_attachment_id', False) or ctx.get('params', {}).get('resId', False)
+        if current_record_id:
+            args = args or []
+            args = expression.AND([
+                args,
+                [('id', '!=', current_record_id)]
+            ])
+
+        return super().name_search(name=name, args=args, operator=operator, limit=limit)
+
+    @api.model
     def _search(self, domain, offset=0, limit=None, order=None):
         # add res_field=False in domain if not present; the arg[0] trick below
         # works for domain items and '&'/'|'/'!' operators too
@@ -601,6 +616,10 @@ class IrAttachment(models.Model):
     def write(self, vals):
         self.check('write', values=vals)
         # remove computed field depending of datas
+        for rec in self:
+            if vals.get('res_model', rec.res_model) == 'ir.attachment' and rec.id == vals.get('res_id', rec.res_id):
+                raise UserError(_('You cannot attach an attachment to itself.\n \
+                %s == res_id: %s', self, vals['res_id']))
         for field in ('file_size', 'checksum', 'store_fname'):
             vals.pop(field, False)
         if 'mimetype' in vals or 'datas' in vals or 'raw' in vals:
