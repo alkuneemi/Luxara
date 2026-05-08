@@ -230,3 +230,27 @@ test("Members are partitioned by online/offline", async () => {
         after: ["h6", { text: "Offline - 1" }],
     });
 });
+
+test("should open avatar popover only for members with linked user", async () => {
+    const pyEnv = await startServer();
+    const [partnerId1, partnerId2] = pyEnv["res.partner"].create([
+        { name: "Member With User" },
+        { name: "Member Without User" },
+    ]);
+    pyEnv["res.users"].create([{ partner_id: partnerId1 }]);
+    const channelId = pyEnv["discuss.channel"].create({
+        name: "TestChannel",
+        channel_member_ids: [
+            Command.create({ partner_id: partnerId1 }),
+            Command.create({ partner_id: partnerId2 }),
+        ],
+        channel_type: "channel",
+    });
+    await start();
+    await openDiscuss(channelId);
+    await click(".o-discuss-ChannelMember:text('Member With User')");
+    await contains(".o_avatar_card");
+    await contains(".o_card_user_infos > span:text('Member With User')");
+    await click(".o-discuss-ChannelMember:text('Member Without User')");
+    await contains(".o_avatar_card", { count: 0 });
+});
