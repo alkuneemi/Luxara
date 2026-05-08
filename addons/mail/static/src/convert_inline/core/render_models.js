@@ -100,14 +100,6 @@ export class LayoutModel {
         }
     }
 
-    /**
-     * TODO EGGMAIL investigate when identities are merged to clarify the flow
-     * Can be overridden to define how 2 layouts should be merged together
-     */
-    merge(originalLayout) {
-        return originalLayout;
-    }
-
     get template() {
         return this.constructor.template;
     }
@@ -118,6 +110,9 @@ export class LayoutModel {
      */
     setAttributes({ attributes = {}, classNames = "", style = {} } = {}, ref = "root") {
         this.refToAttributes.assign(attributes, ref);
+        if ("class" in attributes) {
+            this.refToClassNames.union(attributes["class"], ref);
+        }
         this.refToStyleInfo.assign(style, ref);
         this.refToClassNames.union(classNames, ref);
     }
@@ -159,15 +154,6 @@ export class ElementLayout extends LayoutModel {
         this.tag = tag;
     }
 
-    /**
-     * TODO EGGMAIL: reevaluate if we merge into the argument or if the
-     * argument merges into this => for consistency
-     */
-    merge(originalLayout) {
-        originalLayout.setAttributes(this.refs.root);
-        originalLayout.tag = this.tag;
-    }
-
     getStyleInfo() {
         return this.refToStyleInfo.get("root");
     }
@@ -184,6 +170,21 @@ export class TextNodeLayout {
         const fragment = document.createDocumentFragment();
         const textNode = document.createTextNode(this.content);
         fragment.append(textNode);
+        return fragment;
+    }
+}
+
+export class CommentNodeLayout {
+    content = "";
+
+    constructor({ content }) {
+        this.content = content;
+    }
+
+    renderToFragment() {
+        const fragment = document.createDocumentFragment();
+        const comment = document.createComment(this.content);
+        fragment.append(comment);
         return fragment;
     }
 }
@@ -219,10 +220,6 @@ export class LayoutCell extends LayoutModel {
  * TODO EGGMAIL: simplify/flatten model and combine properties with EmailNode?
  */
 export class Analysis {
-    parsingFacts = {};
-    constraintsForAncestors = [];
-    constraintsForDescendants = [];
-    facts = {};
     isFrozen = false;
 
     constructor(options = {}) {
@@ -230,7 +227,11 @@ export class Analysis {
             canMerge: false,
             canParentMerge: false,
         };
-        this.merge(options);
+        this.facts = { ...(options.facts ?? {}) };
+        this.parsingFacts = { ...(options.parsingFacts ?? {}) };
+        // constraints are functions: (emailNode) => { shouldPropagate: bool, facts: {} }
+        this.constraintsForAncestors = [...(options.constraintsForAncestors ?? [])];
+        this.constraintsForDescendants = [...(options.constraintsForDescendants ?? [])];
     }
 
     /**
@@ -239,18 +240,6 @@ export class Analysis {
      */
     freeze() {
         this.isFrozen = true;
-    }
-
-    merge(analysis) {
-        Object.assign(this.parsingFacts, analysis.parsingFacts ?? {});
-        this.constraintsForAncestors = this.constraintsForAncestors.concat(
-            analysis.constraintsForAncestors
-        );
-        this.constraintsForDescendants = this.constraintsForDescendants.concat(
-            analysis.constraintsForDescendants
-        );
-        Object.assign(this.facts, analysis.facts ?? {});
-        return this;
     }
 }
 
@@ -264,7 +253,6 @@ export function renderEmailNode(emailNode, context = {}) {
 
 export class EmailNode {
     referenceNodes = new UniqueArray();
-    analysis = new Analysis();
     children = new UniqueArray();
 
     constructor({ layout, referenceNode, parent, analysis = {} } = {}) {
@@ -275,7 +263,7 @@ export class EmailNode {
         if (referenceNode) {
             this.pushReferenceNode(referenceNode);
         }
-        this.analysis.merge(analysis);
+        this.analysis = new Analysis(analysis);
     }
 
     spliceChildren(start, deleteCount, ...items) {

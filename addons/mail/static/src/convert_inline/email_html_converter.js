@@ -16,7 +16,8 @@ export class EmailHtmlConverter extends PluginManager {
         this.startPlugins();
         this.isReady = true;
 
-        const inlineTemplate = await this.htmlConversion();
+        await this.buildEmailModel();
+        const inlineTemplate = this.renderEmailTemplate();
         if (!inlineTemplate) {
             return null;
         }
@@ -40,10 +41,14 @@ export class EmailHtmlConverter extends PluginManager {
         return template;
     }
 
-    async htmlConversion() {
+    async buildEmailModel() {
         // 1 prepare working environment, this is the only phase where reference
         // can be modified
         this.trigger("on_will_load_reference_content_handlers");
+
+        // TODO EGGMAIL: evaluate if we need another async step to communicate
+        // with the server (eg to handle attachments) => instead of doing it
+        // in the reference prior to calling htmlConversion.
 
         // 2 load async content (e.g. images) for final dimensions
         await Promise.all(this.trigger("on_load_reference_content_handlers").flat());
@@ -55,9 +60,6 @@ export class EmailHtmlConverter extends PluginManager {
 
         // 4 build the render tree
         this.trigger("on_build_render_tree_handlers");
-
-        // 5 render the email template from the render tree
-        return this.renderEmailTemplate();
     }
 
     onLayoutDimensionsUpdated(dimensions) {

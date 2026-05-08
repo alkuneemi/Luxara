@@ -1,7 +1,12 @@
 import { Plugin } from "../plugin";
 import { registry } from "@web/core/registry";
-import { Analysis, ElementLayout, EmailNode, TextNodeLayout } from "./render_models";
-import { renderEmailNode } from "./render_models";
+import {
+    Analysis,
+    ElementLayout,
+    EmailNode,
+    renderEmailNode,
+    TextNodeLayout,
+} from "./render_models";
 
 /**
  * This plugin handles 4 conversion phases, leading to the ability to render the email html:
@@ -26,18 +31,17 @@ export class RenderPlugin extends Plugin {
     };
 
     setup() {
-        this.rejectedNodes = new WeakSet();
-        this.isAllowedNode = (node) => !this.rejectedNodes.has(node);
+        this.discardedNodes = new WeakSet();
         this.needSyntheticEmailNode = new Set();
     }
 
     buildRenderTree() {
         this.discardIrrelevantNodes();
-        const node = this.config.reference;
-        if (!this.isAllowedReferenceNode(node) || this.rejectedNodes.has(node)) {
+        const reference = this.config.reference;
+        if (!this.isAllowedReferenceNode(reference) || this.discardedNodes.has(reference)) {
             return;
         }
-        this.renderTree = this.createEmailNode(node);
+        this.renderTree = this.createEmailNode(reference);
         this.addSyntheticEmailNodes();
         this.addBottomUpConstraints(this.renderTree);
         this.addTopDownConstraints(this.renderTree);
@@ -57,7 +61,7 @@ export class RenderPlugin extends Plugin {
             if (!this.checkPredicates("should_discard_reference_node_predicates", node)) {
                 continue;
             }
-            this.rejectedNodes.add(node);
+            this.discardedNodes.add(node);
             this.processChildNodes(node, (child) => {
                 rejectedChildren.add(child);
             });
@@ -69,38 +73,52 @@ export class RenderPlugin extends Plugin {
     // -- -- deny absorption by parent (if parent allows it)
     // -- -- deny future children absorption (without considering children identities)
     // -- -- provide useful layout info (styleInfo selection, attributes, etc)
-    createEmailNode(node, parentEmailNode) {
+    createEmailNode(referenceNode, parentEmailNode) {
         let childNodes, emailNode;
-        if (node.nodeType === Node.TEXT_NODE) {
-            const layout = new TextNodeLayout({ content: node.nodeValue });
+        if (referenceNode.nodeType === Node.TEXT_NODE) {
+            const layout = new TextNodeLayout({ content: referenceNode.nodeValue });
             emailNode = new EmailNode({
                 layout,
-                referenceNode: node,
+                referenceNode: referenceNode,
                 parent: parentEmailNode,
             });
         } else {
-            const { layout, analysis } = this.processElementLayout(node, parentEmailNode);
+            const { layout, analysis } = this.processElementLayout(referenceNode, parentEmailNode);
             const parentParsingFacts = parentEmailNode.analysis.parsingFacts;
             if (parentEmailNode && !analysis.parsingFacts.canParentMerge) {
                 parentParsingFacts.canMerge = false;
             }
             emailNode = parentEmailNode;
             if (parentEmailNode && parentParsingFacts.canMerge) {
-                parentEmailNode.pushReferenceNode(node);
-                // defaults to keeping the lowest layout as the main layout,
-                // written on top of the parent values.
-                // merge can be overridden to change that behavior.
-                parentEmailNode.layout = layout.merge(parentEmailNode.layout);
-                parentEmailNode.analysis.merge(analysis);
+                parentEmailNode.pushReferenceNode(referenceNode);
+                if (
+                    !this.delegateTo("email_node_merge_overrides", {
+                        emailNode: parentEmailNode,
+                        layout,
+                        analysis,
+                    })
+                ) {
+                    parentEmailNode.layout = this.mergeElementLayout(
+                        parentEmailNode.layout,
+                        layout
+                    );
+                    parentEmailNode.analysis = this.mergeElementAnalysis(
+                        parentEmailNode.analysis,
+                        analysis
+                    );
+                }
             } else {
                 emailNode = new EmailNode({
                     layout,
-                    referenceNode: node,
+                    referenceNode: referenceNode,
                     parent: parentEmailNode,
                     analysis,
                 });
             }
-            childNodes = this.processChildNodes(node, this.isAllowedNode);
+            childNodes = this.processChildNodes(
+                referenceNode,
+                (node) => !this.discardedNodes.has(node)
+            );
             if (childNodes.length !== 1) {
                 emailNode.analysis.parsingFacts.canMerge = false;
             }
@@ -115,11 +133,41 @@ export class RenderPlugin extends Plugin {
     }
 
     /**
+     * Default merge logic for layouts, childLayout overrides parentLayout
+     * values
+     */
+    mergeElementLayout(parentLayout, childLayout) {
+        const mergedLayout = new ElementLayout({
+            tag: childLayout.tag || parentLayout.tag || "DIV",
+        });
+        mergedLayout.setAttributes(parentLayout.refs.root);
+        mergedLayout.setAttributes(childLayout.refs.root);
+        return mergedLayout;
+    }
+
+    /**
+     * Default merge logic for analysis, childAnalysis overrides parentAnalysis
+     * values, and constraints are concatenated
+     */
+    mergeElementAnalysis(parentAnalysis, childAnalysis) {
+        const mergedAnalysis = new Analysis(parentAnalysis);
+        Object.assign(mergedAnalysis.parsingFacts, childAnalysis.parsingFacts);
+        mergedAnalysis.constraintsForAncestors = mergedAnalysis.constraintsForAncestors.concat(
+            childAnalysis.constraintsForAncestors
+        );
+        mergedAnalysis.constraintsForDescendants = mergedAnalysis.constraintsForAncestors.concat(
+            childAnalysis.constraintsForDescendants
+        );
+        Object.assign(mergedAnalysis.facts, childAnalysis.facts);
+        return mergedAnalysis;
+    }
+
+    /**
      * some emailNode children need to be grouped into synthetic
      * containers (eg children of a hybrid fluid row, if a cluster of inline nodes
      * is next to a "block", they all should be wrapped in a "block")
-     * it's best to have a separate phase for this to separate it from the merging
-     * phase
+     * This process is done separately because it does not follow the
+     * natural treeWalking order
      */
     addSyntheticEmailNodes() {
         for (const emailNode of [...this.needSyntheticEmailNode]) {
@@ -139,7 +187,7 @@ export class RenderPlugin extends Plugin {
             {
                 layout: new ElementLayout({
                     tag: referenceNode.tagName,
-                    attributes: this.getAttributes(referenceNode),
+                    attributes: this.getAttribute(referenceNode),
                     style: this.getStyleInfo(referenceNode),
                 }),
                 analysis: new Analysis({
@@ -198,6 +246,8 @@ export class RenderPlugin extends Plugin {
             }
             for (const [fact, value] of Object.entries(annotations.facts ?? {})) {
                 if (!this.delegateTo("merge_fact_overrides", { emailNode, fact, value })) {
+                    // TODO EGGMAIL: same considerations as in addBottomUpConstraints to
+                    // aggregate facts
                     emailNode.analysis.facts[fact] = value;
                 }
             }
