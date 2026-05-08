@@ -2,6 +2,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Command
 
 
 class SaleOrder(models.Model):
@@ -114,6 +115,27 @@ class SaleOrder(models.Model):
             },
         }
 
+    def action_open_delivery_note_wizard(self):
+        self.ensure_one()
+        if not self.show_ship_button:
+            return None
+        context = {
+            "default_dm_id": self.carrier_id.id,
+            "default_so_id": self.id,
+            "default_note_line_ids": [
+                Command.create({"sol_id": line.id})
+                for line in self.order_line.filtered(lambda line: line.product_id.type == "consu")
+            ],
+        }
+        return {
+            "name": _("Ship Order %s", self.name),
+            "type": "ir.actions.act_window",
+            "res_model": "delivery.note.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": context,
+        }
+
     def _prepare_delivery_line_vals(self, carrier, price_unit):
         context = {}
         if self.partner_id:
@@ -173,7 +195,7 @@ class SaleOrder(models.Model):
         return weight
 
     def _update_order_line_info(self, *args, **kwargs):
-        """ Override of `sale` to recompute the delivery prices.
+        """Override of `sale` to recompute the delivery prices.
 
         :param object product_id: Recordset of `product.product`.
         :return: The unit price of the product, based on the pricelist of the sale order and

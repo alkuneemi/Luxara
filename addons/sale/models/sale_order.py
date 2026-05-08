@@ -446,7 +446,7 @@ class SaleOrder(models.Model):
         string="Is Expired", compute="_compute_is_expired", search="_search_is_expired"
     )
     partner_credit_warning = fields.Text(compute="_compute_partner_credit_warning")
-    show_deliver_button = fields.Boolean(compute="_compute_show_deliver_button")
+    show_ship_button = fields.Boolean(compute="_compute_show_ship_button")
     tax_calculation_rounding_method = fields.Selection(
         related="company_id.tax_calculation_rounding_method", depends=["company_id"]
     )
@@ -1064,12 +1064,22 @@ class SaleOrder(models.Model):
         return ["!", "&"] + expired_domain
 
     @api.depends("order_line.qty_delivered")
-    def _compute_show_deliver_button(self):
+    def _compute_show_ship_button(self):
+        """Compute the show_ship_button field to display the ship button on the SO.
+
+        The button is shown there is at least one 'consu' product with a 'manual' qty_delivered
+        method and if the line is not fully delivered.
+        """
         for order in self:
-            order.show_deliver_button = (
-                order.state == "sale"
-                and any(line.qty_delivered < line.product_uom_qty if line.product_uom_qty > 0 else line.qty_delivered > line.product_uom_qty for line in order.order_line)
-                and all(line.qty_delivered_method == "manual" for line in order.order_line)
+            order.show_ship_button = order.state == "sale" and any(
+                line.product_id.type == "consu"
+                and (
+                    line.qty_delivered < line.product_uom_qty
+                    if line.product_uom_qty > 0
+                    else line.qty_delivered > line.product_uom_qty
+                )
+                and line.qty_delivered_method == "manual"
+                for line in order.order_line
             )
 
     @api.depends("company_id", "fiscal_position_id")
@@ -2620,9 +2630,9 @@ class SaleOrder(models.Model):
             raise UserError(
                 _(
                     "The following sale orders %(invalid_orders)s can't be delivered. Cancelled all"
-                    " deliveries."
-                ),
-                invalid_orders=", ".join(invalid_targets.mapped("name")),
+                    " deliveries.",
+                    invalid_orders=", ".join(invalid_targets.mapped("name"))
+                )
             )
         for order in self:
             for line in order.order_line:
