@@ -53,23 +53,15 @@ export class AccountLabelTextField extends ListTextField {
             fieldString: "Product",
             getDomain: () => this.productDomain,
             placeholder: "",
-            resModel: "product.product",
+            resModel: this.m2XAutoCompleteModel,
             searchLimit: 8,
-            update: async (records) => {
-                const rec = records?.[0];
-                if (!rec) {
-                    return;
-                }
-                await this.props.record.update({ product_id: { id: rec.id } });
-                // useInputField won't auto-sync when dirty (user was typing), force it.
-                const textarea = this.textareaRef.el;
-                if (textarea) {
-                    textarea.value = this.props.record.data[this.props.name] || "";
-                    textarea.focus();
-                }
-            },
+            update: (records) => this.onMany2XUpdate(records),
             value: "",
         };
+    }
+
+    get m2XAutoCompleteModel() {
+        return "product.product";
     }
 
     get m2xInput() {
@@ -87,6 +79,24 @@ export class AccountLabelTextField extends ListTextField {
             return false;
         }
         return true;
+    }
+
+    async onMany2XUpdate(records) {
+        const rec = records?.[0];
+        if (!rec) {
+            return;
+        }
+        await this.updateMany2XProduct(rec);
+        // useInputField won't auto-sync when dirty (user was typing), force it.
+        const textarea = this.textareaRef.el;
+        if (textarea) {
+            textarea.value = this.props.record.data[this.props.name] || "";
+            textarea.focus();
+        }
+    }
+
+    async updateMany2XProduct(record) {
+        await this.props.record.update({ product_id: { id: record.id } });
     }
 
     async onLabelInput() {

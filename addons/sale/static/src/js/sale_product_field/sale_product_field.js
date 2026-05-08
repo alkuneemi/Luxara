@@ -15,7 +15,7 @@ import { ProductCombo } from "../models/product_combo";
 import { ProductConfiguratorDialog } from "../product_configurator_dialog/product_configurator_dialog";
 import { getLinkedSaleOrderLines, serializeComboItem, getSelectedCustomPtav } from "../sale_utils";
 
-async function applyProduct(record, product) {
+export async function applyProduct(record, product) {
     // handle custom values & no variants
     const customAttributesCommands = [
         x2ManyCommands.set([]),  // Command.clear isn't supported in static_list/_applyCommands

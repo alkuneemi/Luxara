@@ -30,32 +30,7 @@
             <t t-else="">
                 <div class="d-flex align-items-center gap-1">
                     <Many2One t-props="this.m2oProps" t-on-keydown="this.onM2oInputKeydown"/>
-                    <t t-if="this.showLabelVisibilityToggler">
-                        <button
-                            class="btn fa fa-bars text-start o_external_button px-1"
-                            type="button"
-                            id="labelVisibilityButtonId"
-                            data-tooltip="Add a description"
-                            t-on-click="() => this.switchLabelVisibility()"
-                        />
-                    </t>
                 </div>
-                <div
-                    t-if="this.props.readonly"
-                    class="o_input d-print-none border-0 fst-italic"
-                    t-att-class="{ ...this.sectionAndNoteClasses, 'd-none': !(this.columnIsProductAndLabel.value and this.label) }"
-                    t-out="this.label"
-                />
-                <textarea
-                    t-else=""
-                    class="o_input d-print-none border-0 fst-italic"
-                    placeholder="Enter a description"
-                    rows="1"
-                    type="text"
-                    t-att-class="{ ...this.sectionAndNoteClasses, 'd-none': !(this.columnIsProductAndLabel.value and (this.label or this.labelVisibility.value)) }"
-                    t-att-value="this.label"
-                    t-custom-ref="labelNodeRef"
-                />
             </t>
             <t t-if="this.isPrintMode.value">
                 <div class="d-none d-print-block text-wrap" t-out="this.label"/>
