@@ -180,3 +180,21 @@ class SaleOrder(models.Model):
                 ],
             },
         }
+
+    # === TOOLING METHODS ===#
+
+    def _prepare_template_order_values(self):
+        """
+        Prepare create values for a sale order template line from a sale order line.
+
+        Override to add extra fields.
+
+        :return: `sale.order.template` create values
+        :rtype: dict
+        """
+        self.ensure_one()
+
+        values = super()._prepare_template_order_values()
+        values.update({"quotation_document_ids": self.quotation_document_ids})
+
+        return values

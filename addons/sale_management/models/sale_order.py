@@ -3,8 +3,7 @@
 from datetime import timedelta
 from itertools import starmap, zip_longest
 
-from odoo import _, api, fields, models
-from odoo.exceptions import AccessError
+from odoo import api, fields, models
 from odoo.tools import is_html_empty
 
 
@@ -153,59 +152,51 @@ class SaleOrder(models.Model):
                 order._send_order_notification_mail(order.sale_order_template_id.mail_template_id)
         return res
 
-    def _prepare_quotation_template_vals(self):
-        """
-        Prepare the dictionary of values to create a new quotation template.
-        Designed to be overridden by other modules to add extra fields.
-        """
-        template_lines = []
-        for line in self.order_line:
-            line_vals = {
-                "sequence": line.sequence,
-                "company_id": line.company_id.id,
-                "product_id": line.product_id.id,
-                "name": line.name,
-                "product_uom_qty": line.product_uom_qty,
-                "display_type": line.display_type,
-                "collapse_composition": line.collapse_composition,
-                "is_optional": line.is_optional,
-                "collapse_prices": line.collapse_prices,
-            }
-            template_lines.append(fields.Command.create(line_vals))
-
-        return {
-            "name": f"Template from {self.name}",
-            "note": self.note,
-            "company_id": self.company_id.id,
-            "journal_id": self.journal_id.id if self.journal_id else False,
-            "require_signature": self.require_signature,
-            "require_payment": self.require_payment,
-            "prepayment_percent": self.prepayment_percent,
-            "sale_order_template_line_ids": template_lines,
-        }
-
     def action_create_quotation_template(self):
         self.ensure_one()
 
-        if not self.env.user.has_group("sale_management.group_sale_order_template"):
-            raise AccessError(
-                _(
-                    "You do not have the required permissions to create Quotation "
-                    "  Templates. Please contact your system administrator."
-                )
-            )
-
-        template_vals = self._prepare_quotation_template_vals()
+        template_vals = self._prepare_quotation_template_values()
         new_template = self.env["sale.order.template"].create(template_vals)
 
         # Assign the newly created template to the current SO
         self.sale_order_template_id = new_template.id
 
+        return new_template.get_formview_action()
+
+    # === TOOLING METHODS ===#
+
+    def _prepare_quotation_template_values(self):
+        """
+        Prepare the dictionary of values to create a new quotation template from the current
+        order.
+
+        :return: `sale.order.template` create values
+        :rtype: dict
+        """
+        self.ensure_one()
+        template_lines = [
+            fields.Command.create(line._prepare_template_line_values()) for line in self.order_line
+        ]
+
         return {
-            "name": "Quotation Template",
-            "type": "ir.actions.act_window",
-            "res_model": "sale.order.template",
-            "res_id": new_template.id,
-            "view_mode": "form",
-            "target": "current",
+            "name": self.env._("Template from %s", self.name),
+            "sale_order_template_line_ids": template_lines,
+            **self._prepare_template_order_values(),
+        }
+
+    def _prepare_template_order_values(self):
+        """
+        Prepare create values for a sale order template line from a sale order line.
+
+        Designed to be overridden by other modules to add extra fields.
+
+        :return: `sale.order.template` create values
+        :rtype: dict
+        """
+        self.ensure_one()
+        order_fields = ("note", "require_signature", "require_payment", "prepayment_percent")
+        return {
+            **self.read(order_fields)[0],
+            "company_id": self.company_id.id,
+            "journal_id": self.journal_id.id,
         }
