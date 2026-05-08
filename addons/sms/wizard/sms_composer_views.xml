@@ -31,6 +31,8 @@
                         <field name="res_id" invisible="1"/>
                         <field name="res_ids" invisible="1"/>
                         <field name="res_model" invisible="1"/>
+                        <field name="can_edit_body" invisible="1"/>
+                        <field name="render_model" invisible="1"/>
                         <field name="mass_force_send" invisible="1"/>
                         <field name="recipient_single_valid" invisible="1"/>
                         <field name="recipient_single_number" invisible="1"/>
@@ -39,7 +41,10 @@
                         <field name="sanitized_numbers" invisible="1"/>
                         <field name="template_id" invisible="1"/>
                         <div name="recipient_single_description" class="o_form_label d-flex align-items-center" invisible="not comment_single_recipient">
-                            To <field name="recipient_single_description" class="ps-1" invisible="not recipient_single_description"/>
+                            <span class="text-muted">
+                                To
+                            </span>
+                            <field name="recipient_single_description" class="ps-1" invisible="not recipient_single_description"/>
                         </div>
                         <field invisible="not comment_single_recipient" name="recipient_single_number_itf" nolabel="1" onchange_on_keydown="True" placeholder="e.g. +1 415 555 0100"/>
                     </group>
@@ -50,21 +55,50 @@
                             options="{'dynamic_placeholder': true, 'dynamic_placeholder_model_reference_field': 'res_model'}"
                             placeholder="Write a message..."/>
                         <field name="body" widget="sms_widget" invisible="not comment_single_recipient"
-                        placeholder="Write a message..."/>
+                            placeholder="Write a message..."/>
                         <field name="mass_keep_log" invisible="1"/>
                         <field name="use_exclusion_list" invisible="1"/>
                 </sheet>
                 <footer>
                     <!-- attrs doesn't work for 'disabled'-->
                     <button string="Send" type="object" class="oe_highlight" name="action_send_sms" data-hotkey="q"
-                            invisible="composition_mode not in ('comment', 'numbers') or not recipient_single_valid"/>
+                            invisible="composition_mode not in ('comment', 'numbers') or not recipient_single_valid or scheduled_date"/>
                     <button string="Send" type="object" class="oe_highlight" name="action_send_sms" data-hotkey="q"
-                            invisible="composition_mode not in ('comment', 'numbers') or recipient_single_valid" disabled='1'/>
+                            invisible="composition_mode not in ('comment', 'numbers') or recipient_single_valid or scheduled_date" disabled='1'/>
+                    <button string="Schedule" type="object" class="btn-primary" name="action_schedule_message" data-hotkey="q"
+                            invisible="not scheduled_date or not recipient_single_valid"/>
                     <button string="Put in queue" type="object" class="oe_highlight" name="action_send_sms" data-hotkey="q"
                         invisible="composition_mode != 'mass'"/>
                     <button string="Send now" type="object" name="action_send_sms_mass_now" data-hotkey="w"
                         invisible="composition_mode != 'mass'"/>
                     <button class="btn btn-secondary" special="cancel" data-hotkey="x"/>
+                    <field name="scheduled_date" widget="text_scheduled_date" invisible="composition_mode != 'comment'"/>
+                    <field name="template_id" widget="mail_composer_template_selector" options="{'no_label': True}"/>
+                    <div class="ms-auto text-muted d-flex align-items-center" invisible="not sms_char_count">
+                        <field name="sms_char_count" nolabel="1"/>/
+                        <field name="sms_max_char" nolabel="1"/>
+                        <span class="mx-2">|</span>
+                        <field name="sms_count" nolabel="1"/>
+                        <span class="ms-1">SMS</span>
+                        <span class="ms-1" invisible="not sms_encoding">(<field name="sms_encoding" nolabel="1"/>)</span>
+                        <a href="https://iap-services.odoo.com/iap/sms/pricing" target="_blank" title="SMS Pricing" aria-label="SMS Pricing" class="fa fa-lg fa-info-circle text-info ms-2"/>
+                    </div>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="sms_composer_view_form_template_save" model="ir.ui.view">
+        <field name="name">sms.composer.view.form.template.save</field>
+        <field name="model">sms.composer</field>
+        <field name="arch" type="xml">
+            <form string="Save as SMS Template">
+                <group>
+                    <field name="template_name" placeholder="e.g: Send order confirmation" required="1"/>
+                </group>
+                <footer>
+                    <button name="action_create_sms_template" type="object" class="btn btn-primary" string="Save Template"/>
+                    <button class="btn btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>
