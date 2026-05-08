@@ -80,6 +80,7 @@ function loadGoogleFonts() {
 }
 
 const MAX_NBR_DISPLAY_MAIN_THEMES = 6;
+const DESKTOP_PREVIEW_WIDTH = 1440;
 
 /**
  * Returns a list of maximum "resultNbrMax" themes that depends on the wanted
@@ -89,9 +90,8 @@ const MAX_NBR_DISPLAY_MAIN_THEMES = 6;
  * @param {Object} state - The state that contains the wanted industry and color
  * palette.
  * @param {Number} resultNbrMax - The number of different wanted themes.
- * @returns {Promise<Array>} A list of objects that contains the different
- * theme names and their related text svgs (as result of a Promise). The length
- * of the list is at most 'resultNbrMax'.
+ * @returns {Promise<Array>} A list of theme suggestion objects. The length of
+ * the list is at most 'resultNbrMax'.
  */
 async function getRecommendedThemes(orm, state, resultNbrMax = MAX_NBR_DISPLAY_MAIN_THEMES) {
     return orm.call("website", "configurator_recommended_themes", [], {
@@ -969,6 +969,7 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
                 }
                 this.state.updateRecommendedThemes(themes);
             }
+            this.scalePreviewIframes();
         });
 
         useLayoutEffect(
@@ -980,6 +981,12 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
             () =>
                 this.blockUiDuringImageLoading(this.state.extraThemes, this.extraThemeSVGPreviews),
             () => [this.state.extraThemes]
+        );
+
+        useExternalListener(window, "resize", () => this.scalePreviewIframes());
+        useLayoutEffect(
+            () => this.scalePreviewIframes(),
+            () => [this.state.themes, this.state.extraThemes]
         );
     }
 
@@ -996,6 +1003,23 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
         );
     }
 
+    getThemePreviewUrl(theme) {
+        const previewUrl = new URL("/website/configurator/preview", theme.preview_url);
+        const palette = this.state.selectedPalette || {};
+        const cleanColor = (value, fallback = "") => (value || fallback).replace(/^#/, "");
+        previewUrl.searchParams.set("color1", cleanColor(palette.color1));
+        previewUrl.searchParams.set("color2", cleanColor(palette.color2));
+        previewUrl.searchParams.set("color3", cleanColor(palette.color3));
+        previewUrl.searchParams.set("color4", cleanColor(palette.color4));
+        previewUrl.searchParams.set("color5", cleanColor(palette.color5));
+        previewUrl.searchParams.set("body_font", this.state.selectedFont || "Inter");
+        previewUrl.searchParams.set(
+            "heading_font",
+            this.state.selectedHeadingsFont || "Inter Tight"
+        );
+        return previewUrl.toString();
+    }
+
     /**
      * Transforms text svgs into svg elements and adds a loading effect that
      * blocks the UI during the loading of the images inside those svg elements.
@@ -1004,15 +1028,22 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
      * @param {Array} themeSVGPreviews - A reference to the svg elements.
      */
     blockUiDuringImageLoading(themes, themeSVGPreviews) {
-        if (!themes.length) {
-            // There is no svg to transform
+        const themesWithSvg = themes
+            .map((theme, idx) => ({
+                theme,
+                previewEl: themeSVGPreviews[idx]?.el,
+            }))
+            .filter(
+                ({ theme, previewEl }) => theme.svg && previewEl && !previewEl.firstElementChild
+            );
+        if (!themesWithSvg.length) {
             return;
         }
         const proms = [];
         this.uiService.block({ delay: 700 });
         const headingsFont = this.state.selectedHeadingsFont || "Inter Tight";
         const bodyFont = this.state.selectedFont || "Inter";
-        themes.forEach((theme, idx) => {
+        themesWithSvg.forEach(({ theme, previewEl }) => {
             const svgEl = new DOMParser().parseFromString(
                 theme.svg,
                 "image/svg+xml"
@@ -1041,13 +1072,51 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
                     })
                 );
             }
-            themeSVGPreviews[idx].el.appendChild(svgEl);
+            previewEl.appendChild(svgEl);
         });
-        // When all the images inside the svgs are loaded then remove the
-        // loading effect.
         Promise.allSettled(proms).then(() => {
             this.uiService.unblock();
         });
+    }
+
+    scalePreviewIframes() {
+        for (const iframe of document.querySelectorAll(
+            ".o_theme_selection_screen .o_configurator_theme_preview_iframe"
+        )) {
+            this.scalePreviewIframe(iframe);
+        }
+    }
+
+    scalePreviewIframe(iframe) {
+        if (!iframe) {
+            return;
+        }
+
+        const previewContainer = iframe.parentElement;
+        const availableWidth = previewContainer.clientWidth;
+        const availableHeight = previewContainer.clientHeight;
+
+        if (!availableWidth || !availableHeight) {
+            return;
+        }
+
+        const scale = Math.min(1, availableWidth / DESKTOP_PREVIEW_WIDTH);
+        const iframeHeight = Math.floor((availableHeight * 2) / scale);
+        const scrollDistance = Math.max(0, iframeHeight - availableHeight / scale);
+
+        iframe.style.setProperty("width", `${DESKTOP_PREVIEW_WIDTH}px`, "important");
+        iframe.style.setProperty("height", `${iframeHeight}px`, "important");
+        iframe.style.setProperty(
+            "--o-configurator-iframe-scroll-distance",
+            `${Math.floor(scrollDistance)}px`
+        );
+        iframe.style.setProperty("transform-origin", "top left");
+        iframe.style.setProperty("transform", `scale(${scale})`);
+        iframe.style.setProperty("flex", "0 0 auto", "important");
+    }
+
+    onPreviewIframeLoad(ev) {
+        this.scalePreviewIframe(ev.currentTarget);
     }
 
     async chooseTheme(themeName) {
@@ -1069,10 +1138,6 @@ export class ThemeSelectionScreen extends ApplyConfiguratorScreen {
         );
         this.state.extraThemesLoaded = true;
         this.uiService.unblock();
-    }
-
-    getExtraThemeName(idx) {
-        return this.state.extraThemes.length > idx && this.state.extraThemes[idx].name;
     }
 }
 
@@ -1361,11 +1426,7 @@ export class Configurator extends Component {
         }));
 
         const style = window.getComputedStyle(document.documentElement);
-        const palettes = getCSSPalettes(
-            style,
-            PALETTE_NAMES,
-            CUSTOM_BG_COLOR_ATTRS
-        );
+        const palettes = getCSSPalettes(style, PALETTE_NAMES, CUSTOM_BG_COLOR_ATTRS);
 
         const localState = JSON.parse(sessionStorage.getItem(this.storageItemName));
         if (localState) {

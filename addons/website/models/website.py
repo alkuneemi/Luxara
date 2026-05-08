@@ -740,7 +740,12 @@ class Website(models.CachedModel):
 
         process_svg = self.env['website.configurator.feature']._process_svg
         for theme in themes_suggested[:result_nbr_max]:
-            theme['svg'] = process_svg(theme['name'], palette, theme.pop('image_urls'))
+            manifest = get_manifest(theme['name']) or {}
+            image_urls = theme.pop('image_urls', {})
+            if manifest.get('url'):
+                theme['preview_url'] = manifest['url']
+            else:
+                theme['svg'] = process_svg(theme['name'], palette, image_urls)
         return themes_suggested[:result_nbr_max]
 
     def _ai_recommend_themes(self, theme_catalog, industry_name, website_type, positioning, count):
