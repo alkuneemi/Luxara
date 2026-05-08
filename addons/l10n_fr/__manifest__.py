@@ -4,11 +4,12 @@
     'icon': '/account/static/description/l10n.png',
     'countries': ['fr'],
     'version': '2.1',
-    'category': 'Accounting/Localizations/Account Charts',
+    'category': 'Accounting/Localizations/Account Charts/Payment Providers',
     'description': """
 """,
     'depends': [
         'base',
+        'payment',
     ],
     'data': [
         'data/res_country_data.xml',
@@ -17,6 +18,8 @@
     'demo': [
         'demo/demo_company.xml',
     ],
+    'post_init_hook': 'post_init_hook',
+    'uninstall_hook': 'uninstall_hook',
     'author': 'Odoo S.A.',
     'license': 'LGPL-3',
 }
