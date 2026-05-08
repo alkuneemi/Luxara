@@ -445,7 +445,7 @@ class HrVersion(models.Model):
                 version_start = tz.localize(fields.Datetime.to_datetime(version.date_start)).astimezone(pytz.utc).replace(tzinfo=None)
                 version_stop = tz.localize(datetime.combine(fields.Datetime.to_datetime(version.date_end or date_stop),
                                                  datetime.max.time())).astimezone(pytz.utc).replace(tzinfo=None)
-                if version_stop < date_stop:
+                if version.date_end and version_stop < date_stop:
                     if version.date_generated_from != version.date_generated_to:
                         domain_to_nullify |= Domain([
                             ('version_id', '=', version.id),
@@ -458,10 +458,24 @@ class HrVersion(models.Model):
                 date_start_work_entries = max(date_start, version_start)
                 date_stop_work_entries = min(date_stop, version_stop)
                 if force:
+                    if version.work_entry_source == 'attendance':
+                        cal_tz_name = (
+                            version.employee_id.resource_calendar_id.tz
+                            or version.resource_calendar_id.tz
+                            or version.company_id.resource_calendar_id.tz
+                        )
+                        domain_tz = pytz.timezone(cal_tz_name) if cal_tz_name else pytz.utc
+                        date_start_aware = pytz.utc.localize(date_start_work_entries)
+                        date_stop_aware = pytz.utc.localize(date_stop_work_entries)
+                    else:
+                        domain_tz = tz
+                        date_start_aware = date_start_work_entries
+                        date_stop_aware = date_stop_work_entries
+
                     domain_to_nullify |= Domain([
                         ('version_id', '=', version.id),
-                        ('date', '>=', date_start_work_entries.astimezone(tz).date()),
-                        ('date', '<=', date_stop_work_entries.astimezone(tz).date()),
+                        ('date', '>=', date_start_aware.astimezone(domain_tz).date()),
+                        ('date', '<=', date_stop_aware.astimezone(domain_tz).date()),
                         ('state', '!=', 'validated'),
                     ])
                     intervals_to_generate[date_start_work_entries, date_stop_work_entries] |= version
