@@ -77,13 +77,13 @@ patch(AttendeeCalendarModel.prototype, {
         const filters = data.filterSections.partner_ids?.filters;
         if (
             filters &&
-            filters[filters.length - 1].type === "all" &&
-            filters[filters.length - 1].active
+            filters[filters.length - 1]?.type === "all" &&
+            filters[filters.length - 1]?.active
         ) {
             attendeeIds = Object.keys(this.partnerColorMap);
         } else {
             attendeeIds = (filters || [])
-                .filter((filter) => filter.type !== "all" && filter.value && filter.active)
+                .filter((filter) => filter?.type !== "all" && filter.value && filter.active)
                 .map((filter) => filter.value);
         }
         if (!attendeeIds.includes(user.partnerId)) {
@@ -102,11 +102,8 @@ patch(AttendeeCalendarModel.prototype, {
         this.multiCalendar = Object.values(res).some(
             (location) => location.user_id !== user.userId
         );
-        const filters = data.filterSections.partner_ids?.filters;
-        data.userFilterActive =
-            filters &&
-            (filters.filter((filter) => filter.value === user.partnerId)[0]?.active ||
-                (filters[filters.length - 1].type === "all" && filters[filters.length - 1].active));
+        const filters = data.filterSections.calendar_id?.filters;
+        data.userFilterActive = filters?.length > 0 && (filters.filter((filter) => filter.isPrimary)[0].active);
         const events = {};
         let previousDay;
         const rangeInterval = Interval.fromDateTimes(

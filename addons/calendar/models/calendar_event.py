@@ -164,6 +164,11 @@ class CalendarEvent(models.Model):
 
     # description
     name = fields.Char('Meeting Subject', required=True)
+    calendar_id = fields.Many2one('calendar.calendar', string='Calendar', index='btree',
+        default=lambda self: self.env.user.calendar_ids.filtered(lambda c: c.is_primary),
+        domain=lambda self: [("user_id", "=", self.env.user.id), ("is_readonly", "=", False)], ondelete='cascade')
+    show_calendar_in_quickcreate = fields.Boolean(compute='_compute_show_calendar_in_quickcreate')
+    calendar_color = fields.Integer(related='calendar_id.color')
     description = fields.Html('Description',
         help="""When synchronization with an external calendar is active, this description is synchronized \
         with the one of the associated meeting in that external calendar. Any update will be propagated there \
@@ -351,10 +356,18 @@ class CalendarEvent(models.Model):
                 'awaiting_count': attendees_count - accepted_count - declined_count - tentative_count
             })
 
+    @api.depends('user_id')
+    def _compute_show_calendar_in_quickcreate(self):
+        for event in self:
+            event.show_calendar_in_quickcreate = len(event.user_id.calendar_ids) > 1
+
     @api.depends('partner_ids')
     @api.depends_context('uid')
     def _compute_user_can_edit(self):
         for event in self:
+            if event.calendar_id.is_readonly:
+                event.user_can_edit = False
+                continue
             # By default, only current attendees and the organizer can edit the event.
             editor_candidates = set(event.partner_ids.user_ids + event.user_id)
             # Right before saving the event, old partners must be able to save changes.
@@ -375,7 +388,7 @@ class CalendarEvent(models.Model):
     @api.depends('privacy', 'user_id')
     def _compute_effective_privacy(self):
         for event in self:
-            event.effective_privacy = event.privacy or event.sudo().user_id.calendar_default_privacy
+            event.effective_privacy = event.privacy or event.sudo().calendar_id.calendar_default_privacy
 
     @api.depends('effective_privacy')
     def _compute_privacy_placeholder(self):
@@ -1012,7 +1025,7 @@ class CalendarEvent(models.Model):
         """ Checks if the event is private, returning True if the conditions match and False otherwise. """
         self.ensure_one()
         event_is_private = self.privacy == 'private'
-        calendar_is_private = not self.privacy and self.sudo().user_id.calendar_default_privacy == 'private'
+        calendar_is_private = not self.privacy and self.sudo().calendar_id.calendar_default_privacy == 'private'
         user_is_not_partner = self.user_id.id != self.env.uid and self.env.user.partner_id not in self.partner_ids
         return (event_is_private or calendar_is_private) and user_is_not_partner
 
@@ -1204,7 +1217,7 @@ class CalendarEvent(models.Model):
 
     def _get_default_privacy_domain(self):
         # Sub query user settings from calendars that are not private ('public' and 'confidential').
-        public_calendars_settings = self.env['res.users.settings'].sudo()._search([('calendar_default_privacy', '!=', 'private')]).select('user_id')
+        public_calendars = self.env['calendar.calendar'].sudo()._search([('calendar_default_privacy', '!=', 'private')]).select('user_id')
         # display public, confidential events and events with default privacy when owner's default privacy is not private
         return ['|', '|',
             ('privacy', 'in', ['public', 'confidential']),
@@ -1213,7 +1226,7 @@ class CalendarEvent(models.Model):
                 ('privacy', '=', False),
                 '|',
                     ('user_id', '=', False),
-                    ('user_id', 'in', public_calendars_settings)]
+                    ('user_id', 'in', public_calendars)]
 
     def _is_event_over(self):
         """Check if the event is over. This method is used to check if the event
@@ -1465,6 +1478,7 @@ class CalendarEvent(models.Model):
             'weekday': weekday_field_name.upper(),
             'byday': str(get_weekday_occurence(event_date)),
             'day': event_date.day,
+            'calendar_id': self.calendar_id.id,
         }
 
     @api.model

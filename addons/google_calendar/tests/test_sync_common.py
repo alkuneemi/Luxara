@@ -6,10 +6,11 @@ from datetime import datetime
 from freezegun import freeze_time
 from unittest.mock import patch
 
-from odoo.addons.google_calendar.utils.google_calendar import GoogleCalendarService
+from odoo.addons.google_calendar.utils.google_calendar_service import GoogleCalendarService
 from odoo.addons.google_account.models.google_service import GoogleService
 from odoo.addons.google_calendar.models.res_users import ResUsers
-from odoo.addons.google_calendar.models.google_sync import google_calendar_token, GoogleCalendarSync
+from odoo.addons.google_calendar.models.google_event_sync import GoogleEventSync
+from odoo.addons.google_calendar.models.google_sync import google_calendar_token
 from odoo.addons.mail.tests.common import mail_new_test_user
 from odoo.tests.common import HttpCase
 
@@ -55,27 +56,27 @@ class TestSyncGoogle(HttpCase):
         self._gsync_patch_values = defaultdict(list)
 
         # as these are normally post-commit hooks, we don't change any state here
-        def _mock_delete(model, service, google_id, **kwargs):
+        def _mock_delete(model, service, calendar, google_id, **kwargs):
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_deleted_ids.append(google_id)
 
-        def _mock_insert(model, service, values, **kwargs):
+        def _mock_insert(model, service, calendar, values, **kwargs):
             if not values:
                 return
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_insert_values.append((values, kwargs))
 
-        def _mock_patch(model, service, google_id, values, **kwargs):
+        def _mock_patch(model, service, calendar, google_id, values, **kwargs):
             with google_calendar_token(user_id or model.env.user.sudo()) as token:
                 if token:
                     self._gsync_patch_values[google_id].append((values, kwargs))
 
         with self.env.cr.savepoint(), \
-             patch.object(GoogleCalendarSync, '_google_insert', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_insert), \
-             patch.object(GoogleCalendarSync, '_google_delete', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_delete), \
-             patch.object(GoogleCalendarSync, '_google_patch', autospec=True, wraps=GoogleCalendarSync, side_effect=_mock_patch):
+             patch.object(GoogleEventSync, '_google_insert', autospec=True, wraps=GoogleEventSync, side_effect=_mock_insert), \
+             patch.object(GoogleEventSync, '_google_delete', autospec=True, wraps=GoogleEventSync, side_effect=_mock_delete), \
+             patch.object(GoogleEventSync, '_google_patch', autospec=True, wraps=GoogleEventSync, side_effect=_mock_patch):
             yield
 
     @contextmanager

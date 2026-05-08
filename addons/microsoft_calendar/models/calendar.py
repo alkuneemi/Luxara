@@ -588,7 +588,7 @@ class CalendarEvent(models.Model):
             }
             # Set default privacy in event according to the organizer's calendar default privacy if defined.
             if self.user_id:
-                sensitivity_o2m[False] = sensitivity_o2m.get(self.user_id.calendar_default_privacy)
+                sensitivity_o2m[False] = sensitivity_o2m.get(self.calendar_id.calendar_default_privacy)
             else:
                 sensitivity_o2m[False] = 'normal'
             values['sensitivity'] = sensitivity_o2m.get(self.privacy)
