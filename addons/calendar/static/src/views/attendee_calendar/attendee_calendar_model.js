@@ -1,6 +1,8 @@
+import { Domain } from "@web/core/domain";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { user } from "@web/core/user";
+import { unique } from "@web/core/utils/arrays";
 import { CalendarModel } from "@web/views/calendar/calendar_model";
 import { askRecurrenceUpdatePolicy } from "@calendar/views/ask_recurrence_update_policy_hook";
 import {
@@ -15,6 +17,7 @@ export class AttendeeCalendarModel extends CalendarModel {
         super.setup(...arguments);
         this.dialog = services.dialog;
         this.rpc = rpc;
+        this.extraTemporaryPartnerIds = [];
     }
 
     /**
@@ -38,6 +41,108 @@ export class AttendeeCalendarModel extends CalendarModel {
 
     get attendees() {
         return this.data.attendees;
+    }
+
+    get isTemporaryFilterMode() {
+        return !!this.meta?.context?.calendar_temporary_filter;
+    }
+
+    /**
+     * @override
+     */
+    computeDomain(data) {
+        if (!this.isTemporaryFilterMode || !this.meta.domain.length) {
+            return super.computeDomain(data);
+        }
+        return [
+            ...Domain.or([this.meta.domain, [["partner_ids", "in", [user.partnerId]]]]).toList(),
+            ...this.computeRangeDomain(data),
+            ...this.computeFiltersDomain(data),
+        ];
+    }
+
+    /**
+     * Redirect partner_ids to dynamic filter path in temporary mode,
+     * skipping calendar.filters persistence.
+     * @override
+     */
+    async loadFilters(data) {
+        if (this.isTemporaryFilterMode) {
+            const filterInfo = this.meta.filtersInfo["partner_ids"];
+            if (filterInfo) {
+                const saved = filterInfo.writeResModel;
+                filterInfo.writeResModel = null;
+                const result = await super.loadFilters(data);
+                filterInfo.writeResModel = saved;
+                return result;
+            }
+        }
+        return super.loadFilters(data);
+    }
+
+    /**
+     * @override
+     */
+    async loadDynamicFilterSection(data, fieldName, filterInfo, previousSection) {
+        const result = await super.loadDynamicFilterSection(...arguments);
+        if (fieldName !== "partner_ids" || !this.isTemporaryFilterMode) {
+            return result;
+        }
+        const defaultPartnerIds = (this.meta?.context?.default_partner_ids || []).filter(Boolean);
+        const allPartnerIds = unique([...defaultPartnerIds, ...this.extraTemporaryPartnerIds]);
+        const existingValues = new Set(result.filters.map((f) => f.value));
+        const missingPartnerIds = allPartnerIds.filter((id) => !existingValues.has(id));
+        if (missingPartnerIds.length) {
+            const previousFilters = previousSection?.filters || [];
+            const partners = await this.orm.searchRead(
+                "res.partner",
+                [["id", "in", missingPartnerIds]],
+                ["display_name"],
+                { context: { active_test: false } }
+            );
+            for (const partner of partners) {
+                const prev = previousFilters.find(
+                    (f) => f.type === "dynamic" && f.value === partner.id
+                );
+                result.filters.push({
+                    type: "dynamic",
+                    recordId: null,
+                    value: partner.id,
+                    label: partner.display_name || this.defaultFilterLabel,
+                    active: prev ? prev.active : true,
+                    canRemove: false,
+                    colorIndex: partner.id,
+                    hasAvatar: true,
+                });
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @override
+     */
+    async createFilter(fieldName, filterValue) {
+        if (fieldName !== "partner_ids" || !this.isTemporaryFilterMode) {
+            return super.createFilter(...arguments);
+        }
+        const values = Array.isArray(filterValue) ? filterValue : [filterValue];
+        this.extraTemporaryPartnerIds = unique([...this.extraTemporaryPartnerIds, ...values.filter(Boolean)]);
+        await this.load();
+    }
+
+    /**
+     * @override
+     */
+    async updateFilters(fieldName, filters, active) {
+        if (fieldName !== "partner_ids" || !this.isTemporaryFilterMode) {
+            return super.updateFilters(...arguments);
+        }
+        this.keepLast.add(Promise.resolve());
+        for (const filter of filters) {
+            filter.active = active;
+        }
+        await this.debouncedLoad();
     }
 
     /**
@@ -72,27 +177,24 @@ export class AttendeeCalendarModel extends CalendarModel {
     }
 
     /**
-     * Load the filter section and add both 'user' and 'everybody' filters to the context.
-     * @override
-     */
-    async loadFilterSection(fieldName, filterInfo, previousSection) {
-        const result = await super.loadFilterSection(fieldName, filterInfo, previousSection);
-        if (result?.filters) {
-            user.updateContext({
-                calendar_filters: {
-                    all: result?.filters?.find((f) => f.type == "all")?.active ?? false,
-                    user: result?.filters?.find((f) => f.type == "user")?.active ?? false,
-                },
-            });
-        }
-        return result;
-    }
-
-    /**
      * @override
      */
     async updateData(data) {
         await super.updateData(...arguments);
+        const filters = data.filterSections["partner_ids"]?.filters;
+        if (filters) {
+            const activePartnerIds = filters
+                .filter((f) => f.type !== "all" && f.value && f.active)
+                .map((f) => f.value);
+            user.updateContext({
+                calendar_filters: {
+                    all: filters.every((f) => f.active),
+                    user: filters.find((f) => f.type === "user")?.active ?? false,
+                    temporary: this.isTemporaryFilterMode,
+                    partner_ids: activePartnerIds,
+                },
+            });
+        }
         await this.updateAttendeeData(data);
     }
 
