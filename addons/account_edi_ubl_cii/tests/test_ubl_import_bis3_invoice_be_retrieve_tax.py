@@ -130,6 +130,47 @@ class TestUblImportBis3InvoiceBERetrieveTax(TestUblImportBis3InvoiceBE):
         )
 
     @freeze_time('2020-01-01')
+    def test_import_price_include_qty_inflation(self):
+        """Test that the importer does not inflate the price_unit when the tax is
+        price-included and the quantity is greater than 1."""
+
+        self.ensure_installed('account_accountant')
+        tax_21_pi = self.percent_tax(21.0, price_include_override='tax_included')
+
+        self._create_invoice(
+            partner_id=self.partner_be,
+            invoice_line_ids=[
+                self._prepare_invoice_line(name="turlututu", price_unit=1.21, tax_ids=tax_21_pi),
+            ],
+            post=True,
+        )
+
+        invoice = self._import_invoice_as_attachment_on(
+            test_name='test_import_price_include_qty_inflation',
+            journal=self.company_data['default_journal_sale'],
+        )
+        self.assertRecordValues(
+            invoice.invoice_line_ids,
+            [
+                {
+                    'quantity': 2.0,
+                    'price_unit': 1.21,
+                    'tax_ids': tax_21_pi.ids,
+                },
+            ],
+        )
+        self.assertRecordValues(
+            invoice,
+            [
+                {
+                    'amount_untaxed': 2.0,
+                    'amount_tax': 0.42,
+                    'amount_total': 2.42,
+                },
+            ],
+        )
+
+    @freeze_time('2020-01-01')
     def test_partial_import_tax_manual_tax_amounts_invoice_predictive(self):
         self.ensure_installed('account_accountant')
 
