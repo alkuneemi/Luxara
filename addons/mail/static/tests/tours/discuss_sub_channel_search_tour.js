@@ -3,14 +3,24 @@ import { SubChannelList } from "@mail/discuss/core/public_web/sub_channel_list";
 import { status } from "@odoo/owl";
 
 import { registry } from "@web/core/registry";
-import { Deferred } from "@web/core/utils/concurrency";
 import { range } from "@web/core/utils/numbers";
 import { patch } from "@web/core/utils/patch";
 import { effect } from "@web/core/utils/reactive";
 
-let waitForLoadMoreToDisappearDef;
+let waitForLoadMoreToDisappear;
+let resolveLoadMoreDisappeared;
+let subChannelLoadMoreState;
+
+function newLoadMoreDef() {
+    waitForLoadMoreToDisappear = new Promise((resolve) => {
+        resolveLoadMoreDisappeared = resolve;
+    });
+    if (!subChannelLoadMoreState?.isVisible) {
+        resolveLoadMoreDisappeared();
+    }
+}
+
 registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
-    undeterministicTour_doNotCopy: true, // Remove this key to make the tour failed. ( It removes delay between steps )
     steps: () => [
         {
             trigger: "body",
@@ -18,13 +28,14 @@ registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
                 patch(SubChannelList.prototype, {
                     setup() {
                         super.setup(...arguments);
+                        subChannelLoadMoreState = this.loadMoreState;
                         effect(
                             (state) => {
                                 if (status(this) === "destroyed") {
                                     return;
                                 }
                                 if (!state.isVisible) {
-                                    waitForLoadMoreToDisappearDef?.resolve();
+                                    resolveLoadMoreDisappeared?.();
                                 }
                             },
                             [this.loadMoreState]
@@ -55,8 +66,8 @@ registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
         {
             trigger:
                 ".o-mail-SubChannelList .o-mail-SubChannelPreview:count(1):contains(Sub Channel 10)",
-            async run() {
-                waitForLoadMoreToDisappearDef = new Deferred();
+            run() {
+                newLoadMoreDef();
             },
         },
         {
@@ -77,8 +88,8 @@ registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
                 ".o-mail-SubChannelPreview .o-mail-SubChannelPreview-name:text(Sub Channel 10)",
             async run() {
                 // Ensure lazy loading is still working after a search.
-                await waitForLoadMoreToDisappearDef;
-                waitForLoadMoreToDisappearDef = new Deferred();
+                await waitForLoadMoreToDisappear;
+                newLoadMoreDef();
             },
         },
         {
@@ -95,8 +106,8 @@ registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
         {
             trigger: "body",
             async run() {
-                await waitForLoadMoreToDisappearDef;
-                waitForLoadMoreToDisappearDef = new Deferred();
+                await waitForLoadMoreToDisappear;
+                newLoadMoreDef();
             },
         },
         {
@@ -113,7 +124,7 @@ registry.category("web_tour.tours").add("test_discuss_sub_channel_search", {
         {
             trigger: "body",
             async run() {
-                await waitForLoadMoreToDisappearDef;
+                await waitForLoadMoreToDisappear;
             },
         },
         {
