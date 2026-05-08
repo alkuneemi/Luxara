@@ -1120,7 +1120,7 @@ class Picking(models.Model):
         if vals.get('partner_id'):
             for picking in self:
                 if picking.location_id.usage == 'supplier' or picking.location_dest_id.usage == 'customer':
-                    if picking.partner_id:
+                    if picking.partner_id and not self._context.get('update_delivery_shipping_partner'):
                         picking.message_unsubscribe(picking.partner_id.ids)
                     picking.message_subscribe([vals.get('partner_id')])
         if vals.get('picking_type_id'):

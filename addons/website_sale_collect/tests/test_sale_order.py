@@ -133,6 +133,9 @@ class TestSaleOrder(ClickAndCollectCommon):
             'state': wh_partner.state_id.code,
             'country_code': wh_partner.country_code,
         }))
-        new_so._action_confirm()
+        new_so.action_confirm()
         self.assertTrue(new_so.partner_shipping_id)
         self.assertFalse(new_so.partner_shipping_id.active)
+        self.assertTrue(new_so.picking_ids)
+        self.assertFalse(new_so.picking_ids.partner_id.active)
+        self.assertEqual(new_so.picking_ids.message_partner_ids, self.partner)
