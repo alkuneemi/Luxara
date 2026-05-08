@@ -488,3 +488,52 @@ class TestArWithholdingArRi(TestArCommon):
             'amount': 250.0,
             'base_amount': 25000.0,
         }])
+
+    def test_invoice_status_after_voided_check(self):
+        bank_journal = self.company_data['default_journal_bank']
+        bank_journal.outbound_payment_method_line_ids = [
+            Command.create({
+                'payment_method_id': self.env.ref('l10n_latam_check.account_payment_method_own_checks').id,
+                'name': 'Own Checks',
+            }),
+        ]
+
+        invoice = self._create_invoice(
+            company_id=self.company_data['company'].id,
+            partner_id=self.partner_a.id,
+            invoice_line_ids=[self._prepare_invoice_line(price_unit=100, product_id=self.product_a)],
+            move_type='in_invoice',
+            l10n_latam_document_type_id=self.env.ref('l10n_ar.dc_liq_uci_a'),
+            l10n_latam_document_number="001-00001",
+            post=True,
+        )
+
+        payment_method_line = bank_journal._get_available_payment_method_lines('outbound').filtered_domain([('code', '=', 'own_checks')])[:1]
+        action = invoice.action_register_payment()
+        wizard = self.env[action['res_model']].with_context(action['context']).create({
+            'journal_id': bank_journal.id,
+            'payment_method_line_id': payment_method_line.id,
+            'l10n_latam_new_check_ids': [
+                Command.create({
+                    'name': '0000001',
+                    'payment_date': datetime.today(),
+                    'amount': invoice.amount_total,
+                })
+            ],
+        })
+        action = wizard.action_create_payments()
+
+        payment = self.env['account.payment'].browse(action['res_id'])
+        check = payment.l10n_latam_new_check_ids
+        self.assertEqual(check.issue_state, 'handed', 'Own check should be in handed state after payment')
+
+        # invoice status is not_paid -> original payment unreconciled, but still appears as outstanding debit on invoice
+        # payment_line is reconciled -> payment now linked with void move and doesn't appear as outstanding debit
+        check.action_void()
+        self.assertEqual(check.issue_state, 'voided', 'Own check should be voided after action_void()')
+        self.assertEqual(invoice.payment_state, 'not_paid', 'Invoice should return to not_paid after the check is voided')
+
+        payment_line = payment.move_id.line_ids.filtered(
+            lambda l: l.account_id.account_type in ('asset_receivable', 'liability_payable')
+        )
+        self.assertTrue(payment_line.reconciled, "Original payment line should be reconciled with the void move")
