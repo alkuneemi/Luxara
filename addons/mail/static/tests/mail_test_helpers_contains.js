@@ -2,7 +2,7 @@
 
 import { __debug__, after, afterEach, expect, getFixture } from "@odoo/hoot";
 import { queryAll, queryFirst } from "@odoo/hoot-dom";
-import { Deferred, animationFrame, tick } from "@odoo/hoot-mock";
+import { animationFrame, tick } from "@odoo/hoot-mock";
 import { isMacOS } from "@web/core/browser/feature_detection";
 import { isVisible } from "@web/core/utils/ui";
 
@@ -620,11 +620,11 @@ class Contains {
      *
      * Success or failure messages will be logged with HOOT as well.
      *
-     * @returns {Promise}
+     * @returns {Promise<void>}
      */
     run() {
         this.done = false;
-        this.def = new Deferred();
+        this.promWithResolvers = Promise.withResolvers();
         this.scrollListeners = new Set();
         this.onBlur = () => this.runOnce("after blur");
         this.onChange = () => this.runOnce("after change");
@@ -640,7 +640,7 @@ class Contains {
                 try {
                     this.runOnce("after mutations");
                 } catch (e) {
-                    this.def.reject(e); // prevents infinite loop in case of programming error
+                    this.promWithResolvers.reject(e); // prevents infinite loop in case of programming error
                 }
             });
             this.observer.observe(document.body, {
@@ -657,7 +657,7 @@ class Contains {
                 }
             });
         }
-        return this.def;
+        return this.promWithResolvers.promise;
     }
 
     /**
@@ -706,7 +706,7 @@ class Contains {
                     }
                 }
                 log(false, message);
-                this.def?.reject(new Error(message));
+                this.promWithResolvers?.reject(new Error(message));
                 for (const childContains of this.childrenContains || []) {
                     if (childContains.successMessage) {
                         log(true, childContains.successMessage);
@@ -829,7 +829,7 @@ class Contains {
         for (const childContains of this.childrenContains) {
             log(true, childContains.successMessage);
         }
-        this.def?.resolve();
+        this.promWithResolvers?.resolve();
     }
 
     /**
