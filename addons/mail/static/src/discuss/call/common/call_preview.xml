@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="mail.CallPreview">
-        <div class="o-mail-CallPreview ratio ratio-16x9">
+        <div class="o-mail-CallPreview ratio" t-att-class="this.env.inWelcomePage and this.ui.isSmall ? 'ratio-4x3' : 'ratio-16x9'">
             <div t-att-class="{'bg-dark': env.inWelcomePage}">
                 <video t-if="state.videoStream" class="object-fit-cover h-100 w-100 position-relative z-0" autoplay="" t-ref="video"/>
                 <div t-else="" class="position-absolute top-0 start-0 end-0 bottom-0 d-flex flex-column align-items-center justify-content-center text-center px-3 z-1" t-att-class="{'text-white': env.inWelcomePage}">
