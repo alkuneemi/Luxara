@@ -886,6 +886,81 @@ QUnit.module("Components", (hooks) => {
         assert.containsNone(target, ".o_model_field_selector_warning");
     });
 
+    QUnit.test(
+        "prevent update of properties(_definition) without sub-fields with X2Many",
+        async (assert) => {
+            addProperties();
+            serverData.models.partner.fields.partner_ids = {
+                string: "Partners (m2m)",
+                type: "many2many",
+                relation: "partner",
+                searchable: true,
+            };
+            serverData.models.partner.fields.child_ids = {
+                string: "Children (o2m)",
+                type: "one2many",
+                relation: "partner",
+                searchable: true,
+            };
+
+            class Parent extends Component {
+                static components = { ModelFieldSelector };
+                static template = xml`
+                    <ModelFieldSelector
+                        readonly="false"
+                        resModel="'partner'"
+                        path="path"
+                        update="(path) => this.onUpdate(path)"
+                    />
+                `;
+                setup() {
+                    this.path = "foo";
+                }
+                onUpdate(path) {
+                    this.path = path;
+                    assert.step(path);
+                    this.render();
+                }
+            }
+
+            await mountComponent(Parent);
+
+            await openModelFieldSelectorPopover(target);
+            await click(
+                target,
+                ".o_model_field_selector_popover_item[data-name='properties'] .o_model_field_selector_popover_relation_icon"
+            );
+            await nextTick();
+            await click(target, ".o_model_field_selector_popover_close");
+
+            await openModelFieldSelectorPopover(target);
+            await click(
+                target,
+                ".o_model_field_selector_popover_item[data-name='partner_ids'] .o_model_field_selector_popover_relation_icon"
+            );
+            await click(
+                target,
+                ".o_model_field_selector_popover_item[data-name='properties'] .o_model_field_selector_popover_relation_icon"
+            );
+            await nextTick();
+            await click(target, ".o_model_field_selector_popover_close");
+
+            await openModelFieldSelectorPopover(target);
+            await click(
+                target,
+                ".o_model_field_selector_popover_item[data-name='child_ids'] .o_model_field_selector_popover_relation_icon"
+            );
+            await click(
+                target,
+                ".o_model_field_selector_popover_item[data-name='properties'] .o_model_field_selector_popover_relation_icon"
+            );
+            await nextTick();
+            await click(target, ".o_model_field_selector_popover_close");
+
+            assert.verifySteps([]);
+        }
+    );
+
     QUnit.test("search on field string and name in debug mode", async (assert) => {
         patchWithCleanup(browser, { setTimeout: (fn) => fn() }); // for debouncedSearchFields
         serverData.models.partner.fields.ucit = {

@@ -40,6 +40,9 @@ export class ModelFieldSelector extends Component {
             onClose: async () => {
                 if (this.newPath !== null) {
                     const fieldInfo = await loadFieldInfo(this.props.resModel, this.newPath);
+                    if (["properties", "properties_definition"].includes(fieldInfo.fieldDef?.type)) {
+                        return;
+                    }
                     this.props.update(this.newPath, fieldInfo);
                 }
             },
