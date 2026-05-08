@@ -1171,9 +1171,10 @@ export class WysiwygAdapterComponent extends Wysiwyg {
      */
     _getRecordInfo(editable) {
         const $editable = $(editable);
+        const resModel = $editable.data('oe-model');
         return {
-            resModel: $editable.data('oe-model'),
-            resId: $editable.data('oe-id'),
+            resModel: resModel,
+            resId: resModel === 'ir.ui.view' ? $editable.data('oe-id') : undefined,
             field: $editable.data('oe-field'),
             type: $editable.data('oe-type'),
         };
