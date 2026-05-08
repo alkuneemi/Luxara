@@ -15,7 +15,6 @@ class FleetVehicleSendMail(models.TransientModel):
         'ir.attachment', 'fleet_vehicle_mail_compose_message_ir_attachments_rel',
         'wizard_id', 'attachment_id',
         string='Attachments',
-        bypass_search_access=True,
     )
 
     @api.depends('subject')

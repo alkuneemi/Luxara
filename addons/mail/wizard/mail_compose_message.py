@@ -103,7 +103,7 @@ class MailComposeMessage(models.TransientModel):
     attachment_ids = fields.Many2many(
         'ir.attachment', 'mail_compose_message_ir_attachments_rel',
         'wizard_id', 'attachment_id', string='Attachments',
-        compute='_compute_attachment_ids', readonly=False, store=True, bypass_search_access=True)
+        compute='_compute_attachment_ids', readonly=False, store=True)
     attachment_links = fields.Html("Attachment links", compute="_compute_attachment_links")
     attachment_links_info = fields.Char(compute="_compute_attachment_links")
     email_layout_xmlid = fields.Char(
