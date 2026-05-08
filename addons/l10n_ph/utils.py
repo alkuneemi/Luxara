@@ -49,13 +49,13 @@ def _export_bir_2307(sheet_title, moves, file_format='xlsx'):
     for move in moves:
         partner = move.commercial_partner_id
         partner_address_info = [partner.street, partner.street2, partner.city, partner.state_id.name, partner.country_id.name]
-        first_name = partner.first_name or ''
-        middle_name = partner.middle_name or ''
-        last_name = partner.last_name or ''
+        first_name = partner.l10n_ph_first_names or ''
+        middle_name = partner.l10n_ph_middle_name or ''
+        last_name = partner.l10n_ph_last_name or ''
         values = {
             'invoice_date': format_date(move.env, move.invoice_date, date_format="MM/dd/yyyy"),
             'vat': re.sub(r'-', '', partner.vat)[:9] if partner.vat else '',
-            'branch_code': partner.branch_code or '000',
+            'branch_code': partner.l10n_ph_branch_code or '000',
             'company_name': partner.name if (not first_name and not middle_name and not last_name) else '',
             'first_name': first_name,
             'middle_name': middle_name,

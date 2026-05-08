@@ -31,12 +31,8 @@ class TestBIR2307Generation(TestPhCommon):
         cls.invoice.action_post()
 
         cls.partner = cls.env['res.partner'].create({
-            'vat': '123-456-789-001',
-            'branch_code': '001',
+            'vat': '123-456-789',
             'name': 'Jose Mangahas Cuyegkeng',
-            'first_name': 'Jose',
-            'middle_name': 'Mangahas',
-            'last_name': 'Cuyegkeng',
             'street': "250 Amorsolo Street",
             'city': "Manila",
             'country_id': cls.env.ref('base.ph').id,
@@ -45,7 +41,6 @@ class TestBIR2307Generation(TestPhCommon):
 
         cls.partner_a.write({
             'vat': '123-456-789-001',
-            'branch_code': '001',
             'name': 'JMC Company',
             'street': "250 Amorsolo Street",
             'city': "Manila",
@@ -57,7 +52,7 @@ class TestBIR2307Generation(TestPhCommon):
 
     def test_bir_2307_company(self):
         """ Test the report """
-        self.partner_a.first_name = self.partner_a.middle_name = self.partner_a.last_name = ''
+        self.partner_a.l10n_ph_first_names = self.partner_a.l10n_ph_middle_name = self.partner_a.l10n_ph_last_name = ''
         wizard_action = self.invoice.action_open_l10n_ph_2307_wizard()
         context = wizard_action['context']
         wizard = self.env['l10n_ph_2307.wizard'].with_context(context).create({})
@@ -120,7 +115,7 @@ class TestBIR2307Generation(TestPhCommon):
         for row in range(1, sheet.nrows):
             result.append(sheet.row_values(row))
         self.assertEqual(result, [
-            ['01/01/2025', '123456789', '001', '', 'Cuyegkeng', 'Jose', 'Mangahas', '250 Amorsolo Street, Manila, Philippines', '+900–1-096', '', 'WI010', 1000.0, 10.0, 100.0]
+            ['01/01/2025', '123456789', '000', '', 'Cuyegkeng', 'Jose', 'Mangahas', '250 Amorsolo Street, Manila, Philippines', '+900–1-096', '', 'WI010', 1000.0, 10.0, 100.0]
         ])
 
     def test_03_atc_affected_by_vat(self):
@@ -146,12 +141,12 @@ class TestBIR2307Generation(TestPhCommon):
         for row in range(1, sheet.nrows):
             result.append(sheet.row_values(row))
         self.assertEqual(result, [
-            ['01/01/2025', '123456789', '001', '', 'Cuyegkeng', 'Jose', 'Mangahas', '250 Amorsolo Street, Manila, Philippines', '+900–1-096', '10% ATC', 'WI010', 1150.0, 10.0, 115.0]
+            ['01/01/2025', '123456789', '000', '', 'Cuyegkeng', 'Jose', 'Mangahas', '250 Amorsolo Street, Manila, Philippines', '+900–1-096', '10% ATC', 'WI010', 1150.0, 10.0, 115.0]
         ])
 
     def test_04_multi_currency(self):
         """ Ensure that generating the file on a document of another currency than the company's gives the correct result. """
-        self.partner_a.first_name = self.partner_a.middle_name = self.partner_a.last_name = ''
+        self.partner_a.l10n_ph_first_names = self.partner_a.l10n_ph_middle_name = self.partner_a.l10n_ph_last_name = ''
         tax = self._create_tax('10% ATC', -10, l10n_ph_atc='WI010')
         bill = self.init_invoice(
             move_type='in_invoice',
