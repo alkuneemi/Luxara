@@ -993,9 +993,16 @@ class ResPartner(models.Model):
                 'search_method': search_vat_regex,
             })
 
+        criteria = self._add_country_specific_vat_criteria(criteria, normalized_vat, country_prefix)
+
         return {
             'criteria': criteria,
         }
+
+    @api.model
+    def _add_country_specific_vat_criteria(self, criteria, normalized_vat, country_prefix):
+        # To override in base_vat or localizations for specific countries
+        return criteria
 
     @api.model
     def _import_retrieve_customer_from_phone(self, customer_values):

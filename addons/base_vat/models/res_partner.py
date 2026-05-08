@@ -168,6 +168,16 @@ class ResPartner(models.Model):
     def _onchange_vat(self):
         self._check_vat(validation=False)
 
+    @api.model
+    def _add_country_specific_vat_criteria(self, criteria, normalized_vat, country_prefix):
+        normalized_vat = normalized_vat.replace('-', '')
+        if country_prefix.upper() == 'CH' and len(normalized_vat) >= 12:
+            formated_vat = self.env['res.partner']._run_vat_checks(self.env.ref('base.ch'), normalized_vat, validation=False)[0]
+            criteria += [{'domain': [('vat', '=', formated_vat)]}]
+            # ch_vat_without_lang_formated = re.sub(r"\s*(TVA|IVA|MWST)?$", "", formated_vat.upper())
+            # criteria += [{'domain': [('vat', 'ilike', ch_vat_without_lang_formated)]}]
+        return criteria
+
     @api.depends_context('company')
     @api.depends('vat')
     def _compute_perform_vies_validation(self):
