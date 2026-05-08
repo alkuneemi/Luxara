@@ -32,20 +32,19 @@ export class SectionDropdown extends Component {
             this.env.getSectionInfoParams({ section_id: section.id })
         );
 
-         if (section.parent_id) {
+        if (section.parent_id) {
             this.parent.children = this.parent.children.filter(c => c.id !== section.id);
+            this.env.searchModel.trigger('section-subtotal-change', {
+                sectionId: section.parent_id,
+                subtotalDelta: -section.subtotal,
+            });
         } else {
             state.sections = state.sections.filter(s => s.id !== section.id);
         }
 
-        if (state.sections.length === 1 && state.sections[0].id === false) {
-            await this.env.loadSections();
-            return;
-        }
-
         const selectedSectionId = this.env.searchModel.selectedSection.sectionId;
         if (selectedSectionId === section.id) {
-            this.env.setSelectedSection(false, false);
+            this.env.setSelectedSection(state.sections[0]?.id || false, false);
         }
     }
 

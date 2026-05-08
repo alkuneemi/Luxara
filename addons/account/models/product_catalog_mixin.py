@@ -84,17 +84,15 @@ class ProductCatalogMixin(models.AbstractModel):
         return sequence
 
     def _get_sections(self, child_field, **kwargs):
-        """Return total untaxed amount, currency_id and sections of the order for the product
-        catalog display.
+        """Return section data for the product catalog display.
 
         :param str child_field: Field name of the order's lines (e.g., 'order_line').
         :param dict kwargs: Additional values given for inherited models.
-        :rtype: dict
-        :return: A dictionary with the total untaxed amount, currency_id and a sorted list of
-            sections of the order.
+        :rtype: list
+        :return: List of section dicts with 'id', 'name', 'sequence', 'parent_id', 'display_type',
+                 'subtotal' and any additional values given by inherited models.
         """
         sections = {}
-        no_section_subtotal = 0.0
         lines = self[child_field]
         for line in lines.sorted('sequence'):
             if line.display_type in ('line_section', 'line_subsection'):
@@ -109,23 +107,7 @@ class ProductCatalogMixin(models.AbstractModel):
                 values.update(self._get_extra_values_for_section(line))
                 sections[line.id] = values
 
-            elif not line.parent_id:
-                no_section_subtotal += line.price_subtotal
-
-        sections[False] = {
-            'id': False,
-            'name': self.env._("No Section"),
-            'sequence': lines[0].sequence - 1 if lines else 0,
-            'parent_id': False,
-            'display_type': False,
-            'subtotal': no_section_subtotal,
-        }
-
-        return {
-            "amount_untaxed": self.amount_untaxed,
-            "currency_id": self.currency_id.id,
-            "sections": sorted(sections.values(), key=lambda x: x['sequence']) if sections else [],
-        }
+        return sorted(sections.values(), key=lambda x: x['sequence'])
 
     def _get_default_create_section_values(self):
         """Return default values for creating a new section in order through catalog.

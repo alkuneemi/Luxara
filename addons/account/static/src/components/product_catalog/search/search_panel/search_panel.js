@@ -2,7 +2,7 @@ import { onWillStart } from "@odoo/owl";
 import { formatCurrency } from "@web/core/currency";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { rpc } from "@web/core/network/rpc";
-import { useBus } from "@web/core/utils/hooks";
+import { useBus, useService } from "@web/core/utils/hooks";
 import { useNestedSortable } from "@web/core/utils/nested_sortable";
 import { useState, useRef, useSubEnv } from "@web/owl2/utils";
 import { SearchPanel } from "@web/search/search_panel/search_panel";
@@ -15,16 +15,18 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
     setup() {
         super.setup();
 
+        this.orm = useService("orm");
+
         this.state = useState({
             ...this.state,
-            totalUntaxedAmount: 0.0,
-            currencyId: null,
             dragging: false,
             isAddingSection: "",
             newSectionName: "",
             renamingSectionId: null,
             sections: [],
+            totalUntaxedAmount: 0.0,
         });
+
 
         useSubEnv({
             setSelectedSection: this.setSelectedSection.bind(this),
@@ -42,7 +44,16 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
 
         useBus(this.env.searchModel, "section-subtotal-change", this.updateSectionSubtotal);
 
-        onWillStart(async () => await this.loadSections());
+        onWillStart(async () => {
+            [this.order] = await this.orm.read(
+                this.env.model.config.context.product_catalog_order_model,
+                [this.env.model.config.context.order_id],
+                ["amount_untaxed", "currency_id", "name"]
+            );
+            this.state.totalUntaxedAmount = this.order.amount_untaxed;
+
+            await this.loadSections();
+        });
 
         this.sectionTreeRef = useRef("sectionTreeRef");
 
@@ -114,7 +125,7 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
     }
 
     getFormattedSubTotal(amount) {
-        return formatCurrency(amount, this.state.currencyId);
+        return formatCurrency(amount, this.order.currency_id[0]);
     }
 
     onSectionInputKeydown(ev, parentId, renameId=null) {
@@ -182,12 +193,7 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
 
     async loadSections(sectionId) {
         if (!this.showSections) return;
-        const {amount_untaxed, currency_id, sections} = await rpc(
-            "/product/catalog/get_sections", this.getSectionInfoParams()
-        );
-
-        this.state.totalUntaxedAmount = amount_untaxed;
-        this.state.currencyId = currency_id;
+        const sections = await rpc("/product/catalog/get_sections", this.getSectionInfoParams());
 
         const sectionsById = new Map();
         const sectionTree = [];
@@ -284,10 +290,7 @@ export class AccountProductCatalogSearchPanel extends SearchPanel {
     }
 
     updateSectionSubtotal({ detail: { sectionId, subtotalDelta } }) {
-        if (this.state.sections.length === 1 && this.state.sections[0].id === false) {
-            this.state.totalUntaxedAmount += subtotalDelta;
-            return;
-        }
+        this.state.totalUntaxedAmount += subtotalDelta;
 
         const section = this.findSectionById(sectionId);
         if (!section) return;

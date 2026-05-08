@@ -10,21 +10,28 @@
             <attribute name="class" add="o_product_catalog_search_panel" separator=" "/>
         </div>
 
+        <header position="attributes">
+            <attribute name="class" remove="text-uppercase" separator=" "/>
+        </header>
+
         <xpath expr="//header/i" position="replace"/>
 
         <section position="before">
-            <section t-if="this.showSections" class="o_search_panel_sections o_search_panel_section mt-4 pb-4 border-bottom">
+            <section
+                t-if="this.showSections"
+                class="o_search_panel_sections o_search_panel_section mt-4 mb-3 pb-4 border-bottom"
+            >
                 <header class="d-flex align-items-center cursor-default mb-3">
-                    <b class="text-uppercase me-2">Sections</b>
+                    <b class="me-2" t-out="this.order.name"/>
                     <button
                         class="btn btn-sm btn-secondary ms-auto"
                         t-on-click="() => this.enableSectionInput()"
                         title="Add a section"
                     >
-                        Add
+                        Add Section
                     </button>
                 </header>
-                <ul t-if="this.state.sections.length > 1" class="list-group d-block" t-ref="sectionTreeRef">
+                <ul class="list-group d-block" t-ref="sectionTreeRef">
                     <t t-foreach="this.state.sections" t-as="section" t-key="section.id">
                         <SectionRow section="section" state="this.state"/>
                     </t>
@@ -38,10 +45,7 @@
                     t-on-keydown="(ev) => this.onSectionInputKeydown(ev)"
                     t-on-blur="() => this.createSection()"
                 />
-                <div
-                    t-if="this.state.sections.length === 1 &amp;&amp; this.state.sections[0].id === false"
-                    class="border-top"
-                >
+                <div class="mt-3 border-top">
                     <div class="d-flex justify-content-between mt-4">
                         <span>Total</span>
                         <span t-out="this.getFormattedSubTotal(this.state.totalUntaxedAmount)"/>

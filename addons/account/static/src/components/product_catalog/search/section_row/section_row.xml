@@ -33,7 +33,7 @@
                     t-att-title="this.props.section.name"
                 >
                     <span
-                        t-attf-class="o_search_panel_label_title d-flex flex-grow-1 {{this.selectedSection.sectionId == this.props.section.id ? 'fw-bold' : ''}}"
+                        t-attf-class="o_search_panel_label_title d-flex align-items-center flex-grow-1 {{this.selectedSection.sectionId == this.props.section.id ? 'fw-bold' : ''}}"
                     >
                         <span
                             class="text-truncate me-1"
