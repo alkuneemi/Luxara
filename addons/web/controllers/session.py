@@ -15,12 +15,14 @@ from odoo.http import Controller, request, route
 from odoo.http.response import Response
 from odoo.http.router import db_filter
 from odoo.http.session import (
+    CheckIdentityException,
     authenticate,
     logout,
     save_session,
     touch,
     update_device_fingerprint,
 )
+from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 
@@ -68,6 +70,28 @@ class Session(Controller):
     @route('/web/session/check', type='jsonrpc', auth='user', readonly=True)
     def check(self):
         return  # ir.http@_authenticate does the job
+
+# TODO MANO REMOVE
+    @route(
+        '/web/session/debug/trigger_check_identity',
+        type='jsonrpc',
+        auth='user',
+        readonly=True,
+        sitemap=False,
+        check_identity=False,
+    )
+    def debug_trigger_check_identity(self):
+        """
+        Raises CheckIdentityException so the web client opens the re-authentication dialog.
+        Restricted to Settings administrators with developer mode (or Odoo --dev).
+        """
+        if not request.env.user.has_group('base.group_system'):
+            raise AccessError("Only Settings users can call this debug endpoint.")
+        if not request.session.debug and not config['dev_mode']:
+            raise AccessError(
+                "Enable developer mode in the UI or start Odoo with --dev to use this endpoint."
+            )
+        raise CheckIdentityException("Debug: forced CheckIdentityException for UI testing")
 
     @route('/web/session/account', type='jsonrpc', auth='user', readonly=True)
     def account(self):

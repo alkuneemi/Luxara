@@ -2,20 +2,28 @@
 <templates xml:space="preserve">
 
     <t t-name="auth_totp_mail.CheckIdentityFormTOTPMail">
-        <div class="text-center">
-            <i class="fa fa-3x fa-envelope" aria-hidden="true"/>
-            <h3>Authentication code via email</h3>
-        </div>
-        <div>
-            Enter below the six-digit authentication code just sent to your email
-        </div>
+    <span class="fa-stack fa-2x">
+      <i class="fa fa-square fa-stack-2x text-100" aria-hidden="true"/>
+      <i class="fa fa-envelope fa-stack-1x text-800" aria-hidden="true"/>
+    </span>
+    <h3>Check your mailbox</h3>
+    <p>
+        We sent a 6-digit code to your email address.
+    </p>
+    <div class="o_totp_mail_code_field d-flex flex-column align-items-center gap-4">
         <input
-            name="token" inputmode="numeric" pattern="[0-9]+" class="form-control" placeholder="XXXXXX"
+            name="token"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            class="o_totp_mail_code_input form-control rounded w-50 fs-2 text-center font-monospace"
+            placeholder="••••••"
             autocomplete="one-time-code"
+            aria-label="Six-digit authentication code"
         />
-        <div class="text-center gap-1 d-grid mb-1 pt-3">
-            <button type="submit" class="btn btn-primary">Verify</button>
-        </div>
+        <button type="submit" class="btn btn-primary align-self-stretch">Verify</button>
+    </div>
     </t>
     <t t-name="auth_totp_mail.CheckIdentityLinkStringTOTPMail">Use an authentication code sent by email</t>
 
