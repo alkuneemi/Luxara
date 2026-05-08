@@ -308,6 +308,13 @@ class WebsitePage(models.Model):
             'view_id': self.env.ref('website.view_view_form_extend').id,
         }
 
+    def open_website_url(self):
+        default_website = self.env.ref('website.default_website', raise_if_not_found=False)
+        if self.website_id and self.website_id != default_website:
+            return super().open_website_url()
+        website_id = self.website_id.id if self.website_id else False
+        return self.env['website'].get_client_action(self.website_url, False, website_id)
+
     # website cache
 
     @api.model
