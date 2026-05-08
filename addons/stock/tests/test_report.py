@@ -382,7 +382,7 @@ class TestReports(TestReportsCommon):
         move_pick = self.env['stock.move'].create({
             'picking_type_id': self.wh_2.pick_type_id.id,
             'location_id': self.wh_2.lot_stock_id.id,
-            'location_final_id': customer_loc.id,
+            'forecasted_location_id': customer_loc.id,
             'product_id': self.product1.id,
             'product_uom_qty': 5.0,
             'date': now + timedelta(days=2),
@@ -402,7 +402,7 @@ class TestReports(TestReportsCommon):
         move_in = self.env['stock.move'].create({
             'picking_type_id': self.wh_2.in_type_id.id,
             'location_id': supplier_loc.id,
-            'location_final_id': self.wh_2.lot_stock_id.id,
+            'forecasted_location_id': self.wh_2.lot_stock_id.id,
             'product_id': self.product1.id,
             'product_uom_qty': 10.0,
             'date': now + timedelta(days=1),
@@ -1435,7 +1435,7 @@ class TestReports(TestReportsCommon):
         move_pick = self.env['stock.move'].create({
             'picking_type_id': self.wh_2.pick_type_id.id,
             'location_id': self.wh_2.lot_stock_id.id,
-            'location_final_id': customer_loc.id,
+            'forecasted_location_id': customer_loc.id,
             'product_id': self.product1.id,
             'product_uom_qty': 5.0,
         })
