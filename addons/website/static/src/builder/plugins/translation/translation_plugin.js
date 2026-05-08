@@ -207,7 +207,7 @@ export class TranslationPlugin extends Plugin {
         const translationRegex =
             /<span [^>]*data-oe-translation-source-sha="([^"]+)"[^>]*>([\s\S]*?)<\/span>/;
         const isEmpty = (el) => !el.hasChildNodes() || el.innerHTML.trim() === "";
-        const matchTag = (el) => el.matches("input, select, textarea, img");
+        const matchTag = (el) => el.matches("input, select, textarea, img, div.media_iframe_video");
         for (const translatedAttr of translatedAttrs) {
             const filteredEditableEls = editableEls.filter(
                 (editableEl) =>
