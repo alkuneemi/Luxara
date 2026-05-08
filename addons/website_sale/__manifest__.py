@@ -29,6 +29,7 @@
         "data/ir_actions_server_data.xml",
         "data/ir_cron_data.xml",
         "data/product_ribbon_data.xml",
+        "data/product_attribute_data.xml",
         "data/tour.xml",
         "data/website_checkout_step_data.xml",
         "data/website_snippet_filter_data.xml",
