@@ -114,6 +114,9 @@
             <t t-snippet="website.s_hero_minimalist" string="Hero Minimalist" group="intro">
                 <keywords>hero, minimalist, headline, header, introduction, home, picture, photo, split layout, two column, large image, tagline, landing page</keywords>
             </t>
+            <t t-snippet="website.s_intro_countdown" string="Intro Countdown" group="intro">
+                <keywords>coming soon, countdown, launch, waitlist, timer, days hours minutes seconds, social media, teaser, pre-launch, fullscreen, dark</keywords>
+            </t>
             <t id="mass_mailing_intro_waiting_list_hook"/>
 
             <!-- Columns group -->

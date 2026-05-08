@@ -1308,4 +1308,10 @@
     <field name="type">url</field>
     <field name="url">/website/static/src/img/snippets_demo/s_intro_countdown_default_image.webp</field>
 </record>
+<record id="website.s_intro_countdown_default_image" model="ir.attachment">
+    <field name="public" eval="True"/>
+    <field name="name">s_intro_countdown_default_image.webp</field>
+    <field name="type">url</field>
+    <field name="url">/website/static/src/img/snippets_demo/s_intro_countdown_default_image.webp</field>
+</record>
 </odoo>
