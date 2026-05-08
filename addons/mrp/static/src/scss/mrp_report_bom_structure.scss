@@ -1,0 +1,5 @@
+.o_mrp_bom_report_page {
+  tfoot{
+    display: table-row-group !important; /* Forces footer to only appear at the END */
+  }
+}
