@@ -1018,3 +1018,58 @@ class TestTaxesDownPaymentSale(TestTaxCommonSale, TestTaxesDownPayment):
             {'price_subtotal': 1070.71, 'balance': -1070.71},
             {'price_subtotal': -70.71, 'balance': 70.71},
         ])
+
+    def test_down_payment_invoice_manual_removing_of_tax_affecting_subsequent_taxes(self):
+        """
+        Test that removing a tax from a down payment invoice correctly recomputes remaining taxes.
+        This ensures that cached manual_tax_amounts are not reused when the tax set changes,
+        particularly for taxes with "Affect Base of Subsequent Taxes", and that dependent
+        taxes are recomputed using the updated base instead of stale values.
+        """
+        product = self.company_data['product_order_cost']
+        tax_10_a = self.percent_tax(10.0)
+        tax_10_a.include_base_amount = True
+        tax_10_b = self.percent_tax(10.0)
+        tax_10_b.sequence = tax_10_a.sequence + 1
+
+        so = self.env['sale.order'].create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                Command.create({
+                    'name': 'line_1',
+                    'product_id': product.id,
+                    'price_unit': 100.0,
+                    'tax_ids': [Command.set((tax_10_a + tax_10_b).ids)],
+                }),
+            ],
+        })
+        so.action_confirm()
+        self.assertRecordValues(so, [{
+            'amount_untaxed': 100.0,
+            'amount_tax': 21.0,
+            'amount_total': 121.0,
+        }])
+
+        wizard = (
+            self.env['sale.advance.payment.inv']
+            .with_context(active_model=so._name, active_ids=so.ids)
+            .create({
+                'advance_payment_method': 'percentage',
+                'amount': 50,
+            })
+        )
+        action_values = wizard.create_invoices()
+
+        dp_invoice = self.env['account.move'].browse(action_values['res_id'])
+        self.assertRecordValues(dp_invoice, [{
+            'amount_untaxed': 50.0,
+            'amount_tax': 10.5,
+            'amount_total': 60.5,
+        }])
+
+        dp_invoice.invoice_line_ids.tax_ids = [Command.set(tax_10_b.ids)]
+        self.assertRecordValues(dp_invoice, [{
+            'amount_untaxed': 50.0,
+            'amount_tax': 5.0,
+            'amount_total': 55.0,
+        }])
