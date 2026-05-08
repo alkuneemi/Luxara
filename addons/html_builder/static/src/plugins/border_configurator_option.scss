@@ -11,3 +11,41 @@
         max-width: none;
     }
 }
+
+// Recheck the scss
+.o-hb-border-radius {
+    --o-hb-select-bg: #{$o-we-item-clickable-bg};
+    --o-hb-select-color: #{$o-we-fg-light};
+    --o-hb-select-bg-hover: #{$o-we-bg-lighter};
+    --o-hb-select-color-hover: #{$o-we-fg-lighter};
+    --o-hb-border-color: #{$o-we-bg-darker};
+
+    --border-color: var(--o-hb-border-color);
+
+    font-family: $o-we-font-family;
+    font-size: $o-we-font-size;
+    border-color: var(--border-color);
+    background-color: var(--o-hb-select-bg) !important;
+    padding: 0;
+
+    .o-hb-border-radius-item {    
+        --dropdown-item-padding-y: 0;
+    
+        color: var(--o-hb-select-color, $white) !important;
+        line-height: 2rem;
+        border-bottom: $o-we-border-width solid var(--border-color);
+    
+        &.focus {
+            background-color: var(--o-hb-select-bg-hover) !important;
+            color: var(--o-hb-select-color-hover);
+        }
+
+        .o-hb-border-radius-badge {
+            // Needs to be changed, but to what!
+            background-color: whitesmoke;
+            vertical-align: middle;
+        }
+    }
+}
+
+

@@ -1,3 +1,4 @@
+<!-- The template of FontSizeSelector component-->
 <templates xml:space="preserve">
     <t t-name="html_editor.FontSizeSelector">
         <Dropdown state="this.dropdown" menuClass="'o_font_size_selector_menu'" menuRef="this.menuRef">

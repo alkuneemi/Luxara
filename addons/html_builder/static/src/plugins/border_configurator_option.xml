@@ -18,7 +18,19 @@
 
     <!-- TODO: handle the dependency with border_width_opt bg_color_opt-->
     <BuilderRow t-if="this.props.withRoundCorner" label.translate="Round Corners" level="this.props.level">
-        <BuilderNumberInput action="this.props.action" actionParam="{ mainParam: this.getStyleActionParam('radius'), extraClass: this.props.withBSClass and 'rounded' }" unit="'px'" min="0" composable="true"/>
+        <Dropdown menuClass="'o-hb-border-radius'">
+            <BuilderNumberInput action="this.props.action" actionParam="{ mainParam: this.getStyleActionParam('radius'), extraClass: this.props.withBSClass and 'rounded' }" unit="'px'" min="0" composable="true"/>
+            <t t-set-slot="content">
+                <t t-foreach="this.roundCornerSizes" t-as="size" t-key="size.value">
+                    <BuilderDropdownItem class="'o-hb-border-radius-item'" action="this.props.action" actionParam="{ mainParam: this.getStyleActionParam('radius'), extraClass: this.props.withBSClass and 'rounded' }" actionValue="`${size.value}px`">
+                        <t t-out="size.value"/>
+                        <span class="badge rounded-pill ms-3 o-hb-border-radius-badge">
+                            <t t-out="size.label"/>
+                        </span>
+                    </BuilderDropdownItem>
+                </t>
+            </t>
+        </Dropdown>
     </BuilderRow>
 </t>
 

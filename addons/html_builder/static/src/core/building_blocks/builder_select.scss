@@ -75,6 +75,7 @@
 // TODO: review the SelectMenu template to allow both light/dark backgrounds and
 // remove most '!important' needed here to override Bootstrap classes. See
 // implementations of Many2X builder components for examples.
+// Reference for the Dropdown SCSS
 .o-hb-select-dropdown {
     --o-hb-select-bg: #{$o-we-item-clickable-bg};
     --o-hb-select-color: #{$o-we-fg-light};

@@ -1,6 +1,14 @@
 import { BaseOptionComponent } from "@html_builder/core/base_option_component";
 import { useDomState } from "@html_builder/core/utils";
 
+const ROUND_CORNER_SIZES = [
+    { value: 12, label: "Card" },
+    { value: 100, label: "Pill" },
+    { value: 8, label: "Large" },
+    { value: 6, label: "Normal" },
+    { value: 4, label: "Tiny" },
+];
+
 export class BorderConfigurator extends BaseOptionComponent {
     static template = "html_builder.BorderConfiguratorOption";
     static dependencies = ["builderActions"];
@@ -23,6 +31,7 @@ export class BorderConfigurator extends BaseOptionComponent {
         this.state = useDomState((editingElement) => ({
             hasBorder: this.hasBorder(editingElement),
         }));
+        this.roundCornerSizes = ROUND_CORNER_SIZES;
     }
     getStyleActionParam(param) {
         const property = `border-${this.props.direction ? this.props.direction + "-" : ""}${param}`;

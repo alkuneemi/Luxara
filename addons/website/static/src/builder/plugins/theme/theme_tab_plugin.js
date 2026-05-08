@@ -1,4 +1,5 @@
 import { reactive } from "@web/owl2/utils";
+import { useDomState } from "@html_builder/core/utils";
 import { Plugin } from "@html_editor/plugin";
 import { getCSSVariableValue, getHtmlStyle } from "@html_editor/utils/formatting";
 import { withSequence } from "@html_editor/utils/resource";
@@ -36,6 +37,12 @@ import { ImageSize } from "@html_builder/plugins/image/image_size";
  * @typedef {import("@html_builder/core/builder_options_plugin").BuilderOptionContainer[]} theme_options
  */
 
+const BORDER_RADIUS_MULTIPLIERS = {
+    "border-radius": 1,
+    "border-radius-sm": 0.8,
+    "border-radius-lg": 1.12,
+};
+
 export const GRAY_PARAMS = {
     EXTRA_SATURATION: "gray-extra-saturation",
     HUE: "gray-hue",
@@ -49,8 +56,9 @@ export const OPTION_POSITIONS = {
     BUTTON: 50,
     LINK: 60,
     INPUT: 70,
-    SHADOW: 80,
-    ADVANCED: 90,
+    CARD: 80,
+    SHADOW: 90,
+    ADVANCED: 100,
 };
 
 export class ThemeTabPlugin extends Plugin {
@@ -66,6 +74,7 @@ export class ThemeTabPlugin extends Plugin {
             ChangeColorPaletteAction,
             EditCustomCodeAction,
             ConfigureApiKeyAction,
+            CustomizeBorderRadiusVariableAction,
         },
         theme_options: [
             withSequence(
@@ -78,6 +87,38 @@ export class ThemeTabPlugin extends Plugin {
                         class ThemeWebsiteSettingsOption extends BaseOptionComponent {
                             static template = "website.ThemeWebsiteSettingsOption";
                             static components = { ImageSize };
+                            static dependencies = ["customizeWebsite"];
+
+                            setup() {
+                                super.setup();
+                                this.state = useDomState((el) => ({
+                                    isRangeActive: this.isRangeActive(),
+                                }));
+                            }
+                            isRangeActive() {
+                                const variables = {};
+                                for (const [variable, multiplier] of Object.entries(
+                                    BORDER_RADIUS_MULTIPLIERS
+                                )) {
+                                    variables[variable] =
+                                        parseFloat(
+                                            this.dependencies.customizeWebsite.getWebsiteVariableValue(
+                                                variable
+                                            )
+                                        ) / multiplier;
+                                }
+                                return this.areAllValuesAlmostEqual(Object.values(variables));
+                            }
+
+                            areAllValuesAlmostEqual(values, tolerance = 0.0001) {
+                                if (values.length <= 1) {
+                                    return true;
+                                }
+                                const firstValue = values[0];
+                                return values.every(
+                                    (val) => Math.abs(val - firstValue) < tolerance
+                                );
+                            }
                         },
                     ],
                     this.document.querySelector("#wrapwrap"),
@@ -119,6 +160,16 @@ export class ThemeTabPlugin extends Plugin {
                     _t("Input Fields"),
                     class ThemeInputOption extends BaseOptionComponent {
                         static template = "website.ThemeInputOption";
+                    }
+                )
+            ),
+            withSequence(
+                OPTION_POSITIONS.CARD,
+                this.getThemeOptionBlock(
+                    "theme-card",
+                    _t("Card"),
+                    class ThemeCardOption extends BaseOptionComponent {
+                        static template = "website.ThemeCardOption";
                     }
                 )
             ),
@@ -350,6 +401,24 @@ export class ConfigureApiKeyAction extends BuilderAction {
     }
     apply() {
         this.dependencies.googleMapsOption.configureGMapsAPI("", true);
+    }
+}
+
+export class CustomizeBorderRadiusVariableAction extends CustomizeWebsiteVariableAction {
+    static id = "customizeBorderRadiusVariable";
+    getValue() {
+        return super.getValue({ params: { mainParam: "border-radius" } });
+    }
+    async apply({ value: rawRadiusInput }) {
+        const baseRadius = parseFloat(rawRadiusInput);
+        const unit = rawRadiusInput.replace(baseRadius.toString(), "").trim();
+
+        const scaledVariables = {};
+        for (const [varName, multiplier] of Object.entries(BORDER_RADIUS_MULTIPLIERS)) {
+            const computedValue = baseRadius * multiplier;
+            scaledVariables[varName] = `${computedValue}${unit}`;
+        }
+        await this.dependencies.customizeWebsite.customizeWebsiteVariables(scaledVariables);
     }
 }
 
