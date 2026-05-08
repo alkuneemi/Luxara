@@ -9,7 +9,7 @@ from odoo.exceptions import AccessError
 from odoo.http import request
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment.controllers.post_processing import PaymentPostProcessing
+from odoo.addons.payment.controllers.payment_status import PaymentStatus
 from odoo.addons.portal.controllers import portal
 
 
@@ -418,7 +418,7 @@ class PaymentPortal(portal.CustomerPortal):
             tx_sudo._charge_with_token()  # Token payments are charged immediately.
 
         # Monitor the transaction to make it available in the portal.
-        PaymentPostProcessing.monitor_transaction(tx_sudo)
+        PaymentStatus.monitor_transaction(tx_sudo)
 
         return tx_sudo
 
@@ -439,9 +439,10 @@ class PaymentPortal(portal.CustomerPortal):
             access_token = payment_utils.generate_access_token(
                 tx_sudo.partner_id.id, tx_sudo.amount, tx_sudo.currency_id.id
             )
-        tx_sudo.landing_route = (
-            f"{tx_sudo.landing_route}?tx_id={tx_sudo.id}&access_token={access_token}"
-        )
+        tx_sudo.with_context(
+            # The transaction has just been created; no concurrent write is possible
+            payment_trusted_write=True
+        ).landing_route = f"{tx_sudo.landing_route}?tx_id={tx_sudo.id}&access_token={access_token}"
 
     @http.route("/payment/confirmation", type="http", methods=["GET"], auth="public", website=True)
     def payment_confirm(self, tx_id, access_token, **_kwargs):

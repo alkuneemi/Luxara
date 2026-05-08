@@ -35,7 +35,7 @@ class TossPaymentsController(http.Controller):
             except ValidationError as e:
                 tx_sudo._set_error(str(e))
             else:
-                tx_sudo._process("toss_payments", payment_data)
+                tx_sudo._record(payment_data)
 
         return request.redirect("/payment/status")
 
@@ -97,5 +97,5 @@ class TossPaymentsController(http.Controller):
                     received_signature = payment_data.get("secret")
                     expected_signature = tx_sudo.toss_payments_payment_secret or ""
                     payment_utils.verify_signature(received_signature, expected_signature)
-                tx_sudo._process("toss_payments", payment_data)
+                tx_sudo._record(payment_data)
         return request.make_json_response("")

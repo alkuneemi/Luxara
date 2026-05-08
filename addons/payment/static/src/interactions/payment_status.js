@@ -2,7 +2,7 @@ import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { Interaction } from "@web/public/interaction";
 
-export class PaymentPostProcessing extends Interaction {
+export class PaymentStatus extends Interaction {
     static selector = "div[name='o_payment_status']";
 
     setup() {
@@ -15,12 +15,15 @@ export class PaymentPostProcessing extends Interaction {
         this.busService.subscribe(this.notificationType, this.onProcessingCompleteBind);
 
         // Redirect automatically after 7 seconds to avoid waiting for post-processing forever.
-        this.redirectTimeout = this.waitForTimeout(() => {
-            this.redirectToLandingPage();
-        }, 7000);
+        //this.redirectTimeout = this.waitForTimeout(() => {
+        //    this.redirectToLandingPage();
+        //}, 7000);  // TODO ANV uncomment
     }
 
     async willStart() {
+        // TODO ANV: temp location for this initial processing call
+        await rpc("/payment/process");
+
         // Assume we missed a notification from the postprocessing
         await this.onProcessingComplete();
     }
@@ -35,7 +38,7 @@ export class PaymentPostProcessing extends Interaction {
             "/payment/post_process", { csrf_token: odoo.csrf_token }
         );
         const { provider_code, state, is_post_processed } = postProcessingData;
-        if (is_post_processed && PaymentPostProcessing.getFinalStates(provider_code).has(state)) {
+        if (is_post_processed && PaymentStatus.getFinalStates(provider_code).has(state)) {
             this.redirectToLandingPage();
         }
     }
@@ -68,4 +71,4 @@ export class PaymentPostProcessing extends Interaction {
 
 registry
     .category("public.interactions")
-    .add("payment.payment_post_processing", PaymentPostProcessing);
+    .add("payment.payment_status", PaymentStatus);

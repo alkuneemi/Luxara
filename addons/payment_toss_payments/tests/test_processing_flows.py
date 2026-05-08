@@ -25,11 +25,11 @@ class TestProcessingFlows(TossPaymentsCommon, PaymentHttpCommon):
                 "._send_api_request"
             ),
             patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
-            ) as process_mock,
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
+            ) as record_mock,
         ):
             self._make_http_get_request(url, params=redirect_success_params)
-        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(record_mock.call_count, 1)
 
     @mute_logger("odoo.addons.payment_toss_payments.controllers.main")
     def test_failing_to_confirm_payment_sets_the_transaction_in_error(self):
@@ -68,11 +68,11 @@ class TestProcessingFlows(TossPaymentsCommon, PaymentHttpCommon):
         with (
             patch("odoo.addons.payment.utils.verify_signature"),
             patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
-            ) as process_mock,
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
+            ) as record_mock,
         ):
             self._make_json_request(url, data=self.webhook_data)
-        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(record_mock.call_count, 1)
 
     @mute_logger("odoo.addons.payment_toss_payments.controllers.main")
     def test_webhook_notification_triggers_signature_check(self):
@@ -80,7 +80,7 @@ class TestProcessingFlows(TossPaymentsCommon, PaymentHttpCommon):
         url = self._build_url(const.WEBHOOK_ROUTE)
         with (
             patch("odoo.addons.payment.utils.verify_signature") as signature_check_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"),
         ):
             self._make_json_request(url, data=self.webhook_data)
         self.assertEqual(signature_check_mock.call_args[0][0], self.webhook_data_signature)

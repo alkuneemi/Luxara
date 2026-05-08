@@ -11,6 +11,14 @@
                     <button type="object" name="action_void" invisible="state != 'authorized'" string="Void Transaction"
                             confirm="Are you sure you want to void the authorized transaction? This action can't be undone."/>
                     <button
+                        string="Process"
+                        help="Process pending payment data for this transaction."
+                        type="object"
+                        name="action_process"
+                        invisible="not payment_data_ids"
+                        groups="base.group_no_one"
+                    />
+                    <button
                         string="Post-process"
                         help="Run the post-processing step for this transaction."
                         type="object"
@@ -28,6 +36,18 @@
                                 icon="fa-money"
                                 invisible="refunds_count == 0">
                             <field name="refunds_count" widget="statinfo" string="Refunds"/>
+                        </button>
+                        <button
+                            name="action_view_payment_data"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-refresh"
+
+                            groups="base.group_no_one"
+                        >  <!-- TODO ANV invisible="payment_data_count == 0"-->
+                            <field
+                                string="Pending Updates" name="payment_data_count" widget="statinfo"
+                            />
                         </button>
                     </div>
                     <group>

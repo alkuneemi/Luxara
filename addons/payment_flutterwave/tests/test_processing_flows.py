@@ -24,11 +24,11 @@ class TestProcessingFlows(FlutterwaveCommon, PaymentHttpCommon):
                 return_value=self.verification_data,
             ),
             patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
-            ) as process_mock,
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
+            ) as record_mock,
         ):
             self._make_http_get_request(url, params=self.redirect_payment_data)
-        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(record_mock.call_count, 1)
 
     @mute_logger("odoo.addons.payment_flutterwave.controllers.main")
     def test_webhook_notification_triggers_processing(self):
@@ -39,11 +39,11 @@ class TestProcessingFlows(FlutterwaveCommon, PaymentHttpCommon):
         with (
             patch("odoo.addons.payment.utils.verify_signature"),
             patch(
-                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"
-            ) as process_mock,
+                "odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"
+            ) as record_mock,
         ):
             self._make_json_request(url, data=self.webhook_payment_data)
-        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(record_mock.call_count, 1)
 
     @mute_logger("odoo.addons.payment_flutterwave.controllers.main")
     def test_redirect_notification_triggers_signature_check(self):
@@ -54,7 +54,7 @@ class TestProcessingFlows(FlutterwaveCommon, PaymentHttpCommon):
                 "odoo.addons.payment.models.payment_provider.PaymentProvider._send_api_request",
                 return_value=self.verification_data,
             ) as signature_check_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"),
         ):
             self._make_http_get_request(url, params=self.redirect_payment_data)
         self.assertEqual(signature_check_mock.call_count, 1)
@@ -65,7 +65,7 @@ class TestProcessingFlows(FlutterwaveCommon, PaymentHttpCommon):
         url = self._build_url(FlutterwaveController._webhook_url)
         with (
             patch("odoo.addons.payment.utils.verify_signature") as signature_check_mock,
-            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._process"),
+            patch("odoo.addons.payment.models.payment_transaction.PaymentTransaction._record"),
         ):
             self.opener.headers["verif-hash"] = self.provider.flutterwave_webhook_secret
             self._make_json_request(url, data=self.webhook_payment_data)
