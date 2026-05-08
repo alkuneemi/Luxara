@@ -1226,3 +1226,11 @@ class Website(models.Model):
         :rtype: float
         """
         return product.qty_available - product.outgoing_qty
+
+    @api.model
+    def _get_settings_to_transfer_to_new_default_website(self):
+        """ Provides a list of settings that should always be set on the default
+        website. When the default website changes, a check is performed. If some
+        of these settings are not already set on the new default website, they
+        are copied from the previous default website."""
+        return super()._get_settings_to_transfer_to_new_default_website() + ['salesperson_id', 'salesteam_id']
