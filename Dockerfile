@@ -2,16 +2,17 @@ FROM odoo:19.0
 
 USER root
 
-# 1. تثبيت أداة git وتحديث الشهادات الأمنية داخل الحاوية
+# 1. تثبيت أدوات النظام والمكتبات المطلوبة (بما فيها git و num2words)
 RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir num2words
 
-# 2. الانتقال إلى مجلد الإضافات الخارجية لـ أودو
 WORKDIR /mnt/extra-addons
 
-# 3. سحب الموديولات المخصصة باستخدام التوكن الجديد والرابط المصحح بحالة الأحرف (AlKuneemi)
-RUN git clone --depth 1 -b 19.0 https://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@github.com/AlKuneemi/luxara-addons.git .
+# 2. استقبال التوكن السري من إعدادات ريلوي أثناء البناء وسحب فرع staging بحسابك السمول
+ARG GITHUB_TOKEN
+RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi && \
+    git clone --depth 1 -b staging https://${GITHUB_TOKEN}@github.com/alkuneemi/luxara-addons.git .
 
-# 4. إعادة الصلاحيات للمستخدم الافتراضي لأودو
 USER odoo
 
 EXPOSE 8069
