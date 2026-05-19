@@ -10,6 +10,7 @@ from . import insurance_policy
 from . import insurance_rfq
 from . import insurance_rfq_quote
 from . import insurance_claim
+from . import insurance_commission_rate
 from . import insurance_commission
 from . import insurance_opportunity
 from . import insurance_quotation
