@@ -1,0 +1,897 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Insurance Broker Suite — Odoo Backend Styles
+   Supports: Light Mode & Dark Mode (Odoo 17 / Bootstrap 5)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────
+   CSS VARIABLES — Light Mode (default)
+─────────────────────────────────────────────────────────────────── */
+:root {
+    --ins-bg:                    #f4f6f9;
+    --ins-card-bg:               #ffffff;
+    --ins-card-border:           #e8ecf1;
+    --ins-card-shadow:           rgba(0,0,0,0.04);
+
+    --ins-text-primary:          #1a2332;
+    --ins-text-secondary:        #4a5568;
+    --ins-text-muted:            #8492a6;
+    --ins-text-faint:            #aab4c4;
+
+    --ins-accent:                #3c6cf0;
+    --ins-accent-light:          #eef1fd;
+    --ins-accent-border:         #c7d7fd;
+
+    --ins-divider:               #f4f6f9;
+    --ins-hover-bg:              #f8fafc;
+    --ins-row-hover:             #f8fafc;
+    --ins-bar-track:             #f0f2f5;
+
+    --ins-table-border:          #e8ecf1;
+    --ins-table-row-div:         #f4f6f9;
+    --ins-table-head-color:      #8492a6;
+
+    --ins-quick-bg:              #fafbfd;
+    --ins-quick-border:          #e8ecf1;
+    --ins-quick-hover-bg:        #eef2ff;
+    --ins-quick-hover-border:    #c7d2fe;
+
+    --ins-hero-bg:               linear-gradient(135deg,#f0f4ff 0%,#eef2fd 100%);
+    --ins-hero-border:           #c7d7fd;
+    --ins-hero-label-color:      #3c6cf0;
+    --ins-hero-bar-color:        #3c6cf0;
+    --ins-hero-field-label:      #4a5568;
+    --ins-hero-field-value:      #1a2332;
+
+    --ins-section-label-color:   #8492a6;
+    --ins-section-border:        #e8ecf1;
+
+    --ins-badge-urgent-bg:       #fef2f2;
+    --ins-badge-urgent-fg:       #dc2626;
+    --ins-badge-warning-bg:      #fefce8;
+    --ins-badge-warning-fg:      #d97706;
+    --ins-badge-ok-bg:           #f0fdf4;
+    --ins-badge-ok-fg:           #16a34a;
+
+    --ins-kpi-icon-blue-bg:      #eef1fd;
+    --ins-kpi-icon-blue-fg:      #3c6cf0;
+    --ins-kpi-icon-orange-bg:    #fff4e6;
+    --ins-kpi-icon-orange-fg:    #f59e0b;
+    --ins-kpi-icon-green-bg:     #eafaf1;
+    --ins-kpi-icon-green-fg:     #10b981;
+    --ins-kpi-icon-red-bg:       #fef2f2;
+    --ins-kpi-icon-red-fg:       #ef4444;
+    --ins-kpi-icon-purple-bg:    #f5f0ff;
+    --ins-kpi-icon-purple-fg:    #8b5cf6;
+    --ins-kpi-icon-teal-bg:      #edfafa;
+    --ins-kpi-icon-teal-fg:      #0891b2;
+    --ins-kpi-icon-slate-bg:     #f1f5f9;
+    --ins-kpi-icon-slate-fg:     #64748b;
+    --ins-kpi-icon-indigo-bg:    #eef2ff;
+    --ins-kpi-icon-indigo-fg:    #4f46e5;
+
+    --ins-badge-reported-bg:     #f1f5f9;
+    --ins-badge-reported-fg:     #64748b;
+    --ins-badge-submitted-bg:    #eff6ff;
+    --ins-badge-submitted-fg:    #3b82f6;
+    --ins-badge-approved-bg:     #f0fdf4;
+    --ins-badge-approved-fg:     #22c55e;
+    --ins-badge-rejected-bg:     #fef2f2;
+    --ins-badge-rejected-fg:     #ef4444;
+    --ins-badge-settled-bg:      #f0f9ff;
+    --ins-badge-settled-fg:      #0891b2;
+    --ins-badge-assessment-bg:   #fefce8;
+    --ins-badge-assessment-fg:   #ca8a04;
+
+    --ins-odoo-active-bg:        #d1fae5;
+    --ins-odoo-active-fg:        #059669;
+    --ins-odoo-expired-bg:       #fee2e2;
+    --ins-odoo-expired-fg:       #dc2626;
+    --ins-odoo-pending-bg:       #fef3c7;
+    --ins-odoo-pending-fg:       #d97706;
+    --ins-odoo-cancelled-bg:     #fee2e2;
+    --ins-odoo-cancelled-fg:     #dc2626;
+    --ins-odoo-won-bg:           #d1fae5;
+    --ins-odoo-won-fg:           #059669;
+    --ins-odoo-lost-bg:          #fee2e2;
+    --ins-odoo-lost-fg:          #dc2626;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   CSS VARIABLES — Dark Mode
+   Covers ALL possible ways Odoo 17 can apply dark mode:
+     • html.o_dark / body.o_dark / .o_dark  (Odoo class-based)
+     • html[data-bs-theme="dark"] / body[data-bs-theme="dark"] (Bootstrap 5)
+     • [data-bs-theme="dark"] on any ancestor container
+     • @media prefers-color-scheme: dark  (system/OS level fallback)
+─────────────────────────────────────────────────────────────────── */
+
+/* ── Mixin: dark-mode custom properties ── */
+html.o_dark,
+html[data-bs-theme="dark"],
+body.o_dark,
+body[data-bs-theme="dark"],
+[data-bs-theme="dark"],
+.o_dark {
+    --ins-bg:                    #12151c;
+    --ins-card-bg:               #1c2029;
+    --ins-card-border:           #272d3a;
+    --ins-card-shadow:           rgba(0,0,0,0.35);
+
+    --ins-text-primary:          #e2e8f0;
+    --ins-text-secondary:        #94a3b8;
+    --ins-text-muted:            #64748b;
+    --ins-text-faint:            #3f4a5a;
+
+    --ins-accent:                #6b8ff8;
+    --ins-accent-light:          #1a2344;
+    --ins-accent-border:         #2c3f7c;
+
+    --ins-divider:               #272d3a;
+    --ins-hover-bg:              #232935;
+    --ins-row-hover:             #232935;
+    --ins-bar-track:             #272d3a;
+
+    --ins-table-border:          #272d3a;
+    --ins-table-row-div:         #1e2430;
+    --ins-table-head-color:      #64748b;
+
+    --ins-quick-bg:              #161b24;
+    --ins-quick-border:          #272d3a;
+    --ins-quick-hover-bg:        #1a2344;
+    --ins-quick-hover-border:    #2c3f7c;
+
+    --ins-hero-bg:               linear-gradient(135deg,#1a2344 0%,#161f3a 100%);
+    --ins-hero-border:           #2c3f7c;
+    --ins-hero-label-color:      #6b8ff8;
+    --ins-hero-bar-color:        #6b8ff8;
+    --ins-hero-field-label:      #94a3b8;
+    --ins-hero-field-value:      #e2e8f0;
+
+    --ins-section-label-color:   #64748b;
+    --ins-section-border:        #272d3a;
+
+    --ins-badge-urgent-bg:       #3b1515;
+    --ins-badge-urgent-fg:       #f87171;
+    --ins-badge-warning-bg:      #2e2308;
+    --ins-badge-warning-fg:      #fbbf24;
+    --ins-badge-ok-bg:           #0f2d1e;
+    --ins-badge-ok-fg:           #4ade80;
+
+    --ins-kpi-icon-blue-bg:      #1a2d5a;
+    --ins-kpi-icon-blue-fg:      #6b8ff8;
+    --ins-kpi-icon-orange-bg:    #3b2a0f;
+    --ins-kpi-icon-orange-fg:    #fbbf24;
+    --ins-kpi-icon-green-bg:     #0f2d1e;
+    --ins-kpi-icon-green-fg:     #34d399;
+    --ins-kpi-icon-red-bg:       #3b1515;
+    --ins-kpi-icon-red-fg:       #f87171;
+    --ins-kpi-icon-purple-bg:    #2a1f45;
+    --ins-kpi-icon-purple-fg:    #a78bfa;
+    --ins-kpi-icon-teal-bg:      #0f2a33;
+    --ins-kpi-icon-teal-fg:      #22d3ee;
+    --ins-kpi-icon-slate-bg:     #1e2530;
+    --ins-kpi-icon-slate-fg:     #94a3b8;
+    --ins-kpi-icon-indigo-bg:    #1e2040;
+    --ins-kpi-icon-indigo-fg:    #818cf8;
+
+    --ins-badge-reported-bg:     #1e2530;
+    --ins-badge-reported-fg:     #94a3b8;
+    --ins-badge-submitted-bg:    #1a2d4a;
+    --ins-badge-submitted-fg:    #60a5fa;
+    --ins-badge-approved-bg:     #0f2d1e;
+    --ins-badge-approved-fg:     #4ade80;
+    --ins-badge-rejected-bg:     #3b1515;
+    --ins-badge-rejected-fg:     #f87171;
+    --ins-badge-settled-bg:      #0f2a33;
+    --ins-badge-settled-fg:      #22d3ee;
+    --ins-badge-assessment-bg:   #2e2308;
+    --ins-badge-assessment-fg:   #fbbf24;
+
+    --ins-odoo-active-bg:        #0f2d1e;
+    --ins-odoo-active-fg:        #4ade80;
+    --ins-odoo-expired-bg:       #3b1515;
+    --ins-odoo-expired-fg:       #f87171;
+    --ins-odoo-pending-bg:       #2e2308;
+    --ins-odoo-pending-fg:       #fbbf24;
+    --ins-odoo-cancelled-bg:     #3b1515;
+    --ins-odoo-cancelled-fg:     #f87171;
+    --ins-odoo-won-bg:           #0f2d1e;
+    --ins-odoo-won-fg:           #4ade80;
+    --ins-odoo-lost-bg:          #3b1515;
+    --ins-odoo-lost-fg:          #f87171;
+}
+
+/* ── System/OS level dark mode fallback ── */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-bs-theme="light"]):not(.o_light) {
+        --ins-bg:                    #12151c;
+        --ins-card-bg:               #1c2029;
+        --ins-card-border:           #272d3a;
+        --ins-card-shadow:           rgba(0,0,0,0.35);
+
+        --ins-text-primary:          #e2e8f0;
+        --ins-text-secondary:        #94a3b8;
+        --ins-text-muted:            #64748b;
+        --ins-text-faint:            #3f4a5a;
+
+        --ins-accent:                #6b8ff8;
+        --ins-accent-light:          #1a2344;
+        --ins-accent-border:         #2c3f7c;
+
+        --ins-divider:               #272d3a;
+        --ins-hover-bg:              #232935;
+        --ins-row-hover:             #232935;
+        --ins-bar-track:             #272d3a;
+
+        --ins-table-border:          #272d3a;
+        --ins-table-row-div:         #1e2430;
+        --ins-table-head-color:      #64748b;
+
+        --ins-quick-bg:              #161b24;
+        --ins-quick-border:          #272d3a;
+        --ins-quick-hover-bg:        #1a2344;
+        --ins-quick-hover-border:    #2c3f7c;
+
+        --ins-hero-bg:               linear-gradient(135deg,#1a2344 0%,#161f3a 100%);
+        --ins-hero-border:           #2c3f7c;
+        --ins-hero-label-color:      #6b8ff8;
+        --ins-hero-bar-color:        #6b8ff8;
+        --ins-hero-field-label:      #94a3b8;
+        --ins-hero-field-value:      #e2e8f0;
+
+        --ins-section-label-color:   #64748b;
+        --ins-section-border:        #272d3a;
+
+        --ins-badge-urgent-bg:       #3b1515;
+        --ins-badge-urgent-fg:       #f87171;
+        --ins-badge-warning-bg:      #2e2308;
+        --ins-badge-warning-fg:      #fbbf24;
+        --ins-badge-ok-bg:           #0f2d1e;
+        --ins-badge-ok-fg:           #4ade80;
+
+        --ins-kpi-icon-blue-bg:      #1a2d5a;
+        --ins-kpi-icon-blue-fg:      #6b8ff8;
+        --ins-kpi-icon-orange-bg:    #3b2a0f;
+        --ins-kpi-icon-orange-fg:    #fbbf24;
+        --ins-kpi-icon-green-bg:     #0f2d1e;
+        --ins-kpi-icon-green-fg:     #34d399;
+        --ins-kpi-icon-red-bg:       #3b1515;
+        --ins-kpi-icon-red-fg:       #f87171;
+        --ins-kpi-icon-purple-bg:    #2a1f45;
+        --ins-kpi-icon-purple-fg:    #a78bfa;
+        --ins-kpi-icon-teal-bg:      #0f2a33;
+        --ins-kpi-icon-teal-fg:      #22d3ee;
+        --ins-kpi-icon-slate-bg:     #1e2530;
+        --ins-kpi-icon-slate-fg:     #94a3b8;
+        --ins-kpi-icon-indigo-bg:    #1e2040;
+        --ins-kpi-icon-indigo-fg:    #818cf8;
+
+        --ins-badge-reported-bg:     #1e2530;
+        --ins-badge-reported-fg:     #94a3b8;
+        --ins-badge-submitted-bg:    #1a2d4a;
+        --ins-badge-submitted-fg:    #60a5fa;
+        --ins-badge-approved-bg:     #0f2d1e;
+        --ins-badge-approved-fg:     #4ade80;
+        --ins-badge-rejected-bg:     #3b1515;
+        --ins-badge-rejected-fg:     #f87171;
+        --ins-badge-settled-bg:      #0f2a33;
+        --ins-badge-settled-fg:      #22d3ee;
+        --ins-badge-assessment-bg:   #2e2308;
+        --ins-badge-assessment-fg:   #fbbf24;
+
+        --ins-odoo-active-bg:        #0f2d1e;
+        --ins-odoo-active-fg:        #4ade80;
+        --ins-odoo-expired-bg:       #3b1515;
+        --ins-odoo-expired-fg:       #f87171;
+        --ins-odoo-pending-bg:       #2e2308;
+        --ins-odoo-pending-fg:       #fbbf24;
+        --ins-odoo-cancelled-bg:     #3b1515;
+        --ins-odoo-cancelled-fg:     #f87171;
+        --ins-odoo-won-bg:           #0f2d1e;
+        --ins-odoo-won-fg:           #4ade80;
+        --ins-odoo-lost-bg:          #3b1515;
+        --ins-odoo-lost-fg:          #f87171;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD LAYOUT
+═══════════════════════════════════════════════════════════════════ */
+.o_insurance_dashboard {
+    padding: 24px;
+    background: var(--ins-bg) !important;
+    min-height: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    color: var(--ins-text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════════════ */
+.o_insurance_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.o_insurance_header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ins-text-primary);
+    margin: 0 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.o_insurance_header h2 svg { color: var(--ins-accent); }
+
+.o_insurance_header .date-label {
+    font-size: 12px;
+    color: var(--ins-text-muted);
+    font-weight: 500;
+}
+
+.o_insurance_header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.o_insurance_header-actions .btn {
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+}
+
+.o_insurance_header-actions .btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION TITLE  (POLICIES / OPERATIONS / COMMISSIONS)
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ins-text-muted) !important;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_ins_section-title svg {
+    width: 13px;
+    height: 13px;
+    color: var(--ins-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   KPI GRID
+═══════════════════════════════════════════════════════════════════ */
+.o_insurance_kpi_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.o_insurance_kpi_card {
+    background: var(--ins-card-bg) !important;
+    border: 1px solid var(--ins-card-border) !important;
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 3px var(--ins-card-shadow);
+}
+
+.o_insurance_kpi_card:hover {
+    box-shadow: 0 4px 20px rgba(107,143,248,0.15);
+    border-color: var(--ins-accent-border) !important;
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: inherit;
+}
+
+.o_insurance_kpi_info { flex: 1; min-width: 0; }
+
+.o_insurance_kpi_label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ins-text-muted) !important;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.o_insurance_kpi_value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ins-text-primary) !important;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.o_insurance_kpi_sub {
+    font-size: 11px;
+    color: var(--ins-text-faint) !important;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.o_insurance_kpi_icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.o_insurance_kpi_icon svg { width: 20px; height: 20px; }
+
+/* Icon color variants */
+.kpi-icon-blue   { background: var(--ins-kpi-icon-blue-bg)   !important; color: var(--ins-kpi-icon-blue-fg)   !important; }
+.kpi-icon-orange { background: var(--ins-kpi-icon-orange-bg) !important; color: var(--ins-kpi-icon-orange-fg) !important; }
+.kpi-icon-green  { background: var(--ins-kpi-icon-green-bg)  !important; color: var(--ins-kpi-icon-green-fg)  !important; }
+.kpi-icon-red    { background: var(--ins-kpi-icon-red-bg)    !important; color: var(--ins-kpi-icon-red-fg)    !important; }
+.kpi-icon-purple { background: var(--ins-kpi-icon-purple-bg) !important; color: var(--ins-kpi-icon-purple-fg) !important; }
+.kpi-icon-teal   { background: var(--ins-kpi-icon-teal-bg)   !important; color: var(--ins-kpi-icon-teal-fg)   !important; }
+.kpi-icon-slate  { background: var(--ins-kpi-icon-slate-bg)  !important; color: var(--ins-kpi-icon-slate-fg)  !important; }
+.kpi-icon-indigo { background: var(--ins-kpi-icon-indigo-bg) !important; color: var(--ins-kpi-icon-indigo-fg) !important; }
+
+/* KPI value color overrides */
+.kpi-value-orange .o_insurance_kpi_value { color: var(--ins-kpi-icon-orange-fg) !important; }
+.kpi-value-green  .o_insurance_kpi_value { color: var(--ins-kpi-icon-green-fg)  !important; }
+.kpi-value-red    .o_insurance_kpi_value { color: var(--ins-kpi-icon-red-fg)    !important; }
+.kpi-value-blue   .o_insurance_kpi_value { color: var(--ins-kpi-icon-blue-fg)   !important; }
+.kpi-value-purple .o_insurance_kpi_value { color: var(--ins-kpi-icon-purple-fg) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONTENT GRID
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_row { display: grid; gap: 16px; margin-bottom: 16px; }
+.o_ins_row-2   { grid-template-columns: 1fr 1fr; }
+.o_ins_row-3   { grid-template-columns: 2fr 1fr 1fr; }
+.o_ins_row-2-1 { grid-template-columns: 2fr 1fr; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_card {
+    background: var(--ins-card-bg) !important;
+    border: 1px solid var(--ins-card-border) !important;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px var(--ins-card-shadow);
+    color: var(--ins-text-primary);
+}
+
+.o_ins_card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.o_ins_card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ins-text-primary) !important;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.o_ins_card-title svg { width: 15px; height: 15px; color: var(--ins-text-muted); }
+
+.o_ins_card-link {
+    font-size: 11px;
+    color: var(--ins-accent) !important;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.o_ins_card-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   STAT BAR LIST
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_stat-item { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.o_ins_stat-item:last-child { margin-bottom: 0; }
+
+.o_ins_stat-label {
+    font-size: 12px;
+    color: var(--ins-text-secondary) !important;
+    font-weight: 500;
+    width: 130px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.o_ins_stat-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--ins-bar-track) !important;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.o_ins_stat-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+
+.o_ins_stat-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ins-text-primary) !important;
+    min-width: 28px;
+    text-align: right;
+}
+
+.bar-motor    { background: #3c6cf0; }
+.bar-medical  { background: #10b981; }
+.bar-life     { background: #8b5cf6; }
+.bar-property { background: #f59e0b; }
+.bar-marine   { background: #0891b2; }
+.bar-group    { background: #ec4899; }
+.bar-wc       { background: #64748b; }
+.bar-default  { background: #3c6cf0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATUS BADGES
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.o_ins_badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.badge-reported    { background: var(--ins-badge-reported-bg)   !important; color: var(--ins-badge-reported-fg)   !important; }
+.badge-submitted   { background: var(--ins-badge-submitted-bg)  !important; color: var(--ins-badge-submitted-fg)  !important; }
+.badge-approved    { background: var(--ins-badge-approved-bg)   !important; color: var(--ins-badge-approved-fg)   !important; }
+.badge-rejected    { background: var(--ins-badge-rejected-bg)   !important; color: var(--ins-badge-rejected-fg)   !important; }
+.badge-settled     { background: var(--ins-badge-settled-bg)    !important; color: var(--ins-badge-settled-fg)    !important; }
+.badge-assessment  { background: var(--ins-badge-assessment-bg) !important; color: var(--ins-badge-assessment-fg) !important; }
+
+.badge-reported   .o_ins_badge-dot { background: var(--ins-badge-reported-fg); }
+.badge-submitted  .o_ins_badge-dot { background: var(--ins-badge-submitted-fg); }
+.badge-approved   .o_ins_badge-dot { background: var(--ins-badge-approved-fg); }
+.badge-rejected   .o_ins_badge-dot { background: var(--ins-badge-rejected-fg); }
+.badge-settled    .o_ins_badge-dot { background: var(--ins-badge-settled-fg); }
+.badge-assessment .o_ins_badge-dot { background: var(--ins-badge-assessment-fg); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENEWAL TABLE
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_renewal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+.o_ins_renewal-table th {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ins-table-head-color) !important;
+    padding: 0 8px 10px;
+    border-bottom: 1px solid var(--ins-table-border);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.o_ins_renewal-table td {
+    padding: 9px 8px;
+    color: var(--ins-text-secondary) !important;
+    border-bottom: 1px solid var(--ins-table-row-div);
+    vertical-align: middle;
+}
+
+.o_ins_renewal-table tr:last-child td { border-bottom: none; }
+.o_ins_renewal-table tr:hover td      { background: var(--ins-row-hover) !important; }
+
+.o_ins_renewal-link { color: var(--ins-accent) !important; font-weight: 600; cursor: pointer; text-decoration: none; }
+.o_ins_renewal-link:hover { text-decoration: underline; }
+
+.badge-days { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+
+.badge-days-urgent  { background: var(--ins-badge-urgent-bg)  !important; color: var(--ins-badge-urgent-fg)  !important; }
+.badge-days-warning { background: var(--ins-badge-warning-bg) !important; color: var(--ins-badge-warning-fg) !important; }
+.badge-days-ok      { background: var(--ins-badge-ok-bg)      !important; color: var(--ins-badge-ok-fg)      !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   OPPORTUNITY FUNNEL
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_opp-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--ins-table-row-div);
+}
+
+.o_ins_opp-item:last-child { border-bottom: none; }
+
+.o_ins_opp-stage {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ins-text-secondary) !important;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.o_ins_opp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.o_ins_opp-count { font-size: 14px; font-weight: 700; color: var(--ins-text-primary) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUICK ACTION LINKS
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.o_ins_quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--ins-quick-border) !important;
+    background: var(--ins-quick-bg) !important;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ins-text-secondary) !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-decoration: none;
+}
+
+.o_ins_quick-btn:hover {
+    background: var(--ins-quick-hover-bg) !important;
+    border-color: var(--ins-quick-hover-border) !important;
+    color: var(--ins-accent) !important;
+    text-decoration: none;
+}
+
+.o_ins_quick-btn svg { width: 15px; height: 15px; color: var(--ins-text-muted); flex-shrink: 0; transition: color 0.15s; }
+.o_ins_quick-btn:hover svg { color: var(--ins-accent); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMMISSION SUMMARY
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_comm-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--ins-table-row-div);
+}
+
+.o_ins_comm-row:last-child { border-bottom: none; }
+
+.o_ins_comm-label {
+    font-size: 12px;
+    color: var(--ins-text-secondary) !important;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_ins_comm-label-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.o_ins_comm-amount { font-size: 13px; font-weight: 700; color: var(--ins-text-primary) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_empty { text-align: center; padding: 28px 16px; color: var(--ins-text-faint) !important; }
+.o_ins_empty svg { width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.4; }
+.o_ins_empty p { font-size: 12px; margin: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL FIX FOR ODOO CLIENT ACTION
+═══════════════════════════════════════════════════════════════════ */
+.o_action:has(.o_insurance_dashboard),
+.o_content:has(.o_insurance_dashboard) {
+    overflow: hidden !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.o_action:has(.o_insurance_dashboard) .o_insurance_dashboard,
+.o_content:has(.o_insurance_dashboard) .o_insurance_dashboard {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM HERO CARD
+═══════════════════════════════════════════════════════════════════ */
+.o_ins_form_hero {
+    background: var(--ins-hero-bg) !important;
+    border: 1px solid var(--ins-hero-border) !important;
+    border-radius: 12px;
+    padding: 20px 24px 12px;
+    margin-bottom: 20px;
+}
+
+.o_ins_hero_label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ins-hero-label-color) !important;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_ins_hero_label::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--ins-hero-bar-color);
+    border-radius: 2px;
+}
+
+.o_ins_form_hero .o_wrap_field,
+.o_ins_form_hero .o_field_widget { background: transparent !important; }
+
+/* Field labels inside hero card */
+.o_ins_form_hero .o_group .o_wrap_label label,
+.o_ins_form_hero .o_group td.o_td_label label,
+.o_ins_form_hero .o_cell.o_wrap_label label,
+.o_ins_form_hero label.o_form_label {
+    color: var(--ins-hero-field-label) !important;
+    font-weight: 600;
+}
+
+/* Field values inside hero card */
+.o_ins_form_hero .o_field_widget,
+.o_ins_form_hero .o_field_widget span,
+.o_ins_form_hero .o_field_widget .o_field_char,
+.o_ins_form_hero .o_field_widget input,
+.o_ins_form_hero .o_field_char,
+.o_ins_form_hero .o_form_field {
+    color: var(--ins-hero-field-value) !important;
+}
+
+/* Many2one / phone / email links inside hero */
+.o_ins_form_hero .o_field_widget a,
+.o_ins_form_hero .o_field_widget .o_form_uri {
+    color: var(--ins-accent) !important;
+}
+
+.o_ins_section_label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--ins-section-label-color) !important;
+    padding: 4px 0 10px;
+    border-bottom: 1px solid var(--ins-section-border);
+    margin-bottom: 14px;
+    display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE — FORM VIEW EXPLICIT OVERRIDES
+   Force correct colors on standard Odoo form elements when dark mode
+   is active, since Odoo may not fully theme these for custom modules.
+═══════════════════════════════════════════════════════════════════ */
+
+/* Group string labels (section headers like "Quote & Policy") */
+html.o_dark .o_group > thead .o_form_label,
+html.o_dark .o_group > thead th.o_td_label,
+html[data-bs-theme="dark"] .o_group > thead .o_form_label,
+html[data-bs-theme="dark"] .o_group > thead th.o_td_label,
+body.o_dark .o_group > thead .o_form_label,
+body.o_dark .o_group > thead th.o_td_label,
+body[data-bs-theme="dark"] .o_group > thead .o_form_label,
+body[data-bs-theme="dark"] .o_group > thead th.o_td_label {
+    color: #94a3b8 !important;
+}
+
+/* Form field labels in dark mode */
+html.o_dark .o_ins_form_hero .o_wrap_label label,
+html.o_dark .o_ins_form_hero td.o_td_label label,
+html[data-bs-theme="dark"] .o_ins_form_hero .o_wrap_label label,
+html[data-bs-theme="dark"] .o_ins_form_hero td.o_td_label label,
+body.o_dark .o_ins_form_hero .o_wrap_label label,
+body.o_dark .o_ins_form_hero td.o_td_label label,
+body[data-bs-theme="dark"] .o_ins_form_hero .o_wrap_label label,
+body[data-bs-theme="dark"] .o_ins_form_hero td.o_td_label label {
+    color: #94a3b8 !important;
+}
+
+/* Form field values in dark mode */
+html.o_dark .o_ins_form_hero .o_field_widget,
+html.o_dark .o_ins_form_hero .o_field_widget span:not(.o_status),
+html[data-bs-theme="dark"] .o_ins_form_hero .o_field_widget,
+html[data-bs-theme="dark"] .o_ins_form_hero .o_field_widget span:not(.o_status),
+body.o_dark .o_ins_form_hero .o_field_widget,
+body.o_dark .o_ins_form_hero .o_field_widget span:not(.o_status),
+body[data-bs-theme="dark"] .o_ins_form_hero .o_field_widget,
+body[data-bs-theme="dark"] .o_ins_form_hero .o_field_widget span:not(.o_status) {
+    color: #e2e8f0 !important;
+}
+
+/* ─ prefers-color-scheme dark fallback for form hero ─ */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-bs-theme="light"]):not(.o_light) .o_ins_form_hero .o_wrap_label label,
+    :root:not([data-bs-theme="light"]):not(.o_light) .o_ins_form_hero td.o_td_label label {
+        color: #94a3b8 !important;
+    }
+    :root:not([data-bs-theme="light"]):not(.o_light) .o_ins_form_hero .o_field_widget,
+    :root:not([data-bs-theme="light"]):not(.o_light) .o_ins_form_hero .o_field_widget span:not(.o_status) {
+        color: #e2e8f0 !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ODOO FIELD BADGE OVERRIDES
+═══════════════════════════════════════════════════════════════════ */
+.o_field_widget.o_field_badge .badge[data-value="active"]    { background: var(--ins-odoo-active-bg)    !important; color: var(--ins-odoo-active-fg)    !important; }
+.o_field_widget.o_field_badge .badge[data-value="expired"]   { background: var(--ins-odoo-expired-bg)   !important; color: var(--ins-odoo-expired-fg)   !important; }
+.o_field_widget.o_field_badge .badge[data-value="pending"]   { background: var(--ins-odoo-pending-bg)   !important; color: var(--ins-odoo-pending-fg)   !important; }
+.o_field_widget.o_field_badge .badge[data-value="cancelled"] { background: var(--ins-odoo-cancelled-bg) !important; color: var(--ins-odoo-cancelled-fg) !important; }
+.o_field_widget.o_field_badge .badge[data-value="won"]       { background: var(--ins-odoo-won-bg)       !important; color: var(--ins-odoo-won-fg)       !important; }
+.o_field_widget.o_field_badge .badge[data-value="lost"]      { background: var(--ins-odoo-lost-bg)      !important; color: var(--ins-odoo-lost-fg)      !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+    .o_ins_row-3   { grid-template-columns: 1fr 1fr; }
+    .o_ins_row-2-1 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .o_insurance_dashboard   { padding: 16px; }
+    .o_ins_row-2             { grid-template-columns: 1fr; }
+    .o_ins_row-3             { grid-template-columns: 1fr; }
+    .o_insurance_kpi_grid    { grid-template-columns: repeat(2, 1fr); }
+    .o_ins_quick-actions     { grid-template-columns: 1fr; }
+}
