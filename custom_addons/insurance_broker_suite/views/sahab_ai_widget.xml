@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <template id="sahab_ai_widget" name="SAHAB AI Chat &amp; Insurance Dashboard" inherit_id="portal.frontend_layout" priority="20">
+            <xpath expr="//div[@id='wrapwrap']" position="inside">
+                
+                <input type="hidden" id="oSahabClientContext" value="{}"/>
+                <input type="file" id="oSahabFileInput" class="d-none" accept="image/*,application/pdf"/>
+                <input type="file" id="oSahabCameraInput" class="d-none" accept="image/*" capture="environment"/>
+
+                <button id="oSahabTrigger" class="o_sahab_trigger" aria-label="SAHAB AI Chat">
+                    <i class="fa fa-comments fa-lg"/>
+                    <span class="o_sahab_badge">AI</span>
+                </button>
+
+                <div id="oSahabPanel" class="o_sahab_panel" role="dialog" aria-label="SAHAB AI Insurance Assistant">
+
+                    <div class="o_sahab_header">
+                        <div class="o_sahab_avatar">
+                            <i class="fa fa-robot"/>
+                        </div>
+                        <div class="o_sahab_header_info">
+                            <h6>SAHAB AI</h6>
+                            <small>مساعدك الذكي للتأمين • متاح الآن</small>
+                        </div>
+                        <button id="oSahabClose" class="o_sahab_close" aria-label="Close">×</button>
+                    </div>
+
+                    <div class="o_sahab_step_bar" aria-hidden="true">
+                        <div class="o_sahab_step_dot active"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/><div class="o_sahab_step_dot"/>
+                    </div>
+
+                    <div id="oSahabMessages" class="o_sahab_messages" aria-live="polite"/>
+
+                    <div class="o_sahab_gemini_box">
+                        
+                        <div id="oSahabAttachmentPreview" class="o_sahab_gemini_preview" style="display: none;">
+                            <div class="o_preview_chip">
+                                <span class="o_preview_filename">📎 ملف قيد التحضير...</span>
+                                <button type="button" id="oRemoveAttachment">×</button>
+                            </div>
+                        </div>
+
+                        <div class="o_sahab_textarea_wrapper">
+                            <textarea
+                                id="oSahabInput"
+                                class="o_sahab_gemini_input"
+                                rows="1"
+                                placeholder="اكتب رسالتك هنا أو استخدم الصوت والمرفقات…"
+                                dir="auto"
+                            />
+                        </div>
+
+                        <div class="o_sahab_gemini_footer">
+                            <div class="o_sahab_gemini_tools">
+                                <button type="button" id="oSahabAttachFile" class="o_gemini_tool_btn" title="إرفاق ملف">
+                                    <i class="fa fa-paperclip"/>
+                                </button>
+                                <button type="button" id="oSahabCameraCapture" class="o_gemini_tool_btn" title="التقاط صورة">
+                                    <i class="fa fa-camera"/>
+                                </button>
+                                <button type="button" id="oSahabVoiceRecord" class="o_gemini_tool_btn" title="تحدث بالصوت">
+                                    <i class="fa fa-microphone"/>
+                                </button>
+                            </div>
+                            
+                            <button id="oSahabSend" class="o_sahab_gemini_send" aria-label="Send">
+                                <i class="fa fa-paper-plane"/>
+                            </button>
+                        </div>
+
+                    </div> </div>
+            </xpath>
+        </template>
+
+    </data>
+</odoo>
