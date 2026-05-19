@@ -3,8 +3,7 @@
 <data>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     COMMISSION RATE CONFIGURATION VIEWS
-     Model: insurance.commission.rate
+     COMMISSION RATE CONFIGURATION VIEWS  —  insurance.commission.rate
      ══════════════════════════════════════════════════════════════════════ -->
 
 <!-- ── LIST ── -->
@@ -12,19 +11,21 @@
     <field name="name">insurance.commission.rate.list</field>
     <field name="model">insurance.commission.rate</field>
     <field name="arch" type="xml">
-        <list string="Commission Rates" editable="top"
-              decoration-muted="not active">
-            <field name="subtype_id" optional="show"/>
-            <field name="type_id"    optional="show"/>
+        <list string="Commission Rates — نسب العمولات المتفق عليها"
+              editable="top"
+              decoration-muted="not active"
+              decoration-warning="not commission_account_id or not payable_account_id">
+            <field name="subtype_id"          optional="show"/>
+            <field name="type_id"             optional="show"/>
             <field name="provider_id"/>
-            <field name="rate_type" widget="badge"/>
-            <field name="rate"         string="Rate (%)"   optional="show"/>
-            <field name="fixed_amount" string="Fixed (OMR)" optional="hide"/>
-            <field name="commission_account_id" optional="hide"/>
-            <field name="payable_account_id"    optional="hide"/>
-            <field name="effective_date" optional="show"/>
-            <field name="expiry_date"    optional="show"/>
-            <field name="active"         optional="show"/>
+            <field name="rate_type"           widget="badge"/>
+            <field name="rate"                string="Rate (%)"    optional="show"/>
+            <field name="fixed_amount"        string="Fixed (OMR)" optional="hide"/>
+            <field name="commission_account_id" optional="show"/>
+            <field name="payable_account_id"    optional="show"/>
+            <field name="effective_date"        optional="show"/>
+            <field name="expiry_date"           optional="show"/>
+            <field name="active"                optional="show"/>
         </list>
     </field>
 </record>
@@ -34,25 +35,42 @@
     <field name="name">insurance.commission.rate.form</field>
     <field name="model">insurance.commission.rate</field>
     <field name="arch" type="xml">
-        <form string="Commission Rate Configuration">
+        <form string="Commission Rate Configuration — إعداد نسبة العمولة">
             <sheet>
-                <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                <widget name="web_ribbon" title="Archived / أرشيف"
+                        bg_color="bg-danger"
                         invisible="active"/>
+
                 <div class="oe_title">
-                    <label for="display_name" string="Rate Reference"/>
-                    <h1><field name="display_name" readonly="1" nolabel="1"/></h1>
+                    <label for="display_name" string="Rate Reference / مرجع النسبة"/>
+                    <h1>
+                        <field name="display_name" readonly="1" nolabel="1"/>
+                    </h1>
+                </div>
+
+                <!--
+                ╔══════════════════════════════════════════════════════════════╗
+                ║  🟦 إرشاد: ما هو هذا السجل؟                               ║
+                ╚══════════════════════════════════════════════════════════════╝
+                -->
+                <div class="alert alert-primary" role="alert">
+                    <strong>📘 ما هو سجل نسبة العمولة؟</strong><br/>
+                    هذا السجل يُحدد النسبة أو المبلغ المتفق عليه مع <strong>كل شركة تأمين</strong>
+                    لكل <strong>منتج تأمين</strong>.
+                    عند إنشاء عمولة على وثيقة، سيُجلب هذا المعدل <strong>تلقائياً</strong>
+                    ويُحسب مبلغ العمولة وصافي شركة التأمين فوراً.
                 </div>
 
                 <!-- ★ KEY CARD ★ -->
                 <div class="o_ins_form_hero">
-                    <div class="o_ins_hero_label">العمولة المتفق عليها — Agreed Commission</div>
+                    <div class="o_ins_hero_label">العمولة المتفق عليها — Agreed Commission Rate</div>
                     <group>
-                        <group string="Product &amp; Provider">
+                        <group string="🏢 المنتج والشركة — Product &amp; Provider">
                             <field name="subtype_id" options="{'no_create': true}"/>
-                            <field name="type_id" readonly="1"/>
+                            <field name="type_id"    readonly="1"/>
                             <field name="provider_id" options="{'no_create': true}"/>
                         </group>
-                        <group string="Commission Rate / النسبة">
+                        <group string="💹 النسبة أو المبلغ — Rate / Amount">
                             <field name="rate_type" widget="radio"/>
                             <field name="rate"
                                    string="Commission Rate (%)"
@@ -71,40 +89,127 @@
                     </group>
                 </div>
 
+                <!--
+                ╔══════════════════════════════════════════════════════════════╗
+                ║  🟡 تحذير: نطاق النسبة المسموح به                         ║
+                ╚══════════════════════════════════════════════════════════════╝
+                -->
+                <div class="alert alert-warning mt-2" role="alert"
+                     invisible="rate_type != 'percent'">
+                    <strong>⚠️ تنبيه: نطاق النسبة</strong><br/>
+                    تأكد أن <strong>النسبة الحالية</strong> تقع بين
+                    <strong>الحد الأدنى</strong> و<strong>الحد الأقصى</strong> المدخلَين.
+                    النظام سيرفض حفظ نسبة خارج النطاق المحدد.
+                    <br/><em>مثال: إذا كان الحد الأدنى 10% والأقصى 25% → يجب أن تكون النسبة بينهما.</em>
+                </div>
+
                 <notebook>
-                    <!-- Accounting Tab -->
-                    <page string="Accounting / الحسابات" name="accounting">
+                    <!-- ══ Accounting Tab ══ -->
+                    <page string="📒 الحسابات المحاسبية — Accounting" name="accounting">
+
+                        <!--
+                        ╔════════════════════════════════════════════════════════╗
+                        ║  🔴 مهم: يجب ربط الحسابات قبل تأكيد العمولات        ║
+                        ╚════════════════════════════════════════════════════════╝
+                        -->
+                        <div class="alert alert-danger" role="alert">
+                            <strong>🔴 مطلوب: ربط الحسابات المحاسبية</strong><br/>
+                            يجب تحديد الحسابات الثلاثة أدناه <strong>قبل</strong> استخدام هذه النسبة في أي عمولة.
+                            بدون هذه الحسابات، لن يتمكن النظام من إنشاء القيد المحاسبي التلقائي.
+                        </div>
+
                         <group>
-                            <group string="Chart of Accounts">
+                            <group string="🗂️ دليل الحسابات — Chart of Accounts">
                                 <field name="journal_id"
-                                       options="{'no_create': true}"/>
+                                       options="{'no_create': true}"
+                                       help="اختر يومية عمولات التأمين (INSC) أو أي يومية عامة مناسبة"/>
                                 <field name="commission_account_id"
-                                       options="{'no_create': true}"/>
+                                       options="{'no_create': true}"
+                                       help="حساب دخل العمولة — Credit side: broker's income account (e.g. 410001)"/>
                                 <field name="payable_account_id"
-                                       options="{'no_create': true}"/>
+                                       options="{'no_create': true}"
+                                       help="حساب مستحقات شركات التأمين — Credit side: insurer payable account (e.g. 210001)"/>
+                                <field name="receivable_account_id"
+                                       options="{'no_create': true}"
+                                       help="حساب المدينين — Debit side: client receivable (e.g. 120001) — إذا تُرك فارغاً يُستخدم حساب المدينين الافتراضي للعميل"/>
                             </group>
-                            <group string="Validity / الصلاحية">
+                            <group string="📅 الصلاحية — Validity Period">
                                 <field name="effective_date"/>
                                 <field name="expiry_date"/>
                                 <field name="active" widget="toggle_button"/>
                             </group>
                         </group>
 
-                        <!-- Accounting explainer box -->
-                        <div class="alert alert-info mt-3" role="alert">
-                            <strong>📊 كيف تعمل القيود المحاسبية:</strong><br/>
-                            عند تأكيد العمولة يُنشأ قيد تلقائياً:
+                        <!--
+                        ╔════════════════════════════════════════════════════════╗
+                        ║  🟢 كيف تعمل القيود المحاسبية — Accounting Flow      ║
+                        ╚════════════════════════════════════════════════════════╝
+                        -->
+                        <div class="alert alert-success mt-3" role="alert">
+                            <strong>✅ كيف يعمل القيد المحاسبي التلقائي؟</strong><br/>
+                            عند <strong>تأكيد أي عمولة</strong> مرتبطة بهذه النسبة، ينشئ النظام القيد التالي:
+                            <table class="table table-sm table-bordered mt-2 mb-0 bg-white">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>الحساب</th>
+                                        <th>مدين (Dr)</th>
+                                        <th>دائن (Cr)</th>
+                                        <th>المبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>مدينو العملاء 120001</td>
+                                        <td class="text-center">✔</td>
+                                        <td></td>
+                                        <td>إجمالي القسط</td>
+                                    </tr>
+                                    <tr>
+                                        <td>دخل العمولة 410001</td>
+                                        <td></td>
+                                        <td class="text-center">✔</td>
+                                        <td>حصة البروكر</td>
+                                    </tr>
+                                    <tr>
+                                        <td>مستحقات الشركة 210001</td>
+                                        <td></td>
+                                        <td class="text-center">✔</td>
+                                        <td>صافي الشركة</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!--
+                        ╔════════════════════════════════════════════════════════╗
+                        ║  🟦 الحسابات الافتراضية الجاهزة                      ║
+                        ╚════════════════════════════════════════════════════════╝
+                        -->
+                        <div class="alert alert-info mt-2" role="alert">
+                            <strong>💡 الحسابات الجاهزة في النظام:</strong>
                             <ul class="mb-0 mt-1">
-                                <li><strong>مدين:</strong> حساب المدينين (إجمالي القسط)</li>
-                                <li><strong>دائن:</strong> حساب دخل العمولة (حصة البروكر)</li>
-                                <li><strong>دائن:</strong> حساب الشركة المزودة (الصافي للشركة)</li>
+                                <li><strong>110001</strong> — صندوق البروكر (Cash)</li>
+                                <li><strong>120001</strong> — مدينو عملاء التأمين (Receivable)</li>
+                                <li><strong>210001</strong> — مستحقات شركات التأمين (Payable)</li>
+                                <li><strong>410001</strong> — دخل عمولة التأمين (Income)</li>
+                                <li><strong>INSC</strong> — يومية عمولات التأمين (Journal)</li>
                             </ul>
                         </div>
                     </page>
 
-                    <!-- Notes Tab -->
-                    <page string="Notes" name="notes">
-                        <field name="notes" placeholder="ملاحظات إضافية..."/>
+                    <!-- ══ Notes Tab ══ -->
+                    <page string="📝 ملاحظات — Notes" name="notes">
+                        <!--
+                        ╔════════════════════════════════════════════════════════╗
+                        ║  🟦 إرشاد: ما تكتبه هنا                             ║
+                        ╚════════════════════════════════════════════════════════╝
+                        -->
+                        <div class="alert alert-info mb-2" role="alert">
+                            <strong>📝 اكتب هنا:</strong> شروط الاتفاقية، تواريخ التجديد،
+                            اسم ممثل الشركة، أي استثناءات أو شروط خاصة.
+                        </div>
+                        <field name="notes"
+                               placeholder="مثال: اتفاقية موقّعة مع مدير تطوير الأعمال في الشركة الوطنية بتاريخ 1 يناير 2024. تُراجع كل 6 أشهر..."/>
                     </page>
                 </notebook>
             </sheet>
@@ -121,11 +226,15 @@
         <search string="Search Commission Rates">
             <field name="subtype_id"/>
             <field name="provider_id"/>
-            <filter string="Active"   name="active"   domain="[('active','=',True)]"/>
-            <filter string="Archived" name="archived" domain="[('active','=',False)]"/>
+            <filter string="Active / فعّال"    name="active"   domain="[('active','=',True)]"/>
+            <filter string="Archived / أرشيف"  name="archived" domain="[('active','=',False)]"/>
+            <filter string="Missing Accounts"  name="incomplete"
+                    domain="['|',('commission_account_id','=',False),('payable_account_id','=',False)]"/>
+            <separator/>
             <group expand="0" string="Group By">
-                <filter string="Provider"        name="grp_provider" context="{'group_by':'provider_id'}"/>
-                <filter string="Insurance Type"  name="grp_type"     context="{'group_by':'type_id'}"/>
+                <filter string="Provider"       name="grp_provider" context="{'group_by':'provider_id'}"/>
+                <filter string="Insurance Type" name="grp_type"     context="{'group_by':'type_id'}"/>
+                <filter string="Rate Type"      name="grp_rtype"    context="{'group_by':'rate_type'}"/>
             </group>
         </search>
     </field>
@@ -133,7 +242,7 @@
 
 <!-- ── ACTION ── -->
 <record id="action_commission_rate" model="ir.actions.act_window">
-    <field name="name">Commission Rates / نسب العمولات</field>
+    <field name="name">Commission Rates — نسب العمولات</field>
     <field name="res_model">insurance.commission.rate</field>
     <field name="view_mode">list,form</field>
     <field name="search_view_id" ref="view_commission_rate_search"/>
@@ -143,8 +252,8 @@
             أنشئ أول معدل عمولة — Create your first commission rate
         </p>
         <p>
-            حدّد نسبة العمولة المتفق عليها مع كل شركة تأمين لكل منتج.
-            ستُطبَّق تلقائياً عند إنشاء عمولات على الوثائق.
+            حدّد النسبة المتفق عليها مع كل شركة تأمين لكل منتج.
+            ستُطبَّق تلقائياً وتُنشئ قيوداً محاسبية فور تأكيد كل عمولة.
         </p>
     </field>
 </record>
