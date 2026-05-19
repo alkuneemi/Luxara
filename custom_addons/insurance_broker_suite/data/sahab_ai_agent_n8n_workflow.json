@@ -1,0 +1,362 @@
+{
+  "name": "SAHAB AI — Insurance Agent (Full Odoo Integration)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sahab-insurance-agent",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "node-webhook-01",
+      "name": "Webhook — Receive from Odoo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [160, 300],
+      "webhookId": "sahab-insurance-agent"
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// ── Parse incoming payload & detect intent ─────────────────────────────\nconst body = $input.first().json;\n\nconst message           = (body.message           || '').trim();\nconst sessionId         = (body.session_id        || 'anon').trim();\nconst context           = body.context            || {};\nconst conversationState = body.conversation_state || {};\nconst user              = body.user               || {};\nconst files             = body.files              || [];\n\nif (!message) throw new Error('Empty message received');\n\nconst msg = message.toLowerCase();\n\n// ── Intent Detection ───────────────────────────────────────────────────────\nconst isChoiceSelect = message.includes('[CHOICE:');\nconst isApplyIntent  = /أبي تأمين|أريد تأمين|طلب تأمين|قطع تأمين|apply|اشتري|أشترك|i want insurance|get insurance|buy insurance|purchase/i.test(message);\nconst isInquiry      = /استفسار|أسئلة|معلومات|info|information|tell me|ما هو|what is|how much|كم تكلف|سعر|price|quote/i.test(message);\nconst isClaimIntent  = /مطالبة|claim|تعويض|حادث|accident|emergency/i.test(message);\nconst isTrackIntent  = /track|تتبع|طلبي|my application|حالة|status/i.test(message);\n\n// ── Parse choice selection ─────────────────────────────────────────────────\nlet choiceData = null;\nif (isChoiceSelect) {\n  try {\n    const match = message.match(/\\[CHOICE:(\\w+):(\\d+):(.+?)\\]/);\n    if (match) {\n      choiceData = {\n        type: match[1],\n        id: parseInt(match[2]),\n        name: match[3],\n      };\n    }\n  } catch (e) {}\n}\n\n// ── Build categories string for system prompt ──────────────────────────────\nconst cats = (context.categories || []).map(c => `• ${c.name}`).join('\\n') ||\n  '• Motor / تأمين السيارات\\n• Medical / طبي\\n• Life / حياة\\n• Property / ممتلكات\\n• Marine / بحري';\n\nconst stats = context.stats || {};\nconst userName = user.name ? `, اسم العميل: ${user.name}` : '';\nconst userLoggedIn = user.is_logged_in ? 'العميل مسجّل دخوله في البوابة.' : 'العميل غير مسجّل.';\n\n// ── Build System Prompt ────────────────────────────────────────────────────\nconst systemPrompt = `أنت SAHAB AI، مستشار التأمين الذكي لأكبر شركة وساطة تأمينية في سلطنة عُمان.\n\nأسلوبك:\n- راقٍ، محترف، ودود — كأنك من مشايخ وسكّان السلطنة الكرام\n- تتحدث بالعربية الفصيحة ذات اللهجة العُمانية الرفيعة\n- تستخدم العبارات العُمانية الراقية: \"يسعدنا\"، \"حيّاكم\"، \"تفضّلوا\"، \"إن شاء الله\"\n- ثنائي اللغة: ترد بالعربية أولاً ثم الإنجليزية إذا كان السؤال بالإنجليزية\n- موجز ومباشر — لا تطوّل دون فائدة\n- تُبادر بإنشاء الطلبات والفرص عبر أدوات أودو المتاحة لك\n\nصلاحياتك وأدواتك في نظام أودو:\n1. إنشاء فرصة تأمين (crm.lead) عند الاستفسار بدون طلب\n2. عرض قائمة فئات التأمين المتاحة من قاعدة البيانات\n3. عرض أنواع التأمين حسب الفئة\n4. عرض منتجات التأمين (subtypes) حسب النوع\n5. إنشاء طلب تأمين مكتمل (insurance.application) بعد جمع كل البيانات\n\nمنتجاتنا التأمينية (52 منتجاً):\n${cats}\n\nإحصائيات النظام:\n- إجمالي الوثائق النشطة: ${stats.total_policies || 0}\n- إجمالي العملاء: ${stats.total_clients || 0}\n- المنتجات المتاحة: ${stats.total_products || 52}\n\nحالة العميل: ${userLoggedIn}${userName}\n\nمسار تقديم طلب التأمين:\n1. اسأل العميل عن الفئة → 2. اسأل عن النوع → 3. اسأل عن المنتج → 4. اجمع البيانات الشخصية → 5. أنشئ الطلب\n\nإذا كان العميل يستفسر فقط بدون رغبة بالطلب → أنشئ فرصة (lead) في نظام CRM.\n\nلا تختلق معلومات — إذا لم تعرف، قل \"سأتواصل مع فريقنا المتخصص\".\nلا تذكر أي أسعار محددة — الأسعار تُقدَّم بعد المقارنة من شركات التأمين.`;\n\nreturn [{\n  json: {\n    message,\n    sessionId,\n    context,\n    conversationState,\n    user,\n    files,\n    systemPrompt,\n    isChoiceSelect,\n    isApplyIntent,\n    isInquiry,\n    isClaimIntent,\n    isTrackIntent,\n    choiceData,\n  }\n}];"
+      },
+      "id": "node-parse-01",
+      "name": "Parse Input & Detect Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [380, 300]
+    },
+
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isChoiceSelect }}",
+                    "rightValue": true,
+                    "operator": { "type": "boolean", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "choice"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isApplyIntent }}",
+                    "rightValue": true,
+                    "operator": { "type": "boolean", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "apply"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isInquiry }}",
+                    "rightValue": true,
+                    "operator": { "type": "boolean", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "inquiry"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "node-router-01",
+      "name": "Intent Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [600, 300]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// ── Handle choice selection (category/type/subtype) ──────────────────────\nconst data = $input.first().json;\nconst choice = data.choiceData;\nconst odooBase = $env.ODOO_BASE_URL || '';\n\nif (!choice) {\n  return [{ json: { ...data, routeAction: 'ai_general' } }];\n}\n\nreturn [{ json: {\n  ...data,\n  routeAction: 'choice_' + choice.type,\n  choiceType: choice.type,\n  choiceId: choice.id,\n  choiceName: choice.name,\n  odooBase,\n} }];"
+      },
+      "id": "node-choice-01",
+      "name": "Process Choice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, 160]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.ODOO_BASE_URL }}/insurance/api/types/{{ $json.choiceId }}",
+        "options": { "response": { "response": { "fullResponse": false } } }
+      },
+      "id": "node-odoo-get-types",
+      "name": "Odoo: Get Types by Category",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 100]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.ODOO_BASE_URL }}/insurance/api/subtypes/{{ $json.choiceId }}",
+        "options": { "response": { "response": { "fullResponse": false } } }
+      },
+      "id": "node-odoo-get-subtypes",
+      "name": "Odoo: Get Subtypes by Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 220]
+    },
+
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.ODOO_BASE_URL }}/insurance/api/categories",
+        "options": { "response": { "response": { "fullResponse": false } } }
+      },
+      "id": "node-odoo-get-cats",
+      "name": "Odoo: Get Categories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 320]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ODOO_BASE_URL }}/insurance/api/create-lead",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "name": "={{ 'استفسار تأمين — ' + $('Parse Input & Detect Intent').first().json.message.substring(0, 60) }}",
+          "partner_name": "={{ $('Parse Input & Detect Intent').first().json.user.name || 'عميل غير مسجّل' }}",
+          "description": "={{ 'رسالة العميل: ' + $('Parse Input & Detect Intent').first().json.message + '\\n\\nSession: ' + $('Parse Input & Detect Intent').first().json.sessionId }}",
+          "tag": "insurance-sahab-ai"
+        },
+        "options": {}
+      },
+      "id": "node-odoo-create-lead",
+      "name": "Odoo: Create CRM Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 400]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ODOO_BASE_URL }}/insurance/api/create-application",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json.applicationData }}",
+        "options": {}
+      },
+      "id": "node-odoo-create-app",
+      "name": "Odoo: Create Insurance Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 500]
+    },
+
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "complete",
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            { "role": "system", "content": "={{ $('Parse Input & Detect Intent').first().json.systemPrompt }}" },
+            { "role": "user", "content": "={{ $('Parse Input & Detect Intent').first().json.message }}" }
+          ]
+        },
+        "options": { "temperature": 0.6, "maxTokens": 700 }
+      },
+      "id": "node-openai-main",
+      "name": "SAHAB AI — GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [820, 460],
+      "credentials": {
+        "openAiApi": { "id": "openai-creds", "name": "OpenAI API — SAHAB AI" }
+      }
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// ── Build final structured response ────────────────────────────────────────\nconst parsed = $('Parse Input & Detect Intent').first().json;\nconst msg = parsed.message.toLowerCase();\n\n// ── Determine what came through ────────────────────────────────────────────\nlet aiReply = '';\nlet choiceList = [];\nlet choiceType = '';\nlet action = '';\nlet applyUrl = '';\nlet newConvState = { ...parsed.conversationState };\n\n// Try to get AI reply from OpenAI node\ntry {\n  const openaiData = $('SAHAB AI — GPT-4o').first();\n  if (openaiData && openaiData.json && openaiData.json.message) {\n    aiReply = openaiData.json.message.content || '';\n  }\n} catch (e) {}\n\n// Try to get categories list (if apply intent)\ntry {\n  const catsData = $('Odoo: Get Categories').first();\n  if (catsData && catsData.json && catsData.json.categories) {\n    const cats = catsData.json.categories;\n    if (cats.length > 0 && (parsed.isApplyIntent || !aiReply)) {\n      choiceList = cats;\n      choiceType = 'category';\n      newConvState.step = 'select_category';\n      if (!aiReply) {\n        aiReply = 'يسعدنا مساعدتكم في تأمينكم! 🤝\\n\\nتفضّلوا باختيار **فئة التأمين** المناسبة لكم:';\n      }\n    }\n  }\n} catch (e) {}\n\n// Try to get types (if category chosen)\ntry {\n  const typesData = $('Odoo: Get Types by Category').first();\n  if (typesData && typesData.json && typesData.json.types && parsed.choiceData && parsed.choiceData.type === 'category') {\n    choiceList = typesData.json.types;\n    choiceType = 'type';\n    newConvState.step = 'select_type';\n    newConvState.selectedCategory = parsed.choiceData.id;\n    aiReply = `ممتاز! اخترتم **${parsed.choiceData.name}**. 🎯\\n\\nتفضّلوا بإخباري أي نوع تأمين يناسبكم:`;\n  }\n} catch (e) {}\n\n// Try to get subtypes (if type chosen)\ntry {\n  const subtypesData = $('Odoo: Get Subtypes by Type').first();\n  if (subtypesData && subtypesData.json && subtypesData.json.subtypes && parsed.choiceData && parsed.choiceData.type === 'type') {\n    choiceList = subtypesData.json.subtypes;\n    choiceType = 'subtype';\n    newConvState.step = 'select_subtype';\n    newConvState.selectedType = parsed.choiceData.id;\n    aiReply = `رائع! اخترتم **${parsed.choiceData.name}**. 🛡️\\n\\nتفضّلوا بتحديد نوع التغطية المناسبة:`;\n  }\n} catch (e) {}\n\n// Handle subtype selection → redirect to apply form\ntry {\n  if (parsed.choiceData && parsed.choiceData.type === 'subtype') {\n    action = 'redirect_apply';\n    applyUrl = `/insurance/apply/${parsed.choiceData.id}`;\n    newConvState.step = 'applying';\n    aiReply = `ممتاز! اخترتم **${parsed.choiceData.name}**. 🌟\\n\\nجاري تحويلكم إلى استمارة الطلب.\\nيسعدنا خدمتكم ويسّر الله أمركم. 🤝`;\n  }\n} catch (e) {}\n\n// Handle lead creation response\ntry {\n  const leadData = $('Odoo: Create CRM Lead').first();\n  if (leadData && leadData.json && leadData.json.success) {\n    // Lead was created - acknowledge it\n    if (!aiReply) {\n      aiReply = 'تم تسجيل استفساركم لدينا. 📋\\n\\nسيتواصل معكم أحد مستشارينا المتخصصين قريباً إن شاء الله.\\n\\nهل تودّون تقديم طلب تأمين الآن؟';\n    }\n  }\n} catch (e) {}\n\n// Handle new application creation response\ntry {\n  const appData = $('Odoo: Create Insurance Application').first();\n  if (appData && appData.json && appData.json.success) {\n    const ref = appData.json.reference || '';\n    const portalUrl = appData.json.portal_url || '/my/insurance';\n    aiReply = `تهانينا! ✅ تم إنشاء طلب التأمين بنجاح!\\n\\n**رقم الطلب:** ${ref}\\n\\nيمكنكم متابعة حالة طلبكم عبر بوابة العملاء.\\nفريقنا سيتواصل معكم خلال ساعتين. 🤝`;\n    action = 'application_created';\n    applyUrl = portalUrl;\n  }\n} catch (e) {}\n\n// Fallback reply\nif (!aiReply) {\n  aiReply = 'السلام عليكم! أنا **SAHAB AI**، يسعدني خدمتكم في جميع احتياجاتكم التأمينية. 🌟\\n\\nكيف أقدر أساعدكم اليوم؟';\n}\n\n// ── Contextual quick replies ────────────────────────────────────────────────\nconst allQR = {\n  motor:    ['أبي تأمين شامل', 'تأمين المسؤولية (TPL)', 'تأمين أسطول', 'عرض الأسعار'],\n  medical:  ['تأمين طبي فردي', 'تأمين طبي جماعي', 'تأمين الأسنان', 'استشارة مجانية'],\n  life:     ['تأمين حياة', 'تأمين حوادث شخصية', 'تأمين الأطفال', 'استشارة'],\n  property: ['تأمين منزل', 'تأمين تجاري', 'تأمين حريق', 'عرض أسعار'],\n  marine:   ['تأمين شحن بضائع', 'تأمين يخت', 'تأمين هيكل سفينة', 'استشارة'],\n  claim:    ['تقديم مطالبة', 'الخط الساخن +968 2400 0000', 'تتبع مطالبتي', 'المستندات المطلوبة'],\n  default:  ['أبي تأمين', 'تأمين السيارات', 'التأمين الطبي', 'تتبع طلبي'],\n};\n\nlet quickReplies = allQR.default;\nif (!choiceList.length) {\n  if (msg.includes('motor') || msg.includes('سيارة') || msg.includes('مركبة') || msg.includes('car')) quickReplies = allQR.motor;\n  else if (msg.includes('medical') || msg.includes('طبي') || msg.includes('صحة') || msg.includes('health')) quickReplies = allQR.medical;\n  else if (msg.includes('life') || msg.includes('حياة') || msg.includes('حوادث')) quickReplies = allQR.life;\n  else if (msg.includes('property') || msg.includes('منزل') || msg.includes('عقار') || msg.includes('home')) quickReplies = allQR.property;\n  else if (msg.includes('marine') || msg.includes('بحري') || msg.includes('شحن')) quickReplies = allQR.marine;\n  else if (msg.includes('claim') || msg.includes('مطالبة') || msg.includes('تعويض')) quickReplies = allQR.claim;\n}\n\nreturn [{ json: {\n  reply: aiReply,\n  quick_replies: choiceList.length ? [] : quickReplies,\n  choice_list: choiceList,\n  choice_type: choiceType,\n  action: action,\n  apply_url: applyUrl,\n  conversation_state: newConvState,\n  source: 'ai',\n  session_id: parsed.sessionId,\n  timestamp: new Date().toISOString(),\n} }];"
+      },
+      "id": "node-format-response",
+      "name": "Format SAHAB AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1260, 300]
+    },
+
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" },
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      },
+      "id": "node-respond-ok",
+      "name": "Respond — Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1480, 300]
+    },
+
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ reply: 'عذراً، واجهنا مشكلة تقنية مؤقتة. يرجى المحاولة مجدداً أو التواصل معنا على +968 2400 0000.\\nSorry, a technical issue occurred. Please try again or call +968 2400 0000.', quick_replies: ['حاول مجدداً', 'اتصل +968 2400 0000', 'تصفح التأمينات'], source: 'error' }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "id": "node-respond-err",
+      "name": "Respond — Error Fallback",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1260, 500]
+    },
+
+    {
+      "parameters": { "errorWorkflow": "" },
+      "id": "node-error-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [1040, 560]
+    }
+  ],
+
+  "connections": {
+    "Webhook — Receive from Odoo": {
+      "main": [[{ "node": "Parse Input & Detect Intent", "type": "main", "index": 0 }]]
+    },
+    "Parse Input & Detect Intent": {
+      "main": [[{ "node": "Intent Router", "type": "main", "index": 0 }]]
+    },
+    "Intent Router": {
+      "choice": [[{ "node": "Process Choice", "type": "main", "index": 0 }]],
+      "apply":  [[{ "node": "Odoo: Get Categories", "type": "main", "index": 0 }]],
+      "inquiry": [[{ "node": "SAHAB AI — GPT-4o", "type": "main", "index": 0 }, { "node": "Odoo: Create CRM Lead", "type": "main", "index": 0 }]],
+      "extra":  [[{ "node": "SAHAB AI — GPT-4o", "type": "main", "index": 0 }]]
+    },
+    "Process Choice": {
+      "main": [[
+        { "node": "Odoo: Get Types by Category", "type": "main", "index": 0 },
+        { "node": "Odoo: Get Subtypes by Type", "type": "main", "index": 0 }
+      ]]
+    },
+    "Odoo: Get Categories": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "Odoo: Get Types by Category": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "Odoo: Get Subtypes by Type": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "Odoo: Create CRM Lead": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "Odoo: Create Insurance Application": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "SAHAB AI — GPT-4o": {
+      "main": [[{ "node": "Format SAHAB AI Response", "type": "main", "index": 0 }]]
+    },
+    "Format SAHAB AI Response": {
+      "main": [[{ "node": "Respond — Success", "type": "main", "index": 0 }]]
+    },
+    "On Error": {
+      "main": [[{ "node": "Respond — Error Fallback", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "sahab-ai-v3-2026-comprehensive",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "sahab-ai-insurance-broker-oman"
+  },
+  "id": "sahab-insurance-agent-v3",
+  "tags": [
+    { "id": "tag-01", "name": "insurance" },
+    { "id": "tag-02", "name": "sahab-ai" },
+    { "id": "tag-03", "name": "odoo" },
+    { "id": "tag-04", "name": "oman" }
+  ],
+  "_readme": {
+    "title": "SAHAB AI — Insurance Agent n8n Workflow v3 (Full Odoo Integration)",
+    "version": "3.0.0",
+    "description": "ملف سير العمل الكامل لـ SAHAB AI مع تكامل أودو. يدعم: إنشاء الفرص (CRM leads)، عرض قوائم التأمين التفاعلية، وإنشاء طلبات التأمين عبر الذكاء الاصطناعي.",
+    "agent_capabilities": [
+      "إنشاء فرصة تأمين (crm.lead) تلقائياً عند الاستفسار",
+      "عرض فئات التأمين من قاعدة البيانات",
+      "عرض أنواع التأمين حسب الفئة المختارة",
+      "عرض منتجات التأمين حسب النوع المختار",
+      "إنشاء طلب تأمين مكتمل في insurance.application",
+      "توجيه العميل خطوة بخطوة حتى تقديم الطلب",
+      "الرد باللهجة العُمانية الراقية",
+      "دعم ثنائي اللغة (عربي/إنجليزي)"
+    ],
+    "environment_variables": {
+      "ODOO_BASE_URL": "عنوان موقع أودو مثال: https://my-company.odoo.com",
+      "N8N_OPENAI_KEY": "مفتاح OpenAI API"
+    },
+    "setup_steps": [
+      "1. استيراد هذا الملف في n8n: القائمة → Workflows → Import from File",
+      "2. أضف مفتاح OpenAI: Credentials → New → OpenAI API",
+      "3. أضف متغير البيئة ODOO_BASE_URL بعنوان موقع أودو",
+      "4. فعّل الـ workflow وانسخ رابط Webhook",
+      "5. في أودو: الإعدادات → التقنية → معاملات النظام",
+      "6. أنشئ المفتاح: insurance_broker_suite.n8n_webhook_url = <رابط الـ webhook>"
+    ],
+    "webhook_path": "/webhook/sahab-insurance-agent",
+    "odoo_endpoints_used": [
+      "GET  /insurance/api/categories       — جلب فئات التأمين",
+      "GET  /insurance/api/types/{cat_id}   — جلب الأنواع حسب الفئة",
+      "GET  /insurance/api/subtypes/{type_id} — جلب المنتجات حسب النوع",
+      "POST /insurance/api/create-lead      — إنشاء فرصة في CRM",
+      "POST /insurance/api/create-application — إنشاء طلب تأمين"
+    ]
+  }
+}
