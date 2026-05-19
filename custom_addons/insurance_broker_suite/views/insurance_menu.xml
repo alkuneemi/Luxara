@@ -25,7 +25,7 @@
         <!-- ── فرص التأمين (insurance.opportunity) ──────────────────────── -->
         <menuitem id="menu_insurance_opportunities" name="الفرص (Opportunities)"
             parent="menu_insurance_root"
-            action="action_insurance_opportunities_new" sequence="18"/>
+            action="action_insurance_opportunity_new" sequence="18"/>
 
         <!-- ── تسعيرات التأمين — Universal Quotation Engine ──────────────── -->
         <menuitem id="menu_insurance_quotations" name="Quotations / التسعيرات"
