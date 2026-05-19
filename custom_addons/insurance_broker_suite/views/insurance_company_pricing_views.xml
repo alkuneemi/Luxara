@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ══ PRICING LIST VIEW ══════════════════════════════════════════════════ -->
+        <record id="view_insurance_company_pricing_list" model="ir.ui.view">
+            <field name="name">insurance.company.pricing.list</field>
+            <field name="model">insurance.company.pricing</field>
+            <field name="arch" type="xml">
+                <list string="Product Pricing Configuration"
+                    decoration-muted="active == False">
+                    <field name="company_id"/>
+                    <field name="category_id" optional="show"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="subtype_id"/>
+                    <field name="base_premium" widget="monetary" options="{'currency_field': 'currency'}"/>
+                    <field name="min_premium" optional="show" widget="monetary" options="{'currency_field': 'currency'}"/>
+                    <field name="max_premium" optional="show" widget="monetary" options="{'currency_field': 'currency'}"/>
+                    <field name="override_integration" optional="show"/>
+                    <field name="integration_type" optional="show" widget="badge"
+                        decoration-success="integration_type == 'api'"
+                        decoration-info="integration_type == 'portal'"
+                        decoration-muted="integration_type == 'manual'"/>
+                    <field name="active" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ PRICING FORM VIEW ══════════════════════════════════════════════════ -->
+        <record id="view_insurance_company_pricing_form" model="ir.ui.view">
+            <field name="name">insurance.company.pricing.form</field>
+            <field name="model">insurance.company.pricing</field>
+            <field name="arch" type="xml">
+                <form string="Product Pricing Configuration">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="display_name" readonly="1"/></h1>
+                        </div>
+
+                        <group>
+                            <group string="Product Identification">
+                                <field name="company_id" options="{'no_create': true}"/>
+                                <field name="subtype_id" options="{'no_create': true}"/>
+                                <field name="type_id" readonly="1"/>
+                                <field name="category_id" readonly="1"/>
+                                <field name="active"/>
+                            </group>
+                            <group string="Pricing">
+                                <field name="base_premium"/>
+                                <field name="min_premium"/>
+                                <field name="max_premium"/>
+                                <field name="currency"/>
+                            </group>
+                        </group>
+
+                        <group string="Integration Override">
+                            <group>
+                                <field name="override_integration" widget="boolean_toggle"
+                                    string="Override Company Integration Type"/>
+                                <field name="integration_type"
+                                    invisible="not override_integration"/>
+                                <field name="portal_product_url" widget="url"
+                                    invisible="integration_type != 'portal' or not override_integration"
+                                    string="Product Portal URL"/>
+                                <field name="api_endpoint_override"
+                                    invisible="integration_type != 'api' or not override_integration"
+                                    string="API Endpoint Override"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Coverage Details" name="coverage">
+                                <field name="coverage_summary" widget="html"
+                                    placeholder="Coverage details shown to the customer..."/>
+                            </page>
+                            <page string="Exclusions &amp; Add-ons" name="exclusions">
+                                <group>
+                                    <field name="exclusions" nolabel="1" placeholder="Exclusions..."/>
+                                    <field name="add_ons" nolabel="1" placeholder="Add-ons available..."/>
+                                </group>
+                            </page>
+                            <page string="Notes" name="notes">
+                                <field name="pricing_notes" nolabel="1" placeholder="Internal pricing notes..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ SEARCH VIEW ══════════════════════════════════════════════════════ -->
+        <record id="view_insurance_company_pricing_search" model="ir.ui.view">
+            <field name="name">insurance.company.pricing.search</field>
+            <field name="model">insurance.company.pricing</field>
+            <field name="arch" type="xml">
+                <search string="Product Pricing">
+                    <field name="company_id"/>
+                    <field name="subtype_id"/>
+                    <field name="type_id"/>
+                    <field name="category_id"/>
+                    <filter name="manual" string="Manual" domain="[('integration_type','=','manual')]"/>
+                    <filter name="portal" string="Portal" domain="[('integration_type','=','portal')]"/>
+                    <filter name="api" string="API" domain="[('integration_type','=','api')]"/>
+                    <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                        <filter name="group_category" string="Category" context="{'group_by': 'category_id'}"/>
+                        <filter name="group_type" string="Type" context="{'group_by': 'type_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ══ ACTION ══════════════════════════════════════════════════════════ -->
+        <record id="action_insurance_company_pricing" model="ir.actions.act_window">
+            <field name="name">تسعيرة المنتجات / Product Pricing</field>
+            <field name="res_model">insurance.company.pricing</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No pricing configurations yet!</p>
+                <p>Configure pricing for each insurance product per company.</p>
+                <p>Each subtype can have different prices and integration settings per company.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
