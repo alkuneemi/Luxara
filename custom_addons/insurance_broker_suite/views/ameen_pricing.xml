@@ -230,8 +230,8 @@
             const company  = card.dataset.company;
             const url = AMEEN_FORM_URL
                 + '?pricing_id=' + encodeURIComponent(priceId)
-                + '&premium='    + encodeURIComponent(premium)
-                + '&company='    + encodeURIComponent(company);
+                + '&amp;premium='    + encodeURIComponent(premium)
+                + '&amp;company='    + encodeURIComponent(company);
             window.location.href = url;
         }
 
@@ -267,8 +267,8 @@
                             const pObj = AMEEN_ALL_PRICES.find(p => String(p.id) === String(pid));
                             const url = AMEEN_FORM_URL
                                 + '?pricing_id=' + encodeURIComponent(pid)
-                                + '&premium='    + encodeURIComponent(pObj ? pObj.base_premium : '')
-                                + '&company='    + encodeURIComponent(pObj ? pObj.company_name : '');
+                                + '&amp;premium='    + encodeURIComponent(pObj ? pObj.base_premium : '')
+                                + '&amp;company='    + encodeURIComponent(pObj ? pObj.company_name : '');
                             window.location.href = url;
                         });
                     });
@@ -307,7 +307,7 @@
                      onmouseenter="this.style.transform='translateY(-4px)'"
                      onmouseleave="this.style.transform='translateY(0)'"
                      onclick="(function(){
-                       var url=AMEEN_FORM_URL+'?pricing_id=${p.id}&premium=${p.base_premium}&company='+encodeURIComponent('${p.company_name.replace(/'/g,"\\'")}');
+                       var url=AMEEN_FORM_URL+'?pricing_id=${p.id}&amp;premium=${p.base_premium}&amp;company='+encodeURIComponent('${p.company_name.replace(/'/g,"\\'")}');
                        window.location.href=url;
                      })()">
                   ${i===0?'<div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#344B9B;color:#fff;padding:4px 18px;border-radius:100px;font-size:12px;font-weight:800;white-space:nowrap;">⭐ الأفضل</div>':''}
