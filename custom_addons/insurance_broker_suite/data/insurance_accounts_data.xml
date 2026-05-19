@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+<!--
+══════════════════════════════════════════════════════════════════════════════
+  📂 MASTER DATA — شجرة الحسابات المحاسبية
+  ملف: data/insurance_accounts_data.xml
+  الغرض: إنشاء حسابات محاسبية + دفاتر اليومية الخاصة بنظام عمولات التأمين
+  تحديث: noupdate="1" — لن تُعاد كتابة البيانات عند تحديث الموديول
+══════════════════════════════════════════════════════════════════════════════
+-->
+<data noupdate="1">
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  📒 دفتر يومية العمولات — COMMISSION JOURNAL                          │
+    │  النوع: General Journal (القيود العامة)                                │
+    │  يُستخدم: لتسجيل قيود العمولة عند تأكيد كل وثيقة تأمين              │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="journal_insurance_commission" model="account.journal">
+        <field name="name">Insurance Commission Journal / يومية عمولات التأمين</field>
+        <field name="code">INSC</field>
+        <field name="type">general</field>
+        <field name="sequence" eval="15"/>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  💰 حساب دخل العمولة — COMMISSION INCOME ACCOUNT                      │
+    │  الفئة: income (إيرادات)                                              │
+    │  الطرف: دائن عند تسجيل العمولة                                        │
+    │  الكود: 4100 (يمكن تعديله ليتناسب مع دليل حسابات شركتك)             │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="account_commission_income" model="account.account">
+        <field name="name">Commission Income — دخل عمولة التأمين</field>
+        <field name="code">410001</field>
+        <field name="account_type">income</field>
+        <field name="reconcile" eval="False"/>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  🏢 حساب المستحقات لشركات التأمين — INSURER PAYABLE ACCOUNT           │
+    │  الفئة: liability_payable (التزامات — دائنون)                         │
+    │  الطرف: دائن بالمبلغ المستحق لشركة التأمين بعد خصم عمولة البروكر    │
+    │  الكود: 2100 (يمكن تعديله ليتناسب مع دليل حسابات شركتك)             │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="account_insurer_payable" model="account.account">
+        <field name="name">Insurance Companies Payable — مستحقات شركات التأمين</field>
+        <field name="code">210001</field>
+        <field name="account_type">liability_payable</field>
+        <field name="reconcile" eval="True"/>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  👤 حساب المدينين — RECEIVABLE ACCOUNT (CLIENT)                        │
+    │  الفئة: asset_receivable (أصول — مدينون)                              │
+    │  الطرف: مدين بإجمالي القسط المستحق من العميل                          │
+    │  الكود: 1200 (يمكن تعديله ليتناسب مع دليل حسابات شركتك)             │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="account_client_receivable" model="account.account">
+        <field name="name">Insurance Clients Receivable — مدينو عملاء التأمين</field>
+        <field name="code">120001</field>
+        <field name="account_type">asset_receivable</field>
+        <field name="reconcile" eval="True"/>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  💳 حساب الصندوق / البنك — CASH / BANK ACCOUNT                        │
+    │  الفئة: asset_cash                                                     │
+    │  يُستخدم: لتسجيل المدفوعات المستلمة من العملاء والمدفوعة لشركات       │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="account_insurance_cash" model="account.account">
+        <field name="name">Insurance Broker Cash Account — صندوق البروكر</field>
+        <field name="code">110001</field>
+        <field name="account_type">asset_cash</field>
+        <field name="reconcile" eval="False"/>
+    </record>
+
+</data>
+</odoo>
