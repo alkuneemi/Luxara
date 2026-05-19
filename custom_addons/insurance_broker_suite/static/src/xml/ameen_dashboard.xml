@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- ── SVG ICON HELPERS (Feather style — same as main dashboard) ── -->
+    <t t-name="ameen.icon.home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.trending">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.shield">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.users">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.check">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.percent">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.inbox">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.target">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.cpu">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.globe">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.dollar">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.file">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.alert">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.clock">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.list">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.chevron-right">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.external">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+    </t>
+    <t t-name="ameen.icon.tag">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+    </t>
+
+    <!-- ── AMEEN DASHBOARD MAIN TEMPLATE ── -->
+    <t t-name="insurance_broker_suite.AmeenDashboard">
+        <div class="o_ameen_dashboard">
+
+            <!-- Header -->
+            <div class="o_ameen_header">
+                <div class="o_ameen_header-brand">
+                    <div class="o_ameen_logo-dots">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <circle cx="20" cy="4"  r="1.8" fill="#5CAFE4" opacity=".5"/>
+                            <circle cx="26" cy="4"  r="1.8" fill="#5CAFE4" opacity=".7"/>
+                            <circle cx="32" cy="4"  r="1.8" fill="#344B9B"/>
+                            <circle cx="20" cy="10" r="2"   fill="#5CAFE4" opacity=".6"/>
+                            <circle cx="26" cy="10" r="2"   fill="#5CAFE4" opacity=".8"/>
+                            <circle cx="32" cy="10" r="2"   fill="#344B9B"/>
+                            <circle cx="14" cy="16" r="2"   fill="#5CAFE4" opacity=".4"/>
+                            <circle cx="20" cy="16" r="2.2" fill="#5CAFE4" opacity=".7"/>
+                            <circle cx="26" cy="16" r="2.2" fill="#344B9B" opacity=".9"/>
+                            <circle cx="32" cy="16" r="2.2" fill="#344B9B"/>
+                            <circle cx="20" cy="22" r="2"   fill="#344B9B" opacity=".6"/>
+                            <circle cx="26" cy="22" r="2"   fill="#344B9B" opacity=".8"/>
+                            <circle cx="32" cy="22" r="2"   fill="#344B9B"/>
+                            <circle cx="26" cy="28" r="1.8" fill="#344B9B" opacity=".5"/>
+                            <circle cx="32" cy="28" r="1.8" fill="#344B9B" opacity=".7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="o_ameen_header-title">
+                            <span class="o_ameen_title-ar">أمين</span>
+                            <span class="o_ameen_title-sep">·</span>
+                            <span class="o_ameen_title-en">Ameen Portal Dashboard</span>
+                        </h2>
+                        <span class="o_ameen_date-label" t-esc="state.dateLabel"/>
+                    </div>
+                </div>
+                <div class="o_ameen_header-actions">
+                    <a class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+                       href="/ameen" target="_blank">
+                        <t t-call="ameen.icon.home"/>
+                        بوابة أمين
+                    </a>
+                    <a class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                       href="/ameen/dashboard" target="_blank">
+                        <t t-call="ameen.icon.globe"/>
+                        Smart Dashboard
+                    </a>
+                    <button class="btn btn-success btn-sm d-flex align-items-center gap-1"
+                            style="cursor:default;" disabled="true">
+                        <t t-call="ameen.icon.cpu"/>
+                        صحاب AI نشط
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── SECTION: بوابة أمين ── -->
+            <p class="o_ins_section-title">
+                <t t-call="ameen.icon.globe"/>
+                بوابة أمين — Portal Activity
+            </p>
+            <div class="o_insurance_kpi_grid" style="grid-template-columns: repeat(auto-fill, minmax(190px,1fr))">
+
+                <div class="o_insurance_kpi_card" t-on-click="openApplications">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">إجمالي الطلبات</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalApplications"/>
+                        <div class="o_insurance_kpi_sub">جميع القنوات</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-blue">
+                        <t t-call="ameen.icon.file"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-orange" t-on-click="openPendingApplications">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">طلبات معلقة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.pendingApplications"/>
+                        <div class="o_insurance_kpi_sub">تنتظر المعالجة</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-orange">
+                        <t t-call="ameen.icon.inbox"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-green" t-on-click="openCompletedApplications">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">طلبات مكتملة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.completedApplications"/>
+                        <div class="o_insurance_kpi_sub">صدرت وثائقها</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-green">
+                        <t t-call="ameen.icon.check"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-purple" t-on-click="openOpportunities">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">الفرص المنشأة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalOpportunities"/>
+                        <div class="o_insurance_kpi_sub">من البوابة وCRM</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-purple">
+                        <t t-call="ameen.icon.target"/>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ── SECTION: العمليات ── -->
+            <p class="o_ins_section-title">
+                <t t-call="ameen.icon.list"/>
+                العمليات — Operations
+            </p>
+            <div class="o_insurance_kpi_grid" style="grid-template-columns: repeat(auto-fill, minmax(190px,1fr))">
+
+                <div class="o_insurance_kpi_card" t-on-click="openPolicies">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">الوثائق النشطة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.activePolicies"/>
+                        <div class="o_insurance_kpi_sub">من إجمالي <t t-esc="state.totalPolicies"/></div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-blue">
+                        <t t-call="ameen.icon.shield"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-orange" t-on-click="openExpiringPolicies">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">تجديدات قادمة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.expiringIn60Days"/>
+                        <div class="o_insurance_kpi_sub">خلال ٦٠ يوماً</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-orange">
+                        <t t-call="ameen.icon.clock"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-green" t-on-click="openCommissions">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">عمولات محصّلة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.commissionReceived"/>
+                        <div class="o_insurance_kpi_sub">OMR حتى اليوم</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-green">
+                        <t t-call="ameen.icon.dollar"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-red" t-on-click="openClaims">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">مطالبات مفتوحة</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.openClaims"/>
+                        <div class="o_insurance_kpi_sub">تنتظر الحل</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-red">
+                        <t t-call="ameen.icon.alert"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-blue" t-on-click="openClients">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">إجمالي العملاء</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalClients"/>
+                        <div class="o_insurance_kpi_sub">عميل مسجل</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-indigo">
+                        <t t-call="ameen.icon.users"/>
+                    </div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-blue" t-on-click="openRfqs">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">طلبات عروض أسعار</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.openRfqs"/>
+                        <div class="o_insurance_kpi_sub">RFQs مفتوحة</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-slate">
+                        <t t-call="ameen.icon.tag"/>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ── DETAIL ROWS ── -->
+            <div class="o_ins_row o_ins_row-2">
+
+                <!-- آخر الطلبات -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ameen.icon.inbox"/>
+                            آخر الطلبات من البوابة
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openApplications">
+                            عرض الكل <t t-call="ameen.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.recentApplications.length > 0">
+                        <table class="o_ins_renewal-table">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>نوع التأمين</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.recentApplications" t-as="app" t-key="app.id">
+                                    <tr>
+                                        <td t-esc="app.client_name"/>
+                                        <td t-esc="app.type_label"/>
+                                        <td>
+                                            <span class="badge-days"
+                                                  t-attf-class="badge-days-{{app.urgency}}">
+                                                <t t-esc="app.state_label"/>
+                                            </span>
+                                        </td>
+                                        <td t-esc="app.create_date"/>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ameen.icon.inbox"/>
+                            <p>لا توجد طلبات حديثة</p>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Opportunity Funnel -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ameen.icon.target"/>
+                            قمع الفرص — CRM Funnel
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openOpportunities">
+                            عرض الكل <t t-call="ameen.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.oppByStage.length > 0">
+                        <t t-foreach="state.oppByStage" t-as="stg" t-key="stg.stage">
+                            <div class="o_ins_opp-item">
+                                <span class="o_ins_opp-stage">
+                                    <span class="o_ins_opp-dot" t-attf-style="background: {{stg.color}}"/>
+                                    <t t-esc="stg.label"/>
+                                </span>
+                                <span class="o_ins_opp-count" t-esc="stg.count"/>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ameen.icon.target"/>
+                            <p>لا توجد فرص بعد</p>
+                        </div>
+                    </t>
+                </div>
+
+            </div>
+
+            <!-- ── صفحات البوابة + صحاب AI ── -->
+            <div class="o_ins_row o_ins_row-2">
+
+                <!-- Portal Pages -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ameen.icon.globe"/>
+                            صفحات بوابة أمين
+                        </span>
+                    </div>
+                    <div class="o_ameen_portal-links">
+                        <a class="o_ameen_portal-link" href="/ameen" target="_blank">
+                            <span class="o_ameen_portal-icon kpi-icon-blue">
+                                <t t-call="ameen.icon.home"/>
+                            </span>
+                            <span class="o_ameen_portal-info">
+                                <span class="o_ameen_portal-name">الصفحة الرئيسية</span>
+                                <span class="o_ameen_portal-url">/ameen</span>
+                            </span>
+                            <t t-call="ameen.icon.external"/>
+                        </a>
+                        <a class="o_ameen_portal-link" href="/ameen/pricing/1" target="_blank">
+                            <span class="o_ameen_portal-icon kpi-icon-green">
+                                <t t-call="ameen.icon.tag"/>
+                            </span>
+                            <span class="o_ameen_portal-info">
+                                <span class="o_ameen_portal-name">التسعيرة الذكية</span>
+                                <span class="o_ameen_portal-url">/ameen/pricing</span>
+                            </span>
+                            <t t-call="ameen.icon.external"/>
+                        </a>
+                        <a class="o_ameen_portal-link" href="/ameen/dashboard" target="_blank">
+                            <span class="o_ameen_portal-icon kpi-icon-purple">
+                                <t t-call="ameen.icon.trending"/>
+                            </span>
+                            <span class="o_ameen_portal-info">
+                                <span class="o_ameen_portal-name">داشبورد العميل</span>
+                                <span class="o_ameen_portal-url">/ameen/dashboard</span>
+                            </span>
+                            <t t-call="ameen.icon.external"/>
+                        </a>
+                        <a class="o_ameen_portal-link" href="/ameen/core" target="_blank">
+                            <span class="o_ameen_portal-icon kpi-icon-teal">
+                                <t t-call="ameen.icon.file"/>
+                            </span>
+                            <span class="o_ameen_portal-info">
+                                <span class="o_ameen_portal-name">دليل النظام</span>
+                                <span class="o_ameen_portal-url">/ameen/core</span>
+                            </span>
+                            <t t-call="ameen.icon.external"/>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sahab AI Status -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ameen.icon.cpu"/>
+                            صحاب AI — حالة الوكيل الذكي
+                        </span>
+                    </div>
+                    <div class="o_ameen_ai-status">
+                        <div class="o_ameen_ai-indicator">
+                            <span class="o_ameen_ai-dot"/>
+                            <span class="o_ameen_ai-label">صحاب AI نشط ومتصل</span>
+                        </div>
+                        <div class="o_ins_stat-item" style="margin-top:12px;">
+                            <span class="o_ins_stat-label">معدل الاستجابة</span>
+                            <div class="o_ins_stat-bar-wrap">
+                                <div class="o_ins_stat-bar bar-motor" style="width:94%"/>
+                            </div>
+                            <span class="o_ins_stat-count">94%</span>
+                        </div>
+                        <div class="o_ins_stat-item">
+                            <span class="o_ins_stat-label">رضا المستخدمين</span>
+                            <div class="o_ins_stat-bar-wrap">
+                                <div class="o_ins_stat-bar bar-life" style="width:88%"/>
+                            </div>
+                            <span class="o_ins_stat-count">88%</span>
+                        </div>
+                        <div class="o_ins_stat-item">
+                            <span class="o_ins_stat-label">معدل إتمام التسعيرة</span>
+                            <div class="o_ins_stat-bar-wrap">
+                                <div class="o_ins_stat-bar bar-health" style="width:76%"/>
+                            </div>
+                            <span class="o_ins_stat-count">76%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="o_ins_card">
+                <div class="o_ins_card-header">
+                    <span class="o_ins_card-title">
+                        <t t-call="ameen.icon.list"/>
+                        إجراءات سريعة
+                    </span>
+                </div>
+                <div class="o_ins_quick-actions">
+                    <span class="o_ins_quick-btn" t-on-click="openApplications">
+                        <t t-call="ameen.icon.file"/> الطلبات
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openPolicies">
+                        <t t-call="ameen.icon.shield"/> الوثائق
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openClients">
+                        <t t-call="ameen.icon.users"/> العملاء
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openOpportunities">
+                        <t t-call="ameen.icon.target"/> الفرص
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openCommissions">
+                        <t t-call="ameen.icon.dollar"/> العمولات
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openClaims">
+                        <t t-call="ameen.icon.alert"/> المطالبات
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openRfqs">
+                        <t t-call="ameen.icon.tag"/> RFQ
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openExpiringPolicies">
+                        <t t-call="ameen.icon.clock"/> التجديدات
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>
