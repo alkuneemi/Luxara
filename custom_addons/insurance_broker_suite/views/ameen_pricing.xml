@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     AMEEN SMART PRICING PAGE — صفحة التسعيرة الذكية
+     Route: /ameen/pricing/<subtype_id>
+     Strategy: أفضل 3 أسعار فوراً → استمارة → شهادة (أقل من دقيقتين)
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<template id="ameen_pricing_page" name="Ameen Smart Pricing Page">
+    <t t-call="website.layout">
+        <t t-set="head">
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap"/>
+            <meta name="description" t-att-content="'تسعيرة فورية — ' + (subtype.name or '')"/>
+        </t>
+        <t t-set="additional_title" t-value="'تسعيرة — ' + (subtype.name or '') + ' | أمين'"/>
+
+        <!-- ══ INLINE STYLES ══ -->
+        <style>
+            #ameen-pricing { font-family: 'Cairo', sans-serif; direction: rtl; background: #F0F4FF; min-height: 100vh; }
+            .ap-header { background: linear-gradient(135deg,#344B9B 0%,#1a2d7a 100%); color:#fff; padding:32px 24px 40px; text-align:center; }
+            .ap-header h1 { font-size:28px; font-weight:900; margin:0 0 8px; }
+            .ap-header p  { font-size:15px; opacity:.85; margin:0; }
+            .ap-steps { display:flex; justify-content:center; gap:0; margin:20px auto 0; max-width:500px; }
+            .ap-step { display:flex; align-items:center; gap:8px; padding:8px 16px; background:rgba(255,255,255,.15); border-radius:100px; font-size:13px; font-weight:700; }
+            .ap-step-dot { width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0; }
+            .ap-step.active .ap-step-dot { background:#fff; color:#344B9B; }
+            .ap-step.done .ap-step-dot { background:#5CAFE4; color:#fff; }
+            .ap-step.inactive .ap-step-dot { background:rgba(255,255,255,.3); color:#fff; }
+            .ap-step-arrow { font-size:18px; opacity:.6; margin:0 4px; }
+            .ap-body { max-width:1100px; margin:0 auto; padding:32px 20px 60px; }
+
+            /* ── TOP: AI Comparison ── */
+            .ap-ai-section { background:#fff; border-radius:20px; box-shadow:0 4px 30px rgba(52,75,155,.10); padding:28px; margin-bottom:32px; }
+            .ap-ai-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+            .ap-ai-icon { width:48px;height:48px;background:linear-gradient(135deg,#344B9B,#5CAFE4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0; }
+            .ap-ai-title { font-size:20px; font-weight:900; color:#344B9B; }
+            .ap-ai-subtitle { font-size:13px; color:#888; }
+            .ap-ai-frame { min-height:220px; border:none; width:100%; border-radius:12px; background:#F8F9FF; overflow:hidden; transition:min-height .4s; }
+            .ap-ai-loading { text-align:center; padding:48px 20px; }
+            .ap-spinner { width:44px;height:44px;border:4px solid #EEF2FF;border-top:4px solid #344B9B;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px; }
+            @keyframes spin { to { transform:rotate(360deg); } }
+            .ap-ai-loading-txt { color:#344B9B; font-weight:700; font-size:15px; }
+            .ap-ai-loading-sub { color:#888; font-size:13px; margin-top:4px; }
+
+            /* ── BOTTOM: All Quotes ── */
+            .ap-all-header { font-size:18px; font-weight:900; color:#1a1a2e; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+            .ap-all-count { background:#EEF2FF; color:#344B9B; padding:3px 12px; border-radius:100px; font-size:13px; font-weight:700; }
+            .ap-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
+            .ap-quote-card { background:#fff; border-radius:16px; padding:24px; cursor:pointer; transition:all .25s; border:2px solid transparent; box-shadow:0 2px 12px rgba(52,75,155,.07); position:relative; overflow:hidden; }
+            .ap-quote-card:hover { border-color:#344B9B; transform:translateY(-4px); box-shadow:0 8px 30px rgba(52,75,155,.18); }
+            .ap-quote-card.best-value { border-color:#344B9B; }
+            .ap-best-badge { position:absolute; top:0; right:0; background:#344B9B; color:#fff; font-size:11px; font-weight:800; padding:5px 14px; border-radius:0 14px 0 14px; }
+            .ap-company-name { font-size:16px; font-weight:800; color:#1a1a2e; margin-bottom:16px; }
+            .ap-premium-box { text-align:center; padding:16px; background:#F0F4FF; border-radius:12px; margin-bottom:16px; }
+            .ap-premium-val { font-size:32px; font-weight:900; color:#344B9B; line-height:1; }
+            .ap-premium-curr { font-size:14px; color:#666; margin-top:4px; }
+            .ap-premium-range { font-size:12px; color:#999; margin-top:6px; }
+            .ap-features { list-style:none; margin:0 0 16px; padding:0; }
+            .ap-features li { font-size:13px; color:#555; padding:4px 0; display:flex; align-items:flex-start; gap:6px; }
+            .ap-features li::before { content:'✓'; color:#5CAFE4; font-weight:900; flex-shrink:0; }
+            .ap-select-btn { width:100%; padding:12px; background:linear-gradient(135deg,#344B9B,#5CAFE4); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; transition:opacity .2s; }
+            .ap-select-btn:hover { opacity:.9; }
+
+            /* No results */
+            .ap-empty { text-align:center; padding:60px 20px; }
+            .ap-empty-icon { font-size:48px; margin-bottom:16px; }
+
+            /* Responsive */
+            @media (max-width:640px) {
+                .ap-grid { grid-template-columns:1fr; }
+                .ap-steps { flex-wrap:wrap; gap:8px; justify-content:center; }
+            }
+        </style>
+
+        <div id="ameen-pricing">
+
+            <!-- ══ HEADER ══ -->
+            <div class="ap-header">
+                <div style="font-size:13px;opacity:.7;margin-bottom:8px;">
+                    <a href="/ameen" style="color:#fff;text-decoration:none;">🏠 أمين</a>
+                    <span style="margin:0 8px;">›</span>
+                    <span t-esc="subtype.name or 'التسعيرة'"/>
+                </div>
+                <h1>
+                    🤖 تسعيرة ذكية فورية
+                    — <span t-esc="subtype.name"/>
+                </h1>
+                <p>اختر أفضل عرض ثم أكمل الاستمارة واستلم شهادتك فوراً</p>
+
+                <!-- Progress Steps -->
+                <div class="ap-steps">
+                    <div class="ap-step active">
+                        <div class="ap-step-dot">1</div>
+                        <span>اختر السعر</span>
+                    </div>
+                    <div class="ap-step-arrow">→</div>
+                    <div class="ap-step inactive">
+                        <div class="ap-step-dot">2</div>
+                        <span>بيانات + دفع</span>
+                    </div>
+                    <div class="ap-step-arrow">→</div>
+                    <div class="ap-step inactive">
+                        <div class="ap-step-dot">3</div>
+                        <span>🎉 شهادتك فوراً</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ap-body">
+
+                <!-- ══════════════════════════════════════════════
+                     القسم العلوي: وكيل صحاب AI — مقارنة أفضل 3
+                     ══════════════════════════════════════════════ -->
+                <div class="ap-ai-section">
+                    <div class="ap-ai-header">
+                        <div class="ap-ai-icon">🤖</div>
+                        <div>
+                            <div class="ap-ai-title">صحاب AI — تقرير المقارنة الذكية</div>
+                            <div class="ap-ai-subtitle">
+                                يحلل وكيل الذكاء الاصطناعي جميع الأسعار ويختار لك الأفضل
+                            </div>
+                        </div>
+                        <div style="margin-right:auto;">
+                            <span id="ai-status-badge"
+                                  style="background:#FFF3CD;color:#856404;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;">
+                                ⏳ جارٍ التحليل...
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- AI Output Frame -->
+                    <div id="ai-comparison-frame" class="ap-ai-frame">
+                        <div class="ap-ai-loading" id="ai-loading">
+                            <div class="ap-spinner"></div>
+                            <div class="ap-ai-loading-txt">صحاب يحلل أسعار السوق لك...</div>
+                            <div class="ap-ai-loading-sub">
+                                يقارن <span t-esc="len(pricing_records)"/> عرضاً من شركات التأمين
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════
+                     القسم السفلي: كل عروض الشركات
+                     ══════════════════════════════════════════════ -->
+                <div class="ap-all-header">
+                    <span>📋 جميع عروض الأسعار</span>
+                    <span class="ap-all-count">
+                        <t t-esc="len(pricing_records)"/> شركة
+                    </span>
+                </div>
+
+                <t t-if="pricing_records">
+                    <div class="ap-grid">
+                        <t t-foreach="pricing_records" t-as="price">
+                            <div class="ap-quote-card"
+                                 t-att-class="'ap-quote-card best-value' if price_index == 0 else 'ap-quote-card'"
+                                 t-att-data-id="price.id"
+                                 t-att-data-premium="price.base_premium"
+                                 t-att-data-company="price.company_id.name"
+                                 t-att-data-form-url="form_url"
+                                 onclick="ameenSelectQuote(this)">
+
+                                <t t-if="price_index == 0">
+                                    <div class="ap-best-badge">🏆 الأوفر</div>
+                                </t>
+
+                                <div class="ap-company-name" t-esc="price.company_id.name"/>
+
+                                <div class="ap-premium-box">
+                                    <div class="ap-premium-val">
+                                        <t t-esc="'%.3f' % price.base_premium"/>
+                                    </div>
+                                    <div class="ap-premium-curr">
+                                        <t t-esc="price.currency or 'OMR'"/> / سنوياً
+                                    </div>
+                                    <div class="ap-premium-range"
+                                         t-if="price.min_premium or price.max_premium">
+                                        من <t t-esc="'%.3f' % price.min_premium"/>
+                                        إلى <t t-esc="'%.3f' % price.max_premium"/>
+                                        <t t-esc="price.currency or 'OMR'"/>
+                                    </div>
+                                </div>
+
+                                <t t-if="price.coverage_summary">
+                                    <ul class="ap-features">
+                                        <li t-esc="price.add_ons or 'تغطية شاملة'" t-if="price.add_ons"/>
+                                        <li t-if="price.pricing_notes" t-esc="price.pricing_notes"/>
+                                    </ul>
+                                </t>
+
+                                <button class="ap-select-btn">
+                                    اختر هذا العرض ←
+                                </button>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <t t-else="">
+                    <div class="ap-empty">
+                        <div class="ap-empty-icon">🔍</div>
+                        <div style="font-size:18px;font-weight:700;color:#344B9B;margin-bottom:8px;">
+                            لا توجد عروض أسعار متاحة حالياً
+                        </div>
+                        <div style="color:#888;">يرجى التواصل مع فريقنا للحصول على عرض مخصص</div>
+                        <a href="/ameen" style="display:inline-block;margin-top:20px;padding:12px 28px;background:#344B9B;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">
+                            ← العودة للرئيسية
+                        </a>
+                    </div>
+                </t>
+
+            </div><!-- /ap-body -->
+        </div><!-- /ameen-pricing -->
+
+        <!-- ══ JAVASCRIPT ══ -->
+        <script>
+        // ── Hidden data ──────────────────────────────────────────────────────
+        const AMEEN_SUBTYPE_ID   = <t t-esc="subtype.id"/>;
+        const AMEEN_FORM_URL     = '<t t-esc="form_url"/>';
+        const AMEEN_ALL_PRICES   = <t t-out="all_prices_json"/>;
+        const AMEEN_TOP3_PRICES  = <t t-out="top3_json"/>;
+
+        // ── Navigate to form ─────────────────────────────────────────────────
+        function ameenSelectQuote(card) {
+            const priceId  = card.dataset.id;
+            const premium  = card.dataset.premium;
+            const company  = card.dataset.company;
+            const url = AMEEN_FORM_URL
+                + '?pricing_id=' + encodeURIComponent(priceId)
+                + '&premium='    + encodeURIComponent(premium)
+                + '&company='    + encodeURIComponent(company);
+            window.location.href = url;
+        }
+
+        // ── Call Sahab AI for comparison HTML ───────────────────────────────
+        async function loadAIComparison() {
+            const frame  = document.getElementById('ai-comparison-frame');
+            const badge  = document.getElementById('ai-status-badge');
+
+            try {
+                const resp = await fetch('/ameen/pricing/ai-compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subtype_id: AMEEN_SUBTYPE_ID,
+                        prices: AMEEN_ALL_PRICES,
+                    }),
+                });
+
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+
+                if (data.html) {
+                    frame.innerHTML = data.html;
+                    badge.textContent  = '✅ تحليل صحاب AI';
+                    badge.style.background = '#D1FAE5';
+                    badge.style.color      = '#065F46';
+
+                    // Make AI cards clickable too
+                    frame.querySelectorAll('[data-pricing-id]').forEach(el => {
+                        el.style.cursor = 'pointer';
+                        el.addEventListener('click', () => {
+                            const pid = el.dataset.pricingId;
+                            const pObj = AMEEN_ALL_PRICES.find(p => String(p.id) === String(pid));
+                            const url = AMEEN_FORM_URL
+                                + '?pricing_id=' + encodeURIComponent(pid)
+                                + '&premium='    + encodeURIComponent(pObj ? pObj.base_premium : '')
+                                + '&company='    + encodeURIComponent(pObj ? pObj.company_name : '');
+                            window.location.href = url;
+                        });
+                    });
+                } else {
+                    frame.innerHTML = buildFallbackHTML(AMEEN_TOP3_PRICES);
+                    badge.textContent = '✅ أفضل 3 أسعار';
+                    badge.style.background = '#D1FAE5';
+                    badge.style.color = '#065F46';
+                }
+            } catch (err) {
+                console.warn('Sahab AI unavailable:', err);
+                if (AMEEN_TOP3_PRICES.length > 0) {
+                    frame.innerHTML = buildFallbackHTML(AMEEN_TOP3_PRICES);
+                    badge.textContent = '⚡ عرض سريع';
+                    badge.style.background = '#FEF3C7';
+                    badge.style.color = '#92400E';
+                } else {
+                    frame.innerHTML = '<div style="padding:40px;text-align:center;color:#888;font-size:14px;">لا توجد أسعار لعرضها في المقارنة</div>';
+                    badge.textContent = '—';
+                }
+            }
+        }
+
+        // ── Fallback comparison cards (client-side) ──────────────────────────
+        function buildFallbackHTML(prices) {
+            const badges = ['🥇 الأوفر سعراً', '🥈 الأشمل تغطية', '🥉 الأعلى جودة'];
+            const borders = ['#344B9B', '#5CAFE4', '#84CFFF'];
+
+            const cards = prices.map((p, i) => `
+                <div data-pricing-id="${p.id}"
+                     style="flex:1;min-width:220px;max-width:340px;border:2.5px solid ${borders[i]||'#344B9B'};
+                            border-radius:16px;padding:28px 24px;text-align:center;
+                            background:${i===0?'#EEF2FF':'#fff'};
+                            box-shadow:0 4px 20px rgba(52,75,155,.12);
+                            cursor:pointer;transition:transform .2s;position:relative;"
+                     onmouseenter="this.style.transform='translateY(-4px)'"
+                     onmouseleave="this.style.transform='translateY(0)'"
+                     onclick="(function(){
+                       var url=AMEEN_FORM_URL+'?pricing_id=${p.id}&premium=${p.base_premium}&company='+encodeURIComponent('${p.company_name.replace(/'/g,"\\'")}');
+                       window.location.href=url;
+                     })()">
+                  ${i===0?'<div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#344B9B;color:#fff;padding:4px 18px;border-radius:100px;font-size:12px;font-weight:800;white-space:nowrap;">⭐ الأفضل</div>':''}
+                  <div style="font-size:13px;font-weight:700;color:${borders[i]||'#344B9B'};margin-bottom:10px;">${badges[i]||''}</div>
+                  <div style="font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:12px;">${p.company_name}</div>
+                  <div style="font-size:38px;font-weight:900;color:${borders[i]||'#344B9B'};">${parseFloat(p.base_premium).toFixed(3)}</div>
+                  <div style="font-size:14px;color:#666;margin:4px 0 20px;">ر.ع / سنوياً</div>
+                  <div style="padding:12px 20px;background:#344B9B;color:#fff;border-radius:10px;font-weight:700;font-size:14px;">
+                    اختر هذا العرض ←
+                  </div>
+                </div>`).join('');
+
+            return `
+                <div style="font-family:'Cairo',sans-serif;direction:rtl;padding:24px;">
+                  <div style="text-align:center;margin-bottom:28px;">
+                    <p style="color:#344B9B;font-size:16px;font-weight:700;margin:0 0 4px;">
+                      🤖 تحليل صحاب AI — أفضل 3 عروض منتقاة لك
+                    </p>
+                    <p style="color:#888;font-size:13px;margin:0;">انقر على أي عرض للمتابعة</p>
+                  </div>
+                  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">${cards}</div>
+                </div>`;
+        }
+
+        // ── Init ─────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay so page renders first
+            setTimeout(loadAIComparison, 600);
+        });
+        </script>
+
+    </t>
+</template>
+
+</data>
+</odoo>
