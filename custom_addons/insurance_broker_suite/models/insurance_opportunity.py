@@ -118,87 +118,95 @@ class InsuranceOpportunity(models.Model):
         readonly=True,
     )
 
-    # ── Related fields from application_id (for Requirement Details tab) ──────
-    # Odoo does NOT allow "application_id.field_name" syntax in view <field> tags.
-    # These related fields proxy the application fields so the view can use them directly.
+    # ══════════════════════════════════════════════════════════════════════════
+    # Related fields from application_id  (Requirement Details tab)
+    # RULE: field type here MUST match the type on insurance.application exactly.
+    # ══════════════════════════════════════════════════════════════════════════
 
+    # form_type → Selection(related='subtype_id.form_type')
     app_form_type = fields.Selection(
         related='application_id.form_type', readonly=True, store=False)
 
-    # Personal / Contact
-    app_customer_name  = fields.Char(related='application_id.customer_name',  readonly=True, store=False)
-    app_id_number      = fields.Char(related='application_id.id_number',      readonly=True, store=False)
-    app_customer_phone = fields.Char(related='application_id.customer_phone', readonly=True, store=False)
-    app_customer_email = fields.Char(related='application_id.customer_email', readonly=True, store=False)
-    app_nationality    = fields.Char(related='application_id.nationality',    readonly=True, store=False)
-    app_date_of_birth  = fields.Date(related='application_id.date_of_birth',  readonly=True, store=False)
-    app_gender         = fields.Selection(related='application_id.gender',    readonly=True, store=False)
+    # ── Personal / Contact ────────────────────────────────────────────────────
+    app_customer_name  = fields.Char(    related='application_id.customer_name',  readonly=True, store=False)
+    app_id_number      = fields.Char(    related='application_id.id_number',      readonly=True, store=False)
+    app_customer_phone = fields.Char(    related='application_id.customer_phone', readonly=True, store=False)
+    app_customer_email = fields.Char(    related='application_id.customer_email', readonly=True, store=False)
+    app_nationality    = fields.Char(    related='application_id.nationality',    readonly=True, store=False)
+    app_date_of_birth  = fields.Date(    related='application_id.date_of_birth',  readonly=True, store=False)
+    app_gender         = fields.Selection(related='application_id.gender',        readonly=True, store=False)
 
-    # Motor / Vehicle
-    app_motor_full_name        = fields.Char(related='application_id.motor_full_name',        readonly=True, store=False)
-    app_motor_license_number   = fields.Char(related='application_id.motor_license_number',   readonly=True, store=False)
-    app_motor_plate_number     = fields.Char(related='application_id.motor_plate_number',     readonly=True, store=False)
-    app_motor_plate_character  = fields.Char(related='application_id.motor_plate_character',  readonly=True, store=False)
-    app_motor_year             = fields.Char(related='application_id.motor_year',             readonly=True, store=False)
-    app_motor_make             = fields.Char(related='application_id.motor_make',             readonly=True, store=False)
-    app_motor_model            = fields.Char(related='application_id.motor_model',            readonly=True, store=False)
-    app_motor_chassis_number   = fields.Char(related='application_id.motor_chassis_number',   readonly=True, store=False)
-    app_motor_engine_cc        = fields.Char(related='application_id.motor_engine_cc',        readonly=True, store=False)
+    # ── Motor / Vehicle ───────────────────────────────────────────────────────
+    # motor_year        → Integer  (NOT Char)
+    # motor_engine_cc   → Integer  (NOT Char)
+    app_motor_full_name        = fields.Char(   related='application_id.motor_full_name',        readonly=True, store=False)
+    app_motor_license_number   = fields.Char(   related='application_id.motor_license_number',   readonly=True, store=False)
+    app_motor_plate_number     = fields.Char(   related='application_id.motor_plate_number',     readonly=True, store=False)
+    app_motor_plate_character  = fields.Char(   related='application_id.motor_plate_character',  readonly=True, store=False)
+    app_motor_year             = fields.Integer(related='application_id.motor_year',             readonly=True, store=False)
+    app_motor_make             = fields.Char(   related='application_id.motor_make',             readonly=True, store=False)
+    app_motor_model            = fields.Char(   related='application_id.motor_model',            readonly=True, store=False)
+    app_motor_chassis_number   = fields.Char(   related='application_id.motor_chassis_number',   readonly=True, store=False)
+    app_motor_color            = fields.Char(   related='application_id.motor_color',            readonly=True, store=False)
+    app_motor_engine_cc        = fields.Integer(related='application_id.motor_engine_cc',        readonly=True, store=False)
     app_motor_seating_capacity = fields.Integer(related='application_id.motor_seating_capacity', readonly=True, store=False)
-    app_motor_is_financed      = fields.Boolean(related='application_id.motor_is_financed',   readonly=True, store=False)
-    app_motor_finance_company  = fields.Char(related='application_id.motor_finance_company',  readonly=True, store=False)
-    app_motor_color            = fields.Char(related='application_id.motor_color',            readonly=True, store=False)
+    app_motor_is_financed      = fields.Boolean(related='application_id.motor_is_financed',      readonly=True, store=False)
+    app_motor_finance_company  = fields.Char(   related='application_id.motor_finance_company',  readonly=True, store=False)
 
-    # Medical
-    app_med_coverage_type      = fields.Char(related='application_id.med_coverage_type',      readonly=True, store=False)
-    app_med_employee_count     = fields.Integer(related='application_id.med_employee_count',  readonly=True, store=False)
-    app_med_dependents_count   = fields.Integer(related='application_id.med_dependents_count', readonly=True, store=False)
+    # ── Medical ───────────────────────────────────────────────────────────────
+    # med_coverage_type → Selection  (NOT Char)
+    app_med_coverage_type      = fields.Selection(related='application_id.med_coverage_type',      readonly=True, store=False)
+    app_med_employee_count     = fields.Integer(  related='application_id.med_employee_count',     readonly=True, store=False)
+    app_med_dependents_count   = fields.Integer(  related='application_id.med_dependents_count',   readonly=True, store=False)
     app_med_network_preference = fields.Selection(related='application_id.med_network_preference', readonly=True, store=False)
-    app_med_dental_required    = fields.Boolean(related='application_id.med_dental_required', readonly=True, store=False)
-    app_med_optical_required   = fields.Boolean(related='application_id.med_optical_required', readonly=True, store=False)
-    app_med_pre_existing       = fields.Boolean(related='application_id.med_pre_existing',    readonly=True, store=False)
-    app_med_company_name       = fields.Char(related='application_id.med_company_name',       readonly=True, store=False)
+    app_med_dental_required    = fields.Boolean(  related='application_id.med_dental_required',    readonly=True, store=False)
+    app_med_optical_required   = fields.Boolean(  related='application_id.med_optical_required',   readonly=True, store=False)
+    app_med_pre_existing       = fields.Boolean(  related='application_id.med_pre_existing',       readonly=True, store=False)
+    app_med_company_name       = fields.Char(     related='application_id.med_company_name',       readonly=True, store=False)
 
-    # Property / Fire
-    app_prop_proposer_name     = fields.Char(related='application_id.prop_proposer_name',     readonly=True, store=False)
-    app_prop_address           = fields.Char(related='application_id.prop_address',           readonly=True, store=False)
-    app_prop_cover_type        = fields.Char(related='application_id.prop_cover_type',        readonly=True, store=False)
-    app_prop_usage             = fields.Char(related='application_id.prop_usage',             readonly=True, store=False)
-    app_prop_building_value    = fields.Float(related='application_id.prop_building_value',   readonly=True, store=False)
-    app_prop_contents_value    = fields.Float(related='application_id.prop_contents_value',   readonly=True, store=False)
-    app_prop_construction_type = fields.Char(related='application_id.prop_construction_type', readonly=True, store=False)
-    app_prop_any_previous_loss = fields.Boolean(related='application_id.prop_any_previous_loss', readonly=True, store=False)
+    # ── Property / Fire ───────────────────────────────────────────────────────
+    # prop_address    → Text       (NOT Char)
+    # prop_cover_type → Selection  (NOT Char)
+    # prop_usage      → Selection  (NOT Char)
+    app_prop_proposer_name     = fields.Char(     related='application_id.prop_proposer_name',     readonly=True, store=False)
+    app_prop_address           = fields.Text(     related='application_id.prop_address',           readonly=True, store=False)
+    app_prop_cover_type        = fields.Selection(related='application_id.prop_cover_type',        readonly=True, store=False)
+    app_prop_usage             = fields.Selection(related='application_id.prop_usage',             readonly=True, store=False)
+    app_prop_building_value    = fields.Float(    related='application_id.prop_building_value',    readonly=True, store=False)
+    app_prop_contents_value    = fields.Float(    related='application_id.prop_contents_value',    readonly=True, store=False)
+    app_prop_construction_type = fields.Char(     related='application_id.prop_construction_type', readonly=True, store=False)
+    app_prop_any_previous_loss = fields.Boolean(  related='application_id.prop_any_previous_loss', readonly=True, store=False)
 
-    # Marine
-    app_marine_voyage_from   = fields.Char(related='application_id.marine_voyage_from',    readonly=True, store=False)
-    app_marine_voyage_to     = fields.Char(related='application_id.marine_voyage_to',      readonly=True, store=False)
-    app_marine_departure_date = fields.Date(related='application_id.marine_departure_date', readonly=True, store=False)
-    app_marine_arrival_date  = fields.Date(related='application_id.marine_arrival_date',   readonly=True, store=False)
-    app_marine_cargo_type    = fields.Char(related='application_id.marine_cargo_type',     readonly=True, store=False)
-    app_marine_cargo_value   = fields.Float(related='application_id.marine_cargo_value',   readonly=True, store=False)
-    app_marine_vessel_name   = fields.Char(related='application_id.marine_vessel_name',    readonly=True, store=False)
+    # ── Marine ────────────────────────────────────────────────────────────────
+    app_marine_voyage_from    = fields.Char( related='application_id.marine_voyage_from',    readonly=True, store=False)
+    app_marine_voyage_to      = fields.Char( related='application_id.marine_voyage_to',      readonly=True, store=False)
+    app_marine_departure_date = fields.Date( related='application_id.marine_departure_date', readonly=True, store=False)
+    app_marine_arrival_date   = fields.Date( related='application_id.marine_arrival_date',   readonly=True, store=False)
+    app_marine_cargo_type     = fields.Char( related='application_id.marine_cargo_type',     readonly=True, store=False)
+    app_marine_cargo_value    = fields.Float(related='application_id.marine_cargo_value',    readonly=True, store=False)
+    app_marine_vessel_name    = fields.Char( related='application_id.marine_vessel_name',    readonly=True, store=False)
 
-    # Life
-    app_life_sum_assured       = fields.Float(related='application_id.life_sum_assured',        readonly=True, store=False)
-    app_life_policy_term       = fields.Integer(related='application_id.life_policy_term',      readonly=True, store=False)
-    app_life_payment_frequency = fields.Selection(related='application_id.life_payment_frequency', readonly=True, store=False)
-    app_life_beneficiary_name  = fields.Char(related='application_id.life_beneficiary_name',    readonly=True, store=False)
-    app_life_occupation        = fields.Char(related='application_id.life_occupation',          readonly=True, store=False)
-    app_life_smoker            = fields.Boolean(related='application_id.life_smoker',           readonly=True, store=False)
-    app_life_hazardous_activity = fields.Boolean(related='application_id.life_hazardous_activity', readonly=True, store=False)
+    # ── Life ──────────────────────────────────────────────────────────────────
+    app_life_sum_assured        = fields.Float(    related='application_id.life_sum_assured',        readonly=True, store=False)
+    app_life_policy_term        = fields.Integer(  related='application_id.life_policy_term',        readonly=True, store=False)
+    app_life_payment_frequency  = fields.Selection(related='application_id.life_payment_frequency',  readonly=True, store=False)
+    app_life_beneficiary_name   = fields.Char(     related='application_id.life_beneficiary_name',   readonly=True, store=False)
+    app_life_occupation         = fields.Char(     related='application_id.life_occupation',         readonly=True, store=False)
+    app_life_smoker             = fields.Boolean(  related='application_id.life_smoker',             readonly=True, store=False)
+    app_life_hazardous_activity = fields.Boolean(  related='application_id.life_hazardous_activity', readonly=True, store=False)
 
-    # Workmen Compensation
-    app_wc_company_name      = fields.Char(related='application_id.wc_company_name',         readonly=True, store=False)
-    app_wc_employee_count    = fields.Integer(related='application_id.wc_employee_count',    readonly=True, store=False)
-    app_wc_total_annual_wages = fields.Float(related='application_id.wc_total_annual_wages', readonly=True, store=False)
-    app_wc_business_nature   = fields.Char(related='application_id.wc_business_nature',     readonly=True, store=False)
-    app_wc_any_previous_claims = fields.Boolean(related='application_id.wc_any_previous_claims', readonly=True, store=False)
+    # ── Workmen Compensation ──────────────────────────────────────────────────
+    app_wc_company_name        = fields.Char(   related='application_id.wc_company_name',         readonly=True, store=False)
+    app_wc_employee_count      = fields.Integer(related='application_id.wc_employee_count',       readonly=True, store=False)
+    app_wc_total_annual_wages  = fields.Float(  related='application_id.wc_total_annual_wages',   readonly=True, store=False)
+    app_wc_business_nature     = fields.Char(   related='application_id.wc_business_nature',      readonly=True, store=False)
+    app_wc_any_previous_claims = fields.Boolean(related='application_id.wc_any_previous_claims',  readonly=True, store=False)
 
-    # Documents
+    # ── Documents ─────────────────────────────────────────────────────────────
     app_document_ids = fields.Many2many(
         related='application_id.document_ids', readonly=True, string='Uploaded Documents')
 
-    # ── Computed portal URL ───────────────────────────────────────────────────
+    # ── Computed ──────────────────────────────────────────────────────────────
     @api.depends('application_id')
     def _compute_portal_url(self):
         base = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
@@ -208,7 +216,7 @@ class InsuranceOpportunity(models.Model):
             else:
                 rec.portal_url = f'{base}/my/insurance'
 
-    # ── Cascading onchange ────────────────────────────────────────────────────
+    # ── Onchange ──────────────────────────────────────────────────────────────
     @api.onchange('ins_category_id')
     def _onchange_ins_category_id(self):
         self.ins_type_id = False
@@ -235,10 +243,8 @@ class InsuranceOpportunity(models.Model):
         ], limit=1)
         if existing:
             return existing
-
         stage = self.env['crm.stage'].sudo().search([], limit=1, order='sequence asc')
         website_source = self.env['insurance.source'].sudo().search([('code', '=', 'website')], limit=1)
-
         opp = self.sudo().create({
             'type': 'opportunity',
             'name': f'Website Insurance — {partner.name}',
@@ -255,7 +261,7 @@ class InsuranceOpportunity(models.Model):
         })
         return opp
 
-    # ── Auto-create Sales Application on Lead stage ───────────────────────────
+    # ── Auto-create Sales Application on stage advance ────────────────────────
     def write(self, vals):
         result = super().write(vals)
         if vals.get('stage_id'):
