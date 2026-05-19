@@ -27,13 +27,23 @@
             parent="menu_insurance_root"
             action="action_insurance_opportunities_new" sequence="18"/>
 
+        <!-- ── تسعيرات التأمين — Universal Quotation Engine ──────────────── -->
+        <menuitem id="menu_insurance_quotations" name="Quotations / التسعيرات"
+            parent="menu_insurance_root" sequence="22"/>
+        <menuitem id="menu_insurance_quotations_all" name="All Quotations / جميع التسعيرات"
+            parent="menu_insurance_quotations"
+            action="action_insurance_quotation" sequence="10"/>
+        <menuitem id="menu_insurance_pricing" name="Product Pricing / تسعيرة المنتجات"
+            parent="menu_insurance_quotations"
+            action="action_insurance_company_pricing" sequence="20"/>
+
         <!-- ── العملاء ──────────────────────────────────────────────────── -->
         <menuitem id="menu_insurance_clients" name="Clients"
-            parent="menu_insurance_root" action="action_insurance_client" sequence="20"/>
+            parent="menu_insurance_root" action="action_insurance_client" sequence="30"/>
 
         <!-- ── وثائق التأمين ─────────────────────────────────────────────── -->
         <menuitem id="menu_insurance_policies" name="Policies"
-            parent="menu_insurance_root" sequence="30"/>
+            parent="menu_insurance_root" sequence="40"/>
         <menuitem id="menu_insurance_policies_all" name="All Policies"
             parent="menu_insurance_policies" action="action_insurance_policy" sequence="10"/>
         <menuitem id="menu_insurance_policies_expiring" name="Expiring Soon"
@@ -41,7 +51,7 @@
 
         <!-- ── RFQ Management ───────────────────────────────────────────── -->
         <menuitem id="menu_insurance_rfq" name="RFQ Management"
-            parent="menu_insurance_root" sequence="40"/>
+            parent="menu_insurance_root" sequence="50"/>
         <menuitem id="menu_insurance_rfq_all" name="All RFQs"
             parent="menu_insurance_rfq" action="action_insurance_rfq" sequence="10"/>
         <menuitem id="menu_insurance_rfq_quotes" name="Insurer Quotes"
@@ -49,11 +59,11 @@
 
         <!-- ── المطالبات ────────────────────────────────────────────────── -->
         <menuitem id="menu_insurance_claims" name="Claims"
-            parent="menu_insurance_root" action="action_insurance_claim" sequence="50"/>
+            parent="menu_insurance_root" action="action_insurance_claim" sequence="60"/>
 
         <!-- ── العمولات ─────────────────────────────────────────────────── -->
         <menuitem id="menu_insurance_commissions" name="Commissions"
-            parent="menu_insurance_root" action="action_insurance_commission" sequence="60"/>
+            parent="menu_insurance_root" action="action_insurance_commission" sequence="70"/>
 
         <!-- ══ الإعدادات ════════════════════════════════════════════════════ -->
         <menuitem id="menu_insurance_config" name="Configuration"
@@ -64,8 +74,10 @@
             parent="menu_insurance_config" action="action_insurance_type" sequence="20"/>
         <menuitem id="menu_insurance_config_subtypes" name="Insurance Sub-Types"
             parent="menu_insurance_config" action="action_insurance_subtype" sequence="30"/>
-        <menuitem id="menu_insurance_config_companies" name="Insurance Companies"
+        <menuitem id="menu_insurance_config_companies" name="Insurance Companies / الشركات"
             parent="menu_insurance_config" action="action_insurance_company_provider" sequence="40"/>
+        <menuitem id="menu_insurance_config_pricing" name="Product Pricing / التسعيرة"
+            parent="menu_insurance_config" action="action_insurance_company_pricing" sequence="50"/>
         <menuitem id="menu_sahab_ai_settings" name="SAHAB AI Settings"
             parent="menu_insurance_config" action="action_sahab_ai_settings_server" sequence="90"/>
     </data>
