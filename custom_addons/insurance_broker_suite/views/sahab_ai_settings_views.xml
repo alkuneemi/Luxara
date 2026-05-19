@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_sahab_ai_config_form" model="ir.ui.view">
+            <field name="name">sahab.ai.config.form</field>
+            <field name="model">sahab.ai.config</field>
+            <field name="arch" type="xml">
+                <form string="SAHAB AI Settings">
+                    <sheet>
+
+                        <!-- Header Banner -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="p-4 rounded text-white"
+                                    style="background: linear-gradient(135deg, #1a237e, #3949ab);">
+                                    <h3 class="mb-1" style="color:#fff; font-weight:700;">
+                                        <i class="fa fa-robot me-2"/>SAHAB AI
+                                    </h3>
+                                    <p class="mb-0" style="opacity: 0.85;">
+                                        المساعد الذكي لخدمات التأمين — إعدادات الاتصال والتكوين
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Agent Identity</div>
+                            <group>
+                                <group>
+                                    <field name="agent_name" placeholder="e.g. SAHAB"/>
+                                    <field name="company_name" placeholder="e.g. Al Broker Insurance"/>
+                                </group>
+                                <group>
+                                    <field name="mode" widget="radio"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Connection Status -->
+                        <group string="Connection Status">
+                            <group>
+                                <field name="connection_status" readonly="1"/>
+                                <field name="connection_message" readonly="1"/>
+                            </group>
+                            <group>
+                                <div colspan="2" class="mt-2">
+                                    <button name="action_test_connection" type="object"
+                                        class="btn btn-primary">
+                                        <i class="fa fa-plug me-1"/>Test Connection
+                                    </button>
+                                </div>
+                            </group>
+                        </group>
+
+                        <!-- OpenAI settings (shown only in direct_api mode) -->
+                        <group string="OpenAI Settings (Direct API)"
+                            invisible="mode != 'direct_api'">
+                            <group>
+                                <field name="openai_api_key" password="True"
+                                    placeholder="sk-..."/>
+                                <field name="ai_model"/>
+                            </group>
+                            <group>
+                                <field name="temperature"/>
+                                <field name="max_tokens"/>
+                            </group>
+                        </group>
+
+                        <!-- n8n settings (shown only in n8n_webhook mode) -->
+                        <group string="n8n Webhook Settings"
+                            invisible="mode != 'n8n_webhook'">
+                            <field name="n8n_webhook_url" colspan="2"
+                                placeholder="https://your-n8n.app/webhook/..."/>
+                        </group>
+
+                        <!-- Welcome message -->
+                        <group string="Welcome Message">
+                            <field name="welcome_message" nolabel="1" colspan="2"
+                                placeholder="رسالة الترحيب الأولى للعميل..."/>
+                        </group>
+
+                        <!-- System Message (Agent Prompt) -->
+                        <group string="System Message (Agent Prompt)">
+                            <field name="system_message" nolabel="1" colspan="2"
+                                placeholder="أنت مستشار تأميني ذكي ومخلص... (يمكنك استخدام المتغيرات {agent_name} و {company_name})"/>
+                        </group>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_sahab_ai_settings_server" model="ir.actions.server">
+            <field name="name">SAHAB AI Settings</field>
+            <field name="model_id" ref="insurance_broker_suite.model_sahab_ai_config"/>
+            <field name="state">code</field>
+            <field name="code">
+config_record = env['sahab.ai.config'].get_config()
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'SAHAB AI Settings',
+    'res_model': 'sahab.ai.config',
+    'view_mode': 'form',
+    'res_id': config_record.id,
+    'target': 'current',
+}
+            </field>
+        </record>
+
+    </data>
+</odoo>
