@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Direct Portal Access — Redirect Page
+     صفحة التوجيه المباشر لبوابة شركة التأمين
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="direct_portal_redirect" name="Direct Portal — Redirect">
+    <t t-call="website.layout">
+        <style>
+            .o_dp_wrapper {
+                min-height: 60vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+            }
+            .o_dp_card {
+                background: #fff;
+                border-radius: 20px;
+                padding: 48px 40px;
+                max-width: 480px;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+            }
+            .o_dp_logo_ring {
+                width: 80px; height: 80px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #059669, #0891b2);
+                display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 32px; color: #fff;
+            }
+            .o_dp_spinner {
+                width: 36px; height: 36px;
+                border: 4px solid #e2e8f0;
+                border-top-color: #059669;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                display: inline-block;
+                margin-bottom: 16px;
+            }
+            @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+
+        <div class="o_dp_wrapper py-5">
+            <div class="o_dp_card">
+                <div class="o_dp_logo_ring">
+                    <i class="fa fa-building-o"/>
+                </div>
+                <div class="o_dp_spinner" id="dp_spinner"/>
+                <h4 class="fw-bold mb-2">Connecting to <t t-esc="company.name"/></h4>
+                <p class="text-muted mb-4">
+                    Redirecting you to the insurance company portal…<br/>
+                    <small>جاري توجيهك لبوابة شركة التأمين مباشرةً</small>
+                </p>
+                <t t-if="has_credentials">
+                    <div class="alert alert-success py-2 small" role="alert">
+                        <i class="fa fa-check-circle me-1"/>
+                        Credentials will be auto-filled for you.
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-warning py-2 small" role="alert">
+                        <i class="fa fa-info-circle me-1"/>
+                        You will be taken to the login page. Please enter your credentials.
+                    </div>
+                </t>
+                <div class="mt-3">
+                    <a t-att-href="portal_url" class="btn btn-success btn-lg w-100" id="dp_manual_btn"
+                       target="_blank" rel="noopener">
+                        <i class="fa fa-external-link me-2"/>Open Portal Manually
+                    </a>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/insurance" class="text-muted small">
+                        <i class="fa fa-arrow-left me-1"/>Back to Ameen Hub
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Auto-redirect after 1.5s
+            (function() {
+                var url = '<t t-esc="portal_url"/>';
+                if (url) {
+                    setTimeout(function() {
+                        window.open(url, '_blank');
+                        document.getElementById('dp_spinner').style.display = 'none';
+                    }, 1500);
+                }
+            })();
+        </script>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Direct Portal Access — Invalid Token Page
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="direct_portal_invalid" name="Direct Portal — Invalid Link">
+    <t t-call="website.layout">
+        <div class="container py-5 text-center" style="min-height:60vh;display:flex;align-items:center;justify-content:center;">
+            <div style="max-width:420px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#fee2e2;
+                            display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+                            font-size:32px;color:#dc2626;">
+                    <i class="fa fa-exclamation-triangle"/>
+                </div>
+                <h3 class="fw-bold mb-2">Invalid or Expired Link</h3>
+                <t t-if="reason == 'invalid_token'">
+                    <p class="text-muted">This direct access link is invalid or has expired. Please request a new link from Ameen Hub.</p>
+                </t>
+                <t t-elif="reason == 'no_portal_url'">
+                    <p class="text-muted">The portal URL for
+                        <t t-if="company"><strong><t t-esc="company.name"/></strong></t>
+                        has not been configured yet. Please contact Ameen Hub for assistance.
+                    </p>
+                </t>
+                <t t-else="">
+                    <p class="text-muted">Something went wrong with this link. Please contact Ameen Hub for a new access link.</p>
+                </t>
+                <a href="/insurance" class="btn btn-success mt-3">
+                    <i class="fa fa-home me-2"/>Go to Ameen Hub
+                </a>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Public Quotation View — Customer Quote Comparison Page
+     صفحة مقارنة التسعيرات للعميل (بدون تسجيل دخول)
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="quotation_public_view" name="Insurance Quotation — Public View">
+    <t t-call="website.layout">
+        <style>
+            .o_qt_hero {
+                background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
+                color: #fff;
+                padding: 40px 0;
+            }
+            .o_qt_card {
+                border: none;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                transition: box-shadow 0.2s, transform 0.2s;
+            }
+            .o_qt_card:hover {
+                box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+                transform: translateY(-2px);
+            }
+            .o_qt_card.o_qt_recommended {
+                border: 2px solid #059669;
+                box-shadow: 0 8px 32px rgba(5,150,105,0.18);
+            }
+            .o_qt_badge_rec {
+                background: #059669;
+                color: #fff;
+                font-size: 11px;
+                padding: 4px 12px;
+                border-radius: 20px;
+                display: inline-block;
+                margin-bottom: 8px;
+            }
+            .o_qt_premium {
+                font-size: 2rem;
+                font-weight: 800;
+                color: #0f172a;
+            }
+            .o_qt_currency {
+                font-size: 1rem;
+                color: #64748b;
+                font-weight: 400;
+            }
+            .o_qt_source_badge {
+                font-size: 10px;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+            .o_qt_footer {
+                background: #f8fafc;
+                border-top: 1px solid #e2e8f0;
+                padding: 24px 0;
+            }
+        </style>
+
+        <!-- Hero -->
+        <div class="o_qt_hero">
+            <div class="container">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:50px;height:50px;border-radius:50%;
+                                background:rgba(255,255,255,0.15);
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:22px;">
+                        <i class="fa fa-shield"/>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-4">Your Insurance Quotation</div>
+                        <div class="opacity-75 small">Ref: <t t-esc="quotation.reference"/></div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <span class="badge bg-light text-dark">
+                            <i class="fa fa-user me-1"/>
+                            <t t-esc="quotation.customer_name"/>
+                        </span>
+                    </div>
+                    <t t-if="quotation.subtype_id">
+                        <div class="col-auto">
+                            <span class="badge bg-success">
+                                <i class="fa fa-tag me-1"/>
+                                <t t-esc="quotation.subtype_id.name"/>
+                            </span>
+                        </div>
+                    </t>
+                    <div class="col-auto">
+                        <span t-attf-class="badge #{quotation.status == 'accepted' and 'bg-success' or 'bg-info'}">
+                            <t t-esc="quotation.status.replace('_',' ').title()"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-5">
+
+            <t t-if="not lines">
+                <div class="text-center py-5">
+                    <div style="font-size:48px;color:#cbd5e1;"><i class="fa fa-clock-o"/></div>
+                    <h5 class="mt-3 text-muted">Quotes Are Being Collected</h5>
+                    <p class="text-muted">
+                        Our team is currently gathering competitive quotes from insurance companies.
+                        This page will be updated when quotes are ready.
+                        <br/>
+                        <small>نحن نجمع عروض الأسعار من شركات التأمين. سيتم تحديث هذه الصفحة قريباً.</small>
+                    </p>
+                </div>
+            </t>
+
+            <t t-else="">
+                <h5 class="fw-bold mb-4">
+                    <i class="fa fa-balance-scale me-2 text-success"/>
+                    Compare Quotes — مقارنة عروض الأسعار
+                    <span class="badge bg-light text-dark fs-6 ms-2"><t t-esc="len(lines)"/> companies</span>
+                </h5>
+
+                <div class="row g-4">
+                    <t t-foreach="lines" t-as="line">
+                        <div class="col-md-6 col-xl-4">
+                            <div t-attf-class="card o_qt_card #{line == recommended and 'o_qt_recommended' or ''}">
+                                <div class="card-body p-4">
+                                    <t t-if="line == recommended">
+                                        <div class="o_qt_badge_rec">
+                                            <i class="fa fa-star me-1"/>Recommended / موصى به
+                                        </div>
+                                    </t>
+                                    <!-- Company Name -->
+                                    <div class="fw-bold fs-5 mb-1">
+                                        <t t-esc="line.company_id.name"/>
+                                    </div>
+                                    <div class="text-muted small mb-3">
+                                        <t t-if="line.source_type == 'api'">
+                                            <span class="o_qt_source_badge" style="background:#dcfce7;color:#166534;">API</span>
+                                        </t>
+                                        <t t-elif="line.source_type == 'portal'">
+                                            <span class="o_qt_source_badge" style="background:#dbeafe;color:#1e40af;">Portal</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="o_qt_source_badge" style="background:#f3f4f6;color:#374151;">Manual</span>
+                                        </t>
+                                    </div>
+
+                                    <!-- Premium -->
+                                    <div class="text-center mb-3">
+                                        <div class="o_qt_premium">
+                                            <t t-esc="'%.3f' % line.premium"/>
+                                            <span class="o_qt_currency"> OMR</span>
+                                        </div>
+                                        <div class="text-muted small">Annual Premium</div>
+                                        <t t-if="line.deductible">
+                                            <div class="text-muted small mt-1">
+                                                Deductible: <strong><t t-esc="'%.3f' % line.deductible"/> OMR</strong>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                    <!-- Key Coverage Points -->
+                                    <t t-if="line.network">
+                                        <div class="d-flex align-items-center gap-2 mb-2 small">
+                                            <i class="fa fa-check-circle text-success"/>
+                                            Network: <strong><t t-esc="line.network"/></strong>
+                                        </div>
+                                    </t>
+                                    <t t-if="line.validity_date">
+                                        <div class="d-flex align-items-center gap-2 mb-2 small text-muted">
+                                            <i class="fa fa-clock-o"/>
+                                            Valid until:
+                                            <t t-esc="line.validity_date" t-options='{"widget":"date"}'/>
+                                        </div>
+                                    </t>
+                                    <t t-if="line.add_ons">
+                                        <div class="small text-muted mt-2">
+                                            <i class="fa fa-plus-circle me-1"/>
+                                            <t t-esc="line.add_ons"/>
+                                        </div>
+                                    </t>
+                                    <t t-if="line.coverage_summary">
+                                        <div class="mt-2 small" t-out="line.coverage_summary"/>
+                                    </t>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-4 px-4">
+                                    <a href="mailto:info@ameenhub.com" class="btn btn-success btn-sm w-100">
+                                        <i class="fa fa-check me-2"/>Select This Quote / اختيار
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- Footer Notes -->
+            <div class="o_qt_footer rounded-3 mt-5 text-center">
+                <div class="container py-3">
+                    <p class="text-muted small mb-1">
+                        <i class="fa fa-lock me-1"/>
+                        This quotation link is private and secure.
+                    </p>
+                    <p class="text-muted small mb-2">
+                        To select a quote or get more information, contact Ameen Hub Insurance Brokerage.
+                    </p>
+                    <a href="/insurance" class="btn btn-outline-success btn-sm">
+                        <i class="fa fa-home me-1"/>Ameen Hub Website
+                    </a>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+</data>
+</odoo>
