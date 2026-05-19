@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_insurance_subtype_list" model="ir.ui.view">
+            <field name="name">insurance.subtype.list</field>
+            <field name="model">insurance.subtype</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Sub-Types">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="category_id"/>
+                    <field name="type_id"/>
+                    <field name="form_type" widget="badge"/>
+                    <field name="has_proposal_form" widget="boolean_toggle"/>
+                    <field name="has_comparison_sheet" widget="boolean_toggle"/>
+                    <field name="has_booking_slip" widget="boolean_toggle"/>
+                    <field name="website_published" widget="boolean_toggle"/>
+                    <field name="application_count" string="Applications" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_insurance_subtype_form" model="ir.ui.view">
+            <field name="name">insurance.subtype.form</field>
+            <field name="model">insurance.subtype</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Sub-Type">
+                    <sheet>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Sub-Type Details</div>
+                            <group>
+                                <group>
+                                    <field name="name" placeholder="e.g. Third Party"/>
+                                    <field name="name_ar" placeholder="طرف ثالث"/>
+                                    <field name="type_id" options="{'no_create': true}"/>
+                                    <field name="category_id" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="form_type"/>
+                                    <field name="sequence"/>
+                                    <field name="website_published" widget="boolean_toggle"/>
+                                    <field name="active"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Secondary: Documents & Config -->
+                        <group string="Required Documents">
+                            <group>
+                                <field name="has_proposal_form" widget="boolean_toggle"
+                                    string="Proposal Form Required"/>
+                                <field name="has_comparison_sheet" widget="boolean_toggle"
+                                    string="Comparison Sheet Required"/>
+                                <field name="has_booking_slip" widget="boolean_toggle"
+                                    string="Booking Slip Required"/>
+                            </group>
+                            <group>
+                                <field name="additional_documents"
+                                    placeholder="e.g. Copy of ID, Vehicle Registration Card"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Description" name="description">
+                                <group string="Short Description (Website)">
+                                    <field name="description" nolabel="1" colspan="2"
+                                        placeholder="Short description shown to customer..."/>
+                                </group>
+                                <group string="Customer Instructions">
+                                    <field name="customer_instructions" widget="html" nolabel="1" colspan="2"
+                                        placeholder="Instructions shown on the application form page..."/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_insurance_subtype" model="ir.actions.act_window">
+            <field name="name">Insurance Sub-Types</field>
+            <field name="res_model">insurance.subtype</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create your first insurance sub-type!</p>
+                <p>Sub-types define the exact coverage option and determine which form fields appear in the online application.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
