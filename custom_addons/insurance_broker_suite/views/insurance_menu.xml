@@ -6,8 +6,20 @@
             web_icon="insurance_broker_suite,static/description/icon.png" sequence="90"/>
 
         <!-- لوحة التحكم -->
-        <menuitem id="menu_insurance_dashboard" name="Dashboard"
+        <menuitem id="menu_insurance_dashboard" name="Dashboard / اللوحة الخلفية"
             parent="menu_insurance_root" action="action_insurance_dashboard" sequence="10"/>
+
+        <!-- Ameen Smart Dashboard — Portal URL -->
+        <record id="action_ameen_portal_dashboard" model="ir.actions.act_url">
+            <field name="name">Ameen Smart Dashboard / داشبورد أمين الذكي</field>
+            <field name="url">/ameen/dashboard</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_ameen_dashboard"
+                  name="Ameen Dashboard / داشبورد أمين"
+                  parent="menu_insurance_root"
+                  action="action_ameen_portal_dashboard"
+                  sequence="11"/>
 
         <!-- ══ سجلات الطلبات الثلاثة ════════════════════════════════════════ -->
         <menuitem id="menu_insurance_registries" name="Application Registries / السجلات"
