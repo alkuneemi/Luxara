@@ -2,22 +2,22 @@ FROM odoo:19.0
 
 USER root
 
-# 1. تثبيت أدوات النظام المعتادة
-RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*
-
-# 2. تثبيت مكتبة num2words
-RUN pip install --no-cache-dir num2words --break-system-packages
+# 1. تحديث النظام وتثبيت المتطلبات
+RUN apt-get update && \
+    apt-get install -y git ca-certificates python3-num2words || \
+    (apt-get install -y python3-pip && pip install --no-cache-dir num2words --break-system-packages) && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /mnt/extra-addons
 
-# 3. استنساخ المديولات من مستودع luxara-addons
-#    GITHUB_TOKEN يُمرَّر كـ Build Variable من Railway
+# 2. استقبال التوكن وسحب مستودع Luxara الفعلي (فرع 19.0)
 ARG GITHUB_TOKEN
-RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN build variable is missing"; exit 1; fi && \
-    git clone --depth 1 -b staging https://${GITHUB_TOKEN}@github.com/alkuneemi/luxara-addons.git .
+RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi && \
+    git clone --depth 1 -b 19.0 https://${GITHUB_TOKEN}@github.com/alkuneemi/Luxara.git .
 
-# 4. نسخ المديولات المخصصة من هذا المستودع (custom_addons/)
-COPY custom_addons/ /mnt/extra-addons/
+# 3. الحيلة الذكية: إعادة تنظيم الملفات لكي يراها أودو بدون odoo.conf
+# سنقوم بنسخ الموديولات المخصصة من مجلد custom_addons ونرفعها للمجلد الرئيسي مباشرة
+RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 
 USER odoo
 
