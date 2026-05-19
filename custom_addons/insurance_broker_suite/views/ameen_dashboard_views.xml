@@ -2,7 +2,7 @@
 <odoo>
 <data>
 
-    <!-- Ameen Portal Dashboard — ir.actions.client (backend) -->
+    <!-- Ameen Portal Dashboard — keep as ir.actions.client (original) -->
     <record id="action_ameen_dashboard" model="ir.actions.client">
         <field name="name">Ameen Portal Dashboard</field>
         <field name="tag">ameen_broker_dashboard</field>
