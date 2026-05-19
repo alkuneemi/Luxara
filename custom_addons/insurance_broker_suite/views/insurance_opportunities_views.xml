@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        
+        <!-- ══ LIST VIEW: Insurance Opportunities (CRM Leads) ══ -->
+        <record id="view_insurance_opportunity_crm_list" model="ir.ui.view">
+            <field name="name">crm.lead.insurance.opportunity.list</field>
+            <field name="model">crm.lead</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Opportunities" decoration-success="stage_id.is_won" decoration-muted="active == False">
+                    <field name="name" string="الفرصة / Opportunity"/>
+                    <field name="partner_name" string="العميل / Contact"/>
+                    <field name="email_from" string="البريد الإلكتروني" optional="show"/>
+                    <field name="phone" string="الهاتف" optional="show"/>
+                    <field name="tag_ids" string="الفئة / Tags" widget="many2many_tags" optional="show"/>
+                    <field name="description" string="ملاحظات / Notes" optional="show"/>
+                    <field name="create_date" string="تاريخ الإنشاء" optional="show"/>
+                    <field name="user_id" string="المسؤول" optional="show"/>
+                    <field name="stage_id" string="المرحلة / Stage"/>
+                    <field name="probability" string="الاحتمالية %" widget="progressbar" optional="show"/>
+                    <field name="active" invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ FORM VIEW: Insurance Opportunity ══ -->
+        <record id="view_insurance_opportunity_crm_form" model="ir.ui.view">
+            <field name="name">crm.lead.insurance.opportunity.form</field>
+            <field name="model">crm.lead</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Opportunity">
+                    <header>
+                        <field name="stage_id" widget="statusbar" options="{'clickable': '1'}"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="الفرصة — Opportunity"/>
+                            <h1><field name="name" placeholder="اسم الفرصة التأمينية..."/></h1>
+                        </div>
+                        <group>
+                            <group string="بيانات العميل — Client Info">
+                                <field name="partner_id" string="العميل"/>
+                                <field name="partner_name" string="الاسم"/>
+                                <field name="email_from" string="البريد الإلكتروني"/>
+                                <field name="phone" string="الهاتف"/>
+                            </group>
+                            <group string="تفاصيل الفرصة — Opportunity Details">
+                                <field name="user_id" string="المسؤول"/>
+                                <field name="team_id" string="الفريق"/>
+                                <field name="tag_ids" string="الفئة التأمينية" widget="many2many_tags"/>
+                                <field name="probability" string="احتمالية التحويل %"/>
+                                <field name="expected_revenue" string="القيمة المتوقعة (OMR)"/>
+                            </group>
+                        </group>
+                        <group string="ملاحظات الاستفسار — Inquiry Notes">
+                            <field name="description" nolabel="1" colspan="2"
+                                   placeholder="تفاصيل استفسار العميل عبر SAHAB AI..."/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ KANBAN VIEW: Insurance Opportunities ══ -->
+        <record id="view_insurance_opportunity_crm_kanban" model="ir.ui.view">
+            <field name="name">crm.lead.insurance.opportunity.kanban</field>
+            <field name="model">crm.lead</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="stage_id" class="o_kanban_mobile">
+                    <field name="name"/>
+                    <field name="partner_name"/>
+                    <field name="email_from"/>
+                    <field name="phone"/>
+                    <field name="stage_id"/>
+                    <field name="probability"/>
+                    <field name="tag_ids"/>
+                    <field name="user_id"/>
+                    <templates>
+                        <t t-name="card">
+                            <div class="oe_kanban_global_click">
+                                <div class="fw-bold mb-1"><field name="name"/></div>
+                                <div class="text-muted small">
+                                    <i class="fa fa-user me-1"/>
+                                    <field name="partner_name"/>
+                                </div>
+                                <t t-if="record.phone.value">
+                                    <div class="text-muted small">
+                                        <i class="fa fa-phone me-1"/>
+                                        <field name="phone"/>
+                                    </div>
+                                </t>
+                                <t t-if="record.tag_ids.value">
+                                    <div class="mt-2">
+                                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                    </div>
+                                </t>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <div class="o_field_widget o_progressbar">
+                                        <field name="probability" widget="progressbar"/>
+                                    </div>
+                                    <field name="user_id" widget="many2one_avatar_user"/>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- ══ ACTION: Insurance Opportunities ══ -->
+        <record id="action_insurance_opportunities_crm_view" model="ir.actions.act_window">
+            <field name="name">فرص التأمين — Insurance Opportunities</field>
+            <field name="res_model">crm.lead</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="domain">[('tag_ids.name', 'ilike', 'insurance')]</field>
+            <field name="context">{
+                'default_type': 'opportunity',
+            
+            }</field>
+            <field name="view_ids" eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_insurance_opportunity_crm_list')}),
+                (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_insurance_opportunity_crm_kanban')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_insurance_opportunity_crm_form')}),
+            ]"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    لا توجد فرص تأمين بعد
+                </p>
+                <p>
+                    يقوم SAHAB AI تلقائياً بإنشاء فرص هنا عندما يستفسر العميل عن التأمين ولا يكمل الطلب.
+                </p>
+            </field>
+        </record>
+
+        <!-- ══ ACTION: All Insurance Opportunities (no domain filter) ══ -->
+        <record id="action_insurance_opportunities_all_crm_view" model="ir.actions.act_window">
+            <field name="name">جميع الفرص — All Opportunities</field>
+            <field name="res_model">crm.lead</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="domain">[('type', '=', 'opportunity')]</field>
+            <field name="context">{
+                'default_type': 'opportunity',
+            
+            }</field>
+            <field name="view_ids" eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_insurance_opportunity_crm_list')}),
+                (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_insurance_opportunity_crm_kanban')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_insurance_opportunity_crm_form')}),
+            ]"/>
+        </record>
+
+    </data>
+</odoo>
