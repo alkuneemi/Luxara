@@ -5,10 +5,9 @@
    Background: #FAFAFA | Text: #595959
    ══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Root Variables ── */
-:root {
+#ameen-portal {
   --ameen-primary:   #344B9B;
   --ameen-secondary: #5CAFE4;
   --ameen-light:     #84CFFF;
@@ -26,10 +25,8 @@
 }
 
 /* ── Reset & Base ── */
-.ameen-portal-wrap * {
+.ameen-portal-wrap *, .ameen-portal-wrap *::before, .ameen-portal-wrap *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 .ameen-portal-wrap {
@@ -1422,9 +1419,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Odoo overrides ── */
-#ameen-portal .o_header_standard,
-#ameen-portal header.o_top_fixed_element { display: none !important; }
+/* Odoo overrides removed — handled by template layout */
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
