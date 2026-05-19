@@ -1,0 +1,242 @@
+{
+  "name": "Ameen Hub — AI Insurance Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ameen-insurance-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "node-webhook-01",
+      "name": "Webhook — Receive from Odoo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "webhookId": "ameen-insurance-agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── STEP 1: Extract and validate the incoming payload ──────────\nconst body = $input.first().json;\n\nconst message    = (body.message    || '').trim();\nconst sessionId  = (body.session_id || 'anon').trim();\nconst context    = body.context     || {};\nconst files      = body.files       || [];\n\nif (!message) {\n  throw new Error('Empty message received');\n}\n\n// ── STEP 2: Build rich system prompt with insurance DB context ──\nconst categories     = (context.categories     || []).map(c => c.name).join(', ');\nconst relevantTypes  = (context.relevant_types || []).map(t => t.name).join(', ');\nconst stats          = context.stats || {};\nconst totalProducts  = stats.total_products  || 52;\nconst totalPolicies  = stats.total_policies  || 0;\nconst totalClients   = stats.total_clients   || 0;\n\nconst systemPrompt = `You are Ameen, an expert AI insurance broker assistant for a leading insurance brokerage in Oman. You are professional, knowledgeable, warm, and bilingual (Arabic and English).\n\n## Your expertise covers all 52 insurance products:\n\n### Personal Insurance:\n- Motor: Comprehensive, Third Party (TPL), Classic Car, Fleet Motor\n- Medical: Individual, Family, Group, Critical Illness, Dental & Optical\n- Life: Term Life, Whole Life, Child Annuity, Personal Accident\n- Home: Comprehensive, Fire & Allied Perils, Relocation, Plate Glass\n- Travel: Individual, Family, Annual Multi-Trip, Schengen\n- Domestic Worker (maid) insurance\n- Yacht & watercraft\n\n### Commercial/Corporate Insurance:\n- Group Medical, Group Life, Workmen Compensation (WC)\n- Property All Risk (PAR), Business Interruption\n- Marine Cargo, Marine Hull, Freight Forwarder Liability\n- Contractors All Risk (CAR), Erection All Risk (EAR)\n- Plant & Machinery Breakdown\n- Cyber Liability, Data Breach\n- Professional Indemnity (PI), Medical Malpractice\n- Directors & Officers (D&O) Liability\n- General Third Party Liability, Product Liability\n- Aviation Hull & Liability\n- Surety / Performance Bonds\n- Energy & Oil (upstream/downstream)\n- Trade Credit Insurance\n- SME Business Package\n\n## Available categories in our system: ${categories || 'Motor, Medical, Life, Property, Marine, Engineering, Liability, Aviation, Cyber, Financial'}\n${relevantTypes ? '## Relevant products for this enquiry: ' + relevantTypes : ''}\n\n## Live statistics:\n- ${totalProducts} insurance products available on website\n- ${totalPolicies > 0 ? totalPolicies + ' active policies' : 'Serving hundreds of clients'}\n- ${totalClients > 0 ? totalClients + ' registered clients' : 'Growing client base across Oman'}\n\n## Operational guidelines:\n1. Respond in the SAME LANGUAGE as the user (Arabic or English — detect automatically)\n2. Keep responses under 220 words — be concise and actionable\n3. Use bullet points and **bold** for key terms\n4. Always end with a clear next step or question\n5. For applications: direct users to /insurance on the website\n6. For claims: direct to /my/insurance portal or call +968 2400 0000 (24/7)\n7. For urgent matters: always provide the emergency hotline\n8. Do NOT invent specific premium prices — explain the quote process instead\n9. Be empathetic for claims situations\n10. Upsell complementary products naturally (e.g., if motor → mention TPL + Comprehensive difference)\n\n## Company info:\n- Name: Ameen Hub Insurance Brokerage\n- Location: Muscat, Sultanate of Oman\n- License: Insurance Authority of Oman\n- Emergency Claims: +968 2400 0000 (24/7)\n- Portal: /my/insurance\n- Apply online: /insurance`;\n\nreturn [{\n  json: {\n    message,\n    sessionId,\n    context,\n    files,\n    systemPrompt,\n    timestamp: new Date().toISOString(),\n  }\n}];"
+      },
+      "id": "node-code-01",
+      "name": "Build System Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "complete",
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "={{ $json.systemPrompt }}"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.65,
+          "maxTokens": 600
+        }
+      },
+      "id": "node-openai-01",
+      "name": "OpenAI GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [660, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI API — Ameen Hub"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── STEP 3: Format the AI reply + generate quick replies ────────\nconst aiReply    = $input.first().json.message?.content || '';\nconst prevData   = $('Build System Prompt').first().json;\nconst msg        = (prevData.message || '').toLowerCase();\nconst sessionId  = prevData.sessionId;\n\nif (!aiReply) {\n  throw new Error('OpenAI returned empty response');\n}\n\n// ── Generate contextual quick replies ────────────────────────────\nconst allOptions = {\n  motor:       ['Apply for Motor Insurance', 'Compare Motor Quotes', 'TPL vs Comprehensive', 'Fleet Insurance'],\n  medical:     ['Individual Medical', 'Family Health Plan', 'Group Medical', 'Critical Illness'],\n  life:        ['Term Life Insurance', 'Personal Accident', 'Child Annuity', 'Group Life / WC'],\n  property:    ['Home Insurance', 'Commercial Property', 'Fire Insurance', 'Relocation Cover'],\n  marine:      ['Marine Cargo Quote', 'Yacht Insurance', 'Hull & Machinery', 'Freight Forwarder'],\n  claim:       ['How to Submit a Claim', 'Emergency Hotline', 'Track My Claim', 'Documents Required'],\n  quote:       ['Motor Quote', 'Medical Quote', 'Property Quote', 'Browse All Products'],\n  portal:      ['Go to My Portal', 'Track Application', 'Download Policy', 'Renew Policy'],\n  arabic:      ['تأمين السيارات', 'التأمين الطبي', 'تأمين الحياة', 'عرض جميع المنتجات'],\n  default:     ['🚗 Motor Insurance', '🏥 Medical Insurance', '❤️ Life Insurance', '🏠 Property Insurance'],\n};\n\nlet quickReplies = allOptions.default;\n\nif (msg.includes('motor') || msg.includes('car') || msg.includes('vehicle') || msg.includes('سيارة')) {\n  quickReplies = allOptions.motor;\n} else if (msg.includes('medical') || msg.includes('health') || msg.includes('طبي')) {\n  quickReplies = allOptions.medical;\n} else if (msg.includes('life') || msg.includes('حياة') || msg.includes('accident')) {\n  quickReplies = allOptions.life;\n} else if (msg.includes('property') || msg.includes('home') || msg.includes('fire') || msg.includes('منزل')) {\n  quickReplies = allOptions.property;\n} else if (msg.includes('marine') || msg.includes('cargo') || msg.includes('yacht') || msg.includes('بحري')) {\n  quickReplies = allOptions.marine;\n} else if (msg.includes('claim') || msg.includes('accident') || msg.includes('مطالبة')) {\n  quickReplies = allOptions.claim;\n} else if (msg.includes('quote') || msg.includes('price') || msg.includes('سعر') || msg.includes('premium')) {\n  quickReplies = allOptions.quote;\n} else if (msg.includes('portal') || msg.includes('status') || msg.includes('track') || msg.includes('متابعة')) {\n  quickReplies = allOptions.portal;\n} else if (/[\\u0600-\\u06ff]/.test(msg)) {\n  quickReplies = allOptions.arabic;\n}\n\nreturn [{\n  json: {\n    reply: aiReply,\n    quick_replies: quickReplies.slice(0, 4),\n    source: 'ai',\n    model: 'gpt-4o',\n    session_id: sessionId,\n    timestamp: new Date().toISOString(),\n  }\n}];"
+      },
+      "id": "node-code-02",
+      "name": "Format Response + Quick Replies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "node-respond-ok",
+      "name": "Respond — Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1140, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ reply: 'I apologize, I encountered a technical issue. Please try again or call our team on +968 2400 0000 for immediate assistance.', quick_replies: ['Try Again', 'Call +968 2400 0000', 'Browse Insurance', 'Submit Claim'], source: 'error' }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "node-respond-err",
+      "name": "Respond — Error Fallback",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 520]
+    },
+    {
+      "parameters": {
+        "errorWorkflow": ""
+      },
+      "id": "node-error-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [660, 520]
+    }
+  ],
+  "connections": {
+    "Webhook — Receive from Odoo": {
+      "main": [
+        [
+          {
+            "node": "Build System Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build System Prompt": {
+      "main": [
+        [
+          {
+            "node": "OpenAI GPT-4o",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4o": {
+      "main": [
+        [
+          {
+            "node": "Format Response + Quick Replies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response + Quick Replies": {
+      "main": [
+        [
+          {
+            "node": "Respond — Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Respond — Error Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ameen-hub-insurance-broker"
+  },
+  "id": "ameen-insurance-agent-v1",
+  "tags": [
+    { "id": "tag-01", "name": "insurance" },
+    { "id": "tag-02", "name": "ai-agent" },
+    { "id": "tag-03", "name": "ameen-hub" },
+    { "id": "tag-04", "name": "odoo" }
+  ],
+  "_readme": {
+    "title": "Ameen Hub AI Insurance Agent — n8n Workflow",
+    "version": "1.0.0",
+    "description": "This workflow powers the AI Call Center widget on the Ameen Hub insurance website. It receives user messages from Odoo, enriches them with live insurance DB context, calls OpenAI GPT-4o, and returns a formatted reply with quick-reply buttons.",
+    "setup_steps": [
+      "1. Import this JSON into n8n: Menu → Workflows → Import from File",
+      "2. Add your OpenAI API key: Credentials → New → OpenAI API",
+      "3. Activate the workflow and copy the Webhook Production URL",
+      "4. In Odoo: Settings → Technical → Parameters → System Parameters",
+      "5. Create key: insurance_broker_suite.n8n_webhook_url = <your webhook URL>",
+      "6. The Odoo AI chat endpoint /insurance/ai-chat will now route through this workflow"
+    ],
+    "webhook_path": "/webhook/ameen-insurance-agent",
+    "expected_input": {
+      "message": "User's question or request (string)",
+      "session_id": "Unique session identifier (string)",
+      "context": {
+        "categories": "Array of {id, name} insurance categories from Odoo DB",
+        "relevant_types": "Array of {id, name} matched insurance types (keyword-based)",
+        "stats": "Object with total_products, total_policies, total_clients counts"
+      },
+      "files": "Array of uploaded file names (strings)"
+    },
+    "expected_output": {
+      "reply": "AI-generated response text (markdown supported)",
+      "quick_replies": "Array of up to 4 suggested follow-up button labels",
+      "source": "ai | error",
+      "model": "gpt-4o",
+      "session_id": "Echo of input session_id",
+      "timestamp": "ISO 8601 timestamp"
+    }
+  }
+}
