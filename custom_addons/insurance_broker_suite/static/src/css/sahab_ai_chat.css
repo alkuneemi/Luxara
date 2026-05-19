@@ -1,0 +1,461 @@
+/* ═══════════════════════════════════════════════════════════════
+   SAHAB AI Chat Widget — insurance_broker_suite
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Floating trigger button ─────────────────────────────────── */
+.o_sahab_trigger {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9998;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(26,35,126,.40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .2s, box-shadow .2s;
+}
+.o_sahab_trigger:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 32px rgba(26,35,126,.55);
+}
+.o_sahab_trigger .o_sahab_badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    background: #f44336;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+}
+
+/* ── Chat panel ──────────────────────────────────────────────── */
+.o_sahab_panel {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    z-index: 9999;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 580px;
+    max-height: calc(100vh - 120px);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 16px 56px rgba(0,0,0,.20);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px) scale(.96);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+}
+.o_sahab_panel.open {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.o_sahab_header {
+    background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.o_sahab_avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.o_sahab_header_info h6 {
+    margin: 0 0 2px;
+    font-size: 15px;
+    font-weight: 700;
+}
+.o_sahab_header_info small {
+    opacity: .80;
+    font-size: 12px;
+}
+.o_sahab_close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    opacity: .75;
+    padding: 0 4px;
+    line-height: 1;
+    transition: opacity .15s;
+}
+.o_sahab_close:hover { opacity: 1; }
+
+/* ── Messages area ───────────────────────────────────────────── */
+.o_sahab_messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f5f7fb;
+    scroll-behavior: smooth;
+}
+.o_sahab_messages::-webkit-scrollbar { width: 4px; }
+.o_sahab_messages::-webkit-scrollbar-thumb { background: #c5cae9; border-radius: 4px; }
+
+/* ── Individual message ──────────────────────────────────────── */
+.o_sahab_msg {
+    display: flex;
+    gap: 8px;
+    animation: msgIn .25s ease;
+}
+@keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.o_sahab_msg.user { flex-direction: row-reverse; }
+
+.o_sahab_msg_avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #3949ab;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    align-self: flex-end;
+}
+.o_sahab_msg.user .o_sahab_msg_avatar {
+    background: #e8eaf6;
+    color: #3949ab;
+}
+
+.o_sahab_bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.o_sahab_msg.agent .o_sahab_bubble {
+    background: #fff;
+    color: #1a1a2e;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.o_sahab_msg.user .o_sahab_bubble {
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+/* ── Typing indicator ────────────────────────────────────────── */
+.o_sahab_typing {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    width: fit-content;
+}
+.o_sahab_typing span {
+    width: 7px; height: 7px;
+    background: #3949ab;
+    border-radius: 50%;
+    animation: typingDot 1.2s infinite;
+}
+.o_sahab_typing span:nth-child(2) { animation-delay: .2s; }
+.o_sahab_typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes typingDot {
+    0%, 80%, 100% { transform: scale(.7); opacity: .5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Option buttons ──────────────────────────────────────────── */
+.o_sahab_options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 4px 0 2px;
+}
+.o_sahab_option_btn {
+    background: #fff;
+    border: 1.5px solid #3949ab;
+    color: #3949ab;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s, color .15s, transform .1s;
+    white-space: nowrap;
+}
+.o_sahab_option_btn:hover, .o_sahab_option_btn:focus {
+    background: #3949ab;
+    color: #fff;
+    transform: scale(1.03);
+    outline: none;
+}
+.o_sahab_option_btn.selected {
+    background: #1a237e;
+    color: #fff;
+    border-color: #1a237e;
+    pointer-events: none;
+}
+
+/* ── Input row ───────────────────────────────────────────────── */
+.o_sahab_input_row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid #e8eaf6;
+    background: #fff;
+    flex-shrink: 0;
+}
+.o_sahab_input {
+    flex: 1;
+    border: 1.5px solid #c5cae9;
+    border-radius: 22px;
+    padding: 9px 16px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    max-height: 100px;
+    transition: border-color .15s;
+    font-family: inherit;
+    line-height: 1.4;
+}
+.o_sahab_input:focus { border-color: #3949ab; }
+.o_sahab_send {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a237e, #3949ab);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: transform .15s, box-shadow .15s;
+    flex-shrink: 0;
+}
+.o_sahab_send:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 14px rgba(57,73,171,.45);
+}
+
+/* ── Step indicator ──────────────────────────────────────────── */
+.o_sahab_step_bar {
+    display: flex;
+    padding: 6px 14px 0;
+    gap: 4px;
+    background: #f5f7fb;
+}
+.o_sahab_step_dot {
+    height: 3px;
+    flex: 1;
+    border-radius: 2px;
+    background: #c5cae9;
+    transition: background .3s;
+}
+.o_sahab_step_dot.active { background: #3949ab; }
+.o_sahab_step_dot.done { background: #4caf50; }
+
+/* ── Mobile responsive ───────────────────────────────────────── */
+@media (max-width: 480px) {
+    .o_sahab_panel {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+    .o_sahab_trigger {
+        bottom: 18px;
+        right: 18px;
+    }
+}
+
+/* ── RTL support ─────────────────────────────────────────────── */
+[dir="rtl"] .o_sahab_panel,
+html[lang*="ar"] .o_sahab_panel {
+    right: auto;
+    left: 28px;
+}
+[dir="rtl"] .o_sahab_trigger,
+html[lang*="ar"] .o_sahab_trigger {
+    right: auto;
+    left: 28px;
+}
+@keyframes bounce {
+    0% { height: 10px; }
+    100% { height: 55px; }
+}
+
+.o_cc_record_btn:hover {
+    transform: scale(1.05);
+}
+/* ── صندوق جمناي المتكامل ── */
+.o_sahab_gemini_box {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    margin: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.o_sahab_gemini_box:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
+}
+
+/* حاوية المرفقات أعلى النص */
+.o_sahab_gemini_preview {
+    padding: 4px 4px 8px 4px;
+    border-bottom: 1px dashed #f1f5f9;
+    margin-bottom: 6px;
+}
+
+.o_preview_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.o_preview_chip button {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+}
+
+/* حاوية النص الممتدة */
+.o_sahab_textarea_wrapper {
+    width: 100%;
+    padding: 4px 0;
+}
+
+.o_sahab_gemini_input {
+    width: 100%;
+    min-height: 24px;
+    max-height: 120px; /* يتمدد مرناً لـ 5 أسطر ثم يظهر سكروول ناعم */
+    resize: none;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1e293b;
+    background: transparent;
+    padding: 4px;
+    overflow-y: auto;
+}
+
+/* شريط التحكم السفلي */
+.o_sahab_gemini_footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 4px;
+}
+
+.o_sahab_gemini_tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_gemini_tool_btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.o_gemini_tool_btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+/* زر إرسال جمناي الدائري الأنيق */
+.o_sahab_gemini_send {
+    background: #2563eb;
+    border: none;
+    outline: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.o_sahab_gemini_send:hover {
+    background-color: #1d4ed8;
+}
+
+.o_sahab_gemini_send:active {
+    transform: scale(0.95);
+}
+
