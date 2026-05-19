@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ══ LIST VIEW ══════════════════════════════════════════════ -->
+        <record id="view_insurance_commission_list" model="ir.ui.view">
+            <field name="name">insurance.commission.list</field>
+            <field name="model">insurance.commission</field>
+            <field name="arch" type="xml">
+                <list string="Commissions"
+                    decoration-danger="status == 'overdue'"
+                    decoration-success="status == 'received'"
+                    decoration-warning="status == 'partial'"
+                    decoration-info="status == 'pending'">
+                    <field name="policy_id"/>
+                    <field name="client_id"/>
+                    <field name="insurer"/>
+                    <field name="insurance_type" widget="badge" optional="show"/>
+                    <field name="expected_amount" widget="monetary"/>
+                    <field name="received_amount" widget="monetary"/>
+                    <field name="outstanding_amount" widget="monetary"/>
+                    <field name="due_date"/>
+                    <field name="received_date" optional="show"/>
+                    <field name="status" widget="badge"
+                        decoration-info="status == 'pending'"
+                        decoration-warning="status == 'partial'"
+                        decoration-success="status == 'received'"
+                        decoration-danger="status == 'overdue'"
+                    />
+                    <button name="action_mark_received" string="Mark Received"
+                        type="object" class="btn-success btn-sm"
+                        invisible="status == 'received'"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ FORM VIEW ══════════════════════════════════════════════ -->
+        <record id="view_insurance_commission_form" model="ir.ui.view">
+            <field name="name">insurance.commission.form</field>
+            <field name="model">insurance.commission</field>
+            <field name="arch" type="xml">
+                <form string="Commission Record">
+                    <header>
+                        <button name="action_mark_received" string="Mark as Received"
+                            type="object" class="btn-success"
+                            invisible="status == 'received'"/>
+                        <button name="action_mark_partial" string="Mark as Partial"
+                            type="object" class="btn-warning"
+                            invisible="status in ('received','partial')"/>
+                        <button name="action_mark_overdue" string="Mark as Overdue"
+                            type="object" class="btn-danger"
+                            invisible="status in ('received','overdue')"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="pending,partial,received"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Reference"/>
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Commission Details</div>
+                            <group>
+                                <group>
+                                    <field name="policy_id" options="{'no_create': true}"/>
+                                    <field name="expected_amount" widget="monetary"/>
+                                    <field name="received_amount" widget="monetary"/>
+                                </group>
+                                <group>
+                                    <field name="due_date"/>
+                                    <field name="received_date"/>
+                                    <field name="outstanding_amount" widget="monetary" readonly="1"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Auto-filled / secondary -->
+                        <group string="Policy Info (Auto-filled)">
+                            <group>
+                                <field name="client_id" readonly="1"/>
+                                <field name="insurer" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="insurance_type" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Notes" name="notes">
+                                <field name="notes" placeholder="Internal notes..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ SEARCH VIEW ════════════════════════════════════════════ -->
+              
+
+        <!-- ══ ACTION ═════════════════════════════════════════════════ -->
+        <record id="action_insurance_commission" model="ir.actions.act_window">
+            <field name="name">Commissions</field>
+            <field name="res_model">insurance.commission</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No commissions yet!</p>
+                <p>Commission records are created automatically when a policy is issued.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
