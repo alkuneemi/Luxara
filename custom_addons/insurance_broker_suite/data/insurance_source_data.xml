@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <record id="source_ai_chat" model="insurance.source">
+            <field name="name">SAHAB AI Chat</field>
+            <field name="code">ai_chat</field>
+        </record>
+
+        <record id="source_website" model="insurance.source">
+            <field name="name">Website</field>
+            <field name="code">website</field>
+        </record>
+
+        <record id="source_phone" model="insurance.source">
+            <field name="name">Phone</field>
+            <field name="code">phone</field>
+        </record>
+
+        <record id="source_walk_in" model="insurance.source">
+            <field name="name">Walk-in</field>
+            <field name="code">walk_in</field>
+        </record>
+
+        <record id="source_referral" model="insurance.source">
+            <field name="name">Referral</field>
+            <field name="code">referral</field>
+        </record>
+
+        <record id="source_other" model="insurance.source">
+            <field name="name">Other</field>
+            <field name="code">other</field>
+        </record>
+
+    </data>
+</odoo>
