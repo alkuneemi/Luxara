@@ -18,16 +18,14 @@ RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 
 # 3. إعادة تنظيم الملفات
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 
-# 4. تهيئة مسار بديل وآمن للبيانات والجلسات داخل الحاوية
-RUN mkdir -p /tmp/odoo/sessions /tmp/odoo/filestore && \
-    chown -R odoo:odoo /tmp/odoo
-
-# تعيين متغيرات البيئة لإجبار أودو على استخدام المسار الجديد ذو الصلاحيات المفتوحة
-ENV ODOO_RC=/etc/odoo/odoo.conf
-RUN echo "[options]\ndata_dir = /tmp/odoo" > /etc/odoo/odoo.conf && \
-    chown odoo:odoo /etc/odoo/odoo.conf
+# 4. إنشاء مجلد داخل مسار الـ HOME الخاص بمستخدم odoo حيث يمتلك الصلاحيات الكاملة تلقائياً
+RUN mkdir -p /var/lib/odoo/.local/share/Odoo/sessions && \
+    chown -R odoo:odoo /var/lib/odoo
 
 USER odoo
+
+# تعيين المتغير البيئي القياسي لأودو ليتوجه لهذا المجلد الآمن مباشرة لحفظ الجلسات والبيانات
+ENV XDG_DATA_HOME=/var/lib/odoo/.local/share
 
 EXPOSE 8069
 CMD ["odoo"]
