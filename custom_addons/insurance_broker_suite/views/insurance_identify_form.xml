@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        نافذة تسجيل الدخول المنبثقة الحديثة — Modern Insurance Login Modal
+        تُدمج في قالب insurance_home عبر متغير show_login_modal
+    -->
+    <template id="insurance_login_modal" name="Insurance — Modern Login Modal">
+        <!-- ══ MODAL OVERLAY ══ -->
+        <div id="ins_login_overlay" class="ins_login_overlay"
+             style="display:flex; position:fixed; inset:0; z-index:9999;
+                    background:rgba(10,20,60,0.72); backdrop-filter:blur(8px);
+                    align-items:center; justify-content:center; padding:20px;">
+
+            <div class="ins_login_card" style="
+                background:#fff;
+                border-radius:24px;
+                width:100%;
+                max-width:440px;
+                overflow:hidden;
+                box-shadow:0 32px 80px rgba(0,0,40,0.45);
+                animation: insLoginSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            ">
+                <!-- ── HEADER ── -->
+                <div style="
+                    background: linear-gradient(135deg,#1e3a5f 0%,#2563eb 60%,#3b82f6 100%);
+                    padding: 36px 32px 28px;
+                    text-align: center;
+                    position: relative;
+                ">
+                    <!-- Shield Icon -->
+                    <div style="
+                        width:72px;height:72px;
+                        background:rgba(255,255,255,0.15);
+                        border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;
+                        margin:0 auto 16px;
+                        border:2px solid rgba(255,255,255,0.3);
+                    ">
+                        <i class="fa fa-shield" style="font-size:30px;color:#fff;"/>
+                    </div>
+                    <h3 style="color:#fff;font-weight:800;margin:0 0 6px;font-size:22px;">
+                        مرحباً بك في منصة التأمين
+                    </h3>
+                    <p style="color:rgba(255,255,255,0.75);margin:0;font-size:14px;">
+                        سجّل دخولك للمتابعة واستعراض منتجات التأمين
+                    </p>
+                </div>
+
+                <!-- ── BODY ── -->
+                <div style="padding:28px 32px 32px;">
+
+                    <!-- Error message -->
+                    <div id="ins_login_error" style="
+                        display:none;
+                        background:#fef2f2;border:1px solid #fecaca;
+                        border-radius:10px;padding:12px 16px;
+                        color:#dc2626;font-size:13px;
+                        margin-bottom:16px;
+                        display:flex;align-items:center;gap:8px;
+                    " class="d-none">
+                        <i class="fa fa-exclamation-circle"/>
+                        <span>البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مجدداً.</span>
+                    </div>
+
+                    <!-- Login Form -->
+                    <t t-set="csrf" t-value="request.csrf_token()"/>
+                    <form id="ins_login_form" method="POST"
+                          t-attf-action="/insurance/ajax-login">
+                        <input type="hidden" name="csrf_token" t-att-value="csrf"/>
+                        <input type="hidden" name="redirect"
+                               t-att-value="login_redirect or '/insurance'"/>
+
+                        <!-- Email -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-weight:600;font-size:13px;
+                                          color:#374151;margin-bottom:6px;">
+                                البريد الإلكتروني
+                            </label>
+                            <div style="position:relative;">
+                                <i class="fa fa-envelope" style="
+                                    position:absolute;left:14px;top:50%;
+                                    transform:translateY(-50%);
+                                    color:#9ca3af;font-size:15px;
+                                "/>
+                                <input type="email" name="login" id="ins_email"
+                                       autocomplete="username"
+                                       placeholder="example@email.com"
+                                       required="required"
+                                       style="
+                                    width:100%;
+                                    border:1.5px solid #e5e7eb;
+                                    border-radius:12px;
+                                    padding:12px 14px 12px 42px;
+                                    font-size:14px;
+                                    outline:none;
+                                    transition:border-color 0.2s;
+                                    direction:ltr;
+                                    box-sizing:border-box;
+                                "/>
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-weight:600;font-size:13px;
+                                          color:#374151;margin-bottom:6px;">
+                                كلمة المرور
+                            </label>
+                            <div style="position:relative;">
+                                <i class="fa fa-lock" style="
+                                    position:absolute;left:14px;top:50%;
+                                    transform:translateY(-50%);
+                                    color:#9ca3af;font-size:15px;
+                                "/>
+                                <input type="password" name="password" id="ins_password"
+                                       autocomplete="current-password"
+                                       placeholder="••••••••"
+                                       required="required"
+                                       style="
+                                    width:100%;
+                                    border:1.5px solid #e5e7eb;
+                                    border-radius:12px;
+                                    padding:12px 14px 12px 42px;
+                                    font-size:14px;
+                                    outline:none;
+                                    transition:border-color 0.2s;
+                                    direction:ltr;
+                                    box-sizing:border-box;
+                                "/>
+                                <button type="button" onclick="
+                                    var p=document.getElementById('ins_password');
+                                    p.type=p.type=='password'?'text':'password';
+                                    this.querySelector('i').className=p.type=='password'?'fa fa-eye':'fa fa-eye-slash';
+                                " style="
+                                    position:absolute;right:14px;top:50%;
+                                    transform:translateY(-50%);
+                                    background:none;border:none;cursor:pointer;
+                                    color:#9ca3af;padding:0;
+                                "><i class="fa fa-eye"/></button>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="ins_login_btn" style="
+                            width:100%;
+                            background:linear-gradient(135deg,#2563eb,#1d4ed8);
+                            color:#fff;
+                            border:none;
+                            border-radius:12px;
+                            padding:14px;
+                            font-size:15px;
+                            font-weight:700;
+                            cursor:pointer;
+                            transition:all 0.2s;
+                            display:flex;align-items:center;justify-content:center;gap:8px;
+                        ">
+                            <i class="fa fa-sign-in"/>
+                            تسجيل الدخول
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div style="
+                        display:flex;align-items:center;gap:12px;
+                        margin:20px 0;
+                    ">
+                        <div style="flex:1;height:1px;background:#e5e7eb;"/>
+                        <span style="color:#9ca3af;font-size:12px;white-space:nowrap;">أو</span>
+                        <div style="flex:1;height:1px;background:#e5e7eb;"/>
+                    </div>
+
+                    <!-- Google Login Button -->
+                    <t t-if="google_login_url">
+                        <a t-att-href="google_login_url" style="
+                            display:flex;align-items:center;justify-content:center;gap:12px;
+                            width:100%;
+                            background:#fff;
+                            color:#374151;
+                            border:1.5px solid #e5e7eb;
+                            border-radius:12px;
+                            padding:13px;
+                            font-size:14px;
+                            font-weight:600;
+                            text-decoration:none;
+                            transition:all 0.2s;
+                            box-sizing:border-box;
+                            margin-bottom:16px;
+                        " onmouseover="this.style.borderColor='#4285F4';this.style.boxShadow='0 2px 12px rgba(66,133,244,0.2)'"
+                           onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+                            <!-- Google G Logo SVG -->
+                            <svg width="20" height="20" viewBox="0 0 48 48">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            </svg>
+                            الدخول عبر Google
+                        </a>
+                    </t>
+                    <t t-else="">
+                        <a href="/web/login?redirect=/insurance" style="
+                            display:flex;align-items:center;justify-content:center;gap:12px;
+                            width:100%;
+                            background:#fff;
+                            color:#374151;
+                            border:1.5px solid #e5e7eb;
+                            border-radius:12px;
+                            padding:13px;
+                            font-size:14px;
+                            font-weight:600;
+                            text-decoration:none;
+                            transition:all 0.2s;
+                            box-sizing:border-box;
+                            margin-bottom:16px;
+                        ">
+                            <i class="fa fa-key" style="color:#4285F4"/>
+                            صفحة تسجيل الدخول
+                        </a>
+                    </t>
+
+                    <!-- Footer links -->
+                    <div style="text-align:center;">
+                        <a href="/web/signup" style="color:#2563eb;font-size:13px;text-decoration:none;">
+                            ليس لديك حساب؟ <strong>إنشاء حساب جديد</strong>
+                        </a>
+                        <span style="color:#d1d5db;margin:0 8px;">·</span>
+                        <a href="/web/reset_password" style="color:#6b7280;font-size:13px;text-decoration:none;">
+                            نسيت كلمة المرور؟
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+        @keyframes insLoginSlideIn {
+            from { opacity:0; transform:scale(0.88) translateY(24px); }
+            to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+        #ins_login_form input:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
+        }
+        #ins_login_btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37,99,235,0.4) !important;
+        }
+        </style>
+
+        <script>
+        (function(){
+            // Show login error if redirected back with ?login_error=1
+            if (window.location.search.includes('login_error=1')) {
+                var errDiv = document.getElementById('ins_login_error');
+                if (errDiv) { errDiv.classList.remove('d-none'); errDiv.style.display='flex'; }
+            }
+            // Add loading state on submit
+            var form = document.getElementById('ins_login_form');
+            if (form) {
+                form.addEventListener('submit', function(){
+                    var btn = document.getElementById('ins_login_btn');
+                    if (btn) {
+                        btn.innerHTML = '<i class="fa fa-spinner fa-spin"/> جارٍ تسجيل الدخول...';
+                        btn.disabled = true;
+                    }
+                });
+            }
+        })();
+        </script>
+    </template>
+</odoo>
