@@ -1,6 +1,6 @@
 {
     'name': 'Insurance Broker Suite',
-    'version': '19.0.4.0.0',
+    'version': '19.0.5.0.0',
     'summary': 'Full-featured Insurance Broker Management System — Ameen Portal with Universal Quoting Engine & Customer Portal',
     'description': '''
 Insurance Broker Suite for Odoo 19 — Ameen Portal
@@ -15,6 +15,9 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
 * Product Pricing per Company: تسعيرة لكل منتج لكل شركة
 * RFQ / quotation workflow
 * Claims management
+* Commission Rate Table — نسب العمولات المتفق عليها
+* Automated Journal Entries — قيود محاسبية تلقائية
+* Payment Gateway (Stripe) — بوابة الدفع الإلكتروني
 * Commission tracking
 * Three Application Registries:
   - General Registry: جميع الطلبات من كل القنوات
@@ -36,6 +39,8 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         'web',
         'crm',
         'website',
+        'account',
+        'payment',
     ],
     'data': [
         # Security
@@ -57,6 +62,7 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         'views/insurance_policy_views.xml',
         'views/insurance_rfq_views.xml',
         'views/insurance_claim_views.xml',
+        'views/insurance_commission_rate_views.xml',
         'views/insurance_commission_views.xml',
         # Config views
         'views/insurance_category_views.xml',
@@ -88,6 +94,8 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         # Oman Agent
         'views/oman_agent_templates.xml',
         'views/sahab_call_center.xml',
+        # Commission Rate Menu
+        'views/insurance_commission_menu_patch.xml',
         # Menus (last)
         'views/insurance_menu.xml',
     ],
