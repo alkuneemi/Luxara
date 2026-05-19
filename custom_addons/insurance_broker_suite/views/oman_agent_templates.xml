@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="oman_agent_global_bubble" inherit_id="website.layout" name="Oman Agent Floating Bubble">
+            <xpath expr="//div[@id='wrapwrap']" position="inside">
+                
+                <div id="omanAgentBubble" class="o_agent_floating_bubble show">
+                    <div class="bubble-avatar">
+                        <i class="fa fa-user-circle"/>
+                        <span class="online-pulse"/>
+                    </div>
+                    
+                    <div class="bubble-content">
+                        <h6 id="omanAgentBubbleTitle" class="bubble-title">مستشارك التأميني (وضع التجربة)</h6>
+                        <p id="omanAgentBubbleText" class="bubble-text">اضغط على زر التجربة لإرسال الطلب...</p>
+                        <a id="omanAgentBubbleLink" href="#" class="bubble-link d-none">
+                            <span>اكتشف المزيد</span> <i class="fa fa-angle-left"/>
+                        </a>
+                    </div>
+
+                    <button id="testWebhookBtn" class="btn btn-warning btn-sm fw-bold mx-3" style="border-radius: 20px; font-size: 11px;">
+                        <i class="fa fa-paper-plane"/> إرسال ويبهوك
+                    </button>
+
+                    <button id="omanAgentBubbleClose" class="bubble-close" title="إخفاء">&amp;times;</button>
+                </div>
+
+            </xpath>
+        </template>
+    </data>
+</odoo>
