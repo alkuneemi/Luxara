@@ -1,19 +1,17 @@
 {
     'name': 'Insurance Broker Suite',
-    'version': '19.0.3.0.0',
-    'summary': 'Full-featured Insurance Broker Management System with Universal Quoting Engine & Customer Portal',
+    'version': '19.0.4.0.0',
+    'summary': 'Full-featured Insurance Broker Management System — Ameen Portal with Universal Quoting Engine & Customer Portal',
     'description': '''
-Insurance Broker Suite for Odoo 19
-====================================
+Insurance Broker Suite for Odoo 19 — Ameen Portal
+====================================================
+* Ameen Portal Home Page (/): بوابة أمين الرئيسية المتكاملة
 * Policy management with renewal alerts
 * Universal Quoting Engine — نظام تسعيرة عام:
   - Manual Entry: موظفو البروكر يدخلون الأسعار يدوياً
   - Direct Portal: بوابة مباشرة — العميل يدخل بوابة الشركة بدون تسجيل دخول (رابط مباشر)
   - API Integration: ربط تلقائي عبر API مع شركات التأمين
-* Company Integration Settings — إعدادات التكامل لكل شركة:
-  - اليوزر نيم والباسورد لشركات البوابة المباشرة
-  - API Key و Endpoints لشركات API
-  - توليد رابط مباشر (Direct Access Token) للعميل
+* Company Integration Settings — إعدادات التكامل لكل شركة
 * Product Pricing per Company: تسعيرة لكل منتج لكل شركة
 * RFQ / quotation workflow
 * Claims management
@@ -22,11 +20,8 @@ Insurance Broker Suite for Odoo 19
   - General Registry: جميع الطلبات من كل القنوات
   - Online Registry: طلبات البوابة الإلكترونية
   - Sales Team Registry: طلبات المبيعات مع نظام العمولة
-* Customer-facing website (/insurance) with:
-  - Category → Type → Subtype → Application form flow
-  - Dynamic forms per insurance type (Motor, Medical, Property, Marine, Life, Workmen)
-* Insurance Opportunities with Requirement Details tab:
-  - يعرض بيانات نموذج الطلب الخاص بنوع التأمين المختار
+* Customer-facing website (/insurance) with dynamic forms per insurance type
+* Insurance Opportunities with Requirement Details tab
 * Customer portal (/my/insurance) for tracking application status
 * SAHAB AI — conversational AI agent
 * Oman Agent Sidebar
@@ -80,6 +75,8 @@ Insurance Broker Suite for Odoo 19
         'views/crm_lead_funnel_views.xml',
         # SAHAB AI
         'views/sahab_ai_settings_views.xml',
+        # ════ AMEEN PORTAL HOME PAGE ════
+        'views/ameen_home.xml',
         # Website / Portal templates
         'views/website_insurance.xml',
         'views/portal_insurance.xml',
@@ -101,6 +98,10 @@ Insurance Broker Suite for Odoo 19
             'insurance_broker_suite/static/src/css/insurance_broker.css',
         ],
         'web.assets_frontend': [
+            # ════ AMEEN HOME PAGE ════
+            'insurance_broker_suite/static/src/css/ameen_home.css',
+            'insurance_broker_suite/static/src/js/ameen_home.js',
+            # Portal styles
             'insurance_broker_suite/static/src/css/insurance_portal.css',
             'insurance_broker_suite/static/src/css/insurance_provider.css',
             'insurance_broker_suite/static/src/css/sahab_ai_chat.css',
