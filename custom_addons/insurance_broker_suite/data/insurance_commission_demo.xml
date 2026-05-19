@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+══════════════════════════════════════════════════════════════════════════════
+  🎯 DEMO DATA — بيانات تجريبية: نسب العمولات + عمولات نموذجية + معاملات
+  ملف: data/insurance_commission_demo.xml
+  الغرض: توضيح سير العمل الكامل لنظام العمولات + قيود محاسبية نموذجية
+══════════════════════════════════════════════════════════════════════════════
+-->
+<data noupdate="1">
+
+    <!-- ====================================================================
+         📊 نسب العمولات النموذجية — SAMPLE COMMISSION RATES
+         هذه النسب تُمثل الاتفاقيات المعتادة مع شركات التأمين
+         يمكنك تعديلها أو حذفها واستبدالها بنسبك الفعلية
+         ==================================================================== -->
+
+    <!-- ✅ نسبة: تأمين مركبات — National Insurance 20% -->
+    <record id="demo_rate_motor_national" model="insurance.commission.rate">
+        <field name="rate_type">percent</field>
+        <field name="rate">20.0</field>
+        <field name="min_rate">15.0</field>
+        <field name="max_rate">25.0</field>
+        <field name="effective_date">2024-01-01</field>
+        <field name="active" eval="True"/>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="commission_account_id" ref="account_commission_income"/>
+        <field name="payable_account_id" ref="account_insurer_payable"/>
+        <field name="notes">
+اتفاقية عمولة تأمين المركبات مع الشركة الوطنية للتأمين.
+النسبة: 20% من إجمالي القسط.
+الحد الأدنى: 15% — الحد الأقصى: 25%.
+صالحة من يناير 2024.
+        </field>
+    </record>
+
+    <!-- ✅ نسبة: تأمين طبي — 15% عمولة ثابتة -->
+    <record id="demo_rate_medical" model="insurance.commission.rate">
+        <field name="rate_type">percent</field>
+        <field name="rate">15.0</field>
+        <field name="min_rate">10.0</field>
+        <field name="max_rate">20.0</field>
+        <field name="effective_date">2024-01-01</field>
+        <field name="active" eval="True"/>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="commission_account_id" ref="account_commission_income"/>
+        <field name="payable_account_id" ref="account_insurer_payable"/>
+        <field name="notes">اتفاقية عمولة التأمين الطبي. النسبة: 15% من إجمالي قسط التأمين الصحي.</field>
+    </record>
+
+    <!-- ✅ نسبة: تأمين تجاري — مبلغ ثابت 50 ر.ع -->
+    <record id="demo_rate_commercial_fixed" model="insurance.commission.rate">
+        <field name="rate_type">fixed</field>
+        <field name="fixed_amount">50.0</field>
+        <field name="effective_date">2024-06-01</field>
+        <field name="active" eval="True"/>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="commission_account_id" ref="account_commission_income"/>
+        <field name="payable_account_id" ref="account_insurer_payable"/>
+        <field name="notes">عمولة ثابتة على وثائق التأمين التجاري. المبلغ: 50 ريال عماني لكل وثيقة بغض النظر عن قيمة القسط.</field>
+    </record>
+
+    <!-- ====================================================================
+         📒 أمثلة على القيود المحاسبية — SAMPLE JOURNAL ENTRIES
+         هذه القيود تُوضح كيفية تسجيل العمولات في دفاتر اليومية
+         في الواقع تُنشأ تلقائياً عند تأكيد كل عمولة
+         ==================================================================== -->
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  📝 مثال (1): تأمين مركبة — عمولة 20%                                │
+    │  القسط الإجمالي:    1,000 ر.ع                                         │
+    │  عمولة البروكر 20%:   200 ر.ع                                         │
+    │  صافي للشركة 80%:     800 ر.ع                                         │
+    │                                                                         │
+    │  القيد:                                                                 │
+    │    مدين:  مدينو العملاء 120001    1,000                                │
+    │    دائن:  دخل العمولة  410001      200                                 │
+    │    دائن:  مستحقات شركات 210001     800                                 │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="demo_journal_entry_motor" model="account.move">
+        <field name="name">INSC/2024/001</field>
+        <field name="move_type">entry</field>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="date">2024-03-15</field>
+        <field name="ref">عمولة وثيقة مركبة | Commission: INS/POL/2024/001 — أحمد العلوي</field>
+        <field name="state">posted</field>
+        <field name="line_ids">
+            <!-- مدين: مديونية العميل بإجمالي القسط -->
+            <record id="demo_line_motor_receivable" model="account.move.line">
+                <field name="account_id" ref="account_client_receivable"/>
+                <field name="name">قسط تأمين مركبة — Customer Premium Receivable</field>
+                <field name="debit">1000.00</field>
+                <field name="credit">0.00</field>
+            </record>
+            <!-- دائن: حصة البروكر (20%) -->
+            <record id="demo_line_motor_commission" model="account.move.line">
+                <field name="account_id" ref="account_commission_income"/>
+                <field name="name">عمولة البروكر 20% — Broker Commission 20%</field>
+                <field name="debit">0.00</field>
+                <field name="credit">200.00</field>
+            </record>
+            <!-- دائن: المبلغ المستحق لشركة التأمين (80%) -->
+            <record id="demo_line_motor_insurer" model="account.move.line">
+                <field name="account_id" ref="account_insurer_payable"/>
+                <field name="name">مستحقات الشركة الوطنية للتأمين 80% — Insurer Net Premium</field>
+                <field name="debit">0.00</field>
+                <field name="credit">800.00</field>
+            </record>
+        </field>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  📝 مثال (2): تسوية — استلام القسط من العميل                          │
+    │  عند استلام 1,000 ر.ع نقداً من العميل                                │
+    │                                                                         │
+    │  القيد:                                                                 │
+    │    مدين:  الصندوق     110001   1,000                                   │
+    │    دائن:  مدينو العملاء 120001  1,000                                  │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="demo_journal_entry_collection" model="account.move">
+        <field name="name">INSC/2024/002</field>
+        <field name="move_type">entry</field>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="date">2024-03-20</field>
+        <field name="ref">استلام قسط من العميل أحمد العلوي | Premium Collection</field>
+        <field name="state">posted</field>
+        <field name="line_ids">
+            <record id="demo_line_cash_debit" model="account.move.line">
+                <field name="account_id" ref="account_insurance_cash"/>
+                <field name="name">استلام قسط من العميل — Cash Receipt</field>
+                <field name="debit">1000.00</field>
+                <field name="credit">0.00</field>
+            </record>
+            <record id="demo_line_receivable_credit" model="account.move.line">
+                <field name="account_id" ref="account_client_receivable"/>
+                <field name="name">تسوية مديونية العميل — Receivable Cleared</field>
+                <field name="debit">0.00</field>
+                <field name="credit">1000.00</field>
+            </record>
+        </field>
+    </record>
+
+    <!--
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  📝 مثال (3): تحويل حصة شركة التأمين                                 │
+    │  دفع 800 ر.ع لشركة التأمين (صافي بعد العمولة)                        │
+    │                                                                         │
+    │  القيد:                                                                 │
+    │    مدين:  مستحقات شركات 210001   800                                   │
+    │    دائن:  الصندوق       110001   800                                   │
+    └─────────────────────────────────────────────────────────────────────────┘
+    -->
+    <record id="demo_journal_entry_insurer_payment" model="account.move">
+        <field name="name">INSC/2024/003</field>
+        <field name="move_type">entry</field>
+        <field name="journal_id" ref="journal_insurance_commission"/>
+        <field name="date">2024-03-25</field>
+        <field name="ref">تحويل قسط لشركة التأمين الوطنية | Insurer Premium Transfer</field>
+        <field name="state">posted</field>
+        <field name="line_ids">
+            <record id="demo_line_insurer_payable_debit" model="account.move.line">
+                <field name="account_id" ref="account_insurer_payable"/>
+                <field name="name">سداد مستحقات الشركة الوطنية — Insurer Payable Cleared</field>
+                <field name="debit">800.00</field>
+                <field name="credit">0.00</field>
+            </record>
+            <record id="demo_line_cash_credit" model="account.move.line">
+                <field name="account_id" ref="account_insurance_cash"/>
+                <field name="name">صرف من الصندوق للشركة — Cash Paid to Insurer</field>
+                <field name="debit">0.00</field>
+                <field name="credit">800.00</field>
+            </record>
+        </field>
+    </record>
+
+</data>
+</odoo>
