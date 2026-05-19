@@ -15,14 +15,17 @@ ARG GITHUB_TOKEN
 RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi && \
     git clone --depth 1 -b 19.0 https://${GITHUB_TOKEN}@github.com/alkuneemi/Luxara.git .
 
-# 3. الحيلة الذكية: إعادة تنظيم الملفات لكي يراها أودو بدون odoo.conf
-# سنقوم بنسخ الموديولات المخصصة من مجلد custom_addons ونرفعها للمجلد الرئيسي مباشرة
+# 3. إعادة تنظيم الملفات
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 
-# 4. إصلاح صلاحيات مجلد الـ Volume والملفات (الحل الجديد)
-# نقوم بإنشاء المجلدات وتغيير ملكيتها بالكامل للمستخدم odoo ليتفادى السيرفر خطأ Permission Denied
-RUN mkdir -p /var/lib/odoo/sessions && \
-    chown -R odoo:odoo /var/lib/odoo
+# 4. تهيئة مسار بديل وآمن للبيانات والجلسات داخل الحاوية
+RUN mkdir -p /tmp/odoo/sessions /tmp/odoo/filestore && \
+    chown -R odoo:odoo /tmp/odoo
+
+# تعيين متغيرات البيئة لإجبار أودو على استخدام المسار الجديد ذو الصلاحيات المفتوحة
+ENV ODOO_RC=/etc/odoo/odoo.conf
+RUN echo "[options]\ndata_dir = /tmp/odoo" > /etc/odoo/odoo.conf && \
+    chown odoo:odoo /etc/odoo/odoo.conf
 
 USER odoo
 
