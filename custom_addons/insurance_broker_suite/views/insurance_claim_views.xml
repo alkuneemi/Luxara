@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- LIST VIEW -->
+        <record id="view_insurance_claim_list" model="ir.ui.view">
+            <field name="name">insurance.claim.list</field>
+            <field name="model">insurance.claim</field>
+            <field name="arch" type="xml">
+                <list string="Claims"
+                    decoration-success="status == 'settled'"
+                    decoration-danger="status == 'rejected'"
+                    decoration-warning="status in ('submitted','under_assessment')"
+                    decoration-info="status in ('reported','documents_collected')">
+                    <field name="claim_number"/>
+                    <field name="client_id"/>
+                    <field name="policy_id"/>
+                    <field name="insurance_type" widget="badge" optional="show"/>
+                    <field name="insurer" optional="show"/>
+                    <field name="incident_date"/>
+                    <field name="claim_amount" widget="monetary"/>
+                    <field name="settled_amount" widget="monetary" optional="show"/>
+                    <field name="status" widget="badge"
+                        decoration-info="status in ('reported','documents_collected')"
+                        decoration-warning="status in ('submitted','under_assessment')"
+                        decoration-success="status in ('approved','settled')"
+                        decoration-danger="status == 'rejected'"
+                    />
+                </list>
+            </field>
+        </record>
+
+        <!-- FORM VIEW -->
+        <record id="view_insurance_claim_form" model="ir.ui.view">
+            <field name="name">insurance.claim.form</field>
+            <field name="model">insurance.claim</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Claim">
+                    <header>
+                        <button name="action_collect_documents" string="Documents Collected" type="object" class="btn-secondary"
+                            invisible="status != 'reported'"/>
+                        <button name="action_submit_to_insurer" string="Submit to Insurer" type="object" class="btn-primary"
+                            invisible="status != 'documents_collected'"/>
+                        <button name="action_mark_under_assessment" string="Under Assessment" type="object" class="btn-secondary"
+                            invisible="status != 'submitted'"/>
+                        <button name="action_approve" string="Approve" type="object" class="btn-success"
+                            invisible="status != 'under_assessment'"/>
+                        <button name="action_reject" string="Reject" type="object" class="btn-danger"
+                            invisible="status != 'under_assessment'"/>
+                        <button name="action_settle" string="Mark as Settled" type="object" class="btn-success"
+                            invisible="status != 'approved'"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="reported,documents_collected,submitted,under_assessment,approved,settled"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="claim_number" string="Claim Number"/>
+                            <h1><field name="claim_number" readonly="1"/></h1>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Claim Details</div>
+                            <group>
+                                <group>
+                                    <field name="policy_id" options="{'no_create': true}"/>
+                                    <field name="incident_date"/>
+                                    <field name="claim_amount" widget="monetary"/>
+                                </group>
+                                <group>
+                                    <field name="description" placeholder="Brief description of the incident..."
+                                        nolabel="1" colspan="1"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Auto-filled / secondary fields -->
+                        <group>
+                            <group string="Policy Info (Auto-filled)">
+                                <field name="client_id" readonly="1"/>
+                                <field name="insurer" readonly="1"/>
+                                <field name="insurance_type" readonly="1"/>
+                            </group>
+                            <group string="Dates &amp; Settlement">
+                                <field name="reported_date"/>
+                                <field name="settlement_date" invisible="status not in ('approved','settled')"/>
+                                <field name="settled_amount" widget="monetary"
+                                    invisible="status not in ('approved','settled')"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Notes" name="description">
+                                <group string="Incident Description">
+                                    <field name="description" nolabel="1" colspan="2"
+                                        placeholder="Full description of the incident..."/>
+                                </group>
+                                <group string="Surveyor Notes">
+                                    <field name="surveyor_notes" nolabel="1" colspan="2"
+                                        placeholder="Surveyor / loss adjustor notes..."/>
+                                </group>
+                                <group string="Rejection Reason" invisible="status != 'rejected'">
+                                    <field name="rejection_reason" nolabel="1" colspan="2"
+                                        placeholder="Reason for rejection..."/>
+                                </group>
+                            </page>
+                            <page string="Documents" name="documents">
+                                <field name="document_ids" widget="many2many_attachments"
+                                    string="Supporting Documents"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- ACTION -->
+        <record id="action_insurance_claim" model="ir.actions.act_window">
+            <field name="name">Claims Management</field>
+            <field name="res_model">insurance.claim</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No claims yet!</p>
+                <p>File and track insurance claims from reporting to settlement.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
