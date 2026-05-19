@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- ══ CRM LEAD FORM — FUNNEL EXTENSION ═══════════════════════════════════ -->
+    <record id="crm_lead_funnel_form_view" model="ir.ui.view">
+        <field name="name">crm.lead.funnel.form</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- 1. Funnel statusbar — appears above everything in the sheet -->
+            <xpath expr="//sheet" position="before">
+                <div class="o_funnel_statusbar_wrap"
+                     invisible="current_funnel_step == False"
+                     style="background:#f8f9fa; border-bottom:1px solid #dee2e6; padding:0 16px;">
+                    <field name="current_funnel_step"
+                           widget="statusbar"
+                           statusbar_visible="1_categories,2_types,3_subtypes,4_form,5_payment,6_completed"
+                           readonly="1"/>
+                </div>
+            </xpath>
+
+            <!-- 2. Quick-look chips: last visited category / type / subtype -->
+            <xpath expr="//div[hasclass('oe_title')]" position="after">
+                <group string="آخر موقع في الموقع / Last Funnel Position"
+                       name="funnel_quick_look"
+                       invisible="current_funnel_step == False"
+                       col="3">
+                    <field name="last_category_id" readonly="1" string="آخر قسم"/>
+                    <field name="last_type_id"     readonly="1" string="آخر نوع"/>
+                    <field name="last_subtype_id"  readonly="1" string="آخر نوع فرعي"/>
+                </group>
+            </xpath>
+
+            <!-- 3. Notebook page: رحلة العميل -->
+            <xpath expr="//notebook" position="inside">
+                <page string="رحلة العميل في الموقع / Website Journey"
+                      name="website_journey">
+
+                    <!-- Summary stat badge -->
+                    <div class="o_field_widget mb-3">
+                        <span class="badge text-bg-info fs-6">
+                            <i class="fa fa-map-signs me-1"/>
+                            <field name="journey_log_count" readonly="1"/>
+                            خطوة مسجّلة
+                        </span>
+                    </div>
+
+                    <field name="journey_log_ids"
+                           readonly="1"
+                           context="{'default_lead_id': id}">
+                        <list string="Journey Log"
+                              default_order="id desc"
+                              decoration-success="action_name != False"
+                              create="false" delete="false" edit="false">
+                            <field name="create_date"  string="الوقت"   width="180px"/>
+                            <field name="action_name"  string="الإجراء"/>
+                            <field name="page_url"     string="الصفحة"/>
+                        </list>
+                    </field>
+
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</data>
+</odoo>
