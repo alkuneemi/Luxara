@@ -96,10 +96,12 @@
                             <field name="sales_application_id" string="Sales Order" readonly="1"/>
                         </group>
 
+                        <!-- Hidden related fields needed for invisible conditions -->
+                        <field name="app_form_type" invisible="1"/>
+
                         <notebook>
-                            <!-- TAB: Requirement Details — بيانات الطلب الخاصة بنوع التأمين -->
+                            <!-- TAB: Requirement Details -->
                             <page string="Requirment Details" name="requirement_details">
-                                <!-- هذه التابة تظهر بيانات نموذج الطلب الخاص بالنوع الفرعي المختار -->
                                 <div class="alert alert-info" role="alert"
                                      invisible="application_id != False">
                                     <i class="fa fa-info-circle me-2"/>
@@ -107,151 +109,152 @@
                                 </div>
 
                                 <!-- Motor Insurance Details -->
-                                <div invisible="application_id == False or application_id.form_type != 'motor'">
+                                <div invisible="application_id == False or app_form_type != 'motor'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-car me-2"/>Motor Insurance Details / بيانات تأمين السيارة
                                     </h5>
                                     <group>
                                         <group string="Personal Information">
-                                            <field name="application_id.customer_name" string="Full Name" readonly="1"/>
-                                            <field name="application_id.id_number" string="ID / Civil Number" readonly="1"/>
-                                            <field name="application_id.customer_phone" string="Phone" readonly="1"/>
-                                            <field name="application_id.customer_email" string="Email" readonly="1"/>
-                                            <field name="application_id.nationality" string="Nationality" readonly="1"/>
+                                            <field name="app_customer_name"  string="Full Name" readonly="1"/>
+                                            <field name="app_id_number"      string="ID / Civil Number" readonly="1"/>
+                                            <field name="app_customer_phone" string="Phone" readonly="1"/>
+                                            <field name="app_customer_email" string="Email" readonly="1"/>
+                                            <field name="app_nationality"    string="Nationality" readonly="1"/>
                                         </group>
                                         <group string="Vehicle Information">
-                                            <field name="application_id.motor_full_name" string="Name on Licence" readonly="1"/>
-                                            <field name="application_id.motor_license_number" string="Driving Licence No." readonly="1"/>
-                                            <field name="application_id.motor_plate_number" string="Plate Number" readonly="1"/>
-                                            <field name="application_id.motor_plate_character" string="Plate Characters" readonly="1"/>
-                                            <field name="application_id.motor_year" string="Vehicle Year" readonly="1"/>
-                                            <field name="application_id.motor_make" string="Make" readonly="1"/>
-                                            <field name="application_id.motor_model" string="Model" readonly="1"/>
-                                            <field name="application_id.motor_chassis_number" string="Chassis No." readonly="1"/>
-                                            <field name="application_id.motor_engine_cc" string="Engine CC" readonly="1"/>
-                                            <field name="application_id.motor_seating_capacity" string="Seating Capacity" readonly="1"/>
-                                            <field name="application_id.motor_is_financed" string="Under Finance?" readonly="1"/>
-                                            <field name="application_id.motor_finance_company" string="Finance Company" readonly="1"
-                                                invisible="not application_id.motor_is_financed"/>
+                                            <field name="app_motor_full_name"        string="Name on Licence" readonly="1"/>
+                                            <field name="app_motor_license_number"   string="Driving Licence No." readonly="1"/>
+                                            <field name="app_motor_plate_number"     string="Plate Number" readonly="1"/>
+                                            <field name="app_motor_plate_character"  string="Plate Characters" readonly="1"/>
+                                            <field name="app_motor_year"             string="Vehicle Year" readonly="1"/>
+                                            <field name="app_motor_make"             string="Make" readonly="1"/>
+                                            <field name="app_motor_model"            string="Model" readonly="1"/>
+                                            <field name="app_motor_chassis_number"   string="Chassis No." readonly="1"/>
+                                            <field name="app_motor_color"            string="Color" readonly="1"/>
+                                            <field name="app_motor_engine_cc"        string="Engine CC" readonly="1"/>
+                                            <field name="app_motor_seating_capacity" string="Seating Capacity" readonly="1"/>
+                                            <field name="app_motor_is_financed"      string="Under Finance?" readonly="1"/>
+                                            <field name="app_motor_finance_company"  string="Finance Company" readonly="1"
+                                                   invisible="not app_motor_is_financed"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Medical Insurance Details -->
-                                <div invisible="application_id == False or application_id.form_type not in ('medical_individual', 'medical_corporate')">
+                                <div invisible="application_id == False or app_form_type not in ('medical_individual', 'medical_corporate')">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-heartbeat me-2"/>Medical Insurance Details / بيانات التأمين الطبي
                                     </h5>
                                     <group>
                                         <group string="Personal Information">
-                                            <field name="application_id.customer_name" string="Full Name" readonly="1"/>
-                                            <field name="application_id.id_number" string="ID Number" readonly="1"/>
-                                            <field name="application_id.date_of_birth" string="Date of Birth" readonly="1"/>
-                                            <field name="application_id.gender" string="Gender" readonly="1"/>
+                                            <field name="app_customer_name" string="Full Name" readonly="1"/>
+                                            <field name="app_id_number"     string="ID Number" readonly="1"/>
+                                            <field name="app_date_of_birth" string="Date of Birth" readonly="1"/>
+                                            <field name="app_gender"        string="Gender" readonly="1"/>
                                         </group>
                                         <group string="Medical Coverage">
-                                            <field name="application_id.med_coverage_type" string="Coverage Type" readonly="1"/>
-                                            <field name="application_id.med_employee_count" string="Employee Count" readonly="1"/>
-                                            <field name="application_id.med_dependents_count" string="Dependents" readonly="1"/>
-                                            <field name="application_id.med_network_preference" string="Network Preference" readonly="1"/>
-                                            <field name="application_id.med_dental_required" string="Dental?" readonly="1"/>
-                                            <field name="application_id.med_optical_required" string="Optical?" readonly="1"/>
-                                            <field name="application_id.med_pre_existing" string="Pre-existing Conditions?" readonly="1"/>
-                                            <field name="application_id.med_company_name" string="Company Name" readonly="1"/>
+                                            <field name="app_med_coverage_type"      string="Coverage Type" readonly="1"/>
+                                            <field name="app_med_employee_count"     string="Employee Count" readonly="1"/>
+                                            <field name="app_med_dependents_count"   string="Dependents" readonly="1"/>
+                                            <field name="app_med_network_preference" string="Network Preference" readonly="1"/>
+                                            <field name="app_med_dental_required"    string="Dental?" readonly="1"/>
+                                            <field name="app_med_optical_required"   string="Optical?" readonly="1"/>
+                                            <field name="app_med_pre_existing"       string="Pre-existing Conditions?" readonly="1"/>
+                                            <field name="app_med_company_name"       string="Company Name" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Property / Fire Insurance Details -->
-                                <div invisible="application_id == False or application_id.form_type != 'property_fire'">
+                                <div invisible="application_id == False or app_form_type != 'property_fire'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-home me-2"/>Property Insurance Details / بيانات تأمين الممتلكات
                                     </h5>
                                     <group>
                                         <group>
-                                            <field name="application_id.prop_proposer_name" string="Proposer Name" readonly="1"/>
-                                            <field name="application_id.prop_address" string="Property Address" readonly="1"/>
-                                            <field name="application_id.prop_cover_type" string="Cover Type" readonly="1"/>
-                                            <field name="application_id.prop_usage" string="Property Usage" readonly="1"/>
+                                            <field name="app_prop_proposer_name"     string="Proposer Name" readonly="1"/>
+                                            <field name="app_prop_address"           string="Property Address" readonly="1"/>
+                                            <field name="app_prop_cover_type"        string="Cover Type" readonly="1"/>
+                                            <field name="app_prop_usage"             string="Property Usage" readonly="1"/>
                                         </group>
                                         <group>
-                                            <field name="application_id.prop_building_value" string="Building Value (OMR)" readonly="1"/>
-                                            <field name="application_id.prop_contents_value" string="Contents Value (OMR)" readonly="1"/>
-                                            <field name="application_id.prop_construction_type" string="Construction Type" readonly="1"/>
-                                            <field name="application_id.prop_any_previous_loss" string="Previous Loss?" readonly="1"/>
+                                            <field name="app_prop_building_value"    string="Building Value (OMR)" readonly="1"/>
+                                            <field name="app_prop_contents_value"    string="Contents Value (OMR)" readonly="1"/>
+                                            <field name="app_prop_construction_type" string="Construction Type" readonly="1"/>
+                                            <field name="app_prop_any_previous_loss" string="Previous Loss?" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Marine Insurance Details -->
-                                <div invisible="application_id == False or application_id.form_type != 'marine'">
+                                <div invisible="application_id == False or app_form_type != 'marine'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-ship me-2"/>Marine Insurance Details / بيانات التأمين البحري
                                     </h5>
                                     <group>
                                         <group>
-                                            <field name="application_id.marine_voyage_from" string="From" readonly="1"/>
-                                            <field name="application_id.marine_voyage_to" string="To" readonly="1"/>
-                                            <field name="application_id.marine_departure_date" string="Departure Date" readonly="1"/>
-                                            <field name="application_id.marine_arrival_date" string="Arrival Date" readonly="1"/>
+                                            <field name="app_marine_voyage_from"    string="From" readonly="1"/>
+                                            <field name="app_marine_voyage_to"      string="To" readonly="1"/>
+                                            <field name="app_marine_departure_date" string="Departure Date" readonly="1"/>
+                                            <field name="app_marine_arrival_date"   string="Arrival Date" readonly="1"/>
                                         </group>
                                         <group>
-                                            <field name="application_id.marine_cargo_type" string="Cargo Type" readonly="1"/>
-                                            <field name="application_id.marine_cargo_value" string="Cargo Value (OMR)" readonly="1"/>
-                                            <field name="application_id.marine_vessel_name" string="Vessel Name" readonly="1"/>
+                                            <field name="app_marine_cargo_type"     string="Cargo Type" readonly="1"/>
+                                            <field name="app_marine_cargo_value"    string="Cargo Value (OMR)" readonly="1"/>
+                                            <field name="app_marine_vessel_name"    string="Vessel Name" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Life Insurance Details -->
-                                <div invisible="application_id == False or application_id.form_type != 'life'">
+                                <div invisible="application_id == False or app_form_type != 'life'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-heart me-2"/>Life Insurance Details / بيانات التأمين على الحياة
                                     </h5>
                                     <group>
                                         <group>
-                                            <field name="application_id.life_sum_assured" string="Sum Assured (OMR)" readonly="1"/>
-                                            <field name="application_id.life_policy_term" string="Policy Term (Years)" readonly="1"/>
-                                            <field name="application_id.life_payment_frequency" string="Payment Frequency" readonly="1"/>
+                                            <field name="app_life_sum_assured"       string="Sum Assured (OMR)" readonly="1"/>
+                                            <field name="app_life_policy_term"       string="Policy Term (Years)" readonly="1"/>
+                                            <field name="app_life_payment_frequency" string="Payment Frequency" readonly="1"/>
                                         </group>
                                         <group>
-                                            <field name="application_id.life_beneficiary_name" string="Beneficiary" readonly="1"/>
-                                            <field name="application_id.life_occupation" string="Occupation" readonly="1"/>
-                                            <field name="application_id.life_smoker" string="Smoker?" readonly="1"/>
-                                            <field name="application_id.life_hazardous_activity" string="Hazardous Activities?" readonly="1"/>
+                                            <field name="app_life_beneficiary_name"  string="Beneficiary" readonly="1"/>
+                                            <field name="app_life_occupation"        string="Occupation" readonly="1"/>
+                                            <field name="app_life_smoker"            string="Smoker?" readonly="1"/>
+                                            <field name="app_life_hazardous_activity" string="Hazardous Activities?" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Workmen Compensation Details -->
-                                <div invisible="application_id == False or application_id.form_type != 'workmen'">
+                                <div invisible="application_id == False or app_form_type != 'workmen'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-users me-2"/>Workmen Compensation Details / بيانات تأمين العمال
                                     </h5>
                                     <group>
                                         <group>
-                                            <field name="application_id.wc_company_name" string="Company Name" readonly="1"/>
-                                            <field name="application_id.wc_employee_count" string="Employee Count" readonly="1"/>
-                                            <field name="application_id.wc_total_annual_wages" string="Total Annual Wages (OMR)" readonly="1"/>
+                                            <field name="app_wc_company_name"       string="Company Name" readonly="1"/>
+                                            <field name="app_wc_employee_count"     string="Employee Count" readonly="1"/>
+                                            <field name="app_wc_total_annual_wages" string="Total Annual Wages (OMR)" readonly="1"/>
                                         </group>
                                         <group>
-                                            <field name="application_id.wc_business_nature" string="Business Nature" readonly="1"/>
-                                            <field name="application_id.wc_any_previous_claims" string="Previous Claims?" readonly="1"/>
+                                            <field name="app_wc_business_nature"    string="Business Nature" readonly="1"/>
+                                            <field name="app_wc_any_previous_claims" string="Previous Claims?" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
 
                                 <!-- Generic (fallback) -->
-                                <div invisible="application_id == False or application_id.form_type != 'generic'">
+                                <div invisible="application_id == False or app_form_type != 'generic'">
                                     <h5 class="text-muted mb-3">
                                         <i class="fa fa-shield me-2"/>Insurance Application Details
                                     </h5>
                                     <group>
                                         <group>
-                                            <field name="application_id.customer_name" string="Full Name" readonly="1"/>
-                                            <field name="application_id.id_number" string="ID Number" readonly="1"/>
-                                            <field name="application_id.customer_phone" string="Phone" readonly="1"/>
-                                            <field name="application_id.customer_email" string="Email" readonly="1"/>
+                                            <field name="app_customer_name"  string="Full Name" readonly="1"/>
+                                            <field name="app_id_number"      string="ID Number" readonly="1"/>
+                                            <field name="app_customer_phone" string="Phone" readonly="1"/>
+                                            <field name="app_customer_email" string="Email" readonly="1"/>
                                         </group>
                                     </group>
                                 </div>
@@ -261,8 +264,8 @@
                                     <h6 class="text-muted">
                                         <i class="fa fa-paperclip me-2"/>Uploaded Documents / الوثائق المرفقة
                                     </h6>
-                                    <field name="application_id.document_ids" readonly="1"
-                                        widget="many2many_binary"/>
+                                    <field name="app_document_ids" readonly="1"
+                                           widget="many2many_binary"/>
                                 </div>
                             </page>
 
@@ -349,7 +352,7 @@
                                         </span>
                                     </div>
                                 </t>
-                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                <div class="mt-2 d-flex justify-content-between">
                                     <field name="probability" widget="progressbar"/>
                                     <field name="user_id" widget="many2one_avatar_user"/>
                                 </div>
@@ -360,20 +363,52 @@
             </field>
         </record>
 
-        <record id="action_insurance_opportunities_new" model="ir.actions.act_window">
-            <field name="name">فرص التأمين — Insurance Opportunities</field>
+        <record id="view_insurance_opportunity_search_new" model="ir.ui.view">
+            <field name="name">insurance.opportunity.search</field>
+            <field name="model">insurance.opportunity</field>
+            <field name="arch" type="xml">
+                <search string="Search Opportunities">
+                    <field name="name" string="Opportunity"/>
+                    <field name="partner_id" string="Customer"/>
+                    <field name="contact_name" string="Contact Name"/>
+                    <field name="ins_category_id" string="Category"/>
+                    <field name="ins_type_id" string="Type"/>
+                    <field name="ins_subtype_id" string="Sub-Type"/>
+                    <field name="ins_source_id" string="Source"/>
+                    <field name="stage_id" string="Stage"/>
+                    <field name="user_id" string="Responsible"/>
+                    <filter string="My Opportunities" name="my_opportunities"
+                            domain="[('user_id', '=', uid)]"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <separator/>
+                    <filter string="Won" name="won" domain="[('probability', '=', 100)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Stage" name="group_stage"
+                                context="{'group_by': 'stage_id'}"/>
+                        <filter string="Category" name="group_category"
+                                context="{'group_by': 'ins_category_id'}"/>
+                        <filter string="Source" name="group_source"
+                                context="{'group_by': 'ins_source_id'}"/>
+                        <filter string="Responsible" name="group_user"
+                                context="{'group_by': 'user_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_insurance_opportunity_new" model="ir.actions.act_window">
+            <field name="name">Insurance Opportunities</field>
             <field name="res_model">insurance.opportunity</field>
             <field name="view_mode">kanban,list,form</field>
             <field name="context">{'default_type': 'opportunity'}</field>
-            <field name="view_ids" eval="[
-                (5, 0, 0),
-                (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_insurance_opportunity_kanban_new')}),
-                (0, 0, {'view_mode': 'list',   'view_id': ref('view_insurance_opportunity_list_new')}),
-                (0, 0, {'view_mode': 'form',   'view_id': ref('view_insurance_opportunity_form_new')}),
-            ]"/>
+            <field name="domain">[('type', '=', 'opportunity')]</field>
             <field name="help" type="html">
-                <p class="o_view_nocontent_smiling_face">لا توجد فرص تأمين بعد</p>
-                <p>تُنشأ الفرص تلقائياً عندما يسجّل عميل الدخول ويزور صفحة التأمين.</p>
+                <p class="o_view_nocontent_smiling_face">
+                    No insurance opportunities yet!
+                </p>
+                <p>
+                    Create your first opportunity or configure the website to capture leads automatically.
+                </p>
             </field>
         </record>
 
