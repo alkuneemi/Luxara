@@ -1,0 +1,1263 @@
+{
+  "name": "Sahab Cloud — SaaS Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sahab-cloud",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node_webhook",
+      "name": "Odoo Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "sahab-cloud-main"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond_secret",
+              "leftValue": "={{ $json.headers['x-secret-key'] }}",
+              "rightValue": "={{ $vars.SAHAB_WEBHOOK_SECRET }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_validate_secret",
+      "name": "Validate Secret Key",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"error\", \"message\": \"Unauthorized\" }",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "node_reject",
+      "name": "Reject Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "provision",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "provision"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "provision_staging",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "provision_staging"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "suspend",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "suspend"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "resume",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resume"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "redeploy",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "redeploy"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "merge_staging",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "merge_staging"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "ping",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ping"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_router",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/git/refs/heads/{{ $json.body.base_branch }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_get_base_sha",
+      "name": "GitHub: Get Base Branch SHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/git/refs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ref",
+              "value": "=refs/heads/{{ $('Odoo Webhook').item.json.body.prod_branch }}"
+            },
+            {
+              "name": "sha",
+              "value": "={{ $json.object.sha }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_create_github_branch",
+      "name": "GitHub: Create Prod Branch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation createDB($projectId: String!, $name: String!) { pluginCreate(input: { projectId: $projectId, name: \\\"postgresql\\\", friendlyName: $name }) { id name } }\",\n  \"variables\": {\n    \"projectId\": \"{{ $vars.RAILWAY_PROJECT_ID }}\",\n    \"name\": \"db_{{ $('Odoo Webhook').item.json.body.subdomain }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_create_railway_db",
+      "name": "Railway: Create PostgreSQL DB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation createService($projectId: String!, $name: String!) { serviceCreate(input: { projectId: $projectId, name: $name, source: { repo: \\\"https://github.com/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}\\\", branch: \\\"{{ $('Odoo Webhook').item.json.body.prod_branch }}\\\" } }) { id name } }\",\n  \"variables\": {\n    \"projectId\": \"{{ $vars.RAILWAY_PROJECT_ID }}\",\n    \"name\": \"odoo-{{ $('Odoo Webhook').item.json.body.subdomain }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_create_railway_service",
+      "name": "Railway: Create Odoo Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation setVars($projectId: String!, $serviceId: String!, $envId: String!, $vars: Json!) { variableCollectionUpsert(input: { projectId: $projectId, environmentId: $envId, serviceId: $serviceId, variables: $vars }) }\",\n  \"variables\": {\n    \"projectId\": \"{{ $vars.RAILWAY_PROJECT_ID }}\",\n    \"serviceId\": \"{{ $json.data.serviceCreate.id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\",\n    \"vars\": {\n      \"DB_HOST\": \"${{ {{ 'db_' + $('Odoo Webhook').item.json.body.subdomain + '.PGHOST' }} }}\",\n      \"DB_PORT\": \"5432\",\n      \"DB_NAME\": \"railway\",\n      \"DB_USER\": \"${{ {{ 'db_' + $('Odoo Webhook').item.json.body.subdomain + '.PGUSER' }} }}\",\n      \"DB_PASSWORD\": \"${{ {{ 'db_' + $('Odoo Webhook').item.json.body.subdomain + '.PGPASSWORD' }} }}\",\n      \"ODOO_MODULES\": \"{{ $('Odoo Webhook').item.json.body.modules }}\",\n      \"CLIENT_SUBDOMAIN\": \"{{ $('Odoo Webhook').item.json.body.subdomain }}\",\n      \"ODOO_BRANCH\": \"{{ $('Odoo Webhook').item.json.body.prod_branch }}\",\n      \"ADMIN_EMAIL\": \"{{ $('Odoo Webhook').item.json.body.email }}\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "node_inject_env_vars",
+      "name": "Railway: Inject Environment Variables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation setDomain($serviceId: String!, $envId: String!, $domain: String!) { customDomainCreate(input: { serviceId: $serviceId, environmentId: $envId, domain: $domain }) { id domain } }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $('Railway: Create Odoo Service').item.json.data.serviceCreate.id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\",\n    \"domain\": \"{{ $('Odoo Webhook').item.json.body.subdomain }}.{{ $vars.BASE_DOMAIN }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_set_domain",
+      "name": "Railway: Set Custom Domain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "seconds",
+        "value": 90,
+        "resume": "timeInterval"
+      },
+      "id": "node_wait_deploy",
+      "name": "Wait: Railway Deploys (90s)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        100
+      ],
+      "webhookId": "sahab-cloud-wait-deploy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Odoo Webhook').item.json.body.callback_url }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"success\": true,\n  \"action\": \"provision\",\n  \"railway_service_id\": \"{{ $('Railway: Create Odoo Service').item.json.data.serviceCreate.id }}\",\n  \"railway_db_id\": \"{{ $('Railway: Create PostgreSQL DB').item.json.data.pluginCreate.id }}\",\n  \"domain\": \"https://{{ $('Odoo Webhook').item.json.body.subdomain }}.{{ $vars.BASE_DOMAIN }}\"\n}",
+        "options": {}
+      },
+      "id": "node_callback_provision",
+      "name": "Odoo: Callback Provision Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"provision\", \"message\": \"Provisioning started\" }",
+        "options": {}
+      },
+      "id": "node_respond_provision",
+      "name": "Respond: Provision Started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2460,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/git/refs/heads/{{ $json.body.base_branch }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_staging_get_sha",
+      "name": "GitHub: Get Prod SHA (staging base)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/git/refs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "ref",
+              "value": "=refs/heads/{{ $('Odoo Webhook').item.json.body.stage_branch }}"
+            },
+            {
+              "name": "sha",
+              "value": "={{ $json.object.sha }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_create_stage_branch",
+      "name": "GitHub: Create Stage Branch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation createDB($projectId: String!, $name: String!) { pluginCreate(input: { projectId: $projectId, name: \\\"postgresql\\\", friendlyName: $name }) { id name } }\",\n  \"variables\": {\n    \"projectId\": \"{{ $vars.RAILWAY_PROJECT_ID }}\",\n    \"name\": \"db_{{ $('Odoo Webhook').item.json.body.subdomain }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_staging_db",
+      "name": "Railway: Create Staging DB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation createService($projectId: String!, $name: String!) { serviceCreate(input: { projectId: $projectId, name: $name, source: { repo: \\\"https://github.com/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}\\\", branch: \\\"{{ $('Odoo Webhook').item.json.body.stage_branch }}\\\" } }) { id name } }\",\n  \"variables\": {\n    \"projectId\": \"{{ $vars.RAILWAY_PROJECT_ID }}\",\n    \"name\": \"odoo-{{ $('Odoo Webhook').item.json.body.subdomain }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_staging_service",
+      "name": "Railway: Create Staging Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation setDomain($serviceId: String!, $envId: String!, $domain: String!) { customDomainCreate(input: { serviceId: $serviceId, environmentId: $envId, domain: $domain }) { id domain } }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $('Railway: Create Staging Service').item.json.data.serviceCreate.id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\",\n    \"domain\": \"{{ $('Odoo Webhook').item.json.body.subdomain }}.{{ $vars.BASE_DOMAIN }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_staging_domain",
+      "name": "Railway: Set Staging Domain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Odoo Webhook').item.json.body.callback_url }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"success\": true,\n  \"action\": \"provision_staging\",\n  \"railway_service_id\": \"{{ $('Railway: Create Staging Service').item.json.data.serviceCreate.id }}\",\n  \"railway_db_id\": \"{{ $('Railway: Create Staging DB').item.json.data.pluginCreate.id }}\",\n  \"domain\": \"https://{{ $('Odoo Webhook').item.json.body.subdomain }}.{{ $vars.BASE_DOMAIN }}\"\n}",
+        "options": {}
+      },
+      "id": "node_callback_staging",
+      "name": "Odoo: Callback Staging Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"provision_staging\" }",
+        "options": {}
+      },
+      "id": "node_respond_staging",
+      "name": "Respond: Staging Started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation suspend($serviceId: String!, $envId: String!) { serviceInstanceUpdate(input: { serviceId: $serviceId, environmentId: $envId, numReplicas: 0 }) }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $json.body.railway_service_id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_suspend",
+      "name": "Railway: Suspend Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        520
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"suspend\", \"message\": \"Service suspended\" }",
+        "options": {}
+      },
+      "id": "node_respond_suspend",
+      "name": "Respond: Suspended",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation resume($serviceId: String!, $envId: String!) { serviceInstanceUpdate(input: { serviceId: $serviceId, environmentId: $envId, numReplicas: 1 }) }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $json.body.railway_service_id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_resume",
+      "name": "Railway: Resume Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        680
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"resume\", \"message\": \"Service resumed\" }",
+        "options": {}
+      },
+      "id": "node_respond_resume",
+      "name": "Respond: Resumed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation redeploy($serviceId: String!, $envId: String!) { serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $envId) }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $json.body.railway_service_id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_redeploy",
+      "name": "Railway: Redeploy Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        840
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"redeploy\", \"message\": \"Redeploy triggered\" }",
+        "options": {}
+      },
+      "id": "node_respond_redeploy",
+      "name": "Respond: Redeploy Triggered",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/pulls",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "=[Sahab Cloud] Merge staging → production: {{ $json.body.subdomain }}"
+            },
+            {
+              "name": "head",
+              "value": "={{ $json.body.stage_branch }}"
+            },
+            {
+              "name": "base",
+              "value": "={{ $json.body.prod_branch }}"
+            },
+            {
+              "name": "body",
+              "value": "=Auto-merge from Sahab Cloud platform. Staging environment validated and approved."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_create_pr",
+      "name": "GitHub: Create PR (stage → prod)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        1000
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/{{ $vars.GITHUB_OWNER }}/{{ $vars.GITHUB_REPO }}/pulls/{{ $json.number }}/merge",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "merge_method",
+              "value": "squash"
+            },
+            {
+              "name": "commit_title",
+              "value": "=[Sahab Cloud] Apply staging changes to production"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_merge_pr",
+      "name": "GitHub: Merge PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        1000
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_github",
+          "name": "GitHub API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://backboard.railway.app/graphql/v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"query\": \"mutation redeploy($serviceId: String!, $envId: String!) { serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $envId) }\",\n  \"variables\": {\n    \"serviceId\": \"{{ $('Odoo Webhook').item.json.body.railway_service_id }}\",\n    \"envId\": \"{{ $vars.RAILWAY_ENVIRONMENT_ID }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node_redeploy_after_merge",
+      "name": "Railway: Redeploy Prod after Merge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        1000
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cred_railway",
+          "name": "Railway API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"action\": \"merge_staging\", \"message\": \"Staging merged and production redeploying\" }",
+        "options": {}
+      },
+      "id": "node_respond_merge",
+      "name": "Respond: Merge Complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\", \"message\": \"pong\", \"platform\": \"Sahab Cloud\" }",
+        "options": {}
+      },
+      "id": "node_ping",
+      "name": "Respond: Pong",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.body?.callback_url || $('Odoo Webhook').item.json.body.callback_url }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"success\": false,\n  \"action\": \"{{ $('Odoo Webhook').item.json.body.action }}\",\n  \"error\": \"n8n workflow error: {{ $json.message || 'Unknown error' }}\"\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "id": "node_error_callback",
+      "name": "Odoo: Error Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        1300
+      ]
+    }
+  ],
+  "connections": {
+    "Odoo Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Secret Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Secret Key": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Get Base Branch SHA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub: Get Prod SHA (staging base)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Railway: Suspend Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Railway: Resume Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Railway: Redeploy Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitHub: Create PR (stage → prod)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: Pong",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Get Base Branch SHA": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Create Prod Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Create Prod Branch": {
+      "main": [
+        [
+          {
+            "node": "Railway: Create PostgreSQL DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Create PostgreSQL DB": {
+      "main": [
+        [
+          {
+            "node": "Railway: Create Odoo Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Create Odoo Service": {
+      "main": [
+        [
+          {
+            "node": "Railway: Inject Environment Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Inject Environment Variables": {
+      "main": [
+        [
+          {
+            "node": "Railway: Set Custom Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Set Custom Domain": {
+      "main": [
+        [
+          {
+            "node": "Wait: Railway Deploys (90s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Railway Deploys (90s)": {
+      "main": [
+        [
+          {
+            "node": "Odoo: Callback Provision Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo: Callback Provision Success": {
+      "main": [
+        [
+          {
+            "node": "Respond: Provision Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Get Prod SHA (staging base)": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Create Stage Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Create Stage Branch": {
+      "main": [
+        [
+          {
+            "node": "Railway: Create Staging DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Create Staging DB": {
+      "main": [
+        [
+          {
+            "node": "Railway: Create Staging Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Create Staging Service": {
+      "main": [
+        [
+          {
+            "node": "Railway: Set Staging Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Set Staging Domain": {
+      "main": [
+        [
+          {
+            "node": "Odoo: Callback Staging Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Odoo: Callback Staging Success": {
+      "main": [
+        [
+          {
+            "node": "Respond: Staging Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Suspend Service": {
+      "main": [
+        [
+          {
+            "node": "Respond: Suspended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Resume Service": {
+      "main": [
+        [
+          {
+            "node": "Respond: Resumed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Redeploy Service": {
+      "main": [
+        [
+          {
+            "node": "Respond: Redeploy Triggered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Create PR (stage → prod)": {
+      "main": [
+        [
+          {
+            "node": "GitHub: Merge PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub: Merge PR": {
+      "main": [
+        [
+          {
+            "node": "Railway: Redeploy Prod after Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Railway: Redeploy Prod after Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond: Merge Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": "",
+    "timezone": "Asia/Riyadh"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "sahab-cloud-n8n"
+  },
+  "id": "sahab-cloud-saas-orchestrator",
+  "tags": [
+    {
+      "name": "Sahab Cloud"
+    },
+    {
+      "name": "SaaS"
+    },
+    {
+      "name": "Production"
+    }
+  ]
+}
