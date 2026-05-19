@@ -45,3 +45,14 @@ access_insurance_client_journey_log_public,insurance.client.journey.log.public,m
 access_insurance_client_journey_log_portal,insurance.client.journey.log.portal,model_insurance_client_journey_log,,1,1,1,0
 access_insurance_client_agent_message_global,access.insurance.client.agent.message.global,model_insurance_client_agent_message,,1,1,1,1
 access_insurance_source_user,access.insurance.source.user,model_insurance_source,,1,1,1,1
+access_insurance_company_pricing_user,insurance.company.pricing user,model_insurance_company_pricing,,1,1,1,0
+access_insurance_company_pricing_manager,insurance.company.pricing manager,model_insurance_company_pricing,,1,1,1,1
+access_insurance_company_pricing_public,insurance.company.pricing public,model_insurance_company_pricing,,1,0,0,0
+access_insurance_quotation_user,insurance.quotation user,model_insurance_quotation,,1,1,1,0
+access_insurance_quotation_manager,insurance.quotation manager,model_insurance_quotation,,1,1,1,1
+access_insurance_quotation_public,insurance.quotation public,model_insurance_quotation,,1,0,0,0
+access_insurance_quotation_portal,insurance.quotation portal,model_insurance_quotation,,1,0,0,0
+access_insurance_quotation_line_user,insurance.quotation.line user,model_insurance_quotation_line,,1,1,1,0
+access_insurance_quotation_line_manager,insurance.quotation.line manager,model_insurance_quotation_line,,1,1,1,1
+access_insurance_quotation_line_public,insurance.quotation.line public,model_insurance_quotation_line,,1,0,0,0
+access_insurance_subtype_pricing_wizard_user,insurance.subtype.pricing.wizard user,model_insurance_subtype_pricing_wizard,,1,1,1,1
