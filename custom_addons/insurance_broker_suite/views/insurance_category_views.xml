@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_insurance_category_list" model="ir.ui.view">
+            <field name="name">insurance.category.list</field>
+            <field name="model">insurance.category</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Categories">
+                    <field name="sequence" widget="handle"/>
+                    <field name="icon" optional="show"/>
+                    <field name="name"/>
+                    <field name="name_ar" optional="show"/>
+                    <field name="type_count" string="Types"/>
+                    <field name="website_published" widget="boolean_toggle"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_insurance_category_form" model="ir.ui.view">
+            <field name="name">insurance.category.form</field>
+            <field name="model">insurance.category</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Category">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object"
+                                name="action_view_types" icon="fa-list">
+                                <field name="type_count" widget="statinfo" string="Types"/>
+                            </button>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Category Information</div>
+                            <group>
+                                <group>
+                                    <field name="name" placeholder="e.g. Motor Insurance"/>
+                                    <field name="name_ar" placeholder="تأمين المركبات"/>
+                                    <field name="icon" placeholder="fa-car"/>
+                                </group>
+                                <group>
+                                    <field name="sequence"/>
+                                    <field name="website_published" widget="boolean_toggle"/>
+                                    <field name="active"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <group>
+                            <field name="description" nolabel="1" colspan="2"
+                                placeholder="Short description shown on website..."/>
+                        </group>
+
+                        <notebook>
+                            <page string="Insurance Types" name="types">
+                                <field name="type_ids" mode="list" readonly="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="subtype_count" string="Sub-Types"/>
+                                        <field name="website_published" widget="boolean_toggle"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_insurance_category" model="ir.actions.act_window">
+            <field name="name">Insurance Categories</field>
+            <field name="res_model">insurance.category</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create your first insurance category!</p>
+                <p>Categories are the top-level groups shown on the customer website (e.g. Motor, Medical, Property).</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
