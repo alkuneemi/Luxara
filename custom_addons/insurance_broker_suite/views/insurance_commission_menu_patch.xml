@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ══ Commission Rate — menu under Configuration ══ -->
+<menuitem id="menu_commission_rate"
+          name="Commission Rates / نسب العمولات"
+          parent="menu_insurance_config"
+          action="action_commission_rate"
+          sequence="25"/>
+
+<!-- ══ Commission Records — under main menu ══ -->
+<menuitem id="menu_insurance_commission_main"
+          name="Commissions / العمولات"
+          parent="menu_insurance_root"
+          action="action_insurance_commission"
+          sequence="35"/>
+
+</data>
+</odoo>
