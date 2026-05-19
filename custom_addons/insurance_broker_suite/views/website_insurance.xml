@@ -472,8 +472,8 @@
                                     <span t-if="sub.has_comparison_sheet" class="badge bg-info-subtle text-info me-1 mb-1">Comparison Sheet</span>
                                     <span t-if="sub.has_booking_slip" class="badge bg-success-subtle text-success me-1 mb-1">Booking Slip</span>
                                 </div>
-                                <a t-attf-href="/insurance/application/form?subtype_id=#{sub.id}" class="btn btn-primary w-100 mt-auto">
-                                    Apply Now →
+                                <a t-attf-href="/ameen/pricing/#{sub.id}" class="btn btn-primary w-100 mt-auto">
+                                    عرض الأسعار والتقديم →
                                 </a>
                             </div>
                         </div>
