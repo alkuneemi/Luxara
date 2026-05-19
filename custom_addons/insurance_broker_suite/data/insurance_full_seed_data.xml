@@ -1,0 +1,3144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             1. ADDITIONAL INSURANCE CATEGORIES
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="cat_travel" model="insurance.category">
+            <field name="name">Travel Insurance</field>
+            <field name="name_ar">تأمين السفر</field>
+            <field name="icon">fa-plane</field>
+            <field name="sequence">70</field>
+            <field name="description">Individual, family, and group travel insurance</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_home" model="insurance.category">
+            <field name="name">Home Insurance</field>
+            <field name="name_ar">تأمين المنزل</field>
+            <field name="icon">fa-house</field>
+            <field name="sequence">80</field>
+            <field name="description">Residential property and contents protection</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_engineering" model="insurance.category">
+            <field name="name">Engineering Insurance</field>
+            <field name="name_ar">التأمين الهندسي</field>
+            <field name="icon">fa-cogs</field>
+            <field name="sequence">90</field>
+            <field name="description">Contractor, erection, machinery and engineering risks</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_liability" model="insurance.category">
+            <field name="name">Liability Insurance</field>
+            <field name="name_ar">تأمين المسؤولية</field>
+            <field name="icon">fa-balance-scale</field>
+            <field name="sequence">100</field>
+            <field name="description">Public, employer, professional and directors liability</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_financial" model="insurance.category">
+            <field name="name">Financial Lines</field>
+            <field name="name_ar">الخطوط المالية</field>
+            <field name="icon">fa-money</field>
+            <field name="sequence">110</field>
+            <field name="description">Fidelity, money, trade credit and financial risk insurance</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_energy" model="insurance.category">
+            <field name="name">Energy Insurance</field>
+            <field name="name_ar">تأمين قطاع الطاقة</field>
+            <field name="icon">fa-bolt</field>
+            <field name="sequence">120</field>
+            <field name="description">Oil, gas, power and energy sector risks</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_cyber" model="insurance.category">
+            <field name="name">Cyber Insurance</field>
+            <field name="name_ar">التأمين السيبراني</field>
+            <field name="icon">fa-shield</field>
+            <field name="sequence">130</field>
+            <field name="description">Cyber attacks, data breaches and digital risk coverage</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_aviation" model="insurance.category">
+            <field name="name">Aviation Insurance</field>
+            <field name="name_ar">تأمين الطيران</field>
+            <field name="icon">fa-fighter-jet</field>
+            <field name="sequence">140</field>
+            <field name="description">Aircraft hull and aviation liability insurance</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_special" model="insurance.category">
+            <field name="name">Special Risks</field>
+            <field name="name_ar">مخاطر خاصة</field>
+            <field name="icon">fa-star</field>
+            <field name="sequence">150</field>
+            <field name="description">Golf, livestock, relocation, and other niche insurance products</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             2. INSURANCE TYPES — all 52 products mapped
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- PERSONAL — Motor -->
+        <record id="type_gap_insurance" model="insurance.type">
+            <field name="name">Gap Insurance</field>
+            <field name="name_ar">تأمين الفجوة المالية</field>
+            <field name="category_id" ref="cat_motor"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_fleet_motor" model="insurance.type">
+            <field name="name">Fleet Motor Insurance</field>
+            <field name="name_ar">تأمين أساطيل السيارات</field>
+            <field name="category_id" ref="cat_motor"/>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- PERSONAL — Medical -->
+        <record id="type_critical_illness" model="insurance.type">
+            <field name="name">Critical Illness</field>
+            <field name="name_ar">تأمين الأمراض المستعصية</field>
+            <field name="category_id" ref="cat_medical"/>
+            <field name="sequence">40</field>
+        </record>
+        <record id="type_medical_malpractice" model="insurance.type">
+            <field name="name">Medical Malpractice</field>
+            <field name="name_ar">تأمين الأخطاء الطبية</field>
+            <field name="category_id" ref="cat_medical"/>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- PERSONAL — Life -->
+        <record id="type_domestic_worker" model="insurance.type">
+            <field name="name">Domestic Worker Insurance</field>
+            <field name="name_ar">تأمين العمالة المنزلية</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_child_annuity" model="insurance.type">
+            <field name="name">Child Annuity</field>
+            <field name="name_ar">المعاش السنوي للأطفال</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">40</field>
+        </record>
+        <record id="type_protect_plus" model="insurance.type">
+            <field name="name">Protect Plus</field>
+            <field name="name_ar">حماية بلس</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">50</field>
+        </record>
+        <record id="type_ucl" model="insurance.type">
+            <field name="name">UCL Coverage</field>
+            <field name="name_ar">تغطية UCL</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">60</field>
+        </record>
+        <record id="type_group_life" model="insurance.type">
+            <field name="name">Group Life Insurance</field>
+            <field name="name_ar">التأمين على الحياة الجماعي</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">70</field>
+        </record>
+        <record id="type_group_pa" model="insurance.type">
+            <field name="name">Group Personal Accident</field>
+            <field name="name_ar">تأمين الحوادث الشخصية الجماعي</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">80</field>
+        </record>
+
+        <!-- PERSONAL — Travel -->
+        <record id="type_travel_individual" model="insurance.type">
+            <field name="name">Individual Travel Insurance</field>
+            <field name="name_ar">تأمين السفر الفردي</field>
+            <field name="category_id" ref="cat_travel"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_travel_group" model="insurance.type">
+            <field name="name">Group Travel Insurance</field>
+            <field name="name_ar">تأمين السفر الجماعي</field>
+            <field name="category_id" ref="cat_travel"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_travel_business" model="insurance.type">
+            <field name="name">Business Travel Insurance</field>
+            <field name="name_ar">تأمين سفر الأعمال</field>
+            <field name="category_id" ref="cat_travel"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- PERSONAL — Home -->
+        <record id="type_home_comprehensive" model="insurance.type">
+            <field name="name">Home Comprehensive Insurance</field>
+            <field name="name_ar">التأمين الشامل للمنزل</field>
+            <field name="category_id" ref="cat_home"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_relocation" model="insurance.type">
+            <field name="name">Relocation Insurance</field>
+            <field name="name_ar">تأمين الانتقال وتغيير السكن</field>
+            <field name="category_id" ref="cat_home"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- PERSONAL — Marine -->
+        <record id="type_yacht" model="insurance.type">
+            <field name="name">Yacht &amp; Pleasure Craft</field>
+            <field name="name_ar">تأمين اليخوت والقوارب الترفيهية</field>
+            <field name="category_id" ref="cat_marine"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_hull_machineries" model="insurance.type">
+            <field name="name">Hull &amp; Machineries</field>
+            <field name="name_ar">تأمين هياكل ومكائن السفن</field>
+            <field name="category_id" ref="cat_marine"/>
+            <field name="sequence">40</field>
+        </record>
+        <record id="type_goods_transit" model="insurance.type">
+            <field name="name">Goods in Transit</field>
+            <field name="name_ar">تأمين البضائع أثناء النقل</field>
+            <field name="category_id" ref="cat_marine"/>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- PERSONAL — Special -->
+        <record id="type_golf" model="insurance.type">
+            <field name="name">Golf Insurance</field>
+            <field name="name_ar">تأمين الجولف</field>
+            <field name="category_id" ref="cat_special"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_livestock" model="insurance.type">
+            <field name="name">Livestock Insurance</field>
+            <field name="name_ar">تأمين الثروة الحيوانية</field>
+            <field name="category_id" ref="cat_special"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- COMMERCIAL — Workmen -->
+        <record id="type_uwc" model="insurance.type">
+            <field name="name">UWC Coverage</field>
+            <field name="name_ar">تغطية UWC</field>
+            <field name="category_id" ref="cat_workmen"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_employers_liability" model="insurance.type">
+            <field name="name">Employer's Liability</field>
+            <field name="name_ar">مسؤولية صاحب العمل</field>
+            <field name="category_id" ref="cat_workmen"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- COMMERCIAL — Engineering -->
+        <record id="type_car" model="insurance.type">
+            <field name="name">Contractor All Risks (CAR)</field>
+            <field name="name_ar">جميع أخطار المقاولين</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_ear" model="insurance.type">
+            <field name="name">Erection All Risks (EAR)</field>
+            <field name="name_ar">جميع أخطار التركيب</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_contractors_plant" model="insurance.type">
+            <field name="name">Contractors Plant &amp; Machinery</field>
+            <field name="name_ar">آليات ومعدات المقاولين</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_engineering" model="insurance.type">
+            <field name="name">Engineering Insurance</field>
+            <field name="name_ar">التأمين الهندسي</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">40</field>
+        </record>
+        <record id="type_machinery_breakdown" model="insurance.type">
+            <field name="name">Machinery Breakdown</field>
+            <field name="name_ar">عطل الآلات والمكائن</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">50</field>
+        </record>
+        <record id="type_electronic_equipment" model="insurance.type">
+            <field name="name">Electronic Equipment Insurance</field>
+            <field name="name_ar">تأمين الأجهزة الإلكترونية</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">60</field>
+        </record>
+        <record id="type_boiler_plant" model="insurance.type">
+            <field name="name">Boiler &amp; Plant</field>
+            <field name="name_ar">الغلايات والمعدات</field>
+            <field name="category_id" ref="cat_engineering"/>
+            <field name="sequence">70</field>
+        </record>
+
+        <!-- COMMERCIAL — Liability -->
+        <record id="type_public_liability" model="insurance.type">
+            <field name="name">Public Liability</field>
+            <field name="name_ar">المسؤولية العامة</field>
+            <field name="category_id" ref="cat_liability"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_professional_indemnity" model="insurance.type">
+            <field name="name">Professional Indemnity</field>
+            <field name="name_ar">التعويض المهني</field>
+            <field name="category_id" ref="cat_liability"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_products_liability" model="insurance.type">
+            <field name="name">Products Liability</field>
+            <field name="name_ar">مسؤولية المنتجات</field>
+            <field name="category_id" ref="cat_liability"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_do_liability" model="insurance.type">
+            <field name="name">Directors &amp; Officers Liability</field>
+            <field name="name_ar">مسؤولية المديرين والمسؤولين</field>
+            <field name="category_id" ref="cat_liability"/>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- COMMERCIAL — Financial Lines -->
+        <record id="type_fidelity" model="insurance.type">
+            <field name="name">Fidelity Guarantee</field>
+            <field name="name_ar">ضمان الأمانة</field>
+            <field name="category_id" ref="cat_financial"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_money" model="insurance.type">
+            <field name="name">Money Insurance</field>
+            <field name="name_ar">تأمين الأموال</field>
+            <field name="category_id" ref="cat_financial"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_trade_credit" model="insurance.type">
+            <field name="name">Trade Credit Insurance</field>
+            <field name="name_ar">الائتمان التجاري</field>
+            <field name="category_id" ref="cat_financial"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="type_sme_package" model="insurance.type">
+            <field name="name">SME Package Insurance</field>
+            <field name="name_ar">باقة الشركات الصغيرة والمتوسطة</field>
+            <field name="category_id" ref="cat_financial"/>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- COMMERCIAL — Energy / Cyber / Aviation -->
+        <record id="type_energy" model="insurance.type">
+            <field name="name">Energy Insurance</field>
+            <field name="name_ar">تأمين قطاع الطاقة</field>
+            <field name="category_id" ref="cat_energy"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_cyber" model="insurance.type">
+            <field name="name">Cyber Insurance</field>
+            <field name="name_ar">التأمين السيبراني</field>
+            <field name="category_id" ref="cat_cyber"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_aviation" model="insurance.type">
+            <field name="name">Aviation Insurance</field>
+            <field name="name_ar">تأمين الطيران</field>
+            <field name="category_id" ref="cat_aviation"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             3. INSURANCE SUBTYPES — all 52 products
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- ── PERSONAL (21) ──────────────────────────────────────────────── -->
+
+        <!-- 1. Motor Insurance (uses existing sub_motor_comp / sub_motor_tp) -->
+
+        <!-- 2. Health Insurance — Individual (uses existing sub_med_individual) -->
+
+        <!-- 3. Travel Insurance -->
+        <record id="sub_travel_individual" model="insurance.subtype">
+            <field name="name">Individual Travel Insurance</field>
+            <field name="name_ar">تأمين السفر الفردي</field>
+            <field name="type_id" ref="type_travel_individual"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Copy of passport, Return flight ticket, Travel itinerary</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for emergency medical expenses, trip cancellation, baggage loss, and personal accident during travel</field>
+        </record>
+
+        <!-- 4. Personal Accident (uses existing sub_personal_accident) -->
+
+        <!-- 5. Home Insurance -->
+        <record id="sub_home_comprehensive" model="insurance.subtype">
+            <field name="name">Home Comprehensive</field>
+            <field name="name_ar">التأمين الشامل للمنزل</field>
+            <field name="type_id" ref="type_home_comprehensive"/>
+            <field name="form_type">property_fire</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Title deed or lease agreement, Property photos, Inventory list</field>
+            <field name="sequence">10</field>
+            <field name="description">Building and contents protection for residential homes</field>
+        </record>
+
+        <!-- 6. Life Insurance (uses existing sub_life_term) -->
+
+        <!-- 7. Domestic Worker Insurance -->
+        <record id="sub_domestic_worker" model="insurance.subtype">
+            <field name="name">Domestic Worker Insurance</field>
+            <field name="name_ar">تأمين العمالة المنزلية</field>
+            <field name="type_id" ref="type_domestic_worker"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Worker's passport copy, Employer's ID copy, Work permit/visa</field>
+            <field name="sequence">10</field>
+            <field name="description">Medical, personal accident and liability coverage for domestic workers</field>
+        </record>
+
+        <!-- 8. Yacht & Pleasure Craft -->
+        <record id="sub_yacht" model="insurance.subtype">
+            <field name="name">Yacht &amp; Pleasure Craft</field>
+            <field name="name_ar">تأمين اليخوت والقوارب الترفيهية</field>
+            <field name="type_id" ref="type_yacht"/>
+            <field name="form_type">marine</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Vessel registration certificate, Skipper's licence, Photos of vessel</field>
+            <field name="sequence">10</field>
+            <field name="description">Hull damage, third-party liability and personal accident for pleasure boats and yachts</field>
+        </record>
+
+        <!-- 9. Critical Illness -->
+        <record id="sub_critical_illness" model="insurance.subtype">
+            <field name="name">Critical Illness Insurance</field>
+            <field name="name_ar">تأمين الأمراض المستعصية والخطيرة</field>
+            <field name="type_id" ref="type_critical_illness"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Medical history report, ID/Passport copy</field>
+            <field name="sequence">10</field>
+            <field name="description">Lump-sum payout upon diagnosis of covered critical illnesses including cancer, heart attack, and stroke</field>
+        </record>
+
+        <!-- 10. Child Annuity -->
+        <record id="sub_child_annuity" model="insurance.subtype">
+            <field name="name">Child Annuity Plan</field>
+            <field name="name_ar">المعاش السنوي للأطفال</field>
+            <field name="type_id" ref="type_child_annuity"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Child's birth certificate, Parent ID copy</field>
+            <field name="sequence">10</field>
+            <field name="description">Savings and annuity plan to secure a child's financial future for education and beyond</field>
+        </record>
+
+        <!-- 11. Golf Insurance -->
+        <record id="sub_golf" model="insurance.subtype">
+            <field name="name">Golf Insurance</field>
+            <field name="name_ar">تأمين الجولف</field>
+            <field name="type_id" ref="type_golf"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Golf club membership card, Equipment list and values</field>
+            <field name="sequence">10</field>
+            <field name="description">Equipment damage, hole-in-one coverage, and third-party liability on the golf course</field>
+        </record>
+
+        <!-- 12. Livestock Insurance -->
+        <record id="sub_livestock" model="insurance.subtype">
+            <field name="name">Livestock Insurance</field>
+            <field name="name_ar">تأمين الثروة الحيوانية</field>
+            <field name="type_id" ref="type_livestock"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Veterinary health certificates, Livestock inventory with values</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for death and illness of farm animals, horses, camels, and livestock</field>
+        </record>
+
+        <!-- 13. Relocation Insurance -->
+        <record id="sub_relocation" model="insurance.subtype">
+            <field name="name">Relocation Insurance</field>
+            <field name="name_ar">تأمين الانتقال وتغيير السكن</field>
+            <field name="type_id" ref="type_relocation"/>
+            <field name="form_type">property_fire</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Packing inventory list, Moving company contract</field>
+            <field name="sequence">10</field>
+            <field name="description">All-risk coverage for household goods and personal belongings during relocation</field>
+        </record>
+
+        <!-- 14. Gap Insurance -->
+        <record id="sub_gap" model="insurance.subtype">
+            <field name="name">Gap Insurance</field>
+            <field name="name_ar">تأمين الفجوة المالية</field>
+            <field name="type_id" ref="type_gap_insurance"/>
+            <field name="form_type">motor</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Finance agreement, Vehicle registration card, Original purchase invoice</field>
+            <field name="sequence">10</field>
+            <field name="description">Covers the difference between the vehicle's insured value and the outstanding finance amount</field>
+        </record>
+
+        <!-- 15. Medical Malpractice -->
+        <record id="sub_medical_malpractice" model="insurance.subtype">
+            <field name="name">Medical Malpractice Insurance</field>
+            <field name="name_ar">تأمين الأخطاء الطبية</field>
+            <field name="type_id" ref="type_medical_malpractice"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Medical licence, CV/Credentials, Previous claims history</field>
+            <field name="sequence">10</field>
+            <field name="description">Professional liability protection for doctors, nurses, and healthcare providers</field>
+        </record>
+
+        <!-- 16. Hull & Machineries -->
+        <record id="sub_hull_machineries" model="insurance.subtype">
+            <field name="name">Hull &amp; Machineries</field>
+            <field name="name_ar">تأمين هياكل ومكائن السفن</field>
+            <field name="type_id" ref="type_hull_machineries"/>
+            <field name="form_type">marine</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Vessel survey report, Classification certificate, Photos</field>
+            <field name="sequence">10</field>
+            <field name="description">Physical damage and machinery breakdown coverage for commercial and fishing vessels</field>
+        </record>
+
+        <!-- 17. UCL Coverage -->
+        <record id="sub_ucl" model="insurance.subtype">
+            <field name="name">UCL Coverage</field>
+            <field name="name_ar">تغطية UCL</field>
+            <field name="type_id" ref="type_ucl"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">ID/Passport copy, Medical questionnaire</field>
+            <field name="sequence">10</field>
+            <field name="description">Unemployment, critical illness and life combined protection plan</field>
+        </record>
+
+        <!-- 18. UWC Coverage -->
+        <record id="sub_uwc" model="insurance.subtype">
+            <field name="name">UWC Coverage</field>
+            <field name="name_ar">تغطية UWC</field>
+            <field name="type_id" ref="type_uwc"/>
+            <field name="form_type">workmen</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee register, Wage schedule, CR Certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Universal worker compensation coverage for broad workforce categories</field>
+        </record>
+
+        <!-- 19. Protect Plus -->
+        <record id="sub_protect_plus" model="insurance.subtype">
+            <field name="name">Protect Plus</field>
+            <field name="name_ar">حماية بلس</field>
+            <field name="type_id" ref="type_protect_plus"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">ID/Passport copy, Income proof</field>
+            <field name="sequence">10</field>
+            <field name="description">Enhanced life and critical illness protection plan with investment component</field>
+        </record>
+
+        <!-- 20. Family Health Insurance (uses existing sub_med_family) -->
+
+        <!-- 21. Third Party Liability - Motor (uses existing sub_motor_tp) -->
+
+        <!-- ── COMMERCIAL (31) ─────────────────────────────────────────────── -->
+
+        <!-- 1. Group Medical (uses existing sub_med_corporate) -->
+
+        <!-- 2. Group Life -->
+        <record id="sub_group_life" model="insurance.subtype">
+            <field name="name">Group Life Insurance</field>
+            <field name="name_ar">التأمين على الحياة الجماعي</field>
+            <field name="type_id" ref="type_group_life"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Employee list with DOB and salaries, CR Certificate, Previous insurer certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Life coverage for all employees providing death benefit and sometimes disability</field>
+        </record>
+
+        <!-- 3. Group Personal Accident -->
+        <record id="sub_group_pa" model="insurance.subtype">
+            <field name="name">Group Personal Accident</field>
+            <field name="name_ar">تأمين الحوادث الشخصية الجماعي</field>
+            <field name="type_id" ref="type_group_pa"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee list, Nature of work description, CR Certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Accident and disability protection for groups of employees or members</field>
+        </record>
+
+        <!-- 4. Group Travel -->
+        <record id="sub_travel_group" model="insurance.subtype">
+            <field name="name">Group Travel Insurance</field>
+            <field name="name_ar">تأمين السفر الجماعي</field>
+            <field name="type_id" ref="type_travel_group"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee/member list with passport numbers, Planned travel schedule</field>
+            <field name="sequence">10</field>
+            <field name="description">Annual multi-trip travel cover for employees and corporate travellers</field>
+        </record>
+
+        <!-- 5. Workmen Compensation (uses existing sub_wc) -->
+
+        <!-- 6. Property All Risk -->
+        <record id="sub_property_all_risk" model="insurance.subtype">
+            <field name="name">Property All Risk</field>
+            <field name="name_ar">تأمين جميع أخطار الممتلكات</field>
+            <field name="type_id" ref="type_property_all_risk"/>
+            <field name="form_type">property_fire</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Property valuation report, Fire safety certificate, CR Certificate, Previous claims record</field>
+            <field name="sequence">10</field>
+            <field name="description">Comprehensive all-perils coverage for commercial properties including buildings, contents, and stock</field>
+        </record>
+
+        <!-- 7. Fire & Allied Perils (uses existing sub_fire_commercial) -->
+
+        <!-- 8. Marine Cargo (uses existing sub_marine_cargo) -->
+
+        <!-- 9. Marine Hull -->
+        <record id="sub_marine_hull" model="insurance.subtype">
+            <field name="name">Marine Hull Insurance</field>
+            <field name="name_ar">هياكل السفن</field>
+            <field name="type_id" ref="type_marine_hull"/>
+            <field name="form_type">marine</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Classification certificate, Survey report, Ownership documents</field>
+            <field name="sequence">10</field>
+            <field name="description">Physical loss or damage to commercial vessel hulls and related equipment</field>
+        </record>
+
+        <!-- 10. CAR -->
+        <record id="sub_car" model="insurance.subtype">
+            <field name="name">Contractor All Risks (CAR)</field>
+            <field name="name_ar">جميع أخطار المقاولين</field>
+            <field name="type_id" ref="type_car"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Contract documents, Bill of quantities, Project timeline, Previous loss experience</field>
+            <field name="sequence">10</field>
+            <field name="description">All-risks coverage for construction projects including material damage and third-party liability</field>
+        </record>
+
+        <!-- 11. EAR -->
+        <record id="sub_ear" model="insurance.subtype">
+            <field name="name">Erection All Risks (EAR)</field>
+            <field name="name_ar">جميع أخطار التركيب</field>
+            <field name="type_id" ref="type_ear"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Equipment specifications, Installation contract, Technical drawings</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for erection and installation of machinery, plant, and structural steel works</field>
+        </record>
+
+        <!-- 12. Contractors Plant & Machinery -->
+        <record id="sub_contractors_plant" model="insurance.subtype">
+            <field name="name">Contractors Plant &amp; Machinery</field>
+            <field name="name_ar">آليات ومعدات المقاولين</field>
+            <field name="type_id" ref="type_contractors_plant"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Equipment list with make, model, year and value, CR Certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Physical damage and breakdown coverage for cranes, excavators, and contractor equipment</field>
+        </record>
+
+        <!-- 13. Engineering Insurance -->
+        <record id="sub_engineering" model="insurance.subtype">
+            <field name="name">Engineering Insurance</field>
+            <field name="name_ar">التأمين الهندسي</field>
+            <field name="type_id" ref="type_engineering"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Technical specification sheet, Equipment inventory, Maintenance records</field>
+            <field name="sequence">10</field>
+            <field name="description">Broad engineering and project risk insurance for industrial and infrastructure projects</field>
+        </record>
+
+        <!-- 14. Machinery Breakdown -->
+        <record id="sub_machinery_breakdown" model="insurance.subtype">
+            <field name="name">Machinery Breakdown</field>
+            <field name="name_ar">عطل الآلات والمكائن</field>
+            <field name="type_id" ref="type_machinery_breakdown"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Machinery list with values, Maintenance history, Technical manuals</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for sudden and unforeseen mechanical or electrical breakdown of machinery</field>
+        </record>
+
+        <!-- 15. Electronic Equipment -->
+        <record id="sub_electronic_equipment" model="insurance.subtype">
+            <field name="name">Electronic Equipment Insurance</field>
+            <field name="name_ar">تأمين الأجهزة الإلكترونية</field>
+            <field name="type_id" ref="type_electronic_equipment"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Equipment list with serial numbers, Purchase invoices, IT asset register</field>
+            <field name="sequence">10</field>
+            <field name="description">All-risk coverage for computers, servers, medical and other electronic equipment</field>
+        </record>
+
+        <!-- 16. Boiler & Plant -->
+        <record id="sub_boiler_plant" model="insurance.subtype">
+            <field name="name">Boiler &amp; Plant Insurance</field>
+            <field name="name_ar">الغلايات والمعدات</field>
+            <field name="type_id" ref="type_boiler_plant"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Boiler inspection certificate, Technical specifications, Maintenance log</field>
+            <field name="sequence">10</field>
+            <field name="description">Explosion, collapse, and breakdown coverage for pressure vessels and plant equipment</field>
+        </record>
+
+        <!-- 17. Fleet Motor -->
+        <record id="sub_fleet_motor" model="insurance.subtype">
+            <field name="name">Fleet Motor Insurance</field>
+            <field name="name_ar">تأمين أسطول السيارات</field>
+            <field name="type_id" ref="type_fleet_motor"/>
+            <field name="form_type">motor</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="has_booking_slip" eval="True"/>
+            <field name="additional_documents">Fleet list (plate numbers, makes, models, chassis), CR Certificate, Driver list</field>
+            <field name="sequence">10</field>
+            <field name="description">Comprehensive or third-party fleet coverage for corporate vehicle fleets</field>
+        </record>
+
+        <!-- 18. Public Liability -->
+        <record id="sub_public_liability" model="insurance.subtype">
+            <field name="name">Public Liability Insurance</field>
+            <field name="name_ar">المسؤولية العامة</field>
+            <field name="type_id" ref="type_public_liability"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Business description, Estimated annual turnover, Previous claims history, CR Certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Third-party bodily injury and property damage liability for businesses</field>
+        </record>
+
+        <!-- 19. Professional Indemnity -->
+        <record id="sub_professional_indemnity" model="insurance.subtype">
+            <field name="name">Professional Indemnity</field>
+            <field name="name_ar">التعويض المهني</field>
+            <field name="type_id" ref="type_professional_indemnity"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Professional qualifications, CV, List of current contracts, Previous claims history</field>
+            <field name="sequence">10</field>
+            <field name="description">Errors and omissions coverage for consultants, engineers, lawyers, and professionals</field>
+        </record>
+
+        <!-- 20. Products Liability -->
+        <record id="sub_products_liability" model="insurance.subtype">
+            <field name="name">Products Liability Insurance</field>
+            <field name="name_ar">مسؤولية المنتجات</field>
+            <field name="type_id" ref="type_products_liability"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Product descriptions, Annual sales/turnover, Market regions, Previous claims history</field>
+            <field name="sequence">10</field>
+            <field name="description">Liability coverage for bodily injury or property damage caused by sold or supplied products</field>
+        </record>
+
+        <!-- 21. Employer's Liability -->
+        <record id="sub_employers_liability" model="insurance.subtype">
+            <field name="name">Employer's Liability Insurance</field>
+            <field name="name_ar">مسؤولية صاحب العمل</field>
+            <field name="type_id" ref="type_employers_liability"/>
+            <field name="form_type">workmen</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee register, Payroll records, Health and safety policy</field>
+            <field name="sequence">10</field>
+            <field name="description">Legal liability to employees for work-related injuries and illnesses</field>
+        </record>
+
+        <!-- 22. Directors & Officers Liability -->
+        <record id="sub_do_liability" model="insurance.subtype">
+            <field name="name">Directors &amp; Officers Liability</field>
+            <field name="name_ar">مسؤولية المديرين والمسؤولين</field>
+            <field name="type_id" ref="type_do_liability"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Company financials, Board member list, Articles of association</field>
+            <field name="sequence">10</field>
+            <field name="description">Personal liability protection for directors and officers against wrongful acts claims</field>
+        </record>
+
+        <!-- 23. Fidelity Guarantee -->
+        <record id="sub_fidelity" model="insurance.subtype">
+            <field name="name">Fidelity Guarantee Insurance</field>
+            <field name="name_ar">ضمان الأمانة</field>
+            <field name="type_id" ref="type_fidelity"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee list handling cash/assets, Internal audit report, CR Certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Protection against employee theft, fraud, and dishonesty</field>
+        </record>
+
+        <!-- 24. Money Insurance -->
+        <record id="sub_money" model="insurance.subtype">
+            <field name="name">Money Insurance</field>
+            <field name="name_ar">تأمين الأموال</field>
+            <field name="type_id" ref="type_money"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Cash handling procedures, Average cash holdings, Safe specifications</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for loss of money in transit, on premises, and in safes</field>
+        </record>
+
+        <!-- 25. Goods in Transit -->
+        <record id="sub_goods_transit" model="insurance.subtype">
+            <field name="name">Goods in Transit</field>
+            <field name="name_ar">تأمين البضائع أثناء النقل</field>
+            <field name="type_id" ref="type_goods_transit"/>
+            <field name="form_type">marine</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Goods description and value, Route details, Carrier details</field>
+            <field name="sequence">10</field>
+            <field name="description">Protection for goods during road, rail, or inland waterway transportation</field>
+        </record>
+
+        <!-- 26. Energy Insurance -->
+        <record id="sub_energy" model="insurance.subtype">
+            <field name="name">Energy Insurance</field>
+            <field name="name_ar">تأمين قطاع الطاقة</field>
+            <field name="type_id" ref="type_energy"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Field survey report, Asset register, Business interruption data, Environmental impact assessment</field>
+            <field name="sequence">10</field>
+            <field name="description">Comprehensive coverage for oil, gas, power generation, and renewable energy assets</field>
+        </record>
+
+        <!-- 27. Cyber Insurance -->
+        <record id="sub_cyber" model="insurance.subtype">
+            <field name="name">Cyber Insurance</field>
+            <field name="name_ar">التأمين السيبراني</field>
+            <field name="type_id" ref="type_cyber"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">IT security policy, Data classification report, Previous incident history, Revenue data</field>
+            <field name="sequence">10</field>
+            <field name="description">First and third-party coverage for data breaches, ransomware, and cyber attacks</field>
+        </record>
+
+        <!-- 28. Aviation Insurance -->
+        <record id="sub_aviation" model="insurance.subtype">
+            <field name="name">Aviation Insurance</field>
+            <field name="name_ar">تأمين الطيران</field>
+            <field name="type_id" ref="type_aviation"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Aircraft registration certificate, Pilot licence, Airworthiness certificate</field>
+            <field name="sequence">10</field>
+            <field name="description">Hull and liability coverage for commercial and private aircraft</field>
+        </record>
+
+        <!-- 29. Trade Credit -->
+        <record id="sub_trade_credit" model="insurance.subtype">
+            <field name="name">Trade Credit Insurance</field>
+            <field name="name_ar">الائتمان التجاري</field>
+            <field name="type_id" ref="type_trade_credit"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Debtor list, Annual sales by buyer, Credit terms, Audited financials</field>
+            <field name="sequence">10</field>
+            <field name="description">Protection against non-payment of commercial debts due to buyer insolvency or protracted default</field>
+        </record>
+
+        <!-- 30. Business Travel -->
+        <record id="sub_business_travel" model="insurance.subtype">
+            <field name="name">Business Travel Insurance</field>
+            <field name="name_ar">تأمين سفر الأعمال</field>
+            <field name="type_id" ref="type_travel_business"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee list, Estimated annual trips and destinations</field>
+            <field name="sequence">10</field>
+            <field name="description">Annual business travel cover including medical emergency, trip cancellation, and baggage</field>
+        </record>
+
+        <!-- 31. SME Package -->
+        <record id="sub_sme_package" model="insurance.subtype">
+            <field name="name">SME Insurance Package</field>
+            <field name="name_ar">باقة الشركات الصغيرة والمتوسطة</field>
+            <field name="type_id" ref="type_sme_package"/>
+            <field name="form_type">generic</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">CR Certificate, Property lease, Employee count, Annual turnover</field>
+            <field name="sequence">10</field>
+            <field name="description">All-in-one package combining property, liability, money, and business interruption for SMEs</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             4. INSURANCE COMPANY PROVIDERS (10 companies)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="company_1" model="insurance.company.provider">
+            <field name="name">National Life &amp; General Insurance Co.</field>
+            <field name="name_ar">شركة الوطنية للتأمين على الحياة والتأمين العام</field>
+            <field name="code">NLGIC</field>
+            <field name="website">https://www.nlgic.com</field>
+            <field name="email">info@nlgic.com</field>
+            <field name="phone">+968 2469 2888</field>
+            <field name="address">Al Khoula, Muscat, Sultanate of Oman</field>
+            <field name="rating">A</field>
+            <field name="license_number">OMN-INS-001</field>
+            <field name="license_expiry">2026-12-31</field>
+            <field name="notes">One of Oman's leading insurance companies offering comprehensive personal and commercial products</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_2" model="insurance.company.provider">
+            <field name="name">Dhofar Insurance Company</field>
+            <field name="name_ar">شركة ظفار للتأمين</field>
+            <field name="code">DIC</field>
+            <field name="website">https://www.dhofarinsurance.com</field>
+            <field name="email">contact@dhofar-ins.com</field>
+            <field name="phone">+968 2477 1990</field>
+            <field name="address">Ruwi, Muscat, Sultanate of Oman</field>
+            <field name="rating">A-</field>
+            <field name="license_number">OMN-INS-002</field>
+            <field name="license_expiry">2026-12-31</field>
+            <field name="notes">Specialized in motor, property, and marine insurance</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_3" model="insurance.company.provider">
+            <field name="name">Oman Insurance Company</field>
+            <field name="name_ar">شركة عُمان للتأمين</field>
+            <field name="code">OIC</field>
+            <field name="website">https://www.tameen.ae</field>
+            <field name="email">info@tameen.ae</field>
+            <field name="phone">+971 4 233 7777</field>
+            <field name="address">Dubai, UAE (Regional Branch in Muscat)</field>
+            <field name="rating">A+</field>
+            <field name="license_number">OMN-INS-003</field>
+            <field name="license_expiry">2027-06-30</field>
+            <field name="notes">Pan-GCC insurer with strong commercial and engineering insurance capabilities</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_4" model="insurance.company.provider">
+            <field name="name">AXA Gulf Insurance</field>
+            <field name="name_ar">أكسا الخليج للتأمين</field>
+            <field name="code">AXA</field>
+            <field name="website">https://www.axagulf.com</field>
+            <field name="email">info@axagulf.com</field>
+            <field name="phone">+968 2447 0055</field>
+            <field name="address">Al Khuwair, Muscat, Sultanate of Oman</field>
+            <field name="rating">AA</field>
+            <field name="license_number">OMN-INS-004</field>
+            <field name="license_expiry">2027-03-31</field>
+            <field name="notes">Global insurer with excellent medical and life products</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_5" model="insurance.company.provider">
+            <field name="name">Al Ahlia Insurance Company</field>
+            <field name="name_ar">شركة الأهلية للتأمين</field>
+            <field name="code">AAIC</field>
+            <field name="website">https://www.alahlia.com</field>
+            <field name="email">info@alahlia.com</field>
+            <field name="phone">+968 2456 0430</field>
+            <field name="address">Ruwi, Muscat, Sultanate of Oman</field>
+            <field name="rating">A</field>
+            <field name="license_number">OMN-INS-005</field>
+            <field name="license_expiry">2026-09-30</field>
+            <field name="notes">Strong presence in motor, property and workmen compensation</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_6" model="insurance.company.provider">
+            <field name="name">Solidarity Oman Takaful</field>
+            <field name="name_ar">سوليداريتي عمان للتكافل</field>
+            <field name="code">SOLT</field>
+            <field name="website">https://www.solidarity.com.bh</field>
+            <field name="email">oman@solidarity.com</field>
+            <field name="phone">+968 2451 6699</field>
+            <field name="address">CBD Area, Muscat, Sultanate of Oman</field>
+            <field name="rating">A-</field>
+            <field name="license_number">OMN-INS-006</field>
+            <field name="license_expiry">2026-12-31</field>
+            <field name="notes">Sharia-compliant takaful products for individuals and corporates</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_7" model="insurance.company.provider">
+            <field name="name">Zurich Insurance Group (Oman)</field>
+            <field name="name_ar">زيورخ للتأمين - عُمان</field>
+            <field name="code">ZURICH</field>
+            <field name="website">https://www.zurich.com</field>
+            <field name="email">oman@zurich.com</field>
+            <field name="phone">+968 2447 8877</field>
+            <field name="address">Al Qurum, Muscat, Sultanate of Oman</field>
+            <field name="rating">AA</field>
+            <field name="license_number">OMN-INS-007</field>
+            <field name="license_expiry">2027-12-31</field>
+            <field name="notes">Specializes in energy, aviation, engineering and large commercial risks</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_8" model="insurance.company.provider">
+            <field name="name">MetLife Insurance (Oman)</field>
+            <field name="name_ar">ميت لايف للتأمين - عُمان</field>
+            <field name="code">METLIFE</field>
+            <field name="website">https://www.metlife.com.om</field>
+            <field name="email">oman@metlife.com</field>
+            <field name="phone">+968 2456 1234</field>
+            <field name="address">Shatti Al Qurum, Muscat, Sultanate of Oman</field>
+            <field name="rating">AA+</field>
+            <field name="license_number">OMN-INS-008</field>
+            <field name="license_expiry">2027-06-30</field>
+            <field name="notes">Leading life, critical illness, and group life solutions</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_9" model="insurance.company.provider">
+            <field name="name">Takaful Oman Insurance</field>
+            <field name="name_ar">تكافل عُمان للتأمين</field>
+            <field name="code">TOI</field>
+            <field name="website">https://www.takafuloman.com</field>
+            <field name="email">info@takafuloman.com</field>
+            <field name="phone">+968 2445 6789</field>
+            <field name="address">Al Ghubra, Muscat, Sultanate of Oman</field>
+            <field name="rating">A</field>
+            <field name="license_number">OMN-INS-009</field>
+            <field name="license_expiry">2026-08-31</field>
+            <field name="notes">Islamically compliant motor, home, and personal accident products</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="company_10" model="insurance.company.provider">
+            <field name="name">GIG Gulf Insurance (Oman)</field>
+            <field name="name_ar">جيج الخليج للتأمين - عُمان</field>
+            <field name="code">GIG</field>
+            <field name="website">https://www.gig.com.kw</field>
+            <field name="email">oman@gig.com</field>
+            <field name="phone">+968 2448 7777</field>
+            <field name="address">Al Mawaleh, Muscat, Sultanate of Oman</field>
+            <field name="rating">A+</field>
+            <field name="license_number">OMN-INS-010</field>
+            <field name="license_expiry">2027-09-30</field>
+            <field name="notes">Regional powerhouse with cyber, D&amp;O and professional indemnity specialisms</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             5. CLIENTS — Personal (10) + Corporate (10)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- Personal Clients -->
+        <record id="client_p1" model="insurance.client">
+            <field name="name">Ahmed Khalid Al Balushi</field>
+            <field name="category">personal</field>
+            <field name="email">ahmed.albalushi@gmail.com</field>
+            <field name="phone">+968 9500 1001</field>
+            <field name="phone">+968 9500 1001</field>
+            <field name="address">Villa 14, Street 12, Al Khuwair, Muscat</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Long-term client since 2019. Has motor and medical policies.</field>
+        </record>
+
+        <record id="client_p2" model="insurance.client">
+            <field name="name">Fatima Saeed Al Rawahi</field>
+            <field name="category">personal</field>
+            <field name="email">fatima.rawahi@hotmail.com</field>
+            <field name="phone">+968 9500 1002</field>
+            <field name="phone">+968 9500 1002</field>
+            <field name="address">Apartment 7B, Al Qurum Heights, Muscat</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Family medical and home insurance client.</field>
+        </record>
+
+        <record id="client_p3" model="insurance.client">
+            <field name="name">Mohammed Nasser Al Habsi</field>
+            <field name="category">personal</field>
+            <field name="email">m.alhabsi@yahoo.com</field>
+            <field name="phone">+968 9500 1003</field>
+            <field name="phone">+968 9500 1003</field>
+            <field name="address">Block 5, Al Azaiba, Muscat</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Interested in life insurance and critical illness cover.</field>
+        </record>
+
+        <record id="client_p4" model="insurance.client">
+            <field name="name">Aisha Hamad Al Kindi</field>
+            <field name="category">personal</field>
+            <field name="email">aisha.alkindi@gmail.com</field>
+            <field name="phone">+968 9500 1004</field>
+            <field name="phone">+968 9500 1004</field>
+            <field name="address">Street 45, Bausher, Muscat</field>
+            <field name="crm_stage">negotiation</field>
+            <field name="notes">Inquired about travel insurance and personal accident.</field>
+        </record>
+
+        <record id="client_p5" model="insurance.client">
+            <field name="name">Khalid Rashid Al Maqbali</field>
+            <field name="category">personal</field>
+            <field name="email">k.maqbali@outlook.com</field>
+            <field name="phone">+968 9500 1005</field>
+            <field name="phone">+968 9500 1005</field>
+            <field name="address">Villa 22, Al Hail North, Muscat</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Owns a yacht — seeking marine pleasure craft insurance.</field>
+        </record>
+
+        <record id="client_p6" model="insurance.client">
+            <field name="name">Sara Ahmed Al Zadjali</field>
+            <field name="category">personal</field>
+            <field name="email">sara.alzadjali@gmail.com</field>
+            <field name="phone">+968 9500 1006</field>
+            <field name="phone">+968 9500 1006</field>
+            <field name="address">Al Mouj Street, Shatti Al Qurum, Muscat</field>
+            <field name="crm_stage">requirement_collection</field>
+            <field name="notes">Looking for domestic worker insurance and home insurance.</field>
+        </record>
+
+        <record id="client_p7" model="insurance.client">
+            <field name="name">Omar Salim Al Farsi</field>
+            <field name="category">personal</field>
+            <field name="email">omar.alfarsi@hotmail.com</field>
+            <field name="phone">+968 9500 1007</field>
+            <field name="phone">+968 9500 1007</field>
+            <field name="address">Al Maabela, Muscat</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Has a child annuity plan and life insurance policy.</field>
+        </record>
+
+        <record id="client_p8" model="insurance.client">
+            <field name="name">Hamed Yousuf Al Busaidi</field>
+            <field name="category">personal</field>
+            <field name="email">hamed.albusaidi@gmail.com</field>
+            <field name="phone">+968 9500 1008</field>
+            <field name="phone">+968 9500 1008</field>
+            <field name="address">Al Ansab, Muscat</field>
+            <field name="crm_stage">quotation_requested</field>
+            <field name="notes">Requested gap insurance for financed vehicle.</field>
+        </record>
+
+        <record id="client_p9" model="insurance.client">
+            <field name="name">Maryam Ali Al Shukaili</field>
+            <field name="category">personal</field>
+            <field name="email">maryam.shukaili@yahoo.com</field>
+            <field name="phone">+968 9500 1009</field>
+            <field name="phone">+968 9500 1009</field>
+            <field name="address">Al Seeb, Muscat Governorate</field>
+            <field name="crm_stage">contacted</field>
+            <field name="notes">Enquiry about medical malpractice — works as a nurse.</field>
+        </record>
+
+        <record id="client_p10" model="insurance.client">
+            <field name="name">Tariq Nabil Al Ghafri</field>
+            <field name="category">personal</field>
+            <field name="email">tariq.ghafri@gmail.com</field>
+            <field name="phone">+968 9500 1010</field>
+            <field name="phone">+968 9500 1010</field>
+            <field name="address">Al Buraimi, Oman</field>
+            <field name="crm_stage">new_lead</field>
+            <field name="notes">Interested in livestock insurance for camel farm.</field>
+        </record>
+
+        <!-- Corporate Clients -->
+        <record id="client_c1" model="insurance.client">
+            <field name="name">Al Rashidi Trading Co. LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Mohammed Al Rashidi</field>
+            <field name="email">mohammed@alrashidi-trading.com</field>
+            <field name="phone">+968 2460 1001</field>
+            <field name="phone">+968 9600 1001</field>
+            <field name="address">OITC Building, Ruwi, Muscat</field>
+            <field name="industry">Trading &amp; Retail</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Large trading company. Has group medical, WC, and fleet motor policies.</field>
+        </record>
+
+        <record id="client_c2" model="insurance.client">
+            <field name="name">Gulf Construction &amp; Engineering LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Saif Al Mamari</field>
+            <field name="email">saif@gulfconstruction.com.om</field>
+            <field name="phone">+968 2460 2002</field>
+            <field name="phone">+968 9600 2002</field>
+            <field name="address">Industrial Area, Al Rusayl, Muscat</field>
+            <field name="industry">Construction &amp; Engineering</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Major contractor — needs CAR, EAR, WC and public liability.</field>
+        </record>
+
+        <record id="client_c3" model="insurance.client">
+            <field name="name">Oman Logistics &amp; Shipping LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Ali Sulaiman Al Lawati</field>
+            <field name="email">ali@oman-logistics.com</field>
+            <field name="phone">+968 2460 3003</field>
+            <field name="phone">+968 9600 3003</field>
+            <field name="address">Port Sultan Qaboos Area, Muttrah, Muscat</field>
+            <field name="industry">Logistics &amp; Shipping</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Requires marine cargo, goods in transit, and fleet motor.</field>
+        </record>
+
+        <record id="client_c4" model="insurance.client">
+            <field name="name">Al Noor Hospitals Group</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Dr. Hessa Al Amri</field>
+            <field name="email">hessa@alnoorhospitals.com</field>
+            <field name="phone">+968 2460 4004</field>
+            <field name="phone">+968 9600 4004</field>
+            <field name="address">Al Khuwair, Muscat</field>
+            <field name="industry">Healthcare</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Medical malpractice, group medical, and professional indemnity client.</field>
+        </record>
+
+        <record id="client_c5" model="insurance.client">
+            <field name="name">SalamAir Aviation Services</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Khalid Al Zeidy</field>
+            <field name="email">khalid@salamair.com</field>
+            <field name="phone">+968 2460 5005</field>
+            <field name="phone">+968 9600 5005</field>
+            <field name="address">Muscat International Airport, Muscat</field>
+            <field name="industry">Aviation</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Aviation hull and liability, group life, and group travel insurance.</field>
+        </record>
+
+        <record id="client_c6" model="insurance.client">
+            <field name="name">Oman Energy Systems LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Said Al Hinai</field>
+            <field name="email">said@omanenergy.com</field>
+            <field name="phone">+968 2460 6006</field>
+            <field name="phone">+968 9600 6006</field>
+            <field name="address">Qurm Business Park, Muscat</field>
+            <field name="industry">Oil &amp; Gas / Energy</field>
+            <field name="crm_stage">negotiation</field>
+            <field name="notes">Energy sector — needs property all risk, energy insurance, WC, and D&amp;O.</field>
+        </record>
+
+        <record id="client_c7" model="insurance.client">
+            <field name="name">TechNova Solutions LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Nasser Al Barwani</field>
+            <field name="email">nasser@technova.om</field>
+            <field name="phone">+968 2460 7007</field>
+            <field name="phone">+968 9600 7007</field>
+            <field name="address">Knowledge Oasis, Al Rusayl, Muscat</field>
+            <field name="industry">Information Technology</field>
+            <field name="crm_stage">quotation_requested</field>
+            <field name="notes">IT company — interested in cyber, professional indemnity, and electronic equipment insurance.</field>
+        </record>
+
+        <record id="client_c8" model="insurance.client">
+            <field name="name">Al Khaleej Financial Services LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Ibrahim Al Toqi</field>
+            <field name="email">ibrahim@alkhaleejfinance.com</field>
+            <field name="phone">+968 2460 8008</field>
+            <field name="phone">+968 9600 8008</field>
+            <field name="address">CBD Area, Muscat</field>
+            <field name="industry">Financial Services</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">Financial firm — fidelity guarantee, D&amp;O, professional indemnity, and money insurance.</field>
+        </record>
+
+        <record id="client_c9" model="insurance.client">
+            <field name="name">Muscat Fisheries &amp; Marine Co.</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Abdullah Al Shanfari</field>
+            <field name="email">abdullah@muscatfisheries.com</field>
+            <field name="phone">+968 2460 9009</field>
+            <field name="phone">+968 9600 9009</field>
+            <field name="address">Muttrah Corniche, Muscat</field>
+            <field name="industry">Fisheries &amp; Marine</field>
+            <field name="crm_stage">requirement_collection</field>
+            <field name="notes">Marine hull, marine cargo, and workmen compensation for fishing fleet.</field>
+        </record>
+
+        <record id="client_c10" model="insurance.client">
+            <field name="name">Sunrise Retail &amp; Hospitality Group</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Yasmine Al Harthi</field>
+            <field name="email">yasmine@sunrise-group.com</field>
+            <field name="phone">+968 2461 0010</field>
+            <field name="phone">+968 9601 0010</field>
+            <field name="address">Madinat Sultan Qaboos, Muscat</field>
+            <field name="industry">Retail &amp; Hospitality</field>
+            <field name="crm_stage">won</field>
+            <field name="notes">SME package, group medical, public liability, and money insurance.</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             6. INSURANCE POLICIES (30 policies — all insurance_type values)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- MOTOR Policies -->
+        <record id="pol_motor_1" model="insurance.policy">
+            <field name="policy_number">POL-MTR-2024-001</field>
+            <field name="client_id" ref="client_p1"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">Al Ahlia Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-03-01</field>
+            <field name="expiry_date">2025-02-28</field>
+            <field name="net_premium">185.00</field>
+            <field name="commission_rate">15.0</field>
+            <field name="sum_assured">8500.00</field>
+            <field name="vehicle_chassis_no">JTMRZ33V985012345</field>
+            <field name="vehicle_plate_no">A 12345</field>
+            <field name="vehicle_year">2021</field>
+            <field name="coverage_details">Comprehensive motor insurance. Covers accidental damage, fire, theft, and third-party liability up to OMR 250,000.</field>
+            <field name="notes">Renewal due in February. Client has preferred garage in Al Khuwair.</field>
+        </record>
+
+        <record id="pol_motor_2" model="insurance.policy">
+            <field name="policy_number">POL-MTR-2024-002</field>
+            <field name="client_id" ref="client_p2"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-06-01</field>
+            <field name="expiry_date">2025-05-31</field>
+            <field name="net_premium">92.00</field>
+            <field name="commission_rate">12.0</field>
+            <field name="sum_assured">0.00</field>
+            <field name="vehicle_chassis_no">VNKKD3D38KA119876</field>
+            <field name="vehicle_plate_no">B 67890</field>
+            <field name="vehicle_year">2019</field>
+            <field name="coverage_details">Third-party liability only. Covers bodily injury and property damage to third parties up to OMR 100,000.</field>
+            <field name="notes">Client uses vehicle for personal commute only.</field>
+        </record>
+
+        <record id="pol_motor_3" model="insurance.policy">
+            <field name="policy_number">POL-FLT-2024-001</field>
+            <field name="client_id" ref="client_c1"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">4200.00</field>
+            <field name="commission_rate">12.5</field>
+            <field name="sum_assured">0.00</field>
+            <field name="coverage_details">Fleet comprehensive motor — 18 vehicles including 5 trucks, 8 pickups, 5 cars. Covers accidental damage, TPL, PA for drivers.</field>
+            <field name="notes">Annual fleet renewal. Claims history: 2 minor claims in previous year.</field>
+        </record>
+
+        <!-- MEDICAL Policies -->
+        <record id="pol_med_1" model="insurance.policy">
+            <field name="policy_number">POL-MED-2024-001</field>
+            <field name="client_id" ref="client_p2"/>
+            <field name="insurance_type">medical</field>
+            <field name="insurer">AXA Gulf Insurance</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">1200.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">50000.00</field>
+            <field name="coverage_details">Family medical insurance. Covers husband, wife, and 3 children. Network A hospitals. Annual limit OMR 50,000 per member. Includes dental and optical.</field>
+            <field name="notes">Family of 5. Annual policy. Network A across Oman.</field>
+        </record>
+
+        <record id="pol_med_2" model="insurance.policy">
+            <field name="policy_number">POL-MED-2024-002</field>
+            <field name="client_id" ref="client_p3"/>
+            <field name="insurance_type">medical</field>
+            <field name="insurer">MetLife Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-04-01</field>
+            <field name="expiry_date">2025-03-31</field>
+            <field name="net_premium">420.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">20000.00</field>
+            <field name="coverage_details">Individual medical insurance. Network B. Annual limit OMR 20,000. No dental or optical.</field>
+            <field name="notes">Individual. First-time medical insurance buyer.</field>
+        </record>
+
+        <record id="pol_grp_med_1" model="insurance.policy">
+            <field name="policy_number">POL-GRP-MED-2024-001</field>
+            <field name="client_id" ref="client_c1"/>
+            <field name="insurance_type">medical</field>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">18500.00</field>
+            <field name="commission_rate">8.0</field>
+            <field name="sum_assured">100000.00</field>
+            <field name="coverage_details">Group medical for 120 employees. Network B with Network A option for senior staff. Includes dental (50%) and optical (50%). Annual limit OMR 5,000 per employee.</field>
+            <field name="notes">Group medical renewal. Moderate claims history. 12 employees added mid-year.</field>
+        </record>
+
+        <!-- LIFE Policies -->
+        <record id="pol_life_1" model="insurance.policy">
+            <field name="policy_number">POL-LIF-2024-001</field>
+            <field name="client_id" ref="client_p3"/>
+            <field name="insurance_type">life</field>
+            <field name="insurer">MetLife Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2023-07-01</field>
+            <field name="expiry_date">2033-06-30</field>
+            <field name="net_premium">650.00</field>
+            <field name="commission_rate">20.0</field>
+            <field name="sum_assured">50000.00</field>
+            <field name="coverage_details">10-year term life insurance. Sum assured OMR 50,000. Death benefit. Annual premium payment. Beneficiary: wife and children.</field>
+            <field name="notes">Long-term policy. Annual payment. Beneficiary details on file.</field>
+        </record>
+
+        <record id="pol_life_2" model="insurance.policy">
+            <field name="policy_number">POL-GRP-LIF-2024-001</field>
+            <field name="client_id" ref="client_c2"/>
+            <field name="insurance_type">group_life</field>
+            <field name="insurer">MetLife Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-03-01</field>
+            <field name="expiry_date">2025-02-28</field>
+            <field name="net_premium">8800.00</field>
+            <field name="commission_rate">12.0</field>
+            <field name="sum_assured">500000.00</field>
+            <field name="coverage_details">Group life for 85 construction employees. Sum assured: 36 months salary per employee. Includes accidental death and permanent total disability.</field>
+            <field name="notes">Construction company — higher risk factor applied. Night shift workers included.</field>
+        </record>
+
+        <record id="pol_life_3" model="insurance.policy">
+            <field name="policy_number">POL-LIF-2024-002</field>
+            <field name="client_id" ref="client_p7"/>
+            <field name="insurance_type">life</field>
+            <field name="insurer">Solidarity Oman Takaful</field>
+            <field name="status">active</field>
+            <field name="issue_date">2022-01-01</field>
+            <field name="expiry_date">2037-12-31</field>
+            <field name="net_premium">1200.00</field>
+            <field name="commission_rate">18.0</field>
+            <field name="sum_assured">100000.00</field>
+            <field name="coverage_details">Child annuity plan — 15-year savings and protection. Maturity benefit OMR 100,000 for child's education and future. Includes parent protection rider.</field>
+            <field name="notes">Premium paid annually. Child born 2020.</field>
+        </record>
+
+        <!-- PROPERTY Policies -->
+        <record id="pol_prop_1" model="insurance.policy">
+            <field name="policy_number">POL-PROP-2024-001</field>
+            <field name="client_id" ref="client_p2"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">Al Ahlia Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-02-01</field>
+            <field name="expiry_date">2025-01-31</field>
+            <field name="net_premium">320.00</field>
+            <field name="commission_rate">15.0</field>
+            <field name="sum_assured">75000.00</field>
+            <field name="coverage_details">Home comprehensive insurance. Building value OMR 60,000. Contents value OMR 15,000. Covers fire, flood, theft, and accidental damage.</field>
+            <field name="notes">Residential villa. First floor and ground floor. Includes swimming pool cover.</field>
+        </record>
+
+        <record id="pol_prop_2" model="insurance.policy">
+            <field name="policy_number">POL-PAR-2024-001</field>
+            <field name="client_id" ref="client_c1"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">12500.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">2500000.00</field>
+            <field name="coverage_details">Property All Risk for main warehouse and office complex. Building insured value OMR 1.5M. Stock OMR 1M. Business interruption included (60 days).</field>
+            <field name="notes">Large commercial property. Annual visit by surveyor required.</field>
+        </record>
+
+        <record id="pol_fire_1" model="insurance.policy">
+            <field name="policy_number">POL-FIRE-2024-001</field>
+            <field name="client_id" ref="client_c10"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">Dhofar Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-05-01</field>
+            <field name="expiry_date">2025-04-30</field>
+            <field name="net_premium">1800.00</field>
+            <field name="commission_rate">12.0</field>
+            <field name="sum_assured">350000.00</field>
+            <field name="coverage_details">Fire and Allied Perils for restaurant and retail outlets. Building OMR 200,000. Contents and stock OMR 150,000.</field>
+            <field name="notes">4 outlets across Muscat Governorate. Annual inspection certificates provided.</field>
+        </record>
+
+        <!-- MARINE Policies -->
+        <record id="pol_marine_1" model="insurance.policy">
+            <field name="policy_number">POL-MAR-2024-001</field>
+            <field name="client_id" ref="client_c3"/>
+            <field name="insurance_type">marine</field>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">7200.00</field>
+            <field name="commission_rate">12.0</field>
+            <field name="sum_assured">500000.00</field>
+            <field name="coverage_details">Annual open marine cargo policy. Coverage: Institute Cargo Clauses (A). All commodities. Ports: Worldwide. Limit per shipment: OMR 500,000.</field>
+            <field name="notes">Annual open cover policy. Monthly declarations required.</field>
+        </record>
+
+        <record id="pol_marine_2" model="insurance.policy">
+            <field name="policy_number">POL-HULL-2024-001</field>
+            <field name="client_id" ref="client_c9"/>
+            <field name="insurance_type">marine</field>
+            <field name="insurer">Dhofar Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-02-01</field>
+            <field name="expiry_date">2025-01-31</field>
+            <field name="net_premium">9500.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">800000.00</field>
+            <field name="coverage_details">Marine hull for fishing fleet of 6 vessels. Total insured value OMR 800,000. Covers collision, fire, machinery breakdown, and P&amp;I liability.</field>
+            <field name="notes">Fleet of fishing vessels. Survey completed. Classification maintained.</field>
+        </record>
+
+        <record id="pol_yacht_1" model="insurance.policy">
+            <field name="policy_number">POL-YACHT-2024-001</field>
+            <field name="client_id" ref="client_p5"/>
+            <field name="insurance_type">marine</field>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-04-01</field>
+            <field name="expiry_date">2025-03-31</field>
+            <field name="net_premium">680.00</field>
+            <field name="commission_rate">15.0</field>
+            <field name="sum_assured">45000.00</field>
+            <field name="coverage_details">Pleasure craft hull and machinery. Vessel value OMR 45,000. 12-metre yacht. Third-party liability OMR 100,000. Personal accident for crew and passengers.</field>
+            <field name="notes">Berthed at Marina Bandar Al Rowdha. Seasonal use.</field>
+        </record>
+
+        <!-- WORKMEN COMPENSATION Policies -->
+        <record id="pol_wc_1" model="insurance.policy">
+            <field name="policy_number">POL-WC-2024-001</field>
+            <field name="client_id" ref="client_c2"/>
+            <field name="insurance_type">workmen_compensation</field>
+            <field name="insurer">Al Ahlia Insurance Company</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">22000.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">0.00</field>
+            <field name="coverage_details">Workmen compensation as per Royal Decree 35/2003. 85 construction workers. Total annual wages OMR 820,000. Covers death, permanent disability, temporary disability, and medical expenses.</field>
+            <field name="notes">High-risk construction site workers. Previous year claims: 3 minor injuries.</field>
+        </record>
+
+        <record id="pol_wc_2" model="insurance.policy">
+            <field name="policy_number">POL-WC-2024-002</field>
+            <field name="client_id" ref="client_c9"/>
+            <field name="insurance_type">workmen_compensation</field>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-03-01</field>
+            <field name="expiry_date">2025-02-28</field>
+            <field name="net_premium">6800.00</field>
+            <field name="commission_rate">10.0</field>
+            <field name="sum_assured">0.00</field>
+            <field name="coverage_details">WC for 45 fishermen and marine workers. Total wages OMR 380,000. Includes sea-related risks. Enhanced death benefit OMR 10,000.</field>
+            <field name="notes">Marine workers — sea-going risk loading applied.</field>
+        </record>
+
+        <!-- Additional diverse policies -->
+        <record id="pol_cyber_1" model="insurance.policy">
+            <field name="policy_number">POL-CYB-2024-001</field>
+            <field name="client_id" ref="client_c7"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-06-01</field>
+            <field name="expiry_date">2025-05-31</field>
+            <field name="net_premium">3500.00</field>
+            <field name="commission_rate">15.0</field>
+            <field name="sum_assured">200000.00</field>
+            <field name="coverage_details">Cyber insurance — first-party data breach costs, ransomware payment support, business interruption, crisis management, regulatory fines (up to OMR 50,000). Third-party liability limit: OMR 200,000.</field>
+            <field name="notes">IT company with client data management. CrowdStrike endpoint protection in place.</field>
+        </record>
+
+        <record id="pol_energy_1" model="insurance.policy">
+            <field name="policy_number">POL-ENE-2024-001</field>
+            <field name="client_id" ref="client_c6"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">85000.00</field>
+            <field name="commission_rate">5.0</field>
+            <field name="sum_assured">15000000.00</field>
+            <field name="coverage_details">Onshore energy insurance. Covers upstream oil and gas assets. Property damage, machinery breakdown, control of well, pollution clean-up, and business interruption.</field>
+            <field name="notes">Large energy account. Annual survey and engineering review required.</field>
+        </record>
+
+        <record id="pol_avi_1" model="insurance.policy">
+            <field name="policy_number">POL-AVI-2024-001</field>
+            <field name="client_id" ref="client_c5"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">42000.00</field>
+            <field name="commission_rate">5.0</field>
+            <field name="sum_assured">5000000.00</field>
+            <field name="coverage_details">Aviation hull — 2 Boeing 737 aircraft. Total insured value USD 12M. Aviation liability (passenger, cargo, third-party) limit USD 500M per occurrence.</field>
+            <field name="notes">Commercial airline operations. CAA Oman approved. ICAO standards maintained.</field>
+        </record>
+
+        <record id="pol_eng_1" model="insurance.policy">
+            <field name="policy_number">POL-ENG-2024-001</field>
+            <field name="client_id" ref="client_c2"/>
+            <field name="insurance_type">property</field>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-02-15</field>
+            <field name="expiry_date">2025-08-14</field>
+            <field name="net_premium">35000.00</field>
+            <field name="commission_rate">8.0</field>
+            <field name="sum_assured">8000000.00</field>
+            <field name="coverage_details">CAR for Al Maabela Commercial Complex construction project. Contract value OMR 8M. Covers accidental damage to works, third-party liability OMR 500,000, and surrounding property.</field>
+            <field name="notes">18-month construction project. Monthly declarations. Premium fully earned.</field>
+        </record>
+
+        <record id="pol_pi_1" model="insurance.policy">
+            <field name="policy_number">POL-PI-2024-001</field>
+            <field name="client_id" ref="client_c4"/>
+            <field name="insurance_type">medical</field>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-01</field>
+            <field name="expiry_date">2024-12-31</field>
+            <field name="net_premium">28000.00</field>
+            <field name="commission_rate">8.0</field>
+            <field name="sum_assured">500000.00</field>
+            <field name="coverage_details">Medical malpractice and professional indemnity for 35 doctors and 80 nurses. Limit per claim: OMR 100,000. Annual aggregate: OMR 500,000. Covers negligence, errors, omissions.</field>
+            <field name="notes">Hospital group. Claims-made basis. Retroactive date: 01/01/2020.</field>
+        </record>
+
+        <record id="pol_expired_1" model="insurance.policy">
+            <field name="policy_number">POL-MTR-2023-099</field>
+            <field name="client_id" ref="client_p4"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="status">expired</field>
+            <field name="issue_date">2023-01-01</field>
+            <field name="expiry_date">2023-12-31</field>
+            <field name="net_premium">155.00</field>
+            <field name="commission_rate">12.0</field>
+            <field name="sum_assured">7000.00</field>
+            <field name="coverage_details">Comprehensive motor insurance — expired. Pending renewal.</field>
+            <field name="notes">Client has not renewed yet. Follow up required.</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             7. ONLINE APPLICATIONS — all 8 form types, all fields populated
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- MOTOR Application 1 — Comprehensive -->
+        <record id="app_motor_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_motor_comp"/>
+            <field name="customer_name">Ahmed Khalid Al Balushi</field>
+            <field name="customer_email">ahmed.albalushi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1001</field>
+            <field name="id_number">10234567</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1985-06-15</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">185.00</field>
+            <field name="admin_notes">&lt;p&gt;Vehicle inspected. No modifications. Clean claims history.&lt;/p&gt;</field>
+            <!-- Motor-specific fields -->
+            <field name="motor_full_name">Ahmed Khalid Mohammed Al Balushi</field>
+            <field name="motor_id_number">10234567</field>
+            <field name="motor_plate_number">12345</field>
+            <field name="motor_plate_character">A</field>
+            <field name="motor_license_number">DL-10234567-OM</field>
+            <field name="motor_vehicle_registration_date">2021-03-10</field>
+            <field name="motor_chassis_number">JTMRZ33V985012345</field>
+            <field name="motor_make">Toyota</field>
+            <field name="motor_model">Land Cruiser</field>
+            <field name="motor_year">2021</field>
+            <field name="motor_color">White</field>
+            <field name="motor_engine_cc">4608</field>
+            <field name="motor_seating_capacity">7</field>
+            <field name="motor_is_financed" eval="False"/>
+        </record>
+
+        <!-- MOTOR Application 2 — Third Party (with finance) -->
+        <record id="app_motor_2" model="insurance.application">
+            <field name="subtype_id" ref="sub_motor_tp"/>
+            <field name="customer_name">Hamed Yousuf Al Busaidi</field>
+            <field name="customer_email">hamed.albusaidi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1008</field>
+            <field name="id_number">20445678</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1990-11-22</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">92.00</field>
+            <field name="admin_notes">&lt;p&gt;Standard TPL. Vehicle is financed through Bank Muscat.&lt;/p&gt;</field>
+            <!-- Motor-specific fields -->
+            <field name="motor_full_name">Hamed Yousuf Rashid Al Busaidi</field>
+            <field name="motor_id_number">20445678</field>
+            <field name="motor_plate_number">67890</field>
+            <field name="motor_plate_character">B</field>
+            <field name="motor_license_number">DL-20445678-OM</field>
+            <field name="motor_vehicle_registration_date">2019-08-20</field>
+            <field name="motor_chassis_number">VNKKD3D38KA119876</field>
+            <field name="motor_make">Kia</field>
+            <field name="motor_model">Sportage</field>
+            <field name="motor_year">2019</field>
+            <field name="motor_color">Silver</field>
+            <field name="motor_engine_cc">1999</field>
+            <field name="motor_seating_capacity">5</field>
+            <field name="motor_is_financed" eval="True"/>
+            <field name="motor_finance_company">Bank Muscat</field>
+        </record>
+
+        <!-- MOTOR Application 3 — Gap Insurance -->
+        <record id="app_motor_gap" model="insurance.application">
+            <field name="subtype_id" ref="sub_gap"/>
+            <field name="customer_name">Hamed Yousuf Al Busaidi</field>
+            <field name="customer_email">hamed.albusaidi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1008</field>
+            <field name="id_number">20445678</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1990-11-22</field>
+            <field name="gender">male</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">55.00</field>
+            <field name="admin_notes">&lt;p&gt;Gap insurance requested to cover finance shortfall.&lt;/p&gt;</field>
+            <field name="motor_full_name">Hamed Yousuf Rashid Al Busaidi</field>
+            <field name="motor_id_number">20445678</field>
+            <field name="motor_plate_number">67890</field>
+            <field name="motor_plate_character">B</field>
+            <field name="motor_license_number">DL-20445678-OM</field>
+            <field name="motor_vehicle_registration_date">2019-08-20</field>
+            <field name="motor_chassis_number">VNKKD3D38KA119876</field>
+            <field name="motor_make">Kia</field>
+            <field name="motor_model">Sportage</field>
+            <field name="motor_year">2019</field>
+            <field name="motor_color">Silver</field>
+            <field name="motor_engine_cc">1999</field>
+            <field name="motor_seating_capacity">5</field>
+            <field name="motor_is_financed" eval="True"/>
+            <field name="motor_finance_company">Bank Muscat</field>
+        </record>
+
+        <!-- MEDICAL INDIVIDUAL Application -->
+        <record id="app_med_individual_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_med_individual"/>
+            <field name="customer_name">Mohammed Nasser Al Habsi</field>
+            <field name="customer_email">m.alhabsi@yahoo.com</field>
+            <field name="customer_phone">+968 9500 1003</field>
+            <field name="id_number">30556789</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1988-03-28</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">420.00</field>
+            <field name="admin_notes">&lt;p&gt;Standard individual medical. Pre-existing hypertension noted — loading applied 15%.&lt;/p&gt;</field>
+            <!-- Medical fields -->
+            <field name="med_coverage_type">individual</field>
+            <field name="med_employee_count">1</field>
+            <field name="med_dependents_count">0</field>
+            <field name="med_network_preference">b</field>
+            <field name="med_dental_required" eval="False"/>
+            <field name="med_optical_required" eval="True"/>
+            <field name="med_pre_existing" eval="True"/>
+            <field name="med_pre_existing_details">Hypertension (controlled with medication since 2019). No other conditions.</field>
+        </record>
+
+        <!-- MEDICAL INDIVIDUAL Application — Family -->
+        <record id="app_med_family_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_med_family"/>
+            <field name="customer_name">Fatima Saeed Al Rawahi</field>
+            <field name="customer_email">fatima.rawahi@hotmail.com</field>
+            <field name="customer_phone">+968 9500 1002</field>
+            <field name="id_number">40667890</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1987-09-14</field>
+            <field name="gender">female</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">1200.00</field>
+            <field name="admin_notes">&lt;p&gt;Family plan. All members healthy. Network A approved.&lt;/p&gt;</field>
+            <field name="med_coverage_type">family</field>
+            <field name="med_employee_count">1</field>
+            <field name="med_dependents_count">4</field>
+            <field name="med_network_preference">a</field>
+            <field name="med_dental_required" eval="True"/>
+            <field name="med_optical_required" eval="True"/>
+            <field name="med_pre_existing" eval="False"/>
+        </record>
+
+        <!-- MEDICAL CORPORATE Application -->
+        <record id="app_med_corporate_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_med_corporate"/>
+            <field name="customer_name">Mohammed Al Rashidi</field>
+            <field name="customer_email">mohammed@alrashidi-trading.com</field>
+            <field name="customer_phone">+968 9600 1001</field>
+            <field name="id_number">50778901</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1975-04-01</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">18500.00</field>
+            <field name="admin_notes">&lt;p&gt;120 employees. Previous insurer was AXA. Moderate claims history. Switched for better network.&lt;/p&gt;</field>
+            <field name="med_coverage_type">group</field>
+            <field name="med_employee_count">120</field>
+            <field name="med_dependents_count">0</field>
+            <field name="med_network_preference">b</field>
+            <field name="med_dental_required" eval="True"/>
+            <field name="med_optical_required" eval="True"/>
+            <field name="med_pre_existing" eval="False"/>
+            <field name="med_company_name">Al Rashidi Trading Co. LLC</field>
+        </record>
+
+        <!-- PROPERTY / FIRE Application — Residential -->
+        <record id="app_prop_residential_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_fire_residential"/>
+            <field name="customer_name">Fatima Saeed Al Rawahi</field>
+            <field name="customer_email">fatima.rawahi@hotmail.com</field>
+            <field name="customer_phone">+968 9500 1002</field>
+            <field name="id_number">40667890</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1987-09-14</field>
+            <field name="gender">female</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">320.00</field>
+            <field name="admin_notes">&lt;p&gt;Residential villa. Good construction quality. Fire extinguishers installed.&lt;/p&gt;</field>
+            <!-- Property fields -->
+            <field name="prop_address">Villa 7, Street 18, Al Qurum, Muscat, Oman</field>
+            <field name="prop_cover_type">comprehensive</field>
+            <field name="prop_usage">residential</field>
+            <field name="prop_building_value">60000.00</field>
+            <field name="prop_contents_value">15000.00</field>
+            <field name="prop_any_previous_loss" eval="False"/>
+            <field name="prop_proposer_name">Fatima Saeed Mohammed Al Rawahi</field>
+            <field name="prop_profession_business">Teacher</field>
+            <field name="prop_any_rejection" eval="False"/>
+            <field name="prop_construction_type">Reinforced Concrete</field>
+            <field name="prop_year_built">2015</field>
+        </record>
+
+        <!-- PROPERTY / FIRE Application — Commercial (Property All Risk) -->
+        <record id="app_prop_commercial_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_property_all_risk"/>
+            <field name="customer_name">Mohammed Al Rashidi</field>
+            <field name="customer_email">mohammed@alrashidi-trading.com</field>
+            <field name="customer_phone">+968 9600 1001</field>
+            <field name="id_number">50778901</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1975-04-01</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">12500.00</field>
+            <field name="admin_notes">&lt;p&gt;Large commercial warehouse. Sprinkler system installed. Surveyor visit completed 2024-03-15.&lt;/p&gt;</field>
+            <field name="prop_address">Plot 24, Industrial Zone, Al Rusayl, Muscat, Oman</field>
+            <field name="prop_cover_type">comprehensive</field>
+            <field name="prop_usage">warehouse</field>
+            <field name="prop_building_value">1500000.00</field>
+            <field name="prop_contents_value">1000000.00</field>
+            <field name="prop_any_previous_loss" eval="True"/>
+            <field name="prop_previous_loss_details">Minor fire incident in 2021 — stock loss OMR 15,000. Fully settled by previous insurer.</field>
+            <field name="prop_proposer_name">Mohammed Khalid Al Rashidi</field>
+            <field name="prop_profession_business">Trading &amp; Retail</field>
+            <field name="prop_any_rejection" eval="False"/>
+            <field name="prop_construction_type">Steel Frame with Concrete Block Infill</field>
+            <field name="prop_year_built">2010</field>
+        </record>
+
+        <!-- PROPERTY / FIRE Application — Relocation -->
+        <record id="app_relocation_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_relocation"/>
+            <field name="customer_name">Sara Ahmed Al Zadjali</field>
+            <field name="customer_email">sara.alzadjali@gmail.com</field>
+            <field name="customer_phone">+968 9500 1006</field>
+            <field name="id_number">60889012</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1992-07-08</field>
+            <field name="gender">female</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">180.00</field>
+            <field name="admin_notes">&lt;p&gt;Relocating from Al Khuwair to Al Mouj. High-value furniture items declared.&lt;/p&gt;</field>
+            <field name="prop_address">Apartment 12C, Al Mouj Tower, Muscat, Oman</field>
+            <field name="prop_cover_type">comprehensive</field>
+            <field name="prop_usage">residential</field>
+            <field name="prop_building_value">0.00</field>
+            <field name="prop_contents_value">22000.00</field>
+            <field name="prop_any_previous_loss" eval="False"/>
+            <field name="prop_proposer_name">Sara Ahmed Ali Al Zadjali</field>
+            <field name="prop_profession_business">Marketing Manager</field>
+            <field name="prop_any_rejection" eval="False"/>
+            <field name="prop_construction_type">N/A - Contents only</field>
+            <field name="prop_year_built">2023</field>
+        </record>
+
+        <!-- MARINE Application — Cargo -->
+        <record id="app_marine_cargo_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_marine_cargo"/>
+            <field name="customer_name">Ali Sulaiman Al Lawati</field>
+            <field name="customer_email">ali@oman-logistics.com</field>
+            <field name="customer_phone">+968 9600 3003</field>
+            <field name="id_number">70990123</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1978-12-05</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">7200.00</field>
+            <field name="admin_notes">&lt;p&gt;Annual open cargo policy. Monthly declarations. Institute Cargo Clauses A.&lt;/p&gt;</field>
+            <!-- Marine fields -->
+            <field name="marine_voyage_from">Muscat Port, Oman</field>
+            <field name="marine_voyage_to">Various — Worldwide</field>
+            <field name="marine_departure_date">2024-01-15</field>
+            <field name="marine_arrival_date">2024-12-31</field>
+            <field name="marine_cargo_type">General merchandise, electronics, food products, building materials</field>
+            <field name="marine_cargo_value">500000.00</field>
+            <field name="marine_vessel_name">Various carrier vessels</field>
+            <field name="marine_packing">Containerized (20ft and 40ft dry and reefer)</field>
+        </record>
+
+        <!-- MARINE Application — Yacht -->
+        <record id="app_yacht_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_yacht"/>
+            <field name="customer_name">Khalid Rashid Al Maqbali</field>
+            <field name="customer_email">k.maqbali@outlook.com</field>
+            <field name="customer_phone">+968 9500 1005</field>
+            <field name="id_number">80101234</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1980-02-14</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">680.00</field>
+            <field name="admin_notes">&lt;p&gt;Pleasure yacht. Annual policy. Skipper is the owner. Professional survey completed.&lt;/p&gt;</field>
+            <field name="marine_voyage_from">Marina Bandar Al Rowdha, Muscat</field>
+            <field name="marine_voyage_to">Omani Territorial Waters</field>
+            <field name="marine_departure_date">2024-04-01</field>
+            <field name="marine_arrival_date">2025-03-31</field>
+            <field name="marine_cargo_type">N/A — Pleasure craft</field>
+            <field name="marine_cargo_value">45000.00</field>
+            <field name="marine_vessel_name">Sea Falcon</field>
+            <field name="marine_packing">N/A</field>
+        </record>
+
+        <!-- MARINE Application — Hull & Machineries -->
+        <record id="app_hull_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_hull_machineries"/>
+            <field name="customer_name">Abdullah Al Shanfari</field>
+            <field name="customer_email">abdullah@muscatfisheries.com</field>
+            <field name="customer_phone">+968 9600 9009</field>
+            <field name="id_number">90212345</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1972-05-20</field>
+            <field name="gender">male</field>
+            <field name="status">under_review</field>
+            <field name="quoted_premium">9500.00</field>
+            <field name="admin_notes">&lt;p&gt;6-vessel fishing fleet. Survey by approved marine surveyor required before binding.&lt;/p&gt;</field>
+            <field name="marine_voyage_from">Muttrah Fishing Port, Muscat</field>
+            <field name="marine_voyage_to">Arabian Sea and Gulf of Oman</field>
+            <field name="marine_departure_date">2024-02-01</field>
+            <field name="marine_arrival_date">2025-01-31</field>
+            <field name="marine_cargo_type">N/A — Fishing vessels</field>
+            <field name="marine_cargo_value">800000.00</field>
+            <field name="marine_vessel_name">Fleet: Al Baraka, Al Noor, Al Rashid, Al Salam, Al Fath, Al Amal</field>
+            <field name="marine_packing">N/A</field>
+        </record>
+
+        <!-- MARINE Application — Goods in Transit -->
+        <record id="app_goods_transit_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_goods_transit"/>
+            <field name="customer_name">Ali Sulaiman Al Lawati</field>
+            <field name="customer_email">ali@oman-logistics.com</field>
+            <field name="customer_phone">+968 9600 3003</field>
+            <field name="id_number">70990123</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1978-12-05</field>
+            <field name="gender">male</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">1800.00</field>
+            <field name="admin_notes">&lt;p&gt;Road transit within GCC. Refrigerated goods included.&lt;/p&gt;</field>
+            <field name="marine_voyage_from">Muscat, Oman</field>
+            <field name="marine_voyage_to">Riyadh, UAE, Bahrain, Kuwait</field>
+            <field name="marine_departure_date">2024-01-01</field>
+            <field name="marine_arrival_date">2024-12-31</field>
+            <field name="marine_cargo_type">Food products (refrigerated), electronics, general cargo</field>
+            <field name="marine_cargo_value">250000.00</field>
+            <field name="marine_vessel_name">Various truck carriers</field>
+            <field name="marine_packing">Palletized, boxed, and refrigerated containers</field>
+        </record>
+
+        <!-- LIFE Application — Term Life -->
+        <record id="app_life_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_life_term"/>
+            <field name="customer_name">Mohammed Nasser Al Habsi</field>
+            <field name="customer_email">m.alhabsi@yahoo.com</field>
+            <field name="customer_phone">+968 9500 1003</field>
+            <field name="id_number">30556789</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1988-03-28</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">650.00</field>
+            <field name="admin_notes">&lt;p&gt;Non-smoker. Healthy. 10-year term approved with standard rates.&lt;/p&gt;</field>
+            <!-- Life fields -->
+            <field name="life_sum_assured">50000.00</field>
+            <field name="life_policy_term">10</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Nadia Mohammed Al Habsi</field>
+            <field name="life_beneficiary_relation">Wife</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Civil Engineer</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- LIFE Application — Critical Illness -->
+        <record id="app_critical_illness_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_critical_illness"/>
+            <field name="customer_name">Ahmed Khalid Al Balushi</field>
+            <field name="customer_email">ahmed.albalushi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1001</field>
+            <field name="id_number">10234567</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1985-06-15</field>
+            <field name="gender">male</field>
+            <field name="status">under_review</field>
+            <field name="quoted_premium">480.00</field>
+            <field name="admin_notes">&lt;p&gt;Medical examination required. Family history of heart disease noted.&lt;/p&gt;</field>
+            <field name="life_sum_assured">30000.00</field>
+            <field name="life_policy_term">15</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Khalid Ahmed Al Balushi</field>
+            <field name="life_beneficiary_relation">Son</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Business Owner</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- LIFE Application — Child Annuity -->
+        <record id="app_child_annuity_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_child_annuity"/>
+            <field name="customer_name">Omar Salim Al Farsi</field>
+            <field name="customer_email">omar.alfarsi@hotmail.com</field>
+            <field name="customer_phone">+968 9500 1007</field>
+            <field name="id_number">70111234</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1983-08-10</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">1200.00</field>
+            <field name="admin_notes">&lt;p&gt;15-year child education plan. Child DOB 2020-06-05.&lt;/p&gt;</field>
+            <field name="life_sum_assured">100000.00</field>
+            <field name="life_policy_term">15</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Rashid Omar Al Farsi</field>
+            <field name="life_beneficiary_relation">Son</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Government Employee</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- LIFE Application — Personal Accident -->
+        <record id="app_pa_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_personal_accident"/>
+            <field name="customer_name">Aisha Hamad Al Kindi</field>
+            <field name="customer_email">aisha.alkindi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1004</field>
+            <field name="id_number">40667991</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1992-01-30</field>
+            <field name="gender">female</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">120.00</field>
+            <field name="admin_notes">&lt;p&gt;Standard personal accident. No hazardous activity.&lt;/p&gt;</field>
+            <field name="life_sum_assured">15000.00</field>
+            <field name="life_policy_term">1</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Hamad Al Kindi</field>
+            <field name="life_beneficiary_relation">Father</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Nurse</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- LIFE Application — Domestic Worker -->
+        <record id="app_domestic_worker_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_domestic_worker"/>
+            <field name="customer_name">Sara Ahmed Al Zadjali</field>
+            <field name="customer_email">sara.alzadjali@gmail.com</field>
+            <field name="customer_phone">+968 9500 1006</field>
+            <field name="id_number">60889012</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1992-07-08</field>
+            <field name="gender">female</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">85.00</field>
+            <field name="admin_notes">&lt;p&gt;Filipino domestic helper. Valid visa. Standard domestic worker plan.&lt;/p&gt;</field>
+            <field name="life_sum_assured">5000.00</field>
+            <field name="life_policy_term">1</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Maria Santos</field>
+            <field name="life_beneficiary_relation">Employee</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Domestic Helper</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- LIFE Application — Group Life (Corporate) -->
+        <record id="app_group_life_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_group_life"/>
+            <field name="customer_name">Saif Al Mamari</field>
+            <field name="customer_email">saif@gulfconstruction.com.om</field>
+            <field name="customer_phone">+968 9600 2002</field>
+            <field name="id_number">55122233</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1974-11-15</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">8800.00</field>
+            <field name="admin_notes">&lt;p&gt;85 construction employees. High-risk occupation loading applied. Previous year claims: 1 death (settled).&lt;/p&gt;</field>
+            <field name="life_sum_assured">500000.00</field>
+            <field name="life_policy_term">1</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Various — per employee records</field>
+            <field name="life_beneficiary_relation">Various</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Construction Workers</field>
+            <field name="life_hazardous_activity" eval="True"/>
+        </record>
+
+        <!-- WORKMEN Application 1 -->
+        <record id="app_wc_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_wc"/>
+            <field name="customer_name">Saif Al Mamari</field>
+            <field name="customer_email">saif@gulfconstruction.com.om</field>
+            <field name="customer_phone">+968 9600 2002</field>
+            <field name="id_number">55122233</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1974-11-15</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">22000.00</field>
+            <field name="admin_notes">&lt;p&gt;Construction workers — high risk classification. Previous year claims: 3 injuries (2 temporary disability, 1 minor). Clean safety record otherwise.&lt;/p&gt;</field>
+            <!-- Workmen fields -->
+            <field name="wc_company_name">Gulf Construction &amp; Engineering LLC</field>
+            <field name="wc_employee_count">85</field>
+            <field name="wc_total_annual_wages">820000.00</field>
+            <field name="wc_business_nature">Civil and structural construction — high-rise and infrastructure projects</field>
+            <field name="wc_any_previous_claims" eval="True"/>
+        </record>
+
+        <!-- WORKMEN Application 2 — Marine Workers -->
+        <record id="app_wc_2" model="insurance.application">
+            <field name="subtype_id" ref="sub_uwc"/>
+            <field name="customer_name">Abdullah Al Shanfari</field>
+            <field name="customer_email">abdullah@muscatfisheries.com</field>
+            <field name="customer_phone">+968 9600 9009</field>
+            <field name="id_number">90212345</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1972-05-20</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">6800.00</field>
+            <field name="admin_notes">&lt;p&gt;Fishing fleet workers — sea-going risk loading 25% applied. Standard WC rates for remaining shore workers.&lt;/p&gt;</field>
+            <field name="wc_company_name">Muscat Fisheries &amp; Marine Co.</field>
+            <field name="wc_employee_count">45</field>
+            <field name="wc_total_annual_wages">380000.00</field>
+            <field name="wc_business_nature">Commercial fishing, marine operations, fish processing and distribution</field>
+            <field name="wc_any_previous_claims" eval="True"/>
+        </record>
+
+        <!-- WORKMEN Application 3 — Employer's Liability -->
+        <record id="app_emp_liability_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_employers_liability"/>
+            <field name="customer_name">Yasmine Al Harthi</field>
+            <field name="customer_email">yasmine@sunrise-group.com</field>
+            <field name="customer_phone">+968 9601 0010</field>
+            <field name="id_number">88334455</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1981-03-25</field>
+            <field name="gender">female</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">3200.00</field>
+            <field name="admin_notes">&lt;p&gt;Retail and hospitality employer. Low risk occupation. No previous claims.&lt;/p&gt;</field>
+            <field name="wc_company_name">Sunrise Retail &amp; Hospitality Group</field>
+            <field name="wc_employee_count">65</field>
+            <field name="wc_total_annual_wages">480000.00</field>
+            <field name="wc_business_nature">Retail stores and restaurant operations</field>
+            <field name="wc_any_previous_claims" eval="False"/>
+        </record>
+
+        <!-- GENERIC Applications — covering remaining insurance types -->
+
+        <!-- CAR Application -->
+        <record id="app_car_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_car"/>
+            <field name="customer_name">Saif Al Mamari</field>
+            <field name="customer_email">saif@gulfconstruction.com.om</field>
+            <field name="customer_phone">+968 9600 2002</field>
+            <field name="id_number">55122233</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1974-11-15</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">35000.00</field>
+            <field name="admin_notes">&lt;p&gt;Al Maabela Commercial Complex. Contract value OMR 8M. 18-month project duration.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Cyber Application -->
+        <record id="app_cyber_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_cyber"/>
+            <field name="customer_name">Nasser Al Barwani</field>
+            <field name="customer_email">nasser@technova.om</field>
+            <field name="customer_phone">+968 9600 7007</field>
+            <field name="id_number">77223344</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1986-09-12</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">3500.00</field>
+            <field name="admin_notes">&lt;p&gt;IT company. Handles client personal data. ISO 27001 certified. Cyber risk assessment completed.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Professional Indemnity Application -->
+        <record id="app_pi_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_professional_indemnity"/>
+            <field name="customer_name">Dr. Hessa Al Amri</field>
+            <field name="customer_email">hessa@alnoorhospitals.com</field>
+            <field name="customer_phone">+968 9600 4004</field>
+            <field name="id_number">44556677</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1970-04-18</field>
+            <field name="gender">female</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">28000.00</field>
+            <field name="admin_notes">&lt;p&gt;Hospital group. 35 doctors + 80 nurses. Claims-made policy. Retroactive date 2020.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Energy Application -->
+        <record id="app_energy_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_energy"/>
+            <field name="customer_name">Said Al Hinai</field>
+            <field name="customer_email">said@omanenergy.com</field>
+            <field name="customer_phone">+968 9600 6006</field>
+            <field name="id_number">66778899</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1968-07-30</field>
+            <field name="gender">male</field>
+            <field name="status">under_review</field>
+            <field name="quoted_premium">85000.00</field>
+            <field name="admin_notes">&lt;p&gt;Onshore energy facility. Total insured value USD 35M. Engineering survey and risk assessment required.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Aviation Application -->
+        <record id="app_aviation_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_aviation"/>
+            <field name="customer_name">Khalid Al Zeidy</field>
+            <field name="customer_email">khalid@salamair.com</field>
+            <field name="customer_phone">+968 9600 5005</field>
+            <field name="id_number">55667788</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1972-02-22</field>
+            <field name="gender">male</field>
+            <field name="status">policy_issued</field>
+            <field name="quoted_premium">42000.00</field>
+            <field name="admin_notes">&lt;p&gt;2 Boeing 737 aircraft. CAA approved. ICAO standards. Annual renewal.&lt;/p&gt;</field>
+        </record>
+
+        <!-- D&O Application -->
+        <record id="app_do_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_do_liability"/>
+            <field name="customer_name">Ibrahim Al Toqi</field>
+            <field name="customer_email">ibrahim@alkhaleejfinance.com</field>
+            <field name="customer_phone">+968 9600 8008</field>
+            <field name="id_number">88990011</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1965-11-08</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">15000.00</field>
+            <field name="admin_notes">&lt;p&gt;Financial services firm. 7-member board. Limit: OMR 1M. Side A and B coverage.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Fidelity Guarantee Application -->
+        <record id="app_fidelity_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_fidelity"/>
+            <field name="customer_name">Ibrahim Al Toqi</field>
+            <field name="customer_email">ibrahim@alkhaleejfinance.com</field>
+            <field name="customer_phone">+968 9600 8008</field>
+            <field name="id_number">88990011</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1965-11-08</field>
+            <field name="gender">male</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">4500.00</field>
+            <field name="admin_notes">&lt;p&gt;Financial institution. 12 employees handling cash/assets. Internal audit report provided.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Golf Insurance Application -->
+        <record id="app_golf_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_golf"/>
+            <field name="customer_name">Ahmed Khalid Al Balushi</field>
+            <field name="customer_email">ahmed.albalushi@gmail.com</field>
+            <field name="customer_phone">+968 9500 1001</field>
+            <field name="id_number">10234567</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1985-06-15</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">65.00</field>
+            <field name="admin_notes">&lt;p&gt;Member of Muscat Hills Golf Club. Equipment value OMR 2,500. Hole-in-one cover requested.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Livestock Insurance Application -->
+        <record id="app_livestock_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_livestock"/>
+            <field name="customer_name">Tariq Nabil Al Ghafri</field>
+            <field name="customer_email">tariq.ghafri@gmail.com</field>
+            <field name="customer_phone">+968 9500 1010</field>
+            <field name="id_number">10101234</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1978-04-22</field>
+            <field name="gender">male</field>
+            <field name="status">info_required</field>
+            <field name="quoted_premium">1200.00</field>
+            <field name="requirement_message">&lt;p&gt;Please provide veterinary health certificates for all camels and an up-to-date inventory with individual values.&lt;/p&gt;</field>
+            <field name="admin_notes">&lt;p&gt;Camel farm in Al Buraimi. 25 camels total. Vet certification required.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Medical Malpractice Application -->
+        <record id="app_malpractice_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_medical_malpractice"/>
+            <field name="customer_name">Maryam Ali Al Shukaili</field>
+            <field name="customer_email">maryam.shukaili@yahoo.com</field>
+            <field name="customer_phone">+968 9500 1009</field>
+            <field name="id_number">90223456</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1989-06-18</field>
+            <field name="gender">female</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">850.00</field>
+            <field name="admin_notes">&lt;p&gt;Registered nurse. Individual medical malpractice. No previous claims. Limit: OMR 50,000.&lt;/p&gt;</field>
+        </record>
+
+        <!-- SME Package Application -->
+        <record id="app_sme_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_sme_package"/>
+            <field name="customer_name">Yasmine Al Harthi</field>
+            <field name="customer_email">yasmine@sunrise-group.com</field>
+            <field name="customer_phone">+968 9601 0010</field>
+            <field name="id_number">88334455</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1981-03-25</field>
+            <field name="gender">female</field>
+            <field name="status">submitted</field>
+            <field name="quoted_premium">2800.00</field>
+            <field name="admin_notes">&lt;p&gt;SME package: property OMR 150,000, public liability OMR 100,000, money OMR 5,000, business interruption 30 days.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Trade Credit Application -->
+        <record id="app_trade_credit_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_trade_credit"/>
+            <field name="customer_name">Mohammed Al Rashidi</field>
+            <field name="customer_email">mohammed@alrashidi-trading.com</field>
+            <field name="customer_phone">+968 9600 1001</field>
+            <field name="id_number">50778901</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1975-04-01</field>
+            <field name="gender">male</field>
+            <field name="status">under_review</field>
+            <field name="quoted_premium">6500.00</field>
+            <field name="admin_notes">&lt;p&gt;Annual receivables exposure OMR 1.2M. 15 active buyers in GCC. Credit limit assessment required for each buyer.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Group Travel Application -->
+        <record id="app_group_travel_1" model="insurance.application">
+            <field name="subtype_id" ref="sub_travel_group"/>
+            <field name="customer_name">Khalid Al Zeidy</field>
+            <field name="customer_email">khalid@salamair.com</field>
+            <field name="customer_phone">+968 9600 5005</field>
+            <field name="id_number">55667788</field>
+            <field name="nationality">Omani</field>
+            <field name="date_of_birth">1972-02-22</field>
+            <field name="gender">male</field>
+            <field name="status">approved</field>
+            <field name="quoted_premium">4200.00</field>
+            <field name="admin_notes">&lt;p&gt;Annual multi-trip for 150 airline employees. Worldwide coverage. Emergency medical unlimited.&lt;/p&gt;</field>
+            <field name="life_sum_assured">50000.00</field>
+            <field name="life_policy_term">1</field>
+            <field name="life_payment_frequency">annual</field>
+            <field name="life_beneficiary_name">Various employees</field>
+            <field name="life_beneficiary_relation">Employee</field>
+            <field name="life_smoker" eval="False"/>
+            <field name="life_occupation">Airline Employees</field>
+            <field name="life_hazardous_activity" eval="False"/>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             8. INSURANCE CLAIMS (15 claims — all statuses covered)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="claim_1" model="insurance.claim">
+            <field name="claim_number">CLM-2024-001</field>
+            <field name="policy_id" ref="pol_motor_1"/>
+            <field name="incident_date">2024-07-12</field>
+            <field name="reported_date">2024-07-13</field>
+            <field name="status">settled</field>
+            <field name="claim_amount">1850.00</field>
+            <field name="settled_amount">1650.00</field>
+            <field name="settlement_date">2024-08-05</field>
+            <field name="description">Rear-end collision at Al Khuwair roundabout. Client's vehicle rear bumper and trunk damaged. Third party admitted fault.</field>
+            <field name="surveyor_notes">Damage assessed at OMR 1,850. Depreciation 10% applied on bumper. Total settlement OMR 1,650 approved by insurer.</field>
+        </record>
+
+        <record id="claim_2" model="insurance.claim">
+            <field name="claim_number">CLM-2024-002</field>
+            <field name="policy_id" ref="pol_grp_med_1"/>
+            <field name="incident_date">2024-05-20</field>
+            <field name="reported_date">2024-05-20</field>
+            <field name="status">settled</field>
+            <field name="claim_amount">3200.00</field>
+            <field name="settled_amount">2800.00</field>
+            <field name="settlement_date">2024-06-10</field>
+            <field name="description">Employee hospitalization — appendectomy at Al Nahda Hospital. 3-day inpatient stay.</field>
+            <field name="surveyor_notes">Network hospital. Deductible OMR 400 applied. Co-pay 10% on room charges. Total insurer payment OMR 2,800.</field>
+        </record>
+
+        <record id="claim_3" model="insurance.claim">
+            <field name="claim_number">CLM-2024-003</field>
+            <field name="policy_id" ref="pol_wc_1"/>
+            <field name="incident_date">2024-04-03</field>
+            <field name="reported_date">2024-04-04</field>
+            <field name="status">approved</field>
+            <field name="claim_amount">8500.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Construction worker fell from scaffolding at second floor level. Fractured left arm and two ribs. Hospitalised for 5 days. Temporary total disability for 45 days.</field>
+            <field name="surveyor_notes">Medical expenses OMR 4,500. Temporary disability compensation OMR 4,000. Total claim OMR 8,500. Approved pending payment from insurer.</field>
+        </record>
+
+        <record id="claim_4" model="insurance.claim">
+            <field name="claim_number">CLM-2024-004</field>
+            <field name="policy_id" ref="pol_marine_1"/>
+            <field name="incident_date">2024-03-15</field>
+            <field name="reported_date">2024-03-18</field>
+            <field name="status">settled</field>
+            <field name="claim_amount">28500.00</field>
+            <field name="settled_amount">25000.00</field>
+            <field name="settlement_date">2024-05-20</field>
+            <field name="description">Container of electronics damaged due to seawater ingress during transit from Singapore to Muscat. 40ft reefer container seal failed.</field>
+            <field name="surveyor_notes">Marine surveyor confirmed ingress at hatch seal. Salvage value deducted. Total settlement OMR 25,000 based on invoice value less 12% salvage.</field>
+        </record>
+
+        <record id="claim_5" model="insurance.claim">
+            <field name="claim_number">CLM-2024-005</field>
+            <field name="policy_id" ref="pol_prop_2"/>
+            <field name="incident_date">2024-09-02</field>
+            <field name="reported_date">2024-09-03</field>
+            <field name="status">under_assessment</field>
+            <field name="claim_amount">185000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Warehouse fire in storage section B. Electrical short circuit caused fire spreading to stock worth approximately OMR 185,000. Fire brigade contained within 2 hours.</field>
+            <field name="surveyor_notes">Loss adjuster appointed. Fire brigade report obtained. Stock inventory verification in progress. Cause confirmed as electrical fault.</field>
+        </record>
+
+        <record id="claim_6" model="insurance.claim">
+            <field name="claim_number">CLM-2024-006</field>
+            <field name="policy_id" ref="pol_motor_2"/>
+            <field name="incident_date">2024-08-22</field>
+            <field name="reported_date">2024-08-22</field>
+            <field name="status">rejected</field>
+            <field name="claim_amount">4500.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Vehicle damage claimed after accident. Investigation revealed policy was TPL only — own damage not covered.</field>
+            <field name="rejection_reason">Claim rejected: policy is Third Party Liability only. Own vehicle damage is not covered under this policy type. Client was advised to upgrade to comprehensive.</field>
+        </record>
+
+        <record id="claim_7" model="insurance.claim">
+            <field name="claim_number">CLM-2024-007</field>
+            <field name="policy_id" ref="pol_med_2"/>
+            <field name="incident_date">2024-06-10</field>
+            <field name="reported_date">2024-06-11</field>
+            <field name="status">submitted</field>
+            <field name="claim_amount">2100.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Emergency room visit for severe chest pain. ECG and cardiac enzymes tests. No cardiac event confirmed — stress-related. 1-night observation.</field>
+            <field name="surveyor_notes">Documents submitted to insurer: hospital bills, discharge summary, investigation reports. Awaiting insurer assessment.</field>
+        </record>
+
+        <record id="claim_8" model="insurance.claim">
+            <field name="claim_number">CLM-2024-008</field>
+            <field name="policy_id" ref="pol_prop_1"/>
+            <field name="incident_date">2024-10-14</field>
+            <field name="reported_date">2024-10-15</field>
+            <field name="status">documents_collected</field>
+            <field name="claim_amount">12000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Burst water pipe in ground floor causing water damage to flooring, walls, and household contents in living room and kitchen.</field>
+            <field name="surveyor_notes">Photos collected. Plumber's report obtained. Contents inventory in progress. Awaiting contractor repair quotes for walls and flooring.</field>
+        </record>
+
+        <record id="claim_9" model="insurance.claim">
+            <field name="claim_number">CLM-2024-009</field>
+            <field name="policy_id" ref="pol_yacht_1"/>
+            <field name="incident_date">2024-05-28</field>
+            <field name="reported_date">2024-05-29</field>
+            <field name="status">settled</field>
+            <field name="claim_amount">3800.00</field>
+            <field name="settled_amount">3500.00</field>
+            <field name="settlement_date">2024-07-01</field>
+            <field name="description">Yacht engine fire while moored. Minor hull damage around engine compartment. Engine total loss.</field>
+            <field name="surveyor_notes">Marine surveyor attended. Engine damage confirmed as fire origin. Hull repair cost OMR 800. Engine replacement OMR 3,000. Deductible OMR 300 applied. Net settlement OMR 3,500.</field>
+        </record>
+
+        <record id="claim_10" model="insurance.claim">
+            <field name="claim_number">CLM-2024-010</field>
+            <field name="policy_id" ref="pol_life_1"/>
+            <field name="incident_date">2024-11-01</field>
+            <field name="reported_date">2024-11-05</field>
+            <field name="status">reported</field>
+            <field name="claim_amount">50000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Life insurance death claim — policyholder passed away due to cardiac arrest. Wife filing claim as sole beneficiary.</field>
+            <field name="surveyor_notes">Death certificate and medical records received. Police report not required (natural death). Awaiting insurer acknowledgement and processing.</field>
+        </record>
+
+        <record id="claim_11" model="insurance.claim">
+            <field name="claim_number">CLM-2024-011</field>
+            <field name="policy_id" ref="pol_eng_1"/>
+            <field name="incident_date">2024-06-30</field>
+            <field name="reported_date">2024-07-02</field>
+            <field name="status">settled</field>
+            <field name="claim_amount">75000.00</field>
+            <field name="settled_amount">68000.00</field>
+            <field name="settlement_date">2024-09-15</field>
+            <field name="description">Partial collapse of formwork at floor 4 of construction project. Structural steel reinforcement and concrete works damaged. No injuries reported.</field>
+            <field name="surveyor_notes">Engineering survey confirmed formwork failure. Reinstatement cost OMR 75,000. Deductible 10% = OMR 7,500. Settlement OMR 67,500 + debris removal OMR 500 = OMR 68,000.</field>
+        </record>
+
+        <record id="claim_12" model="insurance.claim">
+            <field name="claim_number">CLM-2024-012</field>
+            <field name="policy_id" ref="pol_wc_2"/>
+            <field name="incident_date">2024-08-10</field>
+            <field name="reported_date">2024-08-12</field>
+            <field name="status">approved</field>
+            <field name="claim_amount">22000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Fisherman lost at sea during storm. Body recovered after 3 days. Death benefit claim submitted by next of kin.</field>
+            <field name="surveyor_notes">Sea conditions report, coast guard report, and death certificate obtained. Death benefit OMR 20,000 plus medical expenses OMR 2,000. Total claim OMR 22,000 approved.</field>
+        </record>
+
+        <record id="claim_13" model="insurance.claim">
+            <field name="claim_number">CLM-2024-013</field>
+            <field name="policy_id" ref="pol_marine_2"/>
+            <field name="incident_date">2024-09-18</field>
+            <field name="reported_date">2024-09-20</field>
+            <field name="status">under_assessment</field>
+            <field name="claim_amount">45000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Fishing vessel Al Baraka ran aground near Ras Al Hadd. Hull damage to keel and propeller. Engine room partially flooded. Vessel salvaged.</field>
+            <field name="surveyor_notes">Marine surveyor dispatched. Salvage operations cost OMR 12,000. Hull damage estimate OMR 33,000. Total claim OMR 45,000. Assessment in progress.</field>
+        </record>
+
+        <record id="claim_14" model="insurance.claim">
+            <field name="claim_number">CLM-2024-014</field>
+            <field name="policy_id" ref="pol_cyber_1"/>
+            <field name="incident_date">2024-10-05</field>
+            <field name="reported_date">2024-10-06</field>
+            <field name="status">submitted</field>
+            <field name="claim_amount">55000.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Ransomware attack encrypting company servers. 3-day business interruption. IT forensics and data recovery costs. Ransom demand of USD 50,000 paid to recover data.</field>
+            <field name="surveyor_notes">Cyber incident response team engaged. Forensic report in progress. Ransom payment documented. Business interruption calculated at OMR 18,000. Total claim OMR 55,000 including all costs.</field>
+        </record>
+
+        <record id="claim_15" model="insurance.claim">
+            <field name="claim_number">CLM-2024-015</field>
+            <field name="policy_id" ref="pol_grp_med_1"/>
+            <field name="incident_date">2024-11-10</field>
+            <field name="reported_date">2024-11-10</field>
+            <field name="status">reported</field>
+            <field name="claim_amount">950.00</field>
+            <field name="settled_amount">0.00</field>
+            <field name="description">Employee outpatient visit and prescription — diabetes management follow-up at specialist clinic.</field>
+            <field name="surveyor_notes">Routine outpatient claim. Receipts and prescription collected. Sending to insurer's TPA for direct settlement.</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             9. COMMISSION RECORDS (15 records — all statuses)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="comm_1" model="insurance.commission">
+            <field name="policy_id" ref="pol_motor_1"/>
+            <field name="expected_amount">27.75</field>
+            <field name="received_amount">27.75</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-04-01</field>
+            <field name="received_date">2024-04-10</field>
+            <field name="notes">Commission received on time. Direct bank transfer from Al Ahlia.</field>
+        </record>
+
+        <record id="comm_2" model="insurance.commission">
+            <field name="policy_id" ref="pol_med_1"/>
+            <field name="expected_amount">120.00</field>
+            <field name="received_amount">120.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="received_date">2024-02-15</field>
+            <field name="notes">AXA Gulf medical commission — paid with policy statement.</field>
+        </record>
+
+        <record id="comm_3" model="insurance.commission">
+            <field name="policy_id" ref="pol_grp_med_1"/>
+            <field name="expected_amount">1480.00</field>
+            <field name="received_amount">1480.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="received_date">2024-02-20</field>
+            <field name="notes">Group medical commission — largest commission for this quarter. Received on time.</field>
+        </record>
+
+        <record id="comm_4" model="insurance.commission">
+            <field name="policy_id" ref="pol_prop_2"/>
+            <field name="expected_amount">1250.00</field>
+            <field name="received_amount">1250.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="received_date">2024-03-05</field>
+            <field name="notes">PAR commission from Zurich — slightly delayed but received in full.</field>
+        </record>
+
+        <record id="comm_5" model="insurance.commission">
+            <field name="policy_id" ref="pol_wc_1"/>
+            <field name="expected_amount">2200.00</field>
+            <field name="received_amount">2200.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="received_date">2024-02-28</field>
+            <field name="notes">WC commission — paid with policy inception.</field>
+        </record>
+
+        <record id="comm_6" model="insurance.commission">
+            <field name="policy_id" ref="pol_marine_1"/>
+            <field name="expected_amount">864.00</field>
+            <field name="received_amount">864.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="received_date">2024-03-01</field>
+            <field name="notes">Marine cargo open cover commission.</field>
+        </record>
+
+        <record id="comm_7" model="insurance.commission">
+            <field name="policy_id" ref="pol_life_1"/>
+            <field name="expected_amount">130.00</field>
+            <field name="received_amount">130.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2023-08-01</field>
+            <field name="received_date">2023-08-15</field>
+            <field name="notes">First-year life commission from MetLife. Higher rate 20%.</field>
+        </record>
+
+        <record id="comm_8" model="insurance.commission">
+            <field name="policy_id" ref="pol_life_2"/>
+            <field name="expected_amount">1056.00</field>
+            <field name="received_amount">500.00</field>
+            <field name="status">partial</field>
+            <field name="due_date">2024-04-01</field>
+            <field name="notes">Group life commission — partial payment received. Remaining OMR 556 outstanding.</field>
+        </record>
+
+        <record id="comm_9" model="insurance.commission">
+            <field name="policy_id" ref="pol_energy_1"/>
+            <field name="expected_amount">4250.00</field>
+            <field name="received_amount">0.00</field>
+            <field name="status">pending</field>
+            <field name="due_date">2024-02-15</field>
+            <field name="notes">Large energy account commission. Awaiting Zurich payment processing.</field>
+        </record>
+
+        <record id="comm_10" model="insurance.commission">
+            <field name="policy_id" ref="pol_avi_1"/>
+            <field name="expected_amount">2100.00</field>
+            <field name="received_amount">0.00</field>
+            <field name="status">overdue</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="notes">Aviation commission overdue. Chasing Zurich accounts team.</field>
+        </record>
+
+        <record id="comm_11" model="insurance.commission">
+            <field name="policy_id" ref="pol_eng_1"/>
+            <field name="expected_amount">2800.00</field>
+            <field name="received_amount">0.00</field>
+            <field name="status">pending</field>
+            <field name="due_date">2024-03-15</field>
+            <field name="notes">CAR project commission. Due after project commencement. Awaiting GIG payment.</field>
+        </record>
+
+        <record id="comm_12" model="insurance.commission">
+            <field name="policy_id" ref="pol_cyber_1"/>
+            <field name="expected_amount">525.00</field>
+            <field name="received_amount">525.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-07-01</field>
+            <field name="received_date">2024-07-15</field>
+            <field name="notes">Cyber insurance commission from GIG. Paid on time.</field>
+        </record>
+
+        <record id="comm_13" model="insurance.commission">
+            <field name="policy_id" ref="pol_pi_1"/>
+            <field name="expected_amount">2240.00</field>
+            <field name="received_amount">0.00</field>
+            <field name="status">overdue</field>
+            <field name="due_date">2024-02-01</field>
+            <field name="notes">Professional indemnity commission — overdue since February. Escalated to GIG management.</field>
+        </record>
+
+        <record id="comm_14" model="insurance.commission">
+            <field name="policy_id" ref="pol_marine_2"/>
+            <field name="expected_amount">950.00</field>
+            <field name="received_amount">950.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-03-01</field>
+            <field name="received_date">2024-03-18</field>
+            <field name="notes">Marine hull commission from Dhofar — received with minor delay.</field>
+        </record>
+
+        <record id="comm_15" model="insurance.commission">
+            <field name="policy_id" ref="pol_fire_1"/>
+            <field name="expected_amount">216.00</field>
+            <field name="received_amount">216.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-06-01</field>
+            <field name="received_date">2024-06-10</field>
+            <field name="notes">Fire policy commission from Dhofar. Received on time.</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             10. RFQ — REQUESTS FOR QUOTATION (10 RFQs)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="rfq_1" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-001</field>
+            <field name="client_id" ref="client_c1"/>
+            <field name="insurance_type">medical</field>
+            <field name="status">closed</field>
+            <field name="sent_date">2023-11-15</field>
+            <field name="response_deadline">2023-11-30</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Group medical for 120 employees. Seeking competitive rates and Network B with selective Network A upgrade for management.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; 120 employees (90 Omani, 30 expat), Network B standard, dental 50%, optical 50%, annual limit OMR 5,000 per member, maternity optional.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_2" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-002</field>
+            <field name="client_id" ref="client_c2"/>
+            <field name="insurance_type">workmen_compensation</field>
+            <field name="status">closed</field>
+            <field name="sent_date">2023-12-01</field>
+            <field name="response_deadline">2023-12-15</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">WC for 85 construction workers. High-risk classification. Previous year had 3 claims. Seeking best market rate.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; 85 construction workers, annual wages OMR 820,000, high-risk classification required, includes temporary disability and death benefit.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_3" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-003</field>
+            <field name="client_id" ref="client_c7"/>
+            <field name="insurance_type">property</field>
+            <field name="status">comparison_ready</field>
+            <field name="sent_date">2024-09-01</field>
+            <field name="response_deadline">2024-09-20</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Cyber insurance for IT company managing client data. Annual revenue OMR 2.5M. ISO 27001 certified. Seeking comprehensive first and third-party coverage.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; Cyber - first party (data breach, ransomware, business interruption) and third-party (privacy liability, network security). Limit OMR 500,000. Revenue OMR 2.5M.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_4" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-004</field>
+            <field name="client_id" ref="client_c6"/>
+            <field name="insurance_type">property</field>
+            <field name="status">sent</field>
+            <field name="sent_date">2024-10-15</field>
+            <field name="response_deadline">2024-11-05</field>
+            <field name="underwriting_complete" eval="False"/>
+            <field name="notes">Energy insurance for onshore oil and gas facility. Total insured value USD 35M. Large and complex risk — seeking specialist energy market quotations.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; Energy PAR, machinery breakdown, business interruption (120 days), control of well, pollution liability. Aggregate limit USD 35M.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_5" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-005</field>
+            <field name="client_id" ref="client_c9"/>
+            <field name="insurance_type">marine</field>
+            <field name="status">responses_received</field>
+            <field name="sent_date">2024-11-01</field>
+            <field name="response_deadline">2024-11-20</field>
+            <field name="underwriting_complete" eval="False"/>
+            <field name="notes">Marine hull renewal for 6 fishing vessels. Total value OMR 800,000. One grounding claim in current year. Seeking best hull and P&amp;I terms.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; Marine hull, IHC Institute Fishing Vessel Clauses, P&amp;I liability, machinery breakdown. Total fleet value OMR 800,000. Survey completed.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_6" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-006</field>
+            <field name="client_id" ref="client_c4"/>
+            <field name="insurance_type">medical</field>
+            <field name="status">draft</field>
+            <field name="notes">Group medical renewal for hospital staff. 115 doctors, nurses, and admin. Seeking competitive rates with enhanced maternity cover.</field>
+        </record>
+
+        <record id="rfq_7" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-007</field>
+            <field name="client_id" ref="client_c3"/>
+            <field name="insurance_type">motor</field>
+            <field name="status">closed</field>
+            <field name="sent_date">2023-12-10</field>
+            <field name="response_deadline">2023-12-25</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Fleet motor renewal for 18 vehicles. Comprehensive cover required. Previous year: 2 claims (minor). Good fleet management in place.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; Fleet comprehensive motor — 18 vehicles (5 trucks, 8 pickups, 5 cars). Driver list provided. Annual renewal.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_8" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-008</field>
+            <field name="client_id" ref="client_c8"/>
+            <field name="insurance_type">property</field>
+            <field name="status">comparison_ready</field>
+            <field name="sent_date">2024-09-15</field>
+            <field name="response_deadline">2024-10-01</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Directors and Officers Liability for financial services company. 7-member board. Limit OMR 1M sought. Claims-made basis preferred.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; D&amp;O Liability, Side A (personal) and Side B (entity reimbursement), limit OMR 1M, claims-made, retroactive date 2018. Financial services sector.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_9" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-009</field>
+            <field name="client_id" ref="client_c5"/>
+            <field name="insurance_type">group_life</field>
+            <field name="status">closed</field>
+            <field name="sent_date">2023-12-01</field>
+            <field name="response_deadline">2023-12-20</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Group travel for 150 airline employees. Annual multi-trip. Worldwide coverage. Emergency medical unlimited. High travel frequency expected.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; Annual multi-trip group travel, 150 employees, worldwide cover, emergency medical unlimited, trip cancellation OMR 2,000, baggage OMR 1,000.&lt;/p&gt;</field>
+        </record>
+
+        <record id="rfq_10" model="insurance.rfq">
+            <field name="reference_no">RFQ-2024-010</field>
+            <field name="client_id" ref="client_c2"/>
+            <field name="insurance_type">property</field>
+            <field name="status">responses_received</field>
+            <field name="sent_date">2024-10-01</field>
+            <field name="response_deadline">2024-10-20</field>
+            <field name="underwriting_complete" eval="False"/>
+            <field name="notes">CAR for new infrastructure project — road and bridge construction. Contract value OMR 12M. Duration 24 months. Third-party liability and surrounding property coverage required.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Requirements:&lt;/strong&gt; CAR — contract value OMR 12M, 24 months, third-party liability OMR 1M, surrounding property, testing and commissioning 3 months.&lt;/p&gt;</field>
+        </record>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             11. RFQ QUOTES / INSURER RESPONSES (25 quotes)
+        ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- RFQ-001 quotes (Group Medical) — 3 quotes -->
+        <record id="quote_rfq1_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_1"/>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="premium">16800.00</field>
+            <field name="deductible">200.00</field>
+            <field name="coverage">Network B across Oman. Annual limit OMR 5,000 per employee. Dental 50%, optical 50%. Maternity OMR 1,500.</field>
+            <field name="exclusions">Pre-existing conditions (2-year waiting period), cosmetic surgery, experimental treatments</field>
+            <field name="network">Daman TPA — 85 hospitals and 450+ clinics</field>
+            <field name="add_ons">Annual wellness check OMR 50 per employee. Prescription drugs 80% covered.</field>
+            <field name="claim_settlement_ratio">92.5</field>
+            <field name="validity_date">2023-12-31</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <record id="quote_rfq1_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_1"/>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="premium">18500.00</field>
+            <field name="deductible">400.00</field>
+            <field name="coverage">Network B standard, Network A for senior staff (Grade 5+). Dental 50%, optical 50%. Maternity OMR 2,000. Annual limit OMR 5,000.</field>
+            <field name="exclusions">Pre-existing conditions (1-year waiting period for non-life-threatening), cosmetic surgery</field>
+            <field name="network">Globemed TPA — 120 hospitals and 600+ clinics</field>
+            <field name="add_ons">Mental health cover OMR 500. Physiotherapy 15 sessions. Employee assistance programme included.</field>
+            <field name="claim_settlement_ratio">94.0</field>
+            <field name="validity_date">2023-12-31</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq1_3" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_1"/>
+            <field name="insurer">AXA Gulf Insurance</field>
+            <field name="premium">21000.00</field>
+            <field name="deductible">100.00</field>
+            <field name="coverage">Network A for all employees. Annual limit OMR 10,000. Dental 80%, optical 80%. Maternity OMR 3,000 including IVF up to OMR 1,500.</field>
+            <field name="exclusions">Cosmetic surgery, experimental treatments, fertility treatments beyond covered IVF</field>
+            <field name="network">AXA Direct — 180 hospitals and 800+ clinics</field>
+            <field name="add_ons">International emergency cover. Medical evacuation. Annual health screening for all employees.</field>
+            <field name="claim_settlement_ratio">96.0</field>
+            <field name="validity_date">2023-12-31</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-002 quotes (WC — Construction) — 2 quotes -->
+        <record id="quote_rfq2_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_2"/>
+            <field name="insurer">Al Ahlia Insurance Company</field>
+            <field name="premium">22000.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">Workmen compensation per RD 35/2003. All occupation classes including high-risk construction. Death, permanent disability, temporary disability, medical expenses.</field>
+            <field name="exclusions">Gross negligence, intoxication, pre-existing injuries not related to work</field>
+            <field name="add_ons">Free safety training consultation. Monthly loss run reports.</field>
+            <field name="claim_settlement_ratio">88.0</field>
+            <field name="validity_date">2024-01-15</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq2_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_2"/>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="premium">24500.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">WC per RD 35/2003. Enhanced death benefit OMR 12,000. PTD lump sum OMR 30,000. Medical expenses unlimited. Employer legal liability extension.</field>
+            <field name="exclusions">Intentional self-harm, gross misconduct, drug/alcohol-related incidents</field>
+            <field name="add_ons">24/7 emergency helpline. On-site nurse visit quarterly. Annual safety audit included.</field>
+            <field name="claim_settlement_ratio">91.0</field>
+            <field name="validity_date">2024-01-15</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-003 quotes (Cyber Insurance) — 3 quotes -->
+        <record id="quote_rfq3_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_3"/>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="premium">3500.00</field>
+            <field name="deductible">2000.00</field>
+            <field name="coverage">Cyber - First party: data breach response OMR 100K, ransomware OMR 50K, business interruption OMR 75K. Third party: privacy liability OMR 200K, network security OMR 200K.</field>
+            <field name="exclusions">State-sponsored attacks, war and terrorism, infrastructure failure, intentional acts</field>
+            <field name="network">CrowdStrike + Kivu Consulting as panel incident response</field>
+            <field name="add_ons">24/7 cyber incident hotline. Annual cyber risk assessment. Dark web monitoring.</field>
+            <field name="claim_settlement_ratio">85.0</field>
+            <field name="validity_date">2024-10-31</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq3_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_3"/>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="premium">4200.00</field>
+            <field name="deductible">1500.00</field>
+            <field name="coverage">Cyber all-in-one: aggregate limit OMR 500K. Covers all first and third-party cyber risks including regulatory fines up to OMR 75K and reputational harm management.</field>
+            <field name="exclusions">Prior known incidents, bodily injury from cyber events, tangible property damage</field>
+            <field name="network">Mandiant + PwC cyber response</field>
+            <field name="add_ons">Tabletop exercise annually. Employee phishing training included. CISO advisory service.</field>
+            <field name="claim_settlement_ratio">89.0</field>
+            <field name="validity_date">2024-10-31</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <record id="quote_rfq3_3" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_3"/>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="premium">4800.00</field>
+            <field name="deductible">1000.00</field>
+            <field name="coverage">Zurich Cyber Suite. Aggregate OMR 500K. Includes social engineering fraud OMR 25K, reputation management OMR 30K, hardware replacement OMR 20K.</field>
+            <field name="exclusions">Unpatched critical vulnerabilities (beyond 90 days), war, infrastructure outage</field>
+            <field name="network">Zurich's global cyber incident network (24/7)</field>
+            <field name="add_ons">Vulnerability scanning. Employee security awareness programme. Business continuity planning support.</field>
+            <field name="claim_settlement_ratio">92.0</field>
+            <field name="validity_date">2024-10-31</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-005 quotes (Marine Hull) — 3 quotes -->
+        <record id="quote_rfq5_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_5"/>
+            <field name="insurer">Dhofar Insurance Company</field>
+            <field name="premium">9500.00</field>
+            <field name="deductible">3000.00</field>
+            <field name="coverage">Marine hull - IHC Fishing Vessel Clauses. Total fleet value OMR 800,000. Includes machinery breakdown and collision liability. P&amp;I up to OMR 200,000.</field>
+            <field name="exclusions">Willful misconduct, unseaworthy vessel, operation outside licensed area</field>
+            <field name="network">International marine surveyors panel</field>
+            <field name="claim_settlement_ratio">83.0</field>
+            <field name="validity_date">2024-12-10</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq5_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_5"/>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="premium">10800.00</field>
+            <field name="deductible">2500.00</field>
+            <field name="coverage">Marine hull comprehensive. Fleet value OMR 800,000. IHC Clauses + machinery. P&amp;I up to OMR 500,000. Business interruption 30 days.</field>
+            <field name="exclusions">War and strikes, radioactive contamination, intentional scuttling</field>
+            <field name="claim_settlement_ratio">87.0</field>
+            <field name="validity_date">2024-12-10</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <record id="quote_rfq5_3" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_5"/>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="premium">11500.00</field>
+            <field name="deductible">2000.00</field>
+            <field name="coverage">Marine hull + comprehensive P&amp;I OMR 1M. Fleet value OMR 800,000. Includes crew accident OMR 5,000 per person. Enhanced breakdown cover.</field>
+            <field name="exclusions">Deliberate misconduct, operation beyond licensed fishing zone, unseaworthiness</field>
+            <field name="add_ons">24/7 maritime emergency response. Annual hull survey arrangement. Salvage assistance service.</field>
+            <field name="claim_settlement_ratio">90.0</field>
+            <field name="validity_date">2024-12-10</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-007 quotes (Fleet Motor) — 3 quotes -->
+        <record id="quote_rfq7_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_7"/>
+            <field name="insurer">National Life &amp; General Insurance Co.</field>
+            <field name="premium">4200.00</field>
+            <field name="deductible">200.00</field>
+            <field name="coverage">Fleet comprehensive — 18 vehicles. Third-party liability OMR 250,000. Own damage, fire, theft, natural perils. PA for drivers OMR 10,000.</field>
+            <field name="exclusions">Driver under influence, unlicensed driver, use for hire and reward</field>
+            <field name="claim_settlement_ratio">90.0</field>
+            <field name="validity_date">2024-01-15</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq7_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_7"/>
+            <field name="insurer">Al Ahlia Insurance Company</field>
+            <field name="premium">4600.00</field>
+            <field name="deductible">150.00</field>
+            <field name="coverage">Fleet comprehensive with agency repair for vehicles under 3 years. TPL OMR 500,000. OD, fire, theft. PA OMR 15,000 per driver. Roadside assistance included.</field>
+            <field name="exclusions">Racing, off-road use without prior approval, unlicensed driver</field>
+            <field name="add_ons">Agency repair for vehicles under 3 years. Roadside assistance 24/7. Replacement vehicle for major claims.</field>
+            <field name="claim_settlement_ratio">93.0</field>
+            <field name="validity_date">2024-01-15</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <record id="quote_rfq7_3" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_7"/>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="premium">3950.00</field>
+            <field name="deductible">300.00</field>
+            <field name="coverage">Fleet comprehensive — Sharia-compliant takaful. TPL OMR 200,000. OD at market value. PA OMR 8,000. Fire and theft.</field>
+            <field name="exclusions">Unlicensed driver, DUI, use outside Oman without prior notification</field>
+            <field name="claim_settlement_ratio">86.0</field>
+            <field name="validity_date">2024-01-15</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-008 quotes (D&O Liability) — 2 quotes -->
+        <record id="quote_rfq8_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_8"/>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="premium">15000.00</field>
+            <field name="deductible">5000.00</field>
+            <field name="coverage">D&amp;O Liability — Side A (personal), Side B (entity reimbursement), Side C (entity securities). Limit OMR 1M. Claims-made. Retroactive date 01/01/2018.</field>
+            <field name="exclusions">Fraud and dishonesty (post-conviction), personal profit, known claims at inception</field>
+            <field name="add_ons">Legal defence costs advanced before outcome. Crisis PR management OMR 50,000. Regulatory investigation cover.</field>
+            <field name="claim_settlement_ratio">87.0</field>
+            <field name="validity_date">2024-11-15</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq8_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_8"/>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="premium">18500.00</field>
+            <field name="deductible">3000.00</field>
+            <field name="coverage">D&amp;O Zurich Suite. Limit OMR 1M. Broad Side A — no entity sharing of limit. Employment practices liability rider OMR 250,000. Regulatory investigation sub-limit OMR 150,000.</field>
+            <field name="exclusions">Intentional criminal acts, personal guarantee obligations, bodily injury/property damage</field>
+            <field name="add_ons">Board governance advisory session. Zurich risk engineering consultation. 24/7 crisis management hotline.</field>
+            <field name="claim_settlement_ratio">91.0</field>
+            <field name="validity_date">2024-11-15</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-009 quotes (Group Travel) — 2 quotes -->
+        <record id="quote_rfq9_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_9"/>
+            <field name="insurer">AXA Gulf Insurance</field>
+            <field name="premium">4200.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">Annual multi-trip group travel. 150 employees. Emergency medical unlimited. Trip cancellation OMR 2,000. Baggage OMR 1,500. Missed connection OMR 500. Personal accident OMR 20,000.</field>
+            <field name="exclusions">Pre-existing conditions for non-emergency, travel to sanctioned countries, extreme sports (optional add-on)</field>
+            <field name="network">AXA Assistance — 24/7 global emergency network</field>
+            <field name="add_ons">Crisis management and evacuation. Political evacuation. Extreme sports rider available. COVID-19 coverage included.</field>
+            <field name="claim_settlement_ratio">95.0</field>
+            <field name="validity_date">2024-01-10</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq9_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_9"/>
+            <field name="insurer">Oman Insurance Company</field>
+            <field name="premium">4800.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">Group travel annual. Medical unlimited. Trip cancellation OMR 2,500. Baggage OMR 2,000. Business equipment OMR 1,500. Personal accident OMR 25,000. Delay OMR 100/day.</field>
+            <field name="exclusions">War and terrorism, pre-existing conditions except emergencies, illegal activities</field>
+            <field name="network">International SOS — global assistance provider</field>
+            <field name="add_ons">Kidnap and ransom basic cover. Travel concierge service. Real-time travel alerts app.</field>
+            <field name="claim_settlement_ratio">93.0</field>
+            <field name="validity_date">2024-01-10</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+        <!-- RFQ-010 quotes (CAR New Project) — 2 quotes -->
+        <record id="quote_rfq10_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_10"/>
+            <field name="insurer">Zurich Insurance Group (Oman)</field>
+            <field name="premium">52000.00</field>
+            <field name="deductible">10000.00</field>
+            <field name="coverage">CAR — contract value OMR 12M. Material damage to works. TPL OMR 1M. Surrounding property OMR 500,000. Testing and commissioning 3 months. Advance loss of profit rider.</field>
+            <field name="exclusions">Design defect (Section II), war and strikes, nuclear risks, gradual deterioration</field>
+            <field name="add_ons">Risk engineering site visit included. Monthly loss control bulletins. Project monitoring technology.</field>
+            <field name="claim_settlement_ratio">88.0</field>
+            <field name="validity_date">2024-11-15</field>
+            <field name="is_recommended" eval="True"/>
+        </record>
+
+        <record id="quote_rfq10_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="rfq_10"/>
+            <field name="insurer">GIG Gulf Insurance (Oman)</field>
+            <field name="premium">47500.00</field>
+            <field name="deductible">15000.00</field>
+            <field name="coverage">CAR — contract value OMR 12M. Section I material damage to works. Section II TPL OMR 750,000. T&amp;C 3 months. Maintenance period 12 months.</field>
+            <field name="exclusions">Defects of design, faulty materials, war, radioactive contamination</field>
+            <field name="add_ons">Contractors plant and machinery rider available. Professional indemnity rider available. Delay in startup extension.</field>
+            <field name="claim_settlement_ratio">85.0</field>
+            <field name="validity_date">2024-11-15</field>
+            <field name="is_recommended" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
