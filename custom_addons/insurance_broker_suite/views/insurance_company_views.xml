@@ -12,8 +12,17 @@
                     <field name="country_id"/>
                     <field name="phone"/>
                     <field name="email"/>
-                    <field name="rating" widget="badge" decoration-success="rating in ('AAA','AA+','AA','AA-')" decoration-info="rating in ('A+','A','A-')" decoration-warning="rating == 'BBB'" decoration-danger="rating in ('BB','B')" optional="show"/>
-                    <field name="portal_active" string="Portal" widget="boolean_toggle"/>
+                    <field name="integration_type" widget="badge"
+                        decoration-success="integration_type == 'api'"
+                        decoration-info="integration_type == 'portal'"
+                        decoration-muted="integration_type == 'manual'"/>
+                    <field name="rating" widget="badge"
+                        decoration-success="rating in ('AAA','AA+','AA','AA-')"
+                        decoration-info="rating in ('A+','A','A-')"
+                        decoration-warning="rating == 'BBB'"
+                        decoration-danger="rating in ('BB','B')" optional="show"/>
+                    <field name="pricing_count" string="Products" optional="show"/>
+                    <field name="portal_active" string="RFQ Portal" widget="boolean_toggle"/>
                     <field name="license_expiry" optional="show"/>
                     <field name="active"/>
                 </list>
@@ -26,13 +35,28 @@
             <field name="arch" type="xml">
                 <form string="Insurance Company">
                     <header>
-                        <button name="action_send_portal_invite" string="Send Portal Invite"
+                        <button name="action_send_portal_invite" string="Send RFQ Portal Invite"
                             type="object" class="btn-primary" invisible="not email"/>
-                        <button name="action_regenerate_token" string="Regenerate Token"
+                        <button name="action_regenerate_token" string="Regenerate RFQ Token"
                             type="object" class="btn-secondary"
                             confirm="This will invalidate the existing portal link. Proceed?"/>
+                        <button name="action_regenerate_direct_access_token"
+                            string="Regenerate Direct Access Token"
+                            type="object" class="btn-warning"
+                            invisible="integration_type != 'portal'"
+                            confirm="This will invalidate the existing direct access link. Proceed?"/>
+                        <button name="action_test_api_connection"
+                            string="Test API Connection"
+                            type="object" class="btn-info"
+                            invisible="integration_type != 'api'"/>
                     </header>
                     <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object"
+                                name="action_view_pricing" icon="fa-tags">
+                                <field name="pricing_count" widget="statinfo" string="Products"/>
+                            </button>
+                        </div>
                         <div class="oe_title">
                             <h1><field name="name" placeholder="Company Name"/></h1>
                             <h4 class="text-muted">
@@ -40,7 +64,7 @@
                             </h4>
                         </div>
 
-                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <!-- KEY FIELDS -->
                         <div class="o_ins_form_hero">
                             <div class="o_ins_hero_label">Contact &amp; Identity</div>
                             <group>
@@ -57,34 +81,151 @@
                             </group>
                         </div>
 
-                        <!-- Secondary fields -->
+                        <!-- Integration Type -->
+                        <div class="alert alert-info mb-3" role="alert"
+                             invisible="integration_type != 'portal'">
+                            <i class="fa fa-info-circle me-2"/>
+                            <strong>Direct Portal Mode:</strong>
+                            عند اختيار العميل منتجاً تابعاً لهذه الشركة، يظهر رابط دخول مباشر يُوجّهه للبوابة الإلكترونية للشركة بدون تسجيل دخول.
+                        </div>
+                        <div class="alert alert-success mb-3" role="alert"
+                             invisible="integration_type != 'api'">
+                            <i class="fa fa-code me-2"/>
+                            <strong>API Integration Mode:</strong>
+                            الأسعار تُجلب تلقائياً من API الشركة عند طلب العميل للتسعيرة.
+                        </div>
+                        <div class="alert alert-warning mb-3" role="alert"
+                             invisible="integration_type != 'manual'">
+                            <i class="fa fa-pencil me-2"/>
+                            <strong>Manual Entry Mode:</strong>
+                            موظفو البروكر يدخلون الأسعار يدوياً لهذه الشركة.
+                        </div>
+
                         <group>
+                            <group string="Integration Settings / إعدادات التكامل">
+                                <field name="integration_type" widget="radio"/>
+                            </group>
                             <group string="License &amp; Accounting">
                                 <field name="license_number"/>
                                 <field name="license_expiry"/>
                                 <field name="active"/>
-                                <!-- حقل المورد للوصول السريع إلى الحسابات -->
-                                <field name="partner_id" widget="res_partner_many2one" context="{'show_address': 1}" options='{"always_reload": True}'/>
+                                <field name="partner_id" widget="res_partner_many2one"
+                                    context="{'show_address': 1}"
+                                    options='{"always_reload": True}'/>
                             </group>
+                        </group>
+
+                        <group>
                             <group string="Coverage">
                                 <field name="category_ids" widget="many2many_tags"/>
                                 <field name="type_ids" widget="many2many_tags"/>
                             </group>
                         </group>
 
-                        <group string="Provider Portal Access">
-                            <group>
-                                <field name="portal_active" string="Portal Access Enabled"/>
-                                <field name="portal_token" string="Access Token" readonly="1"
-                                    invisible="not portal_active"/>
-                            </group>
-                            <group>
-                                <field name="portal_url" string="Portal URL" widget="url"
-                                    invisible="not portal_active"/>
-                            </group>
-                        </group>
-
                         <notebook>
+                            <!-- Tab 1: Direct Portal Integration -->
+                            <page string="بوابة مباشرة / Direct Portal"
+                                  name="portal_integration"
+                                  invisible="integration_type != 'portal'">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <group string="Portal Credentials / بيانات الدخول">
+                                            <field name="portal_login_url" string="Portal Login URL"
+                                                widget="url" placeholder="https://portal.company.com/login"/>
+                                            <field name="portal_username" string="Username / اسم المستخدم"/>
+                                            <field name="portal_password" string="Password / كلمة المرور"
+                                                password="True"/>
+                                        </group>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <group string="Direct Access Link / الرابط المباشر">
+                                            <field name="direct_access_token" readonly="1"
+                                                string="Access Token"/>
+                                            <field name="direct_access_url" widget="url"
+                                                string="Direct Access Link"
+                                                readonly="1"/>
+                                        </group>
+                                        <div class="alert alert-success mt-2" role="alert"
+                                             invisible="not direct_access_url">
+                                            <i class="fa fa-link me-2"/>
+                                            <strong>هذا الرابط</strong> يُرسَل للعميل ليدخل مباشرة على بوابة الشركة بدون تسجيل دخول.
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+
+                            <!-- Tab 2: API Integration -->
+                            <page string="ربط API / API Integration"
+                                  name="api_integration"
+                                  invisible="integration_type != 'api'">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <group string="API Connection">
+                                            <field name="api_base_url" string="API Base URL"
+                                                placeholder="https://api.company.com"/>
+                                            <field name="api_key" string="API Key" password="True"/>
+                                            <field name="api_secret" string="API Secret" password="True"/>
+                                            <field name="api_test_mode" string="Sandbox / Test Mode"
+                                                widget="boolean_toggle"/>
+                                        </group>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <group string="API Endpoints">
+                                            <field name="api_token_endpoint" string="Auth Endpoint"
+                                                placeholder="/api/auth/token"/>
+                                            <field name="api_quote_endpoint" string="Quote Endpoint"
+                                                placeholder="/api/v1/quote"/>
+                                            <field name="api_policy_endpoint" string="Policy Endpoint"
+                                                placeholder="/api/v1/policy"/>
+                                            <field name="api_documentation_url" string="API Docs URL"
+                                                widget="url"/>
+                                        </group>
+                                    </div>
+                                </div>
+                                <group string="Extra Configuration (JSON)">
+                                    <field name="api_extra_config" nolabel="1" colspan="2"
+                                        placeholder='{"version": "2", "timeout": 30, "currency": "OMR"}'
+                                        widget="ace" options='{"mode": "json"}'/>
+                                </group>
+                            </page>
+
+                            <!-- Tab 3: RFQ Provider Portal (token-based) -->
+                            <page string="RFQ Provider Portal" name="rfq_portal">
+                                <group string="RFQ Portal Access (For Provider to Submit Quotes)">
+                                    <group>
+                                        <field name="portal_active" string="RFQ Portal Access Enabled"/>
+                                        <field name="portal_token" string="Access Token" readonly="1"
+                                            invisible="not portal_active"/>
+                                    </group>
+                                    <group>
+                                        <field name="portal_url" string="RFQ Portal URL" widget="url"
+                                            invisible="not portal_active" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Tab 4: Product Pricing -->
+                            <page string="تسعيرة المنتجات / Product Pricing" name="pricing">
+                                <field name="pricing_ids">
+                                    <list editable="bottom">
+                                        <field name="subtype_id" options="{'no_create': true}"/>
+                                        <field name="type_id" readonly="1" optional="show"/>
+                                        <field name="category_id" readonly="1" optional="show"/>
+                                        <field name="base_premium"/>
+                                        <field name="min_premium" optional="show"/>
+                                        <field name="max_premium" optional="show"/>
+                                        <field name="override_integration" optional="show"/>
+                                        <field name="integration_type"
+                                            invisible="not override_integration" optional="show"/>
+                                        <field name="portal_product_url"
+                                            invisible="integration_type != 'portal' or not override_integration"
+                                            optional="show" widget="url"/>
+                                        <field name="active" optional="show"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <!-- Tab 5: Notes -->
                             <page string="Notes" name="notes">
                                 <group string="Address">
                                     <field name="address" nolabel="1" colspan="2"
@@ -108,6 +249,7 @@
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">Add your first insurance company!</p>
                 <p>List all insurance providers / underwriters you work with as a broker.</p>
+                <p>Configure each company's integration type: Manual, Direct Portal, or API.</p>
             </field>
         </record>
 
