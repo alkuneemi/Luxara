@@ -108,7 +108,7 @@ class InsuranceCompanyProvider(models.Model):
                 'website': vals.get('website'),
                 'country_id': vals.get('country_id'),
                 'is_company': True,
-                'supplier_rank': 1, # هذا الحقل يجعله يظهر في قائمة الموردين
+
             }
             # إنشاء الـ Partner وربطه بالحقل
             partner = self.env['res.partner'].sudo().create(partner_vals)
