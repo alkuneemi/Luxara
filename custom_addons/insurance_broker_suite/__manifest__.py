@@ -98,10 +98,10 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         # Oman Agent
         'views/oman_agent_templates.xml',
         'views/sahab_call_center.xml',
-        # Commission Rate Menu
-        'views/insurance_commission_menu_patch.xml',
-        # Menus (last)
+        # Menus (last — must be before patch so parent IDs exist)
         'views/insurance_menu.xml',
+        # Commission Rate Menu (after main menu so menu_insurance_config exists)
+        'views/insurance_commission_menu_patch.xml',
     ],
     'assets': {
         'web.assets_backend': [
