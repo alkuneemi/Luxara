@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ── CATEGORIES ─────────────────────────────────── -->
+        <record id="cat_motor" model="insurance.category">
+            <field name="name">Motor Insurance</field>
+            <field name="name_ar">تأمين المركبات</field>
+            <field name="icon">fa-car</field>
+            <field name="sequence">10</field>
+            <field name="description">Coverage for cars, motorcycles, trucks and all motor vehicles</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_medical" model="insurance.category">
+            <field name="name">Medical Insurance</field>
+            <field name="name_ar">التأمين الطبي</field>
+            <field name="icon">fa-heartbeat</field>
+            <field name="sequence">20</field>
+            <field name="description">Health and medical coverage for individuals and groups</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_property" model="insurance.category">
+            <field name="name">Property &amp; Fire</field>
+            <field name="name_ar">تأمين الممتلكات والحريق</field>
+            <field name="icon">fa-home</field>
+            <field name="sequence">30</field>
+            <field name="description">Protection for buildings, contents, and commercial property</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_marine" model="insurance.category">
+            <field name="name">Marine Insurance</field>
+            <field name="name_ar">التأمين البحري</field>
+            <field name="icon">fa-ship</field>
+            <field name="sequence">40</field>
+            <field name="description">Cargo, hull, and marine liability insurance</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_life" model="insurance.category">
+            <field name="name">Life Insurance</field>
+            <field name="name_ar">التأمين على الحياة</field>
+            <field name="icon">fa-heart</field>
+            <field name="sequence">50</field>
+            <field name="description">Life, term, and personal accident insurance</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <record id="cat_workmen" model="insurance.category">
+            <field name="name">Workmen Compensation</field>
+            <field name="name_ar">تعويض العمال</field>
+            <field name="icon">fa-users</field>
+            <field name="sequence">60</field>
+            <field name="description">Employee injury and occupational hazard coverage</field>
+            <field name="website_published" eval="True"/>
+        </record>
+
+        <!-- ── TYPES — MOTOR ─────────────────────────────── -->
+        <record id="type_motor_tp" model="insurance.type">
+            <field name="name">Third Party Liability</field>
+            <field name="name_ar">طرف ثالث</field>
+            <field name="category_id" ref="cat_motor"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_motor_comp" model="insurance.type">
+            <field name="name">Comprehensive</field>
+            <field name="name_ar">شامل</field>
+            <field name="category_id" ref="cat_motor"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ── TYPES — MEDICAL ───────────────────────────── -->
+        <record id="type_med_individual" model="insurance.type">
+            <field name="name">Individual Medical</field>
+            <field name="name_ar">تأمين طبي فردي</field>
+            <field name="category_id" ref="cat_medical"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_med_family" model="insurance.type">
+            <field name="name">Family Medical</field>
+            <field name="name_ar">تأمين طبي عائلي</field>
+            <field name="category_id" ref="cat_medical"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="type_med_corporate" model="insurance.type">
+            <field name="name">Corporate / Group Medical</field>
+            <field name="name_ar">تأمين طبي للشركات</field>
+            <field name="category_id" ref="cat_medical"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- ── TYPES — PROPERTY ──────────────────────────── -->
+        <record id="type_fire" model="insurance.type">
+            <field name="name">Fire Insurance</field>
+            <field name="name_ar">تأمين الحريق</field>
+            <field name="category_id" ref="cat_property"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_property_all_risk" model="insurance.type">
+            <field name="name">All Risks Property</field>
+            <field name="name_ar">تأمين شامل للممتلكات</field>
+            <field name="category_id" ref="cat_property"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ── TYPES — MARINE ───────────────────────────── -->
+        <record id="type_marine_cargo" model="insurance.type">
+            <field name="name">Marine Cargo</field>
+            <field name="name_ar">شحن بحري</field>
+            <field name="category_id" ref="cat_marine"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_marine_hull" model="insurance.type">
+            <field name="name">Marine Hull</field>
+            <field name="name_ar">بدن السفينة</field>
+            <field name="category_id" ref="cat_marine"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ── TYPES — LIFE ─────────────────────────────── -->
+        <record id="type_life_term" model="insurance.type">
+            <field name="name">Term Life</field>
+            <field name="name_ar">تأمين حياة مؤقت</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="type_life_personal_accident" model="insurance.type">
+            <field name="name">Personal Accident</field>
+            <field name="name_ar">حوادث شخصية</field>
+            <field name="category_id" ref="cat_life"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ── TYPES — WORKMEN ───────────────────────────── -->
+        <record id="type_wc" model="insurance.type">
+            <field name="name">Workmen Compensation</field>
+            <field name="name_ar">تعويض العمال</field>
+            <field name="category_id" ref="cat_workmen"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ── SUB-TYPES — MOTOR ─────────────────────────── -->
+        <record id="sub_motor_tp" model="insurance.subtype">
+            <field name="name">Third Party — Standard</field>
+            <field name="type_id" ref="type_motor_tp"/>
+            <field name="form_type">motor</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_booking_slip" eval="True"/>
+            <field name="additional_documents">Copy of driving licence, Vehicle registration card (Mulkiya)</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="sub_motor_comp" model="insurance.subtype">
+            <field name="name">Comprehensive</field>
+            <field name="type_id" ref="type_motor_comp"/>
+            <field name="form_type">motor</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="has_booking_slip" eval="True"/>
+            <field name="additional_documents">Copy of driving licence, Vehicle registration card (Mulkiya), Vehicle photos (4 sides)</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ── SUB-TYPES — MEDICAL ───────────────────────── -->
+        <record id="sub_med_individual" model="insurance.subtype">
+            <field name="name">Individual</field>
+            <field name="type_id" ref="type_med_individual"/>
+            <field name="form_type">medical_individual</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Copy of ID card / passport</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="sub_med_family" model="insurance.subtype">
+            <field name="name">Family</field>
+            <field name="type_id" ref="type_med_family"/>
+            <field name="form_type">medical_individual</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Copy of ID / passport for all members</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="sub_med_corporate" model="insurance.subtype">
+            <field name="name">Corporate / Group</field>
+            <field name="type_id" ref="type_med_corporate"/>
+            <field name="form_type">medical_corporate</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Employee list with DOB and salaries, CR Certificate</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ── SUB-TYPES — PROPERTY ──────────────────────── -->
+        <record id="sub_fire_residential" model="insurance.subtype">
+            <field name="name">Residential</field>
+            <field name="type_id" ref="type_fire"/>
+            <field name="form_type">property_fire</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Property valuation report, Copy of title deed / lease</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="sub_fire_commercial" model="insurance.subtype">
+            <field name="name">Commercial / Warehouse</field>
+            <field name="type_id" ref="type_fire"/>
+            <field name="form_type">property_fire</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="has_comparison_sheet" eval="True"/>
+            <field name="additional_documents">Property valuation report, CR Certificate, Stock list</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ── SUB-TYPES — MARINE ────────────────────────── -->
+        <record id="sub_marine_cargo" model="insurance.subtype">
+            <field name="name">Marine Cargo — Single Voyage</field>
+            <field name="type_id" ref="type_marine_cargo"/>
+            <field name="form_type">marine</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Bill of lading, Commercial invoice, Packing list</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ── SUB-TYPES — LIFE ──────────────────────────── -->
+        <record id="sub_life_term" model="insurance.subtype">
+            <field name="name">Term Life Insurance</field>
+            <field name="type_id" ref="type_life_term"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Copy of ID / passport, Medical report (if sum assured exceeds 100,000 OMR)</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="sub_personal_accident" model="insurance.subtype">
+            <field name="name">Personal Accident</field>
+            <field name="type_id" ref="type_life_personal_accident"/>
+            <field name="form_type">life</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- ── SUB-TYPES — WORKMEN ───────────────────────── -->
+        <record id="sub_wc" model="insurance.subtype">
+            <field name="name">Workmen Compensation</field>
+            <field name="type_id" ref="type_wc"/>
+            <field name="form_type">workmen</field>
+            <field name="has_proposal_form" eval="True"/>
+            <field name="additional_documents">Employee register, CR Certificate, Previous claims history</field>
+            <field name="sequence">10</field>
+        </record>
+
+    </data>
+</odoo>
