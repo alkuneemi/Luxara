@@ -1,0 +1,952 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+<!-- ══ LAYOUT BASE ══════════════════════════════════════════════════════════ -->
+<template id="insurance_layout" name="Insurance Layout">
+    <t t-call="website.layout">
+        <div id="wrap" class="o_insurance_wrap">
+            <t t-out="0"/>
+        </div>
+    </t>
+</template>
+
+<!-- ══ HOMEPAGE — CATEGORIES ════════════════════════════════════════════════ -->
+<template id="insurance_home" name="Insurance — Home">
+    <t t-call="insurance_broker_suite.insurance_layout">
+        <!-- ══ AI CALL CENTER HERO ══════════════════════════════════════════ -->
+        <section class="o_ins_ai_hero">
+            <div class="container position-relative" style="z-index:1">
+                <div class="row align-items-center g-5">
+
+                    <!-- Left: Text + CTA -->
+                    <div class="col-lg-6 text-white text-center text-lg-start">
+                        <div class="o_ins_ai_badge">
+                            <span class="o_ins_ai_badge_dot"/>
+                            AI Call Center — Online 24/7
+                        </div>
+                        <h1 class="display-5 fw-bold text-white mb-3 lh-sm">
+                            Your Smart<br/>Insurance Expert
+                        </h1>
+                        <p class="lead mb-2" style="color:rgba(255,255,255,0.72)">
+                            Get instant quotes, apply for coverage, track claims, and speak to our
+                            <strong style="color:#93c5fd">AI-powered call center</strong> anytime — in Arabic or English.
+                        </p>
+                        <p class="mb-4 small" style="color:rgba(255,255,255,0.45)">
+                            Powered by AI · 52 insurance products · Oman's leading broker
+                        </p>
+                        <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                            <button class="o_ins_ai_cta_btn" data-open-cc="1">
+                                <i class="fa fa-headphones"/>
+                                Talk to AI Agent
+                            </button>
+                            <a href="#insurance-categories" class="btn btn-lg btn-outline-light rounded-pill px-4">
+                                <i class="fa fa-th me-2"/>Browse Insurance
+                            </a>
+                        </div>
+                        <!-- Mini stats row -->
+                        <div class="d-flex flex-wrap gap-4 mt-5 justify-content-center justify-content-lg-start">
+                            <div class="text-center">
+                                <div class="fw-bold text-white fs-4">52+</div>
+                                <div class="small" style="color:rgba(255,255,255,0.5)">Products</div>
+                            </div>
+                            <div style="width:1px;background:rgba(255,255,255,0.15)"/>
+                            <div class="text-center">
+                                <div class="fw-bold text-white fs-4">24/7</div>
+                                <div class="small" style="color:rgba(255,255,255,0.5)">AI Support</div>
+                            </div>
+                            <div style="width:1px;background:rgba(255,255,255,0.15)"/>
+                            <div class="text-center">
+                                <div class="fw-bold text-white fs-4">2h</div>
+                                <div class="small" style="color:rgba(255,255,255,0.5)">Quote Response</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: AI Agent Illustration -->
+                    <div class="col-lg-6 text-center d-none d-lg-block">
+                        <div class="o_ins_ai_agent_wrapper" data-open-cc="1">
+                            <!-- Pulse rings behind the agent -->
+                            <div class="o_ins_ai_pulse_ring"/>
+                            <div class="o_ins_ai_pulse_ring"/>
+                            <div class="o_ins_ai_pulse_ring"/>
+
+                            <!-- AI Agent SVG Illustration -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 430" class="o_ins_ai_agent_svg">
+                                <defs>
+                                    <radialGradient id="aBg" cx="50%" cy="44%" r="55%">
+                                        <stop offset="0%" stop-color="#dbeafe"/>
+                                        <stop offset="100%" stop-color="#eff6ff"/>
+                                    </radialGradient>
+                                    <linearGradient id="aSkin" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#fde3c5"/>
+                                        <stop offset="100%" stop-color="#f4b68c"/>
+                                    </linearGradient>
+                                    <linearGradient id="aSuit" x1="0" y1="0" x2="0.3" y2="1">
+                                        <stop offset="0%" stop-color="#1e3a8a"/>
+                                        <stop offset="100%" stop-color="#0f172a"/>
+                                    </linearGradient>
+                                    <linearGradient id="aTie" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#3b82f6"/>
+                                        <stop offset="100%" stop-color="#1d4ed8"/>
+                                    </linearGradient>
+                                    <filter id="aShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1e3a8a" flood-opacity="0.25"/>
+                                    </filter>
+                                </defs>
+
+                                <!-- Background glow circle -->
+                                <ellipse cx="170" cy="215" rx="158" ry="205" fill="url(#aBg)" opacity="0.75" filter="url(#aShadow)"/>
+
+                                <!-- Suit body — left side -->
+                                <path d="M52,430 L52,308 Q78,272 128,263 L128,282 Q96,292 72,318 L62,430Z" fill="url(#aSuit)"/>
+                                <!-- Suit body — right side -->
+                                <path d="M288,430 L288,308 Q262,272 212,263 L212,282 Q244,292 268,318 L278,430Z" fill="url(#aSuit)"/>
+                                <!-- Shirt centre -->
+                                <path d="M128,263 L212,263 L218,430 L122,430Z" fill="#f8fafc"/>
+                                <!-- Tie -->
+                                <path d="M157,268 L183,268 L188,306 L170,320 L152,306Z" fill="url(#aTie)"/>
+                                <path d="M170,320 L165,348 L170,356 L175,348Z" fill="#1d4ed8"/>
+                                <!-- Tie knot -->
+                                <ellipse cx="170" cy="268" rx="13" ry="7" fill="#2563eb"/>
+
+                                <!-- Neck -->
+                                <rect x="150" y="224" width="40" height="48" rx="10" fill="url(#aSkin)"/>
+                                <!-- Neck shadow -->
+                                <rect x="150" y="240" width="40" height="8" rx="4" fill="#e8a878" opacity="0.35"/>
+
+                                <!-- Head -->
+                                <ellipse cx="170" cy="166" rx="63" ry="68" fill="url(#aSkin)"/>
+
+                                <!-- Hair — top/back -->
+                                <path d="M107,150 Q109,86 170,82 Q231,86 233,150 Q233,106 170,100 Q107,106 107,150Z" fill="#1a0d00"/>
+                                <!-- Hair sides -->
+                                <path d="M107,150 Q105,132 108,120" stroke="#1a0d00" stroke-width="2" fill="none"/>
+                                <path d="M233,150 Q235,132 232,120" stroke="#1a0d00" stroke-width="2" fill="none"/>
+
+                                <!-- Ears -->
+                                <ellipse cx="107" cy="166" rx="10" ry="13" fill="url(#aSkin)"/>
+                                <ellipse cx="233" cy="166" rx="10" ry="13" fill="url(#aSkin)"/>
+                                <!-- Ear detail -->
+                                <path d="M110,160 Q113,166 110,172" stroke="#e8a878" stroke-width="1.5" fill="none"/>
+
+                                <!-- Eyebrows -->
+                                <path d="M140,143 Q152,138 163,143" stroke="#2d1400" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                                <path d="M177,143 Q189,138 201,143" stroke="#2d1400" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+                                <!-- Eyes — whites -->
+                                <ellipse cx="151" cy="156" rx="11" ry="12" fill="white"/>
+                                <ellipse cx="189" cy="156" rx="11" ry="12" fill="white"/>
+                                <!-- Irises — blue -->
+                                <circle cx="152" cy="157" r="8" fill="#3b82f6"/>
+                                <circle cx="190" cy="157" r="8" fill="#3b82f6"/>
+                                <!-- Pupils -->
+                                <circle cx="153" cy="158" r="4.5" fill="#1e293b"/>
+                                <circle cx="191" cy="158" r="4.5" fill="#1e293b"/>
+                                <!-- Eye shine -->
+                                <circle cx="155" cy="155" r="2" fill="white" opacity="0.95"/>
+                                <circle cx="193" cy="155" r="2" fill="white" opacity="0.95"/>
+                                <!-- Lower lashes hint -->
+                                <path d="M141,165 Q151,170 161,165" stroke="#e8a878" stroke-width="0.8" fill="none" opacity="0.4"/>
+                                <path d="M179,165 Q189,170 199,165" stroke="#e8a878" stroke-width="0.8" fill="none" opacity="0.4"/>
+
+                                <!-- Nose -->
+                                <path d="M165,170 Q170,182 175,170" stroke="#d48a60" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                                <!-- Nostril hint -->
+                                <circle cx="166" cy="180" r="2.5" fill="#d48a60" opacity="0.3"/>
+                                <circle cx="174" cy="180" r="2.5" fill="#d48a60" opacity="0.3"/>
+
+                                <!-- Smile -->
+                                <path d="M149,192 Q170,207 191,192" stroke="#c07040" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                                <!-- Teeth hint -->
+                                <path d="M153,194 Q170,204 187,194" fill="white" opacity="0.5"/>
+
+                                <!-- Cheek blush -->
+                                <ellipse cx="128" cy="180" rx="16" ry="11" fill="#fcb8b8" opacity="0.28"/>
+                                <ellipse cx="212" cy="180" rx="16" ry="11" fill="#fcb8b8" opacity="0.28"/>
+
+                                <!-- ═══ HEADSET ═══════════════════════════════════ -->
+                                <!-- Headset band arc over head -->
+                                <path d="M107,160 Q107,78 170,74 Q233,78 233,160"
+                                      stroke="#1f2937" stroke-width="11" fill="none" stroke-linecap="round"/>
+                                <!-- Band highlight -->
+                                <path d="M110,155 Q110,86 170,82 Q230,86 230,155"
+                                      stroke="#374151" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+                                <!-- Left earpiece housing -->
+                                <rect x="90" y="150" width="26" height="32" rx="12" fill="#111827"/>
+                                <rect x="94" y="154" width="18" height="24" rx="9" fill="#1f2937"/>
+                                <!-- Left speaker mesh -->
+                                <circle cx="103" cy="166" r="5" fill="#374151"/>
+                                <circle cx="103" cy="166" r="2.5" fill="#4b5563"/>
+
+                                <!-- Right earpiece housing -->
+                                <rect x="224" y="150" width="26" height="32" rx="12" fill="#111827"/>
+                                <rect x="228" y="154" width="18" height="24" rx="9" fill="#1f2937"/>
+                                <!-- Right speaker mesh -->
+                                <circle cx="237" cy="166" r="5" fill="#374151"/>
+                                <circle cx="237" cy="166" r="2.5" fill="#4b5563"/>
+
+                                <!-- Mic boom arm -->
+                                <path d="M96,175 Q83,192 80,212" stroke="#1f2937" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+                                <!-- Mic capsule -->
+                                <rect x="72" y="208" width="24" height="14" rx="7" fill="#3b82f6"/>
+                                <circle cx="84" cy="215" r="4" fill="#1d4ed8"/>
+                                <!-- Mic LED dot -->
+                                <circle cx="90" cy="210" r="2.5" fill="#10b981"/>
+
+                                <!-- ═══ FLOATING BADGES ════════════════════════════ -->
+                                <!-- Online badge — top right -->
+                                <rect x="218" y="86" width="96" height="28" rx="14" fill="#059669"/>
+                                <circle cx="232" cy="100" r="5" fill="#ecfdf5"/>
+                                <text x="268" y="105" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="white">ONLINE 24/7</text>
+
+                                <!-- Chat bubble — left -->
+                                <rect x="8" y="126" width="88" height="52" rx="14" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+                                <polygon points="20,178 36,178 20,192" fill="white"/>
+                                <polygon points="19,178 37,179 19,193" fill="#e5e7eb"/>
+                                <text x="52" y="147" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="10" fill="#374151">How can I</text>
+                                <text x="52" y="161" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="10" fill="#374151">help you</text>
+                                <text x="52" y="175" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="10.5" fill="#374151">today? 😊</text>
+
+                                <!-- Stats card — bottom right -->
+                                <rect x="232" y="240" width="96" height="58" rx="14" fill="#3b82f6"/>
+                                <text x="280" y="260" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="10.5" font-weight="700" fill="white">AI Insurance</text>
+                                <text x="280" y="275" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="9.5" fill="#bfdbfe">Expert · 52 Products</text>
+                                <text x="280" y="289" text-anchor="middle"
+                                      font-family="Arial,sans-serif" font-size="9" fill="#93c5fd">Arabic / English</text>
+
+                                <!-- Decorative dots -->
+                                <circle cx="34" cy="258" r="5" fill="#3b82f6" opacity="0.3"/>
+                                <circle cx="50" cy="278" r="3" fill="#6366f1" opacity="0.22"/>
+                                <circle cx="22" cy="285" r="3.5" fill="#3b82f6" opacity="0.18"/>
+                                <circle cx="308" cy="148" r="4.5" fill="#10b981" opacity="0.4"/>
+                                <circle cx="322" cy="168" r="3" fill="#3b82f6" opacity="0.3"/>
+                                <circle cx="316" cy="195" r="2" fill="#6366f1" opacity="0.2"/>
+                            </svg>
+
+                            <!-- Click hint label -->
+                            <div class="o_ins_ai_click_hint">
+                                <i class="fa fa-hand-pointer-o me-1"/>
+                                Click to chat with AI Agent
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        
+        <div class="o_cc_overlay" id="oCCOverlay">
+    <div class="o_cc_panel" id="oCCPanel" style="max-width: 450px;"> 
+        <div class="o_cc_header">
+            <div class="o_cc_agent_info">
+                <div class="o_cc_avatar_wrap">
+                    <div class="o_cc_avatar" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white;">
+                        <i class="fa fa-phone-square"/>
+                    </div>
+                    <span class="o_cc_status_dot" style="background-color: #10b981; animation: pulse 2s infinite;"/>
+                </div>
+                <div>
+                    <div class="o_cc_agent_name">Ameen — Live Voice AI</div>
+                    <div class="o_cc_agent_status">
+                        <span class="badge bg-danger-subtle text-danger fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">LIVE CALL</span>
+                    </div>
+                    <div class="o_cc_agent_caption">اتصال مباشر • مستشارك التأميني الذكي متاح الآن</div>
+                </div>
+            </div>
+            <button class="o_cc_close" id="oCCClose" title="Close">&#215;</button>
+        </div>
+
+        <div class="o_cc_voice_area d-flex flex-column align-items-center justify-content-center py-5 px-4 text-center">
+            
+            <div class="o_cc_voice_title mb-2 fs-5 fw-bold text-dark">
+                مركز الاتصال الصوتي المباشر (كول سنتر حي)
+            </div>
+            <div class="o_cc_voice_sub text-muted small mb-4">
+                اضغط على زر الاتصال بالأسفل لفتح الخط. تحدث وسيستمع المستشار إليك ويرد فوراً بمجرد صمتك تلقائياً.
+            </div>
+
+            <!-- تموجات الصوت -->
+            <div class="o_cc_waveform d-flex align-items-end justify-content-center gap-1 mb-5" style="height: 60px; min-height: 60px; width: 100%; opacity: 0.2; transition: opacity 0.3s ease;">
+                <div class="o_cc_wave_bar" style="width: 4px; height: 15px; background: #3b82f6; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 35px; background: #3b82f6; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 50px; background: #2563eb; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 25px; background: #1d4ed8; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 45px; background: #3b82f6; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 60px; background: #2563eb; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 30px; background: #1d4ed8; border-radius: 2px;"/>
+                <div class="o_cc_wave_bar" style="width: 4px; height: 15px; background: #3b82f6; border-radius: 2px;"/>
+            </div>
+
+            <!-- زر الاتصال الرئيسي / إنهاء المكالمة -->
+            <div class="position-relative mb-4">
+                <button class="o_cc_record_btn d-flex align-items-center justify-content-center" id="oCCRecord" title="ابدأ المكالمة الحية" 
+                        style="width: 90px; height: 90px; border-radius: 50%; border: none; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-size: 32px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); transition: all 0.3s ease; cursor: pointer;">
+                    <i class="fa fa-phone" id="micIcon"/>
+                </button>
+            </div>
+
+            <div class="o_cc_voice_status fw-semibold text-primary mb-4" id="oCCVoiceStatus" style="font-size: 14px;">
+                اضغط على زر الهاتف لبدء المكالمة الحية
+            </div>
+
+            <div class="o_cc_transcript p-3 rounded w-100 mb-3 border text-start" id="oCCTranscript" 
+                 style="background-color: #f8fafc; font-size: 13px; max-height: 120px; overflow-y: auto; min-height: 60px; display: none; direction: rtl;">
+            </div>
+
+            <div class="o_cc_voice_info text-muted text-start mt-3 p-3 rounded border-top w-100" style="font-size: 11px; background-color: #fff;">
+                <i class="fa fa-info-circle text-primary me-1"/>
+                <span>
+                    المكالمة مستمرة حياً؛ بمجرد التوقف عن الكلام لمدة 3 ثوانٍ سيتولى الـ AI معالجة طلبك والرد صوتياً، ثم يعود للاستماع تلقائياً.
+                </span>
+            </div>
+        </div>
+    </div>
+</div>   
+
+        
+        <!-- Categories Grid -->
+        <section class="py-5" id="insurance-categories">
+            <div class="container">
+                <h2 class="text-center fw-bold mb-2">Insurance Categories</h2>
+                <p class="text-center text-muted mb-5">Choose the type of insurance coverage you need</p>
+                <div class="row g-4 justify-content-center">
+                    <t t-foreach="categories" t-as="cat">
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <a t-attf-href="/insurance/category/#{cat.id}/types" class="text-decoration-none">
+                                <div class="o_ins_cat_card h-100">
+                                    <div class="o_ins_cat_icon">
+                                        <i t-attf-class="fa #{cat.icon} fa-2x"/>
+                                    </div>
+                                    <div class="o_ins_cat_name" t-esc="cat.name"/>
+                                    <div class="o_ins_cat_desc text-muted small mt-1" t-if="cat.description" t-esc="cat.description"/>
+                                    <div class="o_ins_cat_count mt-2">
+                                        <span class="badge bg-light text-dark"><t t-esc="len(cat.type_ids)"/> types</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                    <t t-if="not categories">
+                        <div class="col-12 text-center py-5 text-muted">
+                            <i class="fa fa-shield fa-3x mb-3 d-block"/>
+                            <p>No insurance categories available yet. Please check back later.</p>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section class="o_ins_steps_section py-5">
+            <div class="container">
+                <h2 class="text-center fw-bold mb-5">How It Works</h2>
+                <div class="row g-4 text-center">
+                    <div class="col-md-3">
+                        <div class="o_ins_step_num">1</div>
+                        <h5 class="mt-3 fw-semibold">Choose Category</h5>
+                        <p class="text-muted small">Select the type of insurance that fits your needs</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_ins_step_num">2</div>
+                        <h5 class="mt-3 fw-semibold">Select Coverage</h5>
+                        <p class="text-muted small">Pick from available coverage options and sub-types</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_ins_step_num">3</div>
+                        <h5 class="mt-3 fw-semibold">Fill Application</h5>
+                        <p class="text-muted small">Complete the form and upload required documents</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="o_ins_step_num">4</div>
+                        <h5 class="mt-3 fw-semibold">Track Your Request</h5>
+                        <p class="text-muted small">Login to your account and follow your application status</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ LOGIN MODAL (shown when user is not logged in) ══════════════ -->
+        <t t-if="show_login_modal">
+            <t t-call="insurance_broker_suite.insurance_login_modal"/>
+        </t>
+    </t>
+</template>
+
+<!-- ══ CATEGORY PAGE — TYPES ════════════════════════════════════════════════ -->
+<template id="insurance_category_page" name="Insurance — Category">
+    <t t-call="insurance_broker_suite.insurance_layout">
+        <section class="o_ins_hero o_ins_hero_sm">
+            <div class="container py-4 text-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb justify-content-center">
+                        <li class="breadcrumb-item"><a href="/insurance/categories" class="text-white-50">Insurance</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page"><t t-esc="category.name"/></li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold text-white mb-1">
+                    <i t-attf-class="fa #{category.icon} me-2"/>
+                    <t t-esc="category.name"/>
+                </h1>
+                <p class="text-white-50 mb-0" t-if="category.description" t-esc="category.description"/>
+            </div>
+        </section>
+
+        <section class="py-5">
+            <div class="container">
+                <h2 class="fw-bold mb-2">Available Coverage Types</h2>
+                <p class="text-muted mb-5">Select the insurance type that best suits your requirements</p>
+                <div class="row g-4">
+                    <t t-foreach="types" t-as="ins_type">
+                        <div class="col-md-6 col-lg-4">
+                            <a t-attf-href="/insurance/type/#{ins_type.id}/subtypes" class="text-decoration-none">
+                                <div class="o_ins_type_card h-100">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="o_ins_type_icon me-3">
+                                            <i class="fa fa-file-text-o"/>
+                                        </div>
+                                        <h5 class="mb-0 fw-semibold" t-esc="ins_type.name"/>
+                                    </div>
+                                    <p class="text-muted small mb-3" t-if="ins_type.description" t-esc="ins_type.description"/>
+                                    <div class="d-flex align-items-center justify-content-between mt-auto">
+                                        <span class="badge bg-primary-subtle text-primary">
+                                            <t t-esc="len(ins_type.subtype_ids)"/> options
+                                        </span>
+                                        <span class="text-primary small fw-semibold">Select →</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                    <t t-if="not types">
+                        <div class="col-12 text-center py-5 text-muted">
+                            <p>No insurance types configured for this category yet.</p>
+                        </div>
+                    </t>
+                </div>
+                <div class="mt-4">
+                    <a href="/insurance/categories" class="btn btn-outline-secondary">← Back to Categories</a>
+                </div>
+            </div>
+        </section>
+
+    </t>
+</template>
+
+<!-- ══ TYPE PAGE — SUB-TYPES ════════════════════════════════════════════════ -->
+<template id="insurance_type_page" name="Insurance — Type">
+    <t t-call="insurance_broker_suite.insurance_layout">
+        <section class="o_ins_hero o_ins_hero_sm">
+            <div class="container py-4 text-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb justify-content-center">
+                        <li class="breadcrumb-item"><a href="/insurance/categories" class="text-white-50">Insurance</a></li>
+                        <li class="breadcrumb-item"><a t-attf-href="/insurance/category/#{ins_type.category_id.id}/types" class="text-white-50"><t t-esc="ins_type.category_id.name"/></a></li>
+                        <li class="breadcrumb-item active text-white"><t t-esc="ins_type.name"/></li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold text-white mb-1"><t t-esc="ins_type.name"/></h1>
+            </div>
+        </section>
+
+        <section class="py-5">
+            <div class="container">
+                <h2 class="fw-bold mb-2">Choose Your Coverage Option</h2>
+                <p class="text-muted mb-5">Select the specific coverage that matches your situation</p>
+                <div class="row g-4">
+                    <t t-foreach="subtypes" t-as="sub">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="o_ins_sub_card h-100 d-flex flex-column">
+                                <h5 class="fw-semibold mb-2" t-esc="sub.name"/>
+                                <p class="text-muted small flex-grow-1" t-if="sub.description" t-esc="sub.description"/>
+                                <!-- Required documents badges -->
+                                <div class="mb-3" t-if="sub.has_proposal_form or sub.has_comparison_sheet or sub.has_booking_slip">
+                                    <small class="text-muted d-block mb-1 fw-semibold">Required Documents:</small>
+                                    <span t-if="sub.has_proposal_form" class="badge bg-warning-subtle text-warning me-1 mb-1">Proposal Form</span>
+                                    <span t-if="sub.has_comparison_sheet" class="badge bg-info-subtle text-info me-1 mb-1">Comparison Sheet</span>
+                                    <span t-if="sub.has_booking_slip" class="badge bg-success-subtle text-success me-1 mb-1">Booking Slip</span>
+                                </div>
+                                <a t-attf-href="/insurance/application/form?subtype_id=#{sub.id}" class="btn btn-primary w-100 mt-auto">
+                                    Apply Now →
+                                </a>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="not subtypes">
+                        <div class="col-12 text-center py-5 text-muted">
+                            <p>No coverage options available for this type yet.</p>
+                        </div>
+                    </t>
+                </div>
+                <div class="mt-4">
+                    <a t-attf-href="/insurance/category/#{ins_type.category_id.id}/types" class="btn btn-outline-secondary">← Back</a>
+                </div>
+            </div>
+        </section>
+    </t>
+</template>
+
+<!-- ══ APPLICATION FORM ══════════════════════════════════════════════════════ -->
+<template id="insurance_apply_form" name="Insurance — Application Form">
+    <t t-call="insurance_broker_suite.insurance_layout">
+        <section class="o_ins_hero o_ins_hero_sm">
+            <div class="container py-4 text-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb justify-content-center">
+                        <li class="breadcrumb-item"><a href="/insurance/categories" class="text-white-50">Insurance</a></li>
+                        <li class="breadcrumb-item"><a t-attf-href="/insurance/category/#{subtype.category_id.id}" class="text-white-50"><t t-esc="subtype.category_id.name"/></a></li>
+                        <li class="breadcrumb-item"><a t-attf-href="/insurance/type/#{subtype.type_id.id}/subtypes" class="text-white-50"><t t-esc="subtype.type_id.name"/></a></li>
+                        <li class="breadcrumb-item active text-white"><t t-esc="subtype.name"/></li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold text-white mb-0"><t t-esc="subtype.name"/> — Application</h1>
+            </div>
+        </section>
+
+        <section class="py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+
+                        <!-- Customer instructions -->
+                        <div t-if="subtype.customer_instructions" class="alert alert-info mb-4" t-out="subtype.customer_instructions"/>
+
+                        <form t-attf-action="/insurance/apply/#{subtype.id}/submit" method="POST" enctype="multipart/form-data" class="o_ins_form" novalidate="novalidate">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                            <!-- ── PERSONAL / CONTACT INFO (always shown) ── -->
+                            <div class="o_ins_form_section">
+                                <div class="o_ins_form_section_title">
+                                    <i class="fa fa-user me-2"/>Personal Information
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="customer_name" class="form-control" t-att-value="values.get('customer_name','')"
+                                            t-attf-class="form-control #{error.get('customer_name') and 'is-invalid' or ''}"/>
+                                        <div class="invalid-feedback">Full name is required.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">ID / Civil Number</label>
+                                        <input type="text" name="id_number" class="form-control" t-att-value="values.get('id_number','')"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                                        <input type="email" name="customer_email" t-attf-class="form-control #{error.get('customer_email') and 'is-invalid' or ''}"
+                                            t-att-value="values.get('customer_email','')"/>
+                                        <div class="invalid-feedback">Valid email is required.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Phone <span class="text-danger">*</span></label>
+                                        <input type="tel" name="customer_phone" t-attf-class="form-control #{error.get('customer_phone') and 'is-invalid' or ''}"
+                                            t-att-value="values.get('customer_phone','')"/>
+                                        <div class="invalid-feedback">Phone number is required.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Nationality</label>
+                                        <input type="text" name="nationality" class="form-control" t-att-value="values.get('nationality','')"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── MOTOR FIELDS ── -->
+                            <t t-if="subtype.form_type == 'motor'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title">
+                                        <i class="fa fa-car me-2"/>Vehicle Information
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Full Name (as on licence)</label>
+                                            <input type="text" name="motor_full_name" class="form-control" t-att-value="values.get('motor_full_name','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Driving Licence Number</label>
+                                            <input type="text" name="motor_license_number" class="form-control" t-att-value="values.get('motor_license_number','')"/>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Plate Number</label>
+                                            <input type="text" name="motor_plate_number" class="form-control" placeholder="e.g. 4526" t-att-value="values.get('motor_plate_number','')"/>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Plate Characters (EN)</label>
+                                            <input type="text" name="motor_plate_character" class="form-control" placeholder="e.g. AA" t-att-value="values.get('motor_plate_character','')"/>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Vehicle Year</label>
+                                            <input type="number" name="motor_year" class="form-control" placeholder="e.g. 2020" t-att-value="values.get('motor_year','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Vehicle Make</label>
+                                            <input type="text" name="motor_make" class="form-control" placeholder="e.g. Toyota" t-att-value="values.get('motor_make','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Vehicle Model</label>
+                                            <input type="text" name="motor_model" class="form-control" placeholder="e.g. Camry" t-att-value="values.get('motor_model','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Chassis Number</label>
+                                            <input type="text" name="motor_chassis_number" class="form-control" t-att-value="values.get('motor_chassis_number','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Vehicle Color</label>
+                                            <input type="text" name="motor_color" class="form-control" t-att-value="values.get('motor_color','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">First Registration Date</label>
+                                            <input type="date" name="motor_vehicle_registration_date" class="form-control" t-att-value="values.get('motor_vehicle_registration_date','')"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── MEDICAL INDIVIDUAL ── -->
+                            <t t-if="subtype.form_type == 'medical_individual'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-heartbeat me-2"/>Medical Coverage Details</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Network Preference</label>
+                                            <select name="med_network_preference" class="form-select">
+                                                <option value="">-- Select --</option>
+                                                <option value="a">Network A (Premium)</option>
+                                                <option value="b">Network B (Standard)</option>
+                                                <option value="any">Any Network</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 d-flex flex-column justify-content-end">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="med_dental_required" id="med_dental"/>
+                                                <label class="form-check-label" for="med_dental">Include Dental Coverage</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="med_optical_required" id="med_optical"/>
+                                                <label class="form-check-label" for="med_optical">Include Optical Coverage</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="med_pre_existing" id="med_pre"/>
+                                                <label class="form-check-label" for="med_pre">Any Pre-existing Medical Conditions?</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold">Pre-existing Condition Details (if any)</label>
+                                            <textarea name="med_pre_existing_details" class="form-control" rows="3" placeholder="Please describe any pre-existing conditions..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── MEDICAL CORPORATE ── -->
+                            <t t-if="subtype.form_type == 'medical_corporate'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-building me-2"/>Corporate Medical Details</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Company / Organization Name</label>
+                                            <input type="text" name="med_company_name" class="form-control" t-att-value="values.get('med_company_name','')"/>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">No. of Employees</label>
+                                            <input type="number" name="med_employee_count" class="form-control" min="1"/>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">No. of Dependents</label>
+                                            <input type="number" name="med_dependents_count" class="form-control" min="0"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Network Preference</label>
+                                            <select name="med_network_preference" class="form-select">
+                                                <option value="">-- Select --</option>
+                                                <option value="a">Network A (Premium)</option>
+                                                <option value="b">Network B (Standard)</option>
+                                                <option value="any">Any Network</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 d-flex flex-column justify-content-end">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="med_dental_required" id="med_corp_dental"/>
+                                                <label class="form-check-label" for="med_corp_dental">Dental Coverage</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="med_optical_required" id="med_corp_optical"/>
+                                                <label class="form-check-label" for="med_corp_optical">Optical Coverage</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── PROPERTY / FIRE ── -->
+                            <t t-if="subtype.form_type == 'property_fire'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-home me-2"/>Property Information</div>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold">Property Address</label>
+                                            <textarea name="prop_address" class="form-control" rows="2" placeholder="Full property address..."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Cover Type</label>
+                                            <select name="prop_cover_type" class="form-select">
+                                                <option value="">-- Select --</option>
+                                                <option value="fire_only">Fire Only</option>
+                                                <option value="fire_theft">Fire &amp; Theft</option>
+                                                <option value="fire_allied">Fire &amp; Allied Perils</option>
+                                                <option value="comprehensive">Comprehensive</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Property Usage</label>
+                                            <select name="prop_usage" class="form-select">
+                                                <option value="">-- Select --</option>
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                                <option value="industrial">Industrial</option>
+                                                <option value="warehouse">Warehouse</option>
+                                                <option value="office">Office</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Building Value (OMR)</label>
+                                            <input type="number" name="prop_building_value" class="form-control" step="0.001" min="0"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Contents Value (OMR)</label>
+                                            <input type="number" name="prop_contents_value" class="form-control" step="0.001" min="0"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Proposer Full Name</label>
+                                            <input type="text" name="prop_proposer_name" class="form-control" t-att-value="values.get('prop_proposer_name','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Profession / Business</label>
+                                            <input type="text" name="prop_profession_business" class="form-control" t-att-value="values.get('prop_profession_business','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Construction Type</label>
+                                            <input type="text" name="prop_construction_type" class="form-control" placeholder="e.g. Concrete, Steel..."/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Year Built</label>
+                                            <input type="number" name="prop_year_built" class="form-control" placeholder="e.g. 2010"/>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="prop_any_previous_loss" id="prop_loss"/>
+                                                <label class="form-check-label" for="prop_loss">Any Previous Loss / Claim?</label>
+                                            </div>
+                                            <textarea name="prop_previous_loss_details" class="form-control mt-1" rows="2" placeholder="Details of previous loss/claim..."></textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="prop_any_rejection" id="prop_rejection"/>
+                                                <label class="form-check-label" for="prop_rejection">Any Previous Insurance Rejection?</label>
+                                            </div>
+                                            <textarea name="prop_rejection_details" class="form-control mt-1" rows="2" placeholder="Details if yes..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── MARINE ── -->
+                            <t t-if="subtype.form_type == 'marine'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-ship me-2"/>Marine / Cargo Details</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Voyage From</label>
+                                            <input type="text" name="marine_voyage_from" class="form-control" t-att-value="values.get('marine_voyage_from','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Voyage To</label>
+                                            <input type="text" name="marine_voyage_to" class="form-control" t-att-value="values.get('marine_voyage_to','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Departure Date</label>
+                                            <input type="date" name="marine_departure_date" class="form-control"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Expected Arrival Date</label>
+                                            <input type="date" name="marine_arrival_date" class="form-control"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Cargo / Goods Type</label>
+                                            <input type="text" name="marine_cargo_type" class="form-control" t-att-value="values.get('marine_cargo_type','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Cargo Value (OMR)</label>
+                                            <input type="number" name="marine_cargo_value" class="form-control" step="0.001" min="0"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Vessel / Ship Name</label>
+                                            <input type="text" name="marine_vessel_name" class="form-control" t-att-value="values.get('marine_vessel_name','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Packing / Container Type</label>
+                                            <input type="text" name="marine_packing" class="form-control" t-att-value="values.get('marine_packing','')"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── LIFE ── -->
+                            <t t-if="subtype.form_type == 'life'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-heart me-2"/>Life Insurance Details</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Sum Assured (OMR)</label>
+                                            <input type="number" name="life_sum_assured" class="form-control" step="0.001" min="0"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Policy Term (Years)</label>
+                                            <input type="number" name="life_policy_term" class="form-control" min="1" max="40"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Payment Frequency</label>
+                                            <select name="life_payment_frequency" class="form-select">
+                                                <option value="">-- Select --</option>
+                                                <option value="monthly">Monthly</option>
+                                                <option value="quarterly">Quarterly</option>
+                                                <option value="semi_annual">Semi-Annual</option>
+                                                <option value="annual">Annual</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Occupation</label>
+                                            <input type="text" name="life_occupation" class="form-control" t-att-value="values.get('life_occupation','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Beneficiary Name</label>
+                                            <input type="text" name="life_beneficiary_name" class="form-control" t-att-value="values.get('life_beneficiary_name','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Beneficiary Relationship</label>
+                                            <input type="text" name="life_beneficiary_relation" class="form-control" t-att-value="values.get('life_beneficiary_relation','')"/>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="life_smoker" id="life_smoker"/>
+                                                <label class="form-check-label" for="life_smoker">Smoker?</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="life_hazardous_activity" id="life_haz"/>
+                                                <label class="form-check-label" for="life_haz">Engaged in Hazardous Activities?</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── WORKMEN COMPENSATION ── -->
+                            <t t-if="subtype.form_type == 'workmen'">
+                                <div class="o_ins_form_section">
+                                    <div class="o_ins_form_section_title"><i class="fa fa-hard-hat me-2"/>Workmen Compensation Details</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Company Name</label>
+                                            <input type="text" name="wc_company_name" class="form-control" t-att-value="values.get('wc_company_name','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Nature of Business</label>
+                                            <input type="text" name="wc_business_nature" class="form-control" t-att-value="values.get('wc_business_nature','')"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Number of Employees</label>
+                                            <input type="number" name="wc_employee_count" class="form-control" min="1"/>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Total Annual Wages (OMR)</label>
+                                            <input type="number" name="wc_total_annual_wages" class="form-control" step="0.001" min="0"/>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="wc_any_previous_claims" id="wc_claims"/>
+                                                <label class="form-check-label" for="wc_claims">Any Previous Claims?</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- ── DOCUMENT UPLOAD ── -->
+                            <div class="o_ins_form_section">
+                                <div class="o_ins_form_section_title"><i class="fa fa-paperclip me-2"/>Document Upload</div>
+                                <t t-if="subtype.has_proposal_form or subtype.has_comparison_sheet or subtype.has_booking_slip or subtype.additional_documents">
+                                    <div class="alert alert-warning mb-3">
+                                        <strong>Required Documents:</strong>
+                                        <ul class="mb-0 mt-1">
+                                            <li t-if="subtype.has_proposal_form">Signed Proposal Form</li>
+                                            <li t-if="subtype.has_comparison_sheet">Comparison Sheet</li>
+                                            <li t-if="subtype.has_booking_slip">Booking Slip</li>
+                                            <li t-if="subtype.additional_documents"><t t-esc="subtype.additional_documents"/></li>
+                                        </ul>
+                                    </div>
+                                </t>
+                                <div>
+                                    <label class="form-label fw-semibold">Upload Documents (PDF, Images)</label>
+                                    <input type="file" name="document_files" class="form-control" multiple="multiple" accept=".pdf,.jpg,.jpeg,.png,.gif"/>
+                                    <div class="form-text">You can select multiple files. Max 10MB per file.</div>
+                                </div>
+                            </div>
+
+                            <!-- ── SUBMIT ── -->
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a t-attf-href="/insurance/type/#{subtype.type_id.id}/subtypes" class="btn btn-outline-secondary">← Back</a>
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="fa fa-paper-plane me-2"/>Submit Application
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </t>
+</template>
+
+<!-- ══ THANK YOU ═════════════════════════════════════════════════════════════ -->
+<template id="insurance_thank_you" name="Insurance — Thank You">
+    <t t-call="insurance_broker_suite.insurance_layout">
+        <section class="py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-7 text-center">
+                        <div class="o_ins_thankyou_icon mb-4">✅</div>
+                        <h1 class="fw-bold mb-3">Application Submitted!</h1>
+                        <p class="lead text-muted mb-4">
+                            Thank you for submitting your insurance application. Our team will review it and get back to you shortly.
+                        </p>
+                        <div class="alert alert-info mb-4">
+                            <strong>Your Reference Number:</strong>
+                            <div class="fs-4 fw-bold mt-1" t-esc="reference"/>
+                        </div>
+                        <p class="text-muted mb-5">
+                            Please save this reference number for future correspondence.
+                            You can also track your application status by logging into your account.
+                        </p>
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a href="/web/login" class="btn btn-primary">
+                                <i class="fa fa-user me-2"/>My Account / Track Status
+                            </a>
+                            <a href="/insurance/categories" class="btn btn-outline-secondary">
+                                <i class="fa fa-home me-2"/>Back to Insurance
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </t>
+</template>
+</data>
+</odoo>
