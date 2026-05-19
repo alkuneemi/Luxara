@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_insurance_company_provider_list" model="ir.ui.view">
+            <field name="name">insurance.company.provider.list</field>
+            <field name="model">insurance.company.provider</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Companies">
+                    <field name="name"/>
+                    <field name="code" optional="show"/>
+                    <field name="country_id"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="rating" widget="badge" decoration-success="rating in ('AAA','AA+','AA','AA-')" decoration-info="rating in ('A+','A','A-')" decoration-warning="rating == 'BBB'" decoration-danger="rating in ('BB','B')" optional="show"/>
+                    <field name="portal_active" string="Portal" widget="boolean_toggle"/>
+                    <field name="license_expiry" optional="show"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_insurance_company_provider_form" model="ir.ui.view">
+            <field name="name">insurance.company.provider.form</field>
+            <field name="model">insurance.company.provider</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Company">
+                    <header>
+                        <button name="action_send_portal_invite" string="Send Portal Invite"
+                            type="object" class="btn-primary" invisible="not email"/>
+                        <button name="action_regenerate_token" string="Regenerate Token"
+                            type="object" class="btn-secondary"
+                            confirm="This will invalidate the existing portal link. Proceed?"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="name" placeholder="Company Name"/></h1>
+                            <h4 class="text-muted">
+                                <field name="name_ar" placeholder="اسم الشركة بالعربي"/>
+                            </h4>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Contact &amp; Identity</div>
+                            <group>
+                                <group>
+                                    <field name="email" widget="email"/>
+                                    <field name="phone" widget="phone"/>
+                                    <field name="website" widget="url"/>
+                                </group>
+                                <group>
+                                    <field name="code"/>
+                                    <field name="country_id"/>
+                                    <field name="rating" widget="selection"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Secondary fields -->
+                        <group>
+                            <group string="License &amp; Accounting">
+                                <field name="license_number"/>
+                                <field name="license_expiry"/>
+                                <field name="active"/>
+                                <!-- حقل المورد للوصول السريع إلى الحسابات -->
+                                <field name="partner_id" widget="res_partner_many2one" context="{'show_address': 1}" options='{"always_reload": True}'/>
+                            </group>
+                            <group string="Coverage">
+                                <field name="category_ids" widget="many2many_tags"/>
+                                <field name="type_ids" widget="many2many_tags"/>
+                            </group>
+                        </group>
+
+                        <group string="Provider Portal Access">
+                            <group>
+                                <field name="portal_active" string="Portal Access Enabled"/>
+                                <field name="portal_token" string="Access Token" readonly="1"
+                                    invisible="not portal_active"/>
+                            </group>
+                            <group>
+                                <field name="portal_url" string="Portal URL" widget="url"
+                                    invisible="not portal_active"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Notes" name="notes">
+                                <group string="Address">
+                                    <field name="address" nolabel="1" colspan="2"
+                                        placeholder="Full company address..."/>
+                                </group>
+                                <group string="Internal Notes">
+                                    <field name="notes" nolabel="1" colspan="2"
+                                        placeholder="Internal notes..."/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_insurance_company_provider" model="ir.actions.act_window">
+            <field name="name">Insurance Companies &amp; Providers</field>
+            <field name="res_model">insurance.company.provider</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Add your first insurance company!</p>
+                <p>List all insurance providers / underwriters you work with as a broker.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
