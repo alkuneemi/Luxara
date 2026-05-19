@@ -108,6 +108,9 @@ Insurance Broker Suite for Odoo 19
             'insurance_broker_suite/static/src/js/sahab_ai_chat.js',
             'insurance_broker_suite/static/src/js/website_visit_tracker.js',
             'insurance_broker_suite/static/src/js/sahab_call_center.js',
+            # AI Document Scanner
+            'insurance_broker_suite/static/src/css/ai_doc_scanner.css',
+            'insurance_broker_suite/static/src/js/ai_doc_scanner.js',
         ],
     },
     'images': ['static/description/icon.png'],
