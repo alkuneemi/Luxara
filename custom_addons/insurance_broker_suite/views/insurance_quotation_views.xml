@@ -129,12 +129,11 @@
                                 <group>
                                     <field name="recommended_line_id" string="Recommended Company"/>
                                 </group>
-                                <t t-if="record.recommended_line_id">
-                                    <group string="Recommended Quote Details">
-                                        <field name="recommended_line_id" readonly="1"
-                                            widget="many2one"/>
-                                    </group>
-                                </t>
+                                <group string="Recommended Quote Details"
+                                      invisible="not recommended_line_id">
+                                    <field name="recommended_line_id" readonly="1"
+                                        widget="many2one"/>
+                                </group>
                             </page>
 
                             <!-- Tab: Notes -->
