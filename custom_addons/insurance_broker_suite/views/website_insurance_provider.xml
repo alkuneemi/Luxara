@@ -1,0 +1,758 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Provider Portal — Login / Token Entry
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="provider_portal_login" name="Provider Portal — Login">
+    <t t-call="website.layout">
+        <div class="o_provider_portal">
+            <div class="o_pp_hero_bar">
+                <div class="container text-center py-5">
+                    <div class="o_pp_logo_ring mb-3">
+                        <i class="fa fa-building-o"/>
+                    </div>
+                    <h1 class="fw-bold text-white">Provider Portal</h1>
+                    <p class="text-white opacity-75 fs-5">Ameen Hub Insurance Brokerage</p>
+                </div>
+            </div>
+
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-5">
+
+                        <div class="card shadow-sm border-0 o_pp_login_card">
+                            <div class="card-body p-4 p-md-5">
+                                <h4 class="fw-bold mb-1">Access Your Portal</h4>
+                                <p class="text-muted mb-4">Enter your access token or use the personalised link from your invitation email.</p>
+
+                                <form action="/insurance/provider/" method="get">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Access Token</label>
+                                        <input type="text" name="token" class="form-control form-control-lg o_pp_token_input"
+                                               placeholder="Paste your token here…" required="required"/>
+                                        <div class="form-text">Your token was sent in the invitation email from Ameen Hub.</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-lg w-100 o_pp_btn_primary">
+                                        <i class="fa fa-sign-in me-2"/>Access Portal
+                                    </button>
+                                </form>
+
+                                <hr class="my-4"/>
+                                <p class="text-center text-muted small mb-0">
+                                    Don't have access yet?
+                                    <a href="mailto:rfq@ameenhub.com" class="text-success fw-semibold">Contact us</a>
+                                    to register your company as an approved insurance provider.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="/insurance" class="text-muted text-decoration-none small">
+                                <i class="fa fa-arrow-left me-1"/>Back to Ameen Hub Website
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Provider Portal — Dashboard
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="provider_portal_dashboard" name="Provider Portal — Dashboard">
+    <t t-call="website.layout">
+        <div class="o_provider_portal">
+            <!-- Top Nav Bar -->
+            <div class="o_pp_topbar">
+                <div class="container d-flex align-items-center justify-content-between py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="o_pp_avatar">
+                            <i class="fa fa-building-o"/>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-white fs-5"><t t-esc="provider.name"/></div>
+                            <div class="text-white opacity-75 small">Insurance Provider Portal</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a t-attf-href="/insurance/provider/api?token=#{token}" class="btn btn-outline-light btn-sm">
+                            <i class="fa fa-code me-1"/>API Docs
+                        </a>
+                        <a href="/insurance" class="btn btn-light btn-sm">
+                            <i class="fa fa-external-link me-1"/>Ameen Hub
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container py-4">
+
+                <!-- Stats Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 o_pp_stat_card o_pp_stat_total">
+                            <div class="card-body text-center py-3">
+                                <div class="o_pp_stat_num"><t t-esc="len(rfqs)"/></div>
+                                <div class="o_pp_stat_label">Total RFQs</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 o_pp_stat_card o_pp_stat_quoted">
+                            <div class="card-body text-center py-3">
+                                <div class="o_pp_stat_num"><t t-esc="len(quoted_rfq_ids)"/></div>
+                                <div class="o_pp_stat_label">Quoted</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 o_pp_stat_card o_pp_stat_pending">
+                            <div class="card-body text-center py-3">
+                                <div class="o_pp_stat_num"><t t-esc="len(rfqs) - len(quoted_rfq_ids)"/></div>
+                                <div class="o_pp_stat_label">Awaiting Quote</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 o_pp_stat_card o_pp_stat_info">
+                            <div class="card-body text-center py-3">
+                                <div class="o_pp_stat_num">
+                                    <t t-esc="provider.rating or '—'"/>
+                                </div>
+                                <div class="o_pp_stat_label">Financial Rating</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RFQ Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                        <h5 class="mb-0 fw-bold"><i class="fa fa-inbox me-2 text-success"/>Incoming RFQ Requests</h5>
+                        <span class="badge bg-success rounded-pill"><t t-esc="len(rfqs)"/> Total</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <t t-if="rfqs">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 o_pp_rfq_table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Insurance Type</th>
+                                            <th>Date Sent</th>
+                                            <th>Deadline</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="rfqs" t-as="rfq">
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold text-dark"><t t-esc="rfq.reference_no"/></div>
+                                                </td>
+                                                <td>
+                                                    <span class="o_pp_type_badge">
+                                                        <t t-if="rfq.insurance_type == 'motor'"><i class="fa fa-car me-1"/>Motor</t>
+                                                        <t t-elif="rfq.insurance_type == 'medical'"><i class="fa fa-heartbeat me-1"/>Medical</t>
+                                                        <t t-elif="rfq.insurance_type == 'life'"><i class="fa fa-heart me-1"/>Life</t>
+                                                        <t t-elif="rfq.insurance_type == 'property'"><i class="fa fa-home me-1"/>Property</t>
+                                                        <t t-elif="rfq.insurance_type == 'marine'"><i class="fa fa-ship me-1"/>Marine</t>
+                                                        <t t-elif="rfq.insurance_type == 'group_life'"><i class="fa fa-users me-1"/>Group Life</t>
+                                                        <t t-else=""><i class="fa fa-shield me-1"/><t t-esc="rfq.insurance_type"/></t>
+                                                    </span>
+                                                </td>
+                                                <td class="text-muted small">
+                                                    <t t-esc="rfq.sent_date" t-options='{"widget":"date"}'/>
+                                                </td>
+                                                <td>
+                                                    <t t-if="rfq.response_deadline">
+                                                        <span class="o_pp_deadline_badge">
+                                                            <i class="fa fa-clock-o me-1"/>
+                                                            <t t-esc="rfq.response_deadline" t-options='{"widget":"date"}'/>
+                                                        </span>
+                                                    </t>
+                                                    <t t-else="">—</t>
+                                                </td>
+                                                <td>
+                                                    <t t-if="rfq.id in quoted_rfq_ids">
+                                                        <span class="badge bg-success"><i class="fa fa-check me-1"/>Quote Submitted</span>
+                                                    </t>
+                                                    <t t-elif="rfq.status == 'closed'">
+                                                        <span class="badge bg-secondary">Closed</span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="badge o_pp_badge_pending">
+                                                            <i class="fa fa-clock-o me-1"/>Awaiting Quote
+                                                        </span>
+                                                    </t>
+                                                </td>
+                                                <td class="text-end">
+                                                    <a t-attf-href="/insurance/provider/rfq/#{rfq.id}?token=#{token}"
+                                                       t-attf-class="btn btn-sm #{rfq.id in quoted_rfq_ids and 'btn-outline-success' or 'btn-success'}">
+                                                        <t t-if="rfq.id in quoted_rfq_ids">View / Edit</t>
+                                                        <t t-else="">Submit Quote <i class="fa fa-arrow-right ms-1"/></t>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="text-center py-5">
+                                <div class="o_pp_empty_icon mb-3"><i class="fa fa-inbox"/></div>
+                                <h5 class="text-muted">No RFQ Requests Yet</h5>
+                                <p class="text-muted">When Ameen Hub sends you a Request for Quotation, it will appear here.</p>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-4 text-muted small">
+                    <i class="fa fa-lock me-1"/>Your portal access is secured by a unique token.
+                    For API integration, visit the <a t-attf-href="/insurance/provider/api?token=#{token}" class="text-success">API Documentation</a> page.
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Provider Portal — RFQ Detail + Quote Submission Form
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="provider_rfq_detail" name="Provider Portal — RFQ Detail">
+    <t t-call="website.layout">
+        <div class="o_provider_portal">
+            <!-- Top Nav Bar -->
+            <div class="o_pp_topbar">
+                <div class="container d-flex align-items-center justify-content-between py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <a t-attf-href="/insurance/provider/?token=#{token}" class="btn btn-sm btn-outline-light me-2">
+                            <i class="fa fa-arrow-left"/>
+                        </a>
+                        <div>
+                            <div class="fw-bold text-white fs-5">RFQ: <t t-esc="rfq.reference_no"/></div>
+                            <div class="text-white opacity-75 small"><t t-esc="provider.name"/></div>
+                        </div>
+                    </div>
+                    <div>
+                        <span t-attf-class="badge fs-6 #{
+                            rfq.status == 'sent' and 'bg-warning text-dark' or
+                            rfq.status == 'responses_received' and 'bg-info' or
+                            rfq.status == 'comparison_ready' and 'bg-primary' or
+                            rfq.status == 'closed' and 'bg-secondary' or
+                            'bg-light text-dark'
+                        }">
+                            <t t-esc="rfq.status.replace('_',' ').title()"/>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container py-4">
+                <!-- Error Alert -->
+                <t t-if="error">
+                    <div class="alert alert-danger mb-4">
+                        <i class="fa fa-exclamation-triangle me-2"/><t t-esc="error"/>
+                    </div>
+                </t>
+
+                <div class="row g-4">
+                    <!-- Left: RFQ Requirements -->
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white fw-bold py-3">
+                                <i class="fa fa-file-text-o me-2 text-success"/>RFQ Requirements
+                            </div>
+                            <div class="card-body">
+                                <!-- Key Info -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <div class="o_pp_field_label">Insurance Type</div>
+                                        <div class="fw-semibold">
+                                            <t t-if="rfq.insurance_type == 'motor'"><i class="fa fa-car text-success me-1"/>Motor</t>
+                                            <t t-elif="rfq.insurance_type == 'medical'"><i class="fa fa-heartbeat text-success me-1"/>Medical</t>
+                                            <t t-elif="rfq.insurance_type == 'life'"><i class="fa fa-heart text-success me-1"/>Life</t>
+                                            <t t-elif="rfq.insurance_type == 'property'"><i class="fa fa-home text-success me-1"/>Property</t>
+                                            <t t-elif="rfq.insurance_type == 'marine'"><i class="fa fa-ship text-success me-1"/>Marine</t>
+                                            <t t-else=""><t t-esc="rfq.insurance_type.replace('_',' ').title()"/></t>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="o_pp_field_label">Reference</div>
+                                        <div class="fw-semibold"><t t-esc="rfq.reference_no"/></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="o_pp_field_label">Date Sent</div>
+                                        <div class="fw-semibold">
+                                            <t t-esc="rfq.sent_date" t-options='{"widget":"date"}'/>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="o_pp_field_label">Response Deadline</div>
+                                        <div class="fw-bold text-danger">
+                                            <i class="fa fa-clock-o me-1"/>
+                                            <t t-esc="rfq.response_deadline" t-options='{"widget":"date"}'/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr/>
+
+                                <!-- Requirements Summary (HTML) -->
+                                <t t-if="rfq.requirements_summary">
+                                    <div class="o_pp_field_label mb-2">Requirements Summary</div>
+                                    <div class="o_pp_requirements_box" t-out="rfq.requirements_summary"/>
+                                </t>
+
+                                <!-- Notes -->
+                                <t t-if="rfq.notes">
+                                    <div class="o_pp_field_label mt-3 mb-1">Additional Notes</div>
+                                    <div class="bg-light p-3 rounded small" style="white-space:pre-wrap"><t t-esc="rfq.notes"/></div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Already Submitted Quote -->
+                        <t t-if="existing_quote">
+                            <div class="card border-success border-2 mb-4">
+                                <div class="card-header bg-success text-white fw-bold py-3">
+                                    <i class="fa fa-check-circle me-2"/>Your Submitted Quote
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="o_pp_field_label">Annual Premium</div>
+                                            <div class="fw-bold fs-5 text-success">
+                                                <t t-esc="existing_quote.premium" t-options='{"widget":"float","precision":3}'/> OMR
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="o_pp_field_label">Deductible</div>
+                                            <div class="fw-semibold">
+                                                <t t-esc="existing_quote.deductible" t-options='{"widget":"float","precision":3}'/> OMR
+                                            </div>
+                                        </div>
+                                        <t t-if="existing_quote.network">
+                                            <div class="col-12">
+                                                <div class="o_pp_field_label">Network / TPA</div>
+                                                <div><t t-esc="existing_quote.network"/></div>
+                                            </div>
+                                        </t>
+                                        <t t-if="existing_quote.validity_date">
+                                            <div class="col-6">
+                                                <div class="o_pp_field_label">Valid Until</div>
+                                                <div><t t-esc="existing_quote.validity_date" t-options='{"widget":"date"}'/></div>
+                                            </div>
+                                        </t>
+                                        <t t-if="existing_quote.submitted_at">
+                                            <div class="col-12">
+                                                <div class="text-muted small">
+                                                    <i class="fa fa-clock-o me-1"/>Submitted:
+                                                    <t t-esc="existing_quote.submitted_at" t-options='{"widget":"datetime"}'/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Right: Quote Submission Form -->
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white fw-bold py-3">
+                                <i class="fa fa-pencil-square-o me-2 text-success"/>
+                                <t t-if="existing_quote">Update Your Quote</t>
+                                <t t-else="">Submit Your Quote</t>
+                            </div>
+                            <div class="card-body p-4">
+                                <t t-if="rfq.status == 'closed'">
+                                    <div class="alert alert-secondary text-center py-4">
+                                        <i class="fa fa-lock fa-2x mb-2 d-block"/>
+                                        <strong>This RFQ is closed.</strong><br/>
+                                        Quote submission is no longer accepted.
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <form t-attf-action="/insurance/provider/rfq/#{rfq.id}/submit?token=#{token}"
+                                          method="post" class="o_pp_quote_form">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                        <!-- Premium & Deductible -->
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    Annual Premium (OMR) <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" name="premium" class="form-control form-control-lg"
+                                                           placeholder="0.000" step="0.001" min="0" required="required"
+                                                           t-att-value="existing_quote and existing_quote.premium or ''"/>
+                                                    <span class="input-group-text">OMR</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Deductible (OMR)</label>
+                                                <div class="input-group">
+                                                    <input type="number" name="deductible" class="form-control form-control-lg"
+                                                           placeholder="0.000" step="0.001" min="0"
+                                                           t-att-value="existing_quote and existing_quote.deductible or ''"/>
+                                                    <span class="input-group-text">OMR</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Coverage & Exclusions -->
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Coverage Details</label>
+                                                <textarea name="coverage" class="form-control" rows="3"
+                                                          placeholder="Describe what is covered…"><t t-esc="existing_quote and existing_quote.coverage or ''"/></textarea>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Exclusions</label>
+                                                <textarea name="exclusions" class="form-control" rows="3"
+                                                          placeholder="List any exclusions…"><t t-esc="existing_quote and existing_quote.exclusions or ''"/></textarea>
+                                            </div>
+                                        </div>
+
+                                        <!-- Network, Add-ons, CSR -->
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Network / TPA</label>
+                                                <input type="text" name="network" class="form-control"
+                                                       placeholder="e.g. OMAN Insurance TPA"
+                                                       t-att-value="existing_quote and existing_quote.network or ''"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    Claim Settlement Ratio (%)
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" name="claim_settlement_ratio" class="form-control"
+                                                           placeholder="e.g. 95" step="0.1" min="0" max="100"
+                                                           t-att-value="existing_quote and existing_quote.claim_settlement_ratio or ''"/>
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold">Add-ons / Benefits</label>
+                                                <textarea name="add_ons" class="form-control" rows="2"
+                                                          placeholder="List any add-ons or additional benefits included…"><t t-esc="existing_quote and existing_quote.add_ons or ''"/></textarea>
+                                            </div>
+                                        </div>
+
+                                        <!-- Validity & Notes -->
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Quote Valid Until</label>
+                                                <input type="date" name="validity_date" class="form-control"
+                                                       t-att-value="existing_quote and existing_quote.validity_date or ''"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Additional Notes</label>
+                                                <textarea name="notes" class="form-control" rows="2"
+                                                          placeholder="Any additional terms or conditions…"><t t-esc="existing_quote and existing_quote.notes or ''"/></textarea>
+                                            </div>
+                                        </div>
+
+                                        <!-- Submit -->
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-success btn-lg o_pp_btn_submit">
+                                                <i class="fa fa-paper-plane me-2"/>
+                                                <t t-if="existing_quote">Update Quote</t>
+                                                <t t-else="">Submit Quote</t>
+                                            </button>
+                                            <a t-attf-href="/insurance/provider/?token=#{token}" class="btn btn-outline-secondary">
+                                                Cancel — Back to Dashboard
+                                            </a>
+                                        </div>
+                                    </form>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Provider Portal — Quote Submitted Successfully
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="provider_quote_success" name="Provider Portal — Quote Success">
+    <t t-call="website.layout">
+        <div class="o_provider_portal">
+            <div class="o_pp_topbar">
+                <div class="container py-3">
+                    <div class="fw-bold text-white">Provider Portal — <t t-esc="provider and provider.name or 'Provider'"/></div>
+                </div>
+            </div>
+
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 text-center">
+                        <div class="o_pp_success_ring mb-4">
+                            <i class="fa fa-check-circle"/>
+                        </div>
+                        <h2 class="fw-bold text-success mb-2">Quote Submitted!</h2>
+                        <p class="text-muted fs-5 mb-4">
+                            Your quote has been successfully submitted to Ameen Hub Insurance Brokerage.
+                            Our team will review all quotes and contact you if selected.
+                        </p>
+                        <t t-if="rfq">
+                            <div class="card border-success mb-4">
+                                <div class="card-body py-3">
+                                    <strong>RFQ Reference:</strong> <t t-esc="rfq.reference_no"/>
+                                    <span class="mx-2">·</span>
+                                    <strong>Type:</strong> <t t-esc="rfq.insurance_type.replace('_',' ').title()"/>
+                                </div>
+                            </div>
+                        </t>
+                        <div class="d-flex gap-3 justify-content-center flex-wrap">
+                            <a t-attf-href="/insurance/provider/?token=#{token}" class="btn btn-success btn-lg">
+                                <i class="fa fa-th-list me-2"/>Back to Dashboard
+                            </a>
+                            <t t-if="rfq">
+                                <a t-attf-href="/insurance/provider/rfq/#{rfq.id}?token=#{token}" class="btn btn-outline-success btn-lg">
+                                    <i class="fa fa-eye me-2"/>View Submitted Quote
+                                </a>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Provider Portal — API Documentation
+═══════════════════════════════════════════════════════════════════════ -->
+<template id="provider_api_docs" name="Provider Portal — API Documentation">
+    <t t-call="website.layout">
+        <div class="o_provider_portal">
+            <div class="o_pp_topbar">
+                <div class="container d-flex align-items-center justify-content-between py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <a t-attf-href="/insurance/provider/?token=#{token}" class="btn btn-sm btn-outline-light me-2">
+                            <i class="fa fa-arrow-left"/>
+                        </a>
+                        <div>
+                            <div class="fw-bold text-white fs-5">API Integration Guide</div>
+                            <div class="text-white opacity-75 small">Ameen Hub Insurance Brokerage — Provider API</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container py-4">
+                <div class="row g-4">
+                    <!-- Left: Navigation -->
+                    <div class="col-lg-3">
+                        <div class="card border-0 shadow-sm o_pp_api_nav sticky-top" style="top:80px">
+                            <div class="card-body p-3">
+                                <div class="fw-bold mb-3 text-success"><i class="fa fa-code me-2"/>Contents</div>
+                                <nav class="nav flex-column gap-1">
+                                    <a href="#intro" class="nav-link py-1 px-2">Introduction</a>
+                                    <a href="#auth" class="nav-link py-1 px-2">Authentication</a>
+                                    <a href="#list-rfqs" class="nav-link py-1 px-2">List RFQs</a>
+                                    <a href="#submit-quote" class="nav-link py-1 px-2">Submit Quote</a>
+                                    <a href="#errors" class="nav-link py-1 px-2">Error Codes</a>
+                                    <a href="#examples" class="nav-link py-1 px-2">Code Examples</a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Content -->
+                    <div class="col-lg-9">
+
+                        <!-- Introduction -->
+                        <div class="card border-0 shadow-sm mb-4" id="intro">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <i class="fa fa-info-circle me-2 text-success"/>Introduction
+                            </div>
+                            <div class="card-body">
+                                <p>The <strong>Ameen Hub Provider API</strong> allows insurance companies to receive RFQ (Request for Quotation) requests and submit quotes programmatically — without using the web portal.</p>
+                                <p>This is ideal for companies that want to automate quote generation from their own internal systems.</p>
+                                <div class="o_pp_api_base">
+                                    <div class="text-muted small mb-1">Base URL</div>
+                                    <code><t t-esc="base_url"/>/insurance/provider/api</code>
+                                </div>
+                                <div class="alert alert-warning mt-3 mb-0">
+                                    <i class="fa fa-shield me-2"/>All API requests must include your <strong>Bearer token</strong> in the Authorization header. Keep your token secret.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Authentication -->
+                        <div class="card border-0 shadow-sm mb-4" id="auth">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <i class="fa fa-lock me-2 text-success"/>Authentication
+                            </div>
+                            <div class="card-body">
+                                <p>All requests require a <code>Bearer</code> token in the <code>Authorization</code> HTTP header.</p>
+                                <pre class="o_pp_code_block">Authorization: Bearer YOUR_ACCESS_TOKEN</pre>
+                                <p class="mt-3">Alternatively, you can pass the token as a query parameter:</p>
+                                <pre class="o_pp_code_block">GET /insurance/provider/api/rfqs?token=YOUR_ACCESS_TOKEN</pre>
+                                <t t-if="provider and token">
+                                    <div class="alert alert-success mt-3">
+                                        <strong>Your Access Token:</strong><br/>
+                                        <code class="user-select-all"><t t-esc="token"/></code>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- List RFQs -->
+                        <div class="card border-0 shadow-sm mb-4" id="list-rfqs">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <span class="badge bg-info me-2">GET</span>List Incoming RFQs
+                            </div>
+                            <div class="card-body">
+                                <pre class="o_pp_code_block">GET /insurance/provider/api/rfqs</pre>
+                                <p class="mt-3"><strong>Response:</strong></p>
+                                <pre class="o_pp_code_block">{
+  "provider": "Al Ahlia Insurance",
+  "count": 3,
+  "rfqs": [
+    {
+      "id": 42,
+      "reference": "RFQ/2026/00042",
+      "insurance_type": "medical",
+      "status": "sent",
+      "sent_date": "2026-05-14",
+      "response_deadline": "2026-05-19",
+      "requirements": "Medical group insurance for 120 employees...",
+      "quoted": false,
+      "detail_url": "/insurance/provider/rfq/42?token=..."
+    }
+  ]
+}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Submit Quote -->
+                        <div class="card border-0 shadow-sm mb-4" id="submit-quote">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <span class="badge bg-success me-2">POST</span>Submit a Quote
+                            </div>
+                            <div class="card-body">
+                                <pre class="o_pp_code_block">POST /insurance/provider/api/quote
+Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN</pre>
+                                <p class="mt-3"><strong>Request Body:</strong></p>
+                                <pre class="o_pp_code_block">{
+  "rfq_id": 42,
+  "premium": 1250.500,
+  "deductible": 100.000,
+  "coverage": "Full comprehensive medical coverage including dental and optical",
+  "exclusions": "Pre-existing conditions within first 6 months",
+  "network": "NMC Healthcare Network",
+  "add_ons": "Maternity coverage, dental, optical",
+  "claim_settlement_ratio": 96.5,
+  "validity_date": "2026-06-14",
+  "notes": "Group discount applied for 120+ employees"
+}</pre>
+                                <p class="mt-3"><strong>Response (success):</strong></p>
+                                <pre class="o_pp_code_block">{
+  "success": true,
+  "quote_id": 87,
+  "message": "Quote submitted successfully"
+}</pre>
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <strong>Fields:</strong> Only <code>rfq_id</code> and <code>premium</code> are required. All other fields are optional but recommended.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Codes -->
+                        <div class="card border-0 shadow-sm mb-4" id="errors">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <i class="fa fa-exclamation-triangle me-2 text-success"/>Error Codes
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table mb-0">
+                                    <thead class="table-light">
+                                        <tr><th>HTTP Code</th><th>Meaning</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td><code>401</code></td><td>Invalid or missing access token</td></tr>
+                                        <tr><td><code>400</code></td><td>Missing required fields (rfq_id, premium)</td></tr>
+                                        <tr><td><code>404</code></td><td>RFQ not found or not assigned to your company</td></tr>
+                                        <tr><td><code>500</code></td><td>Server error — contact support</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Code Examples -->
+                        <div class="card border-0 shadow-sm mb-4" id="examples">
+                            <div class="card-header bg-white fw-bold py-3 fs-5">
+                                <i class="fa fa-terminal me-2 text-success"/>Code Examples
+                            </div>
+                            <div class="card-body">
+                                <p class="fw-semibold mb-2">Python (requests)</p>
+                                <pre class="o_pp_code_block">import requests
+
+TOKEN = "YOUR_ACCESS_TOKEN"
+BASE  = "<t t-esc="base_url"/>"
+
+# List RFQs
+resp = requests.get(f"{BASE}/insurance/provider/api/rfqs",
+    headers={"Authorization": f"Bearer {TOKEN}"})
+rfqs = resp.json()["rfqs"]
+
+# Submit a quote
+requests.post(f"{BASE}/insurance/provider/api/quote",
+    headers={"Authorization": f"Bearer {TOKEN}",
+             "Content-Type": "application/json"},
+    json={
+        "rfq_id": rfqs[0]["id"],
+        "premium": 1250.500,
+        "deductible": 100.0,
+        "coverage": "Full comprehensive coverage",
+        "claim_settlement_ratio": 96.5,
+        "validity_date": "2026-06-14"
+    })</pre>
+
+                                <p class="fw-semibold mt-4 mb-2">cURL</p>
+                                <pre class="o_pp_code_block">curl -X POST <t t-esc="base_url"/>/insurance/provider/api/quote \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"rfq_id":42,"premium":1250.5,"coverage":"Full coverage"}'</pre>
+                            </div>
+                        </div>
+
+                        <!-- Support -->
+                        <div class="card border-success border-2 mb-4">
+                            <div class="card-body text-center py-4">
+                                <i class="fa fa-envelope fa-2x text-success mb-2 d-block"/>
+                                <strong>Need help with integration?</strong><br/>
+                                Contact our technical team at <a href="mailto:api@ameenhub.com" class="text-success">api@ameenhub.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+</data>
+</odoo>
