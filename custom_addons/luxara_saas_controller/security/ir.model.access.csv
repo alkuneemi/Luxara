@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+  access_saas_server_manager,saas.server manager,model_saas_server,base.group_system,1,1,1,1
+  access_saas_server_user,saas.server user,model_saas_server,base.group_user,1,0,0,0
+  access_saas_package_manager,saas.package manager,model_saas_package,base.group_system,1,1,1,1
+  access_saas_package_user,saas.package user,model_saas_package,base.group_user,1,0,0,0
+  access_saas_client_manager,saas.client manager,model_saas_client,base.group_system,1,1,1,1
+  access_saas_client_user,saas.client user,model_saas_client,base.group_user,1,0,0,0
+  
