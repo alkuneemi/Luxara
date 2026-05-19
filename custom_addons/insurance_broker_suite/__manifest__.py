@@ -1,11 +1,20 @@
 {
     'name': 'Insurance Broker Suite',
-    'version': '19.0.2.3.0',
-    'summary': 'Full-featured Insurance Broker Management System with Customer Portal & SAHAB AI',
+    'version': '19.0.3.0.0',
+    'summary': 'Full-featured Insurance Broker Management System with Universal Quoting Engine & Customer Portal',
     'description': '''
 Insurance Broker Suite for Odoo 19
 ====================================
 * Policy management with renewal alerts
+* Universal Quoting Engine — نظام تسعيرة عام:
+  - Manual Entry: موظفو البروكر يدخلون الأسعار يدوياً
+  - Direct Portal: بوابة مباشرة — العميل يدخل بوابة الشركة بدون تسجيل دخول (رابط مباشر)
+  - API Integration: ربط تلقائي عبر API مع شركات التأمين
+* Company Integration Settings — إعدادات التكامل لكل شركة:
+  - اليوزر نيم والباسورد لشركات البوابة المباشرة
+  - API Key و Endpoints لشركات API
+  - توليد رابط مباشر (Direct Access Token) للعميل
+* Product Pricing per Company: تسعيرة لكل منتج لكل شركة
 * RFQ / quotation workflow
 * Claims management
 * Commission tracking
@@ -13,23 +22,14 @@ Insurance Broker Suite for Odoo 19
   - General Registry: جميع الطلبات من كل القنوات
   - Online Registry: طلبات البوابة الإلكترونية
   - Sales Team Registry: طلبات المبيعات مع نظام العمولة
-* Customer-facing website (/insurance) with category → type → subtype → application form flow
+* Customer-facing website (/insurance) with:
+  - Category → Type → Subtype → Application form flow
+  - Dynamic forms per insurance type (Motor, Medical, Property, Marine, Life, Workmen)
+* Insurance Opportunities with Requirement Details tab:
+  - يعرض بيانات نموذج الطلب الخاص بنوع التأمين المختار
 * Customer portal (/my/insurance) for tracking application status
-* Backend configuration for categories, types, sub-types, and insurance companies
-* Dashboard with AI agent status and customer portal quick-link button
-* AI Call Center stub
-* Insurance Opportunities — نموذج موروث من crm.lead عبر _inherits:
-  - يحتوي تلقائياً على جميع حقول crm.lead (الاسم، الشريك، المرحلة، الجوال...)
-  - يُنشأ تلقائياً عند تسجيل العميل الدخول وزيارة صفحة التأمين
-  - يتتبع رحلة العميل: categories → types → subtypes → form → payment → certificate
-  - إنشاء طلب مبيعات تلقائي عند الوصول لمرحلة متقدمة
-* نافذة تسجيل دخول حديثة ومنبثقة:
-  - تظهر لأي زائر غير مسجل عند دخول أي صفحة من /insurance
-  - تدعم تسجيل الدخول بالبريد وكلمة المرور
-  - تدعم تسجيل الدخول عبر Google OAuth
-  - بعد التسجيل يُنشأ سجل فرصة في crm.lead/insurance.opportunity
-* SAHAB AI — conversational AI agent for insurance inquiry registration
-* Oman Agent Sidebar — نظام المستشار الذكي والتسويق الموجه والمربوط بـ n8n
+* SAHAB AI — conversational AI agent
+* Oman Agent Sidebar
     ''',
     'author': 'Insurance Broker Suite',
     'category': 'Insurance',
@@ -41,10 +41,6 @@ Insurance Broker Suite for Odoo 19
         'web',
         'crm',
         'website',
-        'account',
-        'contacts',
-        'sale_management',
-        
     ],
     'data': [
         # Security
@@ -59,7 +55,7 @@ Insurance Broker Suite for Odoo 19
         'data/insurance_category_data.xml',
         # Full seed data — all 52 insurance products, all models, all fields
         'data/insurance_full_seed_data.xml',
-         'data/insurance_source_data.xml',
+        'data/insurance_source_data.xml',
         # Backend views
         'views/insurance_dashboard_views.xml',
         'views/insurance_client_views.xml',
@@ -72,10 +68,14 @@ Insurance Broker Suite for Odoo 19
         'views/insurance_type_views.xml',
         'views/insurance_subtype_views.xml',
         'views/insurance_company_views.xml',
+        # Product Pricing (per company per subtype)
+        'views/insurance_company_pricing_views.xml',
         # Application Registries (General + Online + Sales)
         'views/insurance_application_views.xml',
         # Insurance Opportunities (insurance.opportunity inherits crm.lead)
         'views/insurance_opportunity_views.xml',
+        # Universal Quotation System
+        'views/insurance_quotation_views.xml',
         # CRM Lead funnel extension views
         'views/crm_lead_funnel_views.xml',
         # SAHAB AI
@@ -84,14 +84,13 @@ Insurance Broker Suite for Odoo 19
         'views/website_insurance.xml',
         'views/portal_insurance.xml',
         'views/website_insurance_provider.xml',
+        'views/insurance_direct_portal.xml',
         'views/sahab_ai_widget.xml',
-        # Login modal template (replaces old identify form)
+        # Login modal template
         'views/insurance_identify_form.xml',
-        
-        # --- Oman Agent Template ---
+        # Oman Agent
         'views/oman_agent_templates.xml',
-         'views/sahab_call_center.xml',
-        
+        'views/sahab_call_center.xml',
         # Menus (last)
         'views/insurance_menu.xml',
     ],
@@ -108,11 +107,7 @@ Insurance Broker Suite for Odoo 19
             'insurance_broker_suite/static/src/js/insurance_call_center.js',
             'insurance_broker_suite/static/src/js/sahab_ai_chat.js',
             'insurance_broker_suite/static/src/js/website_visit_tracker.js',
-               'insurance_broker_suite/static/src/js/sahab_call_center.js',
-            
-            # --- Oman Agent Assets ---
-       #     'insurance_broker_suite/static/src/css/oman_agent.css',
-         #   'insurance_broker_suite/static/src/js/oman_agent.js',
+            'insurance_broker_suite/static/src/js/sahab_call_center.js',
         ],
     },
     'images': ['static/description/icon.png'],
