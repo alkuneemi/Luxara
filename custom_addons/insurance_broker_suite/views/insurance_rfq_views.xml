@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ══ LIST VIEW ══════════════════════════════════════════════ -->
+        <record id="view_insurance_rfq_list" model="ir.ui.view">
+            <field name="name">insurance.rfq.list</field>
+            <field name="model">insurance.rfq</field>
+            <field name="arch" type="xml">
+                <list string="RFQ Management"
+                    decoration-success="status == 'closed'"
+                    decoration-info="status == 'comparison_ready'"
+                    decoration-warning="status == 'responses_received'">
+                    <field name="reference_no"/>
+                    <field name="client_id"/>
+                    <field name="insurance_type" widget="badge"/>
+                    <field name="sent_date"/>
+                    <field name="response_deadline"/>
+                    <field name="quote_count" string="Quotes"/>
+                    <field name="underwriting_complete" widget="boolean_toggle" string="Underwriting"/>
+                    <field name="status" widget="badge"
+                        decoration-muted="status == 'draft'"
+                        decoration-info="status == 'sent'"
+                        decoration-warning="status == 'responses_received'"
+                        decoration-primary="status == 'comparison_ready'"
+                        decoration-success="status == 'closed'"
+                    />
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ KANBAN VIEW ════════════════════════════════════════════ -->
+        <record id="view_insurance_rfq_kanban" model="ir.ui.view">
+            <field name="name">insurance.rfq.kanban</field>
+            <field name="model">insurance.rfq</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="status">
+                    <field name="reference_no"/>
+                    <field name="client_id"/>
+                    <field name="insurance_type"/>
+                    <field name="status"/>
+                    <field name="quote_count"/>
+                    <field name="response_deadline"/>
+                    <field name="underwriting_complete"/>
+                    <templates>
+                        <t t-name="kanban-card">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="oe_kanban_content">
+                                    <div class="o_kanban_record_top">
+                                        <div class="o_kanban_record_headings">
+                                            <strong><field name="reference_no"/></strong>
+                                        </div>
+                                        <span t-if="record.underwriting_complete.raw_value"
+                                            class="badge bg-success">UW Done</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <p class="mb-1">
+                                            <i class="fa fa-building me-1"/>
+                                            <field name="client_id"/>
+                                        </p>
+                                        <p class="mb-1">
+                                            <field name="insurance_type"/>
+                                        </p>
+                                    </div>
+                                    <div class="o_kanban_record_bottom mt-2">
+                                        <div class="oe_kanban_bottom_left">
+                                            <span>
+                                                <i class="fa fa-quote-left me-1"/>
+                                                <field name="quote_count"/> quotes
+                                            </span>
+                                        </div>
+                                        <div class="oe_kanban_bottom_right">
+                                            <t t-if="record.response_deadline.raw_value">
+                                                <span class="text-muted">
+                                                    <field name="response_deadline"/>
+                                                </span>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- ══ FORM VIEW ══════════════════════════════════════════════ -->
+        <record id="view_insurance_rfq_form" model="ir.ui.view">
+            <field name="name">insurance.rfq.form</field>
+            <field name="model">insurance.rfq</field>
+            <field name="arch" type="xml">
+                <form string="Request for Quotation">
+                    <header>
+                        <button name="action_send" string="Send to Insurers"
+                            type="object" class="btn-primary"
+                            invisible="status != 'draft'"/>
+                        <button name="action_mark_responses_received" string="Responses Received"
+                            type="object" class="btn-secondary"
+                            invisible="status != 'sent'"/>
+                        <button name="action_generate_comparison" string="AI Comparison"
+                            type="object" class="btn-warning"
+                            invisible="status not in ('sent','responses_received')"/>
+                        <button name="action_close" string="Close RFQ"
+                            type="object" class="btn-secondary"
+                            invisible="status == 'closed'"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="draft,sent,responses_received,comparison_ready,closed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object"
+                                name="action_view_quotes" icon="fa-building">
+                                <field name="quote_count" widget="statinfo" string="Quotes"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="reference_no" string="Reference No."/>
+                            <h1><field name="reference_no" readonly="1"/></h1>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">RFQ Information</div>
+                            <group>
+                                <group>
+                                    <field name="client_id" options="{'no_create': true}"/>
+                                    <field name="insurance_type"/>
+                                    <field name="underwriting_complete" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="response_deadline"/>
+                                    <field name="sent_date"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- Notebooks -->
+                        <notebook>
+                            <page string="Requirements" name="requirements">
+                                <field name="notes"
+                                    placeholder="Coverage requirements, sum assured, employee count, vehicle details..."/>
+                            </page>
+
+                            <page string="Insurer Quotes" name="quotes">
+                                <field name="quote_ids">
+                                    <list editable="bottom">
+                                        <field name="insurer"/>
+                                        <field name="premium" widget="monetary"/>
+                                        <field name="deductible" widget="monetary" optional="show"/>
+                                        <field name="coverage" optional="show"/>
+                                        <field name="exclusions" optional="show"/>
+                                        <field name="network" optional="show"/>
+                                        <field name="claim_settlement_ratio" optional="show"/>
+                                        <field name="add_ons" optional="show"/>
+                                        <field name="score" widget="progressbar" optional="show"/>
+                                        <field name="is_recommended" widget="boolean_toggle"/>
+                                        <button name="action_mark_recommended" string="Recommend"
+                                            type="object" class="btn-link btn-sm"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page string="Recommended Quote" name="recommendation"
+                                invisible="not recommended_quote_id">
+                                <group>
+                                    <field name="recommended_quote_id" string="Recommended Insurer"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ SEARCH VIEW ════════════════════════════════════════════ -->
+
+        <!-- ══ QUOTE ACTION ═══════════════════════════════════════════ -->
+        <record id="action_insurance_rfq_quote" model="ir.actions.act_window">
+            <field name="name">Insurer Quotes</field>
+            <field name="res_model">insurance.rfq.quote</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No quotes yet!</p>
+            </field>
+        </record>
+
+        <!-- ══ RFQ ACTION ═════════════════════════════════════════════ -->
+        <record id="action_insurance_rfq" model="ir.actions.act_window">
+            <field name="name">RFQ Management</field>
+            <field name="res_model">insurance.rfq</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create your first RFQ!</p>
+                <p>Send requests to multiple insurers, collect quotes, and generate AI comparison sheets.</p>
+            </field>
+        </record>
+
+        <!-- ══ COMPARISON WIZARD ══════════════════════════════════════ -->
+        <record id="view_insurance_comparison_wizard_form" model="ir.ui.view">
+            <field name="name">insurance.comparison.wizard.form</field>
+            <field name="model">insurance.comparison.wizard</field>
+            <field name="arch" type="xml">
+                <form string="AI Quote Comparison">
+                    <sheet>
+                        <h2>AI Comparison Analysis</h2>
+                        <group>
+                            <field name="rfq_id" readonly="1"/>
+                            <field name="recommended_id" string="AI Recommendation"/>
+                        </group>
+                        <field name="quote_ids" mode="list">
+                            <list>
+                                <field name="insurer"/>
+                                <field name="premium" widget="monetary"/>
+                                <field name="deductible" widget="monetary"/>
+                                <field name="claim_settlement_ratio"/>
+                                <field name="network"/>
+                                <field name="score" widget="progressbar"/>
+                                <field name="is_recommended" widget="boolean_toggle"/>
+                            </list>
+                        </field>
+                        <separator string="AI Analysis Notes"/>
+                        <field name="comparison_notes" widget="html"/>
+                    </sheet>
+                    <footer>
+                        <button name="action_confirm_recommendation"
+                            string="Confirm Recommendation"
+                            type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>
