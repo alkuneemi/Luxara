@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ══ QUOTATION LIST VIEW ════════════════════════════════════════════════ -->
+        <record id="view_insurance_quotation_list" model="ir.ui.view">
+            <field name="name">insurance.quotation.list</field>
+            <field name="model">insurance.quotation</field>
+            <field name="arch" type="xml">
+                <list string="Quotations"
+                    decoration-success="status == 'accepted'"
+                    decoration-info="status == 'quotes_received'"
+                    decoration-warning="status == 'pending_manual'">
+                    <field name="reference"/>
+                    <field name="customer_name"/>
+                    <field name="customer_phone" optional="show"/>
+                    <field name="category_id" optional="show"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="subtype_id"/>
+                    <field name="line_count" string="Companies"/>
+                    <field name="status" widget="badge"
+                        decoration-warning="status == 'open'"
+                        decoration-info="status == 'quotes_received'"
+                        decoration-success="status == 'accepted'"
+                        decoration-muted="status == 'closed'"/>
+                    <field name="create_date"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ QUOTATION FORM VIEW ════════════════════════════════════════════════ -->
+        <record id="view_insurance_quotation_form" model="ir.ui.view">
+            <field name="name">insurance.quotation.form</field>
+            <field name="model">insurance.quotation</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Quotation / تسعيرة التأمين">
+                    <header>
+                        <button name="action_auto_populate_companies"
+                            string="إضافة الشركات تلقائياً / Auto-Populate Companies"
+                            type="object" class="btn-primary"
+                            invisible="status == 'closed'"/>
+                        <button name="action_mark_presented"
+                            string="Mark as Presented to Customer"
+                            type="object" class="btn-success"
+                            invisible="status not in ('quotes_received',)"/>
+                        <button name="action_close"
+                            string="Close Quotation"
+                            type="object" class="btn-secondary"
+                            invisible="status == 'closed'"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="open,pending_manual,quotes_received,presented,accepted,closed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object"
+                                name="action_auto_populate_companies" icon="fa-building">
+                                <field name="line_count" widget="statinfo" string="Companies"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="reference"/>
+                            <h1><field name="reference" readonly="1"/></h1>
+                        </div>
+
+                        <group>
+                            <group string="Insurance Details">
+                                <field name="application_id" options="{'no_create': true}"/>
+                                <field name="opportunity_id" optional="1"/>
+                                <field name="subtype_id" readonly="1"/>
+                                <field name="type_id" readonly="1" optional="1"/>
+                                <field name="category_id" readonly="1" optional="1"/>
+                            </group>
+                            <group string="Customer">
+                                <field name="customer_name" readonly="1"/>
+                                <field name="customer_email" readonly="1" widget="email"/>
+                                <field name="customer_phone" readonly="1" widget="phone"/>
+                            </group>
+                        </group>
+
+                        <group string="Customer Quotation Link">
+                            <field name="public_url" widget="url" readonly="1"
+                                string="Public Quote Link (share with customer)"/>
+                        </group>
+
+                        <notebook>
+                            <!-- Tab: Quote Lines (one per company) -->
+                            <page string="عروض الأسعار / Quote Lines" name="lines">
+                                <field name="line_ids">
+                                    <list editable="bottom"
+                                        decoration-success="status == 'quoted' and is_recommended"
+                                        decoration-info="status == 'quoted'"
+                                        decoration-muted="status == 'rejected'"
+                                        decoration-warning="status == 'pending'">
+                                        <field name="company_id" options="{'no_create': true}"/>
+                                        <field name="source_type" widget="badge"
+                                            decoration-success="source_type == 'api'"
+                                            decoration-info="source_type == 'portal'"
+                                            decoration-muted="source_type == 'manual'"/>
+                                        <field name="status" widget="badge"
+                                            decoration-warning="status == 'pending'"
+                                            decoration-info="status == 'awaiting_api'"
+                                            decoration-success="status == 'quoted'"
+                                            decoration-danger="status == 'rejected'"/>
+                                        <field name="base_premium" optional="show"/>
+                                        <field name="premium"/>
+                                        <field name="tax_amount" optional="show"/>
+                                        <field name="discount_pct" optional="show"/>
+                                        <field name="total_amount" readonly="1"/>
+                                        <field name="validity_date" optional="show"/>
+                                        <field name="portal_direct_url" widget="url"
+                                            string="Portal Link" optional="show" readonly="1"/>
+                                        <field name="is_recommended" widget="boolean_toggle"/>
+                                        <button name="action_mark_quoted" string="Mark Quoted"
+                                            type="object" class="btn-link btn-sm"
+                                            invisible="status == 'quoted'"/>
+                                        <button name="action_open_portal" string="Open Portal"
+                                            type="object" class="btn-link btn-sm"
+                                            invisible="source_type != 'portal'"/>
+                                        <button name="action_generate_session_token"
+                                            string="Generate Link" type="object" class="btn-link btn-sm"
+                                            invisible="source_type != 'portal' or portal_session_token"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <!-- Tab: Recommended -->
+                            <page string="الاختيار الموصى به / Recommended" name="recommended"
+                                invisible="not recommended_line_id">
+                                <group>
+                                    <field name="recommended_line_id" string="Recommended Company"/>
+                                </group>
+                                <t t-if="record.recommended_line_id">
+                                    <group string="Recommended Quote Details">
+                                        <field name="recommended_line_id" readonly="1"
+                                            widget="many2one"/>
+                                    </group>
+                                </t>
+                            </page>
+
+                            <!-- Tab: Notes -->
+                            <page string="Notes" name="notes">
+                                <field name="notes" nolabel="1" placeholder="Internal notes..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ SEARCH VIEW ══════════════════════════════════════════════════════ -->
+        <record id="view_insurance_quotation_search" model="ir.ui.view">
+            <field name="name">insurance.quotation.search</field>
+            <field name="model">insurance.quotation</field>
+            <field name="arch" type="xml">
+                <search string="Quotations">
+                    <field name="reference"/>
+                    <field name="customer_name"/>
+                    <field name="customer_email"/>
+                    <field name="subtype_id"/>
+                    <filter name="open" string="Open" domain="[('status','=','open')]"/>
+                    <filter name="pending" string="Pending Manual" domain="[('status','=','pending_manual')]"/>
+                    <filter name="quoted" string="Quotes Received" domain="[('status','=','quotes_received')]"/>
+                    <filter name="accepted" string="Accepted" domain="[('status','=','accepted')]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_status" string="Status" context="{'group_by': 'status'}"/>
+                        <filter name="group_subtype" string="Sub-Type" context="{'group_by': 'subtype_id'}"/>
+                        <filter name="group_category" string="Category" context="{'group_by': 'category_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ══ QUOTATION LINE FORM ════════════════════════════════════════════════ -->
+        <record id="view_insurance_quotation_line_form" model="ir.ui.view">
+            <field name="name">insurance.quotation.line.form</field>
+            <field name="model">insurance.quotation.line</field>
+            <field name="arch" type="xml">
+                <form string="Quote Line">
+                    <header>
+                        <button name="action_mark_quoted" string="Mark as Quoted"
+                            type="object" class="btn-primary"
+                            invisible="status == 'quoted'"/>
+                        <button name="action_mark_recommended" string="Mark as Recommended"
+                            type="object" class="btn-success"/>
+                        <button name="action_open_portal" string="Open Company Portal"
+                            type="object" class="btn-info"
+                            invisible="source_type != 'portal'"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="pending,awaiting_api,quoted,rejected"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="Company &amp; Source">
+                                <field name="company_id"/>
+                                <field name="source_type"/>
+                                <field name="pricing_id" optional="1"/>
+                            </group>
+                            <group string="Quote Amount">
+                                <field name="base_premium"/>
+                                <field name="premium"/>
+                                <field name="deductible"/>
+                                <field name="discount_pct"/>
+                                <field name="tax_amount"/>
+                                <field name="total_amount" readonly="1"/>
+                                <field name="validity_date"/>
+                            </group>
+                        </group>
+
+                        <group string="Portal Direct Access" invisible="source_type != 'portal'">
+                            <field name="portal_direct_url" widget="url" readonly="1"
+                                string="Direct Access Link"/>
+                            <field name="portal_session_token" string="Session Token" readonly="1"/>
+                        </group>
+
+                        <notebook>
+                            <page string="Coverage Details" name="coverage">
+                                <field name="coverage_summary" widget="html"/>
+                                <field name="network" string="Network / TPA"/>
+                                <field name="add_ons"/>
+                            </page>
+                            <page string="Exclusions" name="exclusions">
+                                <field name="exclusions" nolabel="1"/>
+                            </page>
+                            <page string="API Response" name="api_raw"
+                                invisible="source_type != 'api'">
+                                <field name="api_response_raw" nolabel="1" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ ACTION ══════════════════════════════════════════════════════════ -->
+        <record id="action_insurance_quotation" model="ir.actions.act_window">
+            <field name="name">تسعيرات التأمين / Insurance Quotations</field>
+            <field name="res_model">insurance.quotation</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No quotations yet!</p>
+                <p>Quotations are automatically created when customers submit applications.</p>
+                <p>Each quotation collects pricing from all relevant insurance companies.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
