@@ -1000,3 +1000,106 @@ class InsuranceProviderPortal(http.Controller):
                 json.dumps({'error': str(e), 'code': 500}),
                 headers=[('Content-Type', 'application/json')],
             )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Direct Portal Access Controller
+# يتعامل مع رابط الدخول المباشر لبوابة شركة التأمين بدون تسجيل دخول
+# ══════════════════════════════════════════════════════════════════════════════
+
+class InsuranceDirectPortalAccess(http.Controller):
+    """
+    Direct Portal Access — بوابة الدخول المباشر
+    ---------------------------------------------------
+    عندما يضغط العميل على رابط الدخول المباشر لشركة تأمين معينة،
+    يتم التحقق من الـ token وتوجيه العميل مباشرة لبوابة الشركة
+    بدون الحاجة لتسجيل دخول.
+    """
+
+    @http.route('/insurance/direct-portal/<string:token>', type='http', auth='public', website=True)
+    def direct_portal_access(self, token, **kwargs):
+        """
+        Main direct portal access endpoint.
+        Looks up the company by its direct_access_token and redirects
+        to the company's portal, optionally auto-filling credentials.
+        """
+        if not token or len(token) < 16:
+            return request.not_found()
+
+        company = request.env['insurance.company.provider'].sudo().search([
+            ('direct_access_token', '=', token),
+            ('active', '=', True),
+            ('integration_type', '=', 'portal'),
+        ], limit=1)
+
+        if not company.exists():
+            return request.render('insurance_broker_suite.direct_portal_invalid', {
+                'reason': 'invalid_token',
+            })
+
+        if not company.portal_login_url:
+            return request.render('insurance_broker_suite.direct_portal_invalid', {
+                'reason': 'no_portal_url',
+                'company': company,
+            })
+
+        # Render an intermediate page that auto-submits login credentials
+        # to the company's portal login form (POST redirect technique)
+        return request.render('insurance_broker_suite.direct_portal_redirect', {
+            'company': company,
+            'portal_url': company.portal_login_url,
+            'portal_username': company.portal_username or '',
+            'has_credentials': bool(company.portal_username and company.portal_password),
+        })
+
+    @http.route('/insurance/direct-portal/<string:token>/credentials', type='http', auth='public', website=True)
+    def direct_portal_get_credentials(self, token, **kwargs):
+        """
+        Returns the credentials page for auto-submitting to the company portal.
+        This renders a form that auto-posts credentials to the insurer's login page.
+        """
+        if not token or len(token) < 16:
+            return request.not_found()
+
+        company = request.env['insurance.company.provider'].sudo().search([
+            ('direct_access_token', '=', token),
+            ('active', '=', True),
+            ('integration_type', '=', 'portal'),
+        ], limit=1)
+
+        if not company.exists() or not company.portal_login_url:
+            return request.not_found()
+
+        return request.render('insurance_broker_suite.direct_portal_redirect', {
+            'company': company,
+            'portal_url': company.portal_login_url,
+            'portal_username': company.portal_username or '',
+            'has_credentials': bool(company.portal_username and company.portal_password),
+            'auto_submit': True,
+        })
+
+    @http.route('/insurance/quotation/view/<string:token>', type='http', auth='public', website=True)
+    def view_quotation_public(self, token, **kwargs):
+        """
+        Public URL for customers to view their quotation without login.
+        العميل يرى عروض الأسعار من جميع شركات التأمين بدون تسجيل دخول.
+        """
+        if not token or len(token) < 16:
+            return request.not_found()
+
+        quotation = request.env['insurance.quotation'].sudo().search([
+            ('public_token', '=', token),
+        ], limit=1)
+
+        if not quotation.exists():
+            return request.not_found()
+
+        lines = quotation.line_ids.filtered(
+            lambda l: l.status == 'quoted'
+        ).sorted('premium')
+
+        return request.render('insurance_broker_suite.quotation_public_view', {
+            'quotation': quotation,
+            'lines': lines,
+            'recommended': quotation.recommended_line_id,
+        })
