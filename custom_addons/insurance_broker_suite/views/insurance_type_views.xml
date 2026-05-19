@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_insurance_type_list" model="ir.ui.view">
+            <field name="name">insurance.type.list</field>
+            <field name="model">insurance.type</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Types">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="name_ar" optional="show"/>
+                    <field name="category_id"/>
+                    <field name="subtype_count" string="Sub-Types"/>
+                    <field name="website_published" widget="boolean_toggle"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_insurance_type_form" model="ir.ui.view">
+            <field name="name">insurance.type.form</field>
+            <field name="model">insurance.type</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Type">
+                    <sheet>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Type Information</div>
+                            <group>
+                                <group>
+                                    <field name="name" placeholder="e.g. Third Party"/>
+                                    <field name="name_ar" placeholder="طرف ثالث"/>
+                                    <field name="category_id" options="{'no_create': true}"/>
+                                </group>
+                                <group>
+                                    <field name="sequence"/>
+                                    <field name="website_published" widget="boolean_toggle"/>
+                                    <field name="active"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <group>
+                            <field name="description" nolabel="1" colspan="2"
+                                placeholder="Description shown on website..."/>
+                        </group>
+
+                        <notebook>
+                            <page string="Sub-Types" name="subtypes">
+                                <field name="subtype_ids" mode="list">
+                                    <list editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="name"/>
+                                        <field name="form_type"/>
+                                        <field name="has_proposal_form" widget="boolean_toggle"/>
+                                        <field name="has_comparison_sheet" widget="boolean_toggle"/>
+                                        <field name="has_booking_slip" widget="boolean_toggle"/>
+                                        <field name="website_published" widget="boolean_toggle"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_insurance_type" model="ir.actions.act_window">
+            <field name="name">Insurance Types</field>
+            <field name="res_model">insurance.type</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create your first insurance type!</p>
+                <p>Types sit under categories (e.g. Motor → Third Party, Comprehensive).</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
