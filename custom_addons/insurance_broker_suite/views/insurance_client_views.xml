@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_insurance_client_list" model="ir.ui.view">
+            <field name="name">insurance.client.list</field>
+            <field name="model">insurance.client</field>
+            <field name="arch" type="xml">
+                <list string="Clients" decoration-success="crm_stage == 'won'" decoration-muted="crm_stage == 'lost'">
+                    <field name="name"/>
+                    <field name="category" widget="badge"
+                           decoration-info="category == 'corporate'"
+                           decoration-warning="category == 'personal'"/>
+                    <field name="contact_person"/>
+                    <field name="email"/>
+                    <field name="phone"/>
+                    <field name="industry_ids" widget="many2many_tags" string="Industries" optional="show"/>
+                    <field name="industry" optional="hide" string="Industry (Legacy)"/>
+                    <field name="crm_stage" widget="badge"
+                           decoration-success="crm_stage == 'won'"
+                           decoration-danger="crm_stage == 'lost'"
+                           decoration-warning="crm_stage == 'negotiation'"
+                           decoration-info="crm_stage in ('contacted','requirement_collection','quotation_requested')"
+                    />
+                    <field name="current_funnel_step" string="Last Website Step" optional="show" widget="badge"/>
+                    <field name="policy_count" string="Policies"/>
+                    <field name="total_premium" string="Total Premium" widget="monetary"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_insurance_client_kanban" model="ir.ui.view">
+            <field name="name">insurance.client.kanban</field>
+            <field name="model">insurance.client</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="crm_stage" group_create="false">
+                    <field name="name"/>
+                    <field name="category"/>
+                    <field name="contact_person"/>
+                    <field name="email"/>
+                    <field name="phone"/>
+                    <field name="crm_stage"/>
+                    <field name="current_funnel_step"/>
+                    <field name="policy_count"/>
+                    <field name="total_premium"/>
+                    <templates>
+                        <t t-name="card">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="oe_kanban_content">
+                                    <div class="o_kanban_record_top mb-3">
+                                        <div class="o_kanban_record_headings">
+                                            <strong class="o_kanban_record_title">
+                                                <field name="name"/>
+                                            </strong>
+                                        </div>
+                                        <span class="badge rounded-pill"
+                                            t-attf-class="bg-#{record.category.raw_value == 'corporate' ? 'primary' : 'secondary'}">
+                                            <field name="category"/>
+                                        </span>
+                                    </div>
+                                    <div class="o_kanban_record_body">
+                                        <t t-if="record.contact_person.raw_value">
+                                            <p class="mb-1"><i class="fa fa-user me-1"/><field name="contact_person"/></p>
+                                        </t>
+                                        <t t-if="record.email.raw_value">
+                                            <p class="mb-1"><i class="fa fa-envelope me-1"/><field name="email"/></p>
+                                        </t>
+                                        <t t-if="record.current_funnel_step.raw_value">
+                                            <p class="mb-1 text-muted"><i class="fa fa-globe me-1"/><small><field name="current_funnel_step"/></small></p>
+                                        </t>
+                                    </div>
+                                    <div class="o_kanban_record_bottom mt-2">
+                                        <div class="oe_kanban_bottom_left">
+                                            <span><i class="fa fa-file-text me-1"/><field name="policy_count"/> policies</span>
+                                        </div>
+                                        <div class="oe_kanban_bottom_right">
+                                            <field name="total_premium" widget="monetary"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="view_insurance_client_form" model="ir.ui.view">
+            <field name="name">insurance.client.form</field>
+            <field name="model">insurance.client</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Client">
+                    <header>
+                        <button name="action_generate_agent_messages" 
+                                type="object" 
+                                string="تحليل الوكيل الذكي (AI Agent)" 
+                                class="oe_highlight btn-warning" 
+                                icon="fa-magic"/>
+
+                        <field name="crm_stage" widget="statusbar"
+                               statusbar_visible="new_lead,contacted,requirement_collection,quotation_requested,negotiation,won" options="{'clickable': '1'}"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object" name="action_view_policies" icon="fa-file-text">
+                                <field name="policy_count" widget="statinfo" string="Policies"/>
+                            </button>
+                            <button class="oe_stat_button" type="object" name="action_view_rfqs" icon="fa-send">
+                                <field name="rfq_count" widget="statinfo" string="RFQs"/>
+                            </button>
+                            <button class="oe_stat_button" icon="fa-exclamation-circle">
+                                <field name="claim_count" widget="statinfo" string="Claims"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="name" string="Client Name"/>
+                            <h1><field name="name" placeholder="e.g. Al Rashidi Trading Co."/></h1>
+                        </div>
+
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Contact Information</div>
+                            <group>
+                                <group>
+                                    <field name="category" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="contact_person" placeholder="Full name" invisible="category == 'personal'"/>
+                                    <field name="email" widget="email"/>
+                                </group>
+                                <group>
+                                    <field name="phone" widget="phone"/>
+                                    <field name="address"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <group>
+                            <group string="Accounting &amp; Relation">
+                                <field name="partner_id" widget="res_partner_many2one" context="{'show_address': 1}" options='{"always_reload": True}'/>
+                                <field name="industry_ids" widget="many2many_tags" placeholder="Sectors..."/>
+                                <field name="industry" placeholder="e.g. Construction, Healthcare" groups="base.group_no_one"/>
+                            </group>
+                            <group string="Website Journey Status">
+                                <field name="current_funnel_step" string="Current Funnel Step"/>
+                                <field name="last_category_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="last_type_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="last_subtype_id" options='{"no_open": True, "no_create": True}'/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="📊 لوحة المعالجة والتحليلات الشاملة / Dashboard" name="client_dashboard">
+                                
+                                <div class="o_dashboard_kpi_wrapper" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                                    
+                                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 15px; text-align: center;">
+                                        <div style="font-size: 13px; color: #166534; font-weight: bold; margin-bottom: 5px;">💰 الأقساط النشطة القائمة</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #15803d;">
+                                            <field name="total_premium"/> <span style="font-size: 14px;">OMR</span>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; text-align: center;">
+                                        <div style="font-size: 13px; color: #1e40af; font-weight: bold; margin-bottom: 5px;">📜 وثائق ومحافظ التأمين</div>
+                                        <div style="font-size: 20px; font-weight: 700; color: #1d4ed8;">
+                                            <span title="نشطة"><field name="active_policy_count"/> نشطة</span>
+                                            <span style="color: #6b7280; font-size: 14px; margin: 0 5px;">/</span>
+                                            <span style="color: #94a3b8; font-size: 16px;" title="منتهية أو ملغاة"><field name="expired_policy_count"/> منتهية</span>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 15px; text-align: center;">
+                                        <div style="font-size: 13px; color: #9b2c2c; font-weight: bold; margin-bottom: 5px;">⚠️ الحوادث والمطالبات المالية</div>
+                                        <div style="font-size: 20px; font-weight: 700; color: #c53030;">
+                                            <span><field name="open_claim_count"/> مفتوحة</span>
+                                            <div style="font-size: 11px; color: #e53e3e; font-weight: normal; margin-top: 3px;">بمجموع مطالبات: <field name="total_claimed_amount"/> OMR</div>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 15px; text-align: center;">
+                                        <div style="font-size: 13px; color: #92400e; font-weight: bold; margin-bottom: 5px;">🎯 مسار المبيعات والفرص</div>
+                                        <div style="font-size: 20px; font-weight: 700; color: #b45309;">
+                                            <span title="الفرص في الـ CRM"><field name="opportunity_count"/> فرص</span>
+                                            <span style="color: #6b7280; font-size: 14px; margin: 0 5px;">/</span>
+                                            <span style="color: #d97706;" title="طلبات معلقة في بوابة الويب"><field name="pending_app_count"/> طلبات معلقة</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 25px;">
+                                    
+                                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; background: #ffffff;">
+                                        <h4 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 6px; margin-bottom: 12px; font-weight: bold;">
+                                            <i class="fa fa-bullseye" style="color: #3b82f6; margin-right: 6px;"/> 1. الفرص البيعية وطلبات البوابة الإلكترونية المعلقة (CRM &amp; Applications)
+                                        </h4>
+                                        <notebook>
+                                            <page string="الفرص البيعية النشطة بالـ CRM" name="sub_tab_opps">
+                                                <field name="opportunity_ids" readonly="1">
+                                                    <list decoration-info="stage_id != False">
+                                                        <field name="name" string="عنوان الفرصة التأمينية"/>
+                                                        <field name="user_id" string="مسؤول البيع"/>
+                                                        <field name="expected_revenue" string="الإيراد المتوقع (OMR)"/>
+                                                        <field name="stage_id" string="المرحلة الحالية"/>
+                                                        <field name="probability" widget="progressbar" string="الاحتمالية"/>
+                                                        <field name="create_date" string="تاريخ فتح الملف"/>
+                                                    </list>
+                                                </field>
+                                            </page>
+                                            <page string="طلبات ومسودات البوابة (Applications)" name="sub_tab_apps">
+                                                <field name="application_ids" readonly="1">
+                                                    <list decoration-warning="status in ['draft', 'submitted', 'under_review']" decoration-success="status == 'policy_issued'">
+                                                        <field name="reference" string="رقم الطلب المرجعي"/>
+                                                        <field name="subtype_id" string="النوع الفرعي للتأمين"/>
+                                                        <field name="channel" string="قناة التقديم"/>
+                                                        <field name="status" string="حالة الطلب الحالي"/>
+                                                        <field name="create_date" string="تاريخ الإرسال"/>
+                                                    </list>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </div>
+
+                                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; background: #ffffff;">
+                                        <h4 style="color: #1f2937; border-bottom: 2px solid #f59e0b; padding-bottom: 6px; margin-bottom: 12px; font-weight: bold;">
+                                            <i class="fa fa-file-text-o" style="color: #f59e0b; margin-right: 6px;"/> 2. طلبات عروض الأسعار والمناقصات من الشركات المزودة (RFQs Log)
+                                        </h4>
+                                        <field name="rfq_ids" readonly="1">
+                                            <list decoration-muted="status == 'closed'" decoration-info="status == 'sent'">
+                                                <field name="reference_no" string="رقم طلب التسعير المرجعي"/>
+                                                <field name="insurance_type" string="نوع التأمين المطلوب"/>
+                                                <field name="response_deadline" string="الموعد النهائي للرد"/>
+                                                <field name="status" string="حالة تسعير عروض المناقصة"/>
+                                                <field name="create_date" string="تاريخ الإرسال للشركات"/>
+                                            </list>
+                                        </field>
+                                    </div>
+
+                                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; background: #ffffff;">
+                                        <h4 style="color: #1f2937; border-bottom: 2px solid #10b981; padding-bottom: 6px; margin-bottom: 12px; font-weight: bold;">
+                                            <i class="fa fa-shield" style="color: #10b981; margin-right: 6px;"/> 3. السجل التاريخي المتكامل لوثائق وبوالص التأمين الصادرة (Policies Record)
+                                        </h4>
+                                        <field name="policy_ids" readonly="1">
+                                            <list decoration-success="status == 'active'" decoration-danger="status == 'expired'" decoration-muted="status == 'cancelled'">
+                                                <field name="policy_number" string="رقم البوليصة"/>
+                                                <field name="insurer" string="شركة التأمين المزودة"/>
+                                                <field name="subtype_id" string="النوع الدقيق للتأمين"/>
+                                                <field name="issue_date" string="تاريخ الإصدار"/>
+                                                <field name="expiry_date" string="تاريخ الانتهاء"/>
+                                                <field name="net_premium" string="صافي القسط السنوي (OMR)"/>
+                                                <field name="status" string="حالة التغطية الحالية"/>
+                                            </list>
+                                        </field>
+                                    </div>
+
+                                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; background: #ffffff;">
+                                        <h4 style="color: #1f2937; border-bottom: 2px solid #ef4444; padding-bottom: 6px; margin-bottom: 12px; font-weight: bold;">
+                                            <i class="fa fa-exclamation-triangle" style="color: #ef4444; margin-right: 6px;"/> 4. كشف الحوادث، التعويضات والتسويات المالية (Claims Tracking)
+                                        </h4>
+                                        <field name="claim_ids" readonly="1">
+                                            <list decoration-danger="status in ['reported', 'submitted']" decoration-success="status == 'settled'" decoration-muted="status == 'rejected'">
+                                                <field name="claim_number" string="رقم المطالبة المرجعي"/>
+                                                <field name="policy_id" string="البوليصة المتأثرة"/>
+                                                <field name="insurer" string="الشركة المتحملة للخطر"/>
+                                                <field name="incident_date" string="تاريخ الحادث"/>
+                                                <field name="claim_amount" string="قيمة المطالبة المرفوعة (OMR)"/>
+                                                <field name="settled_amount" string="المبلغ الذي تمت تسويته"/>
+                                                <field name="status" string="مرحلة المعالجة الحالية"/>
+                                            </list>
+                                        </field>
+                                    </div>
+                                </div>
+                            </page>
+
+                            <page string="Policies" name="policies">
+                                <field name="policy_ids" mode="list" readonly="1">
+                                    <list>
+                                        <field name="policy_number"/>
+                                        <field name="insurance_type"/>
+                                        <field name="insurer"/>
+                                        <field name="expiry_date"/>
+                                        <field name="net_premium" widget="monetary"/>
+                                        <field name="status" widget="badge"
+                                               decoration-success="status == 'active'"
+                                               decoration-danger="status in ('expired','cancelled')"
+                                               decoration-warning="status == 'pending'"
+                                        />
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page string="المساعد الذكي (AI Agent)" name="ai_agent_messages">
+                                <div class="alert alert-info" role="alert" style="margin-bottom: 10px;">
+                                    يتم عرض هذه الرسائل الديناميكية للعميل في الواجهة الأمامية (Frontend) بناءً على الصفحة التي يتصفحها حالياً لمساعدته وإرشاده.
+                                </div>
+                                <field name="agent_message_ids">
+                                    <list editable="bottom" decoration-muted="is_read == True">
+                                        <field name="message_type" widget="badge"
+                                               decoration-success="message_type == 'welcome'"
+                                               decoration-warning="message_type == 'reminder'"
+                                               decoration-info="message_type == 'tip'"
+                                               decoration-primary="message_type == 'cross_sell'"/>
+                                        <field name="target_page"/>
+                                        <field name="content"/>
+                                        <field name="is_read" widget="boolean_toggle"/>
+                                    </list>
+                                </field>
+                            </page>
+                             
+                            <page string="Website Journey Logs" name="journey_logs">
+                                <field name="journey_log_ids" readonly="1">
+                                    <list default_order="id desc">
+                                        <field name="create_date" string="Timestamp"/>
+                                        <field name="action_name"/>
+                                        <field name="page_url" widget="url"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page string="Notes" name="notes">
+                                <field name="notes" placeholder="Internal notes about this client..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_insurance_client" model="ir.actions.act_window">
+            <field name="name">Clients</field>
+            <field name="res_model">insurance.client</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Add your first client!</p>
+                <p>Manage all insurance clients, their policies, and RFQs from one place.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
