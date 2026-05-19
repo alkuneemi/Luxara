@@ -19,6 +19,11 @@ RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 
 # سنقوم بنسخ الموديولات المخصصة من مجلد custom_addons ونرفعها للمجلد الرئيسي مباشرة
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 
+# 4. إصلاح صلاحيات مجلد الـ Volume والملفات (الحل الجديد)
+# نقوم بإنشاء المجلدات وتغيير ملكيتها بالكامل للمستخدم odoo ليتفادى السيرفر خطأ Permission Denied
+RUN mkdir -p /var/lib/odoo/sessions && \
+    chown -R odoo:odoo /var/lib/odoo
+
 USER odoo
 
 EXPOSE 8069
