@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--
+══════════════════════════════════════════════════════════════════════════════
+  🎯 DEMO DATA — بيانات تجريبية: تسعيرات كل شركة لكل منتج
+  ملف: data/insurance_pricing_demo.xml
+  الغرض: تعبئة صفحة التسعيرة الذكية بعروض أسعار حقيقية من شركات التأمين
+══════════════════════════════════════════════════════════════════════════════
+-->
+<data noupdate="1">
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     🏢 شركات التأمين — INSURANCE PROVIDER COMPANIES
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_company_national" model="insurance.company.provider">
+    <field name="name">الشركة الوطنية للتأمين — National Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<record id="demo_company_oman" model="insurance.company.provider">
+    <field name="name">تأمين عُمان — Oman Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<record id="demo_company_ahlia" model="insurance.company.provider">
+    <field name="name">الأهلية للتأمين — Al Ahlia Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<record id="demo_company_dhofar" model="insurance.company.provider">
+    <field name="name">ظفار للتأمين — Dhofar Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<record id="demo_company_gulf" model="insurance.company.provider">
+    <field name="name">الخليج للتأمين — Gulf Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<record id="demo_company_vision" model="insurance.company.provider">
+    <field name="name">فيجن للتأمين — Vision Insurance</field>
+    <field name="active" eval="True"/>
+    <field name="integration_type">manual</field>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     🚗 تأمين المركبات — MOTOR INSURANCE SUBTYPES
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_motor_comp" model="insurance.subtype">
+    <field name="name">تأمين مركبات شامل — Comprehensive Motor</field>
+    <field name="form_type">motor</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">10</field>
+</record>
+
+<record id="demo_subtype_motor_tpl" model="insurance.subtype">
+    <field name="name">تأمين ضد الغير — Third Party Liability</field>
+    <field name="form_type">motor</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">11</field>
+</record>
+
+<!-- تسعيرات المركبات الشامل -->
+<record id="pricing_motor_comp_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">285.000</field>
+    <field name="min_premium">240.000</field>
+    <field name="max_premium">420.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;تغطية شاملة للحوادث والسرقة والحريق&lt;/li&gt;&lt;li&gt;تغطية ضد الكوارث الطبيعية&lt;/li&gt;&lt;li&gt;مسؤولية مدنية تجاه الغير&lt;/li&gt;&lt;li&gt;خدمة المساعدة على الطريق 24/7&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">قيادة تحت تأثير الكحول / استخدام المركبة في السباقات</field>
+    <field name="add_ons">تأمين زجاج / تأمين حوادث شخصية / سيارة بديلة</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_comp_oman" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_oman"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">265.000</field>
+    <field name="min_premium">220.000</field>
+    <field name="max_premium">390.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;تغطية الاصطدام والانقلاب&lt;/li&gt;&lt;li&gt;سرقة كلية وجزئية&lt;/li&gt;&lt;li&gt;مسؤولية مدنية شاملة&lt;/li&gt;&lt;li&gt;تغطية الوفاة والإصابة الجسدية&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">استهلاك طبيعي / أضرار الإطارات منفردة</field>
+    <field name="add_ons">غطاء الشخص الثالث المميز / تأمين رحلات الخليج</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_comp_ahlia" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_ahlia"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">295.000</field>
+    <field name="min_premium">250.000</field>
+    <field name="max_premium">450.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;تغطية شاملة + الكوارث الطبيعية&lt;/li&gt;&lt;li&gt;نسبة تسوية مطالبات 97%&lt;/li&gt;&lt;li&gt;شبكة ورش خدمة واسعة&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">الأضرار المتعمدة / القيادة بدون رخصة سارية</field>
+    <field name="add_ons">تأمين السائق / بطارية ورياح وصاعق / غطاء GCC</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_comp_dhofar" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_dhofar"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">275.000</field>
+    <field name="min_premium">230.000</field>
+    <field name="max_premium">400.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;تغطية شاملة للأضرار المادية&lt;/li&gt;&lt;li&gt;مسؤولية قانونية تجاه الغير&lt;/li&gt;&lt;li&gt;تغطية إضافية لدول الخليج&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">أضرار الميكانيكية والكهربائية</field>
+    <field name="add_ons">حوادث شخصية / مساعدة على الطريق / سيارة بديلة مجانية</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_comp_gulf" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_gulf"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">310.000</field>
+    <field name="min_premium">260.000</field>
+    <field name="max_premium">480.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;أعلى نسبة تغطية في السوق&lt;/li&gt;&lt;li&gt;تسوية مطالبات خلال 48 ساعة&lt;/li&gt;&lt;li&gt;ضامن خبرة 30 سنة في السوق&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">المركبات التجارية الثقيلة</field>
+    <field name="add_ons">برنامج ولاء وخصومات / تأمين المستلزمات الإضافية</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_comp_vision" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_vision"/>
+    <field name="subtype_id" ref="demo_subtype_motor_comp"/>
+    <field name="base_premium">255.000</field>
+    <field name="min_premium">210.000</field>
+    <field name="max_premium">370.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;أوفر سعر في السوق&lt;/li&gt;&lt;li&gt;تغطية الأضرار والحوادث&lt;/li&gt;&lt;li&gt;خدمة عملاء رقمية 24/7&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="exclusions">السرقة الجزئية للإكسسوارات فوق 500 ر.ع</field>
+    <field name="add_ons">تطبيق موبايل لتتبع الطلبات / تأمين مخاطر الطقس</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- تسعيرات ضد الغير -->
+<record id="pricing_motor_tpl_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_motor_tpl"/>
+    <field name="base_premium">45.000</field>
+    <field name="min_premium">35.000</field>
+    <field name="max_premium">80.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_tpl_oman" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_oman"/>
+    <field name="subtype_id" ref="demo_subtype_motor_tpl"/>
+    <field name="base_premium">42.000</field>
+    <field name="min_premium">32.000</field>
+    <field name="max_premium">75.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_tpl_ahlia" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_ahlia"/>
+    <field name="subtype_id" ref="demo_subtype_motor_tpl"/>
+    <field name="base_premium">48.000</field>
+    <field name="min_premium">38.000</field>
+    <field name="max_premium">85.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_motor_tpl_vision" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_vision"/>
+    <field name="subtype_id" ref="demo_subtype_motor_tpl"/>
+    <field name="base_premium">38.500</field>
+    <field name="min_premium">30.000</field>
+    <field name="max_premium">65.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     🏥 التأمين الطبي — MEDICAL INSURANCE SUBTYPES
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_medical_ind" model="insurance.subtype">
+    <field name="name">تأمين طبي فردي — Individual Medical</field>
+    <field name="form_type">medical_individual</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">20</field>
+</record>
+
+<record id="demo_subtype_medical_corp" model="insurance.subtype">
+    <field name="name">تأمين طبي جماعي — Corporate Medical</field>
+    <field name="form_type">medical_corporate</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">21</field>
+</record>
+
+<record id="pricing_med_ind_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_medical_ind"/>
+    <field name="base_premium">180.000</field>
+    <field name="min_premium">150.000</field>
+    <field name="max_premium">380.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;شبكة 200+ مستشفى ومركز طبي&lt;/li&gt;&lt;li&gt;تغطية الأمراض المزمنة&lt;/li&gt;&lt;li&gt;طب الأسنان والبصريات&lt;/li&gt;&lt;li&gt;تغطية الأمومة والولادة&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="add_ons">تغطية دول الخليج / استشارات طبية عبر الإنترنت</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_med_ind_ahlia" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_ahlia"/>
+    <field name="subtype_id" ref="demo_subtype_medical_ind"/>
+    <field name="base_premium">165.000</field>
+    <field name="min_premium">140.000</field>
+    <field name="max_premium">350.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;شبكة علاج واسعة&lt;/li&gt;&lt;li&gt;تغطية العمليات الجراحية&lt;/li&gt;&lt;li&gt;تحاليل ومختبرات طبية&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_med_ind_dhofar" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_dhofar"/>
+    <field name="subtype_id" ref="demo_subtype_medical_ind"/>
+    <field name="base_premium">195.000</field>
+    <field name="min_premium">160.000</field>
+    <field name="max_premium">420.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;أشمل تغطية طبية في السوق&lt;/li&gt;&lt;li&gt;شبكة مستشفيات دولية&lt;/li&gt;&lt;li&gt;تغطية الأمراض النادرة&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_med_ind_gulf" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_gulf"/>
+    <field name="subtype_id" ref="demo_subtype_medical_ind"/>
+    <field name="base_premium">155.000</field>
+    <field name="min_premium">130.000</field>
+    <field name="max_premium">320.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     🏠 تأمين الممتلكات — PROPERTY INSURANCE
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_property" model="insurance.subtype">
+    <field name="name">تأمين الممتلكات والحريق — Property &amp; Fire</field>
+    <field name="form_type">property_fire</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">30</field>
+</record>
+
+<record id="pricing_prop_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_property"/>
+    <field name="base_premium">120.000</field>
+    <field name="min_premium">80.000</field>
+    <field name="max_premium">2500.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;حريق وانفجار&lt;/li&gt;&lt;li&gt;سرقة بالإكراه&lt;/li&gt;&lt;li&gt;كوارث طبيعية (فيضانات، عواصف)&lt;/li&gt;&lt;li&gt;مسؤولية تجاه الجيران&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_prop_oman" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_oman"/>
+    <field name="subtype_id" ref="demo_subtype_property"/>
+    <field name="base_premium">98.000</field>
+    <field name="min_premium">65.000</field>
+    <field name="max_premium">2000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_prop_ahlia" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_ahlia"/>
+    <field name="subtype_id" ref="demo_subtype_property"/>
+    <field name="base_premium">135.000</field>
+    <field name="min_premium">90.000</field>
+    <field name="max_premium">3000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_prop_dhofar" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_dhofar"/>
+    <field name="subtype_id" ref="demo_subtype_property"/>
+    <field name="base_premium">110.000</field>
+    <field name="min_premium">75.000</field>
+    <field name="max_premium">2200.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     ⛵ التأمين البحري — MARINE INSURANCE
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_marine" model="insurance.subtype">
+    <field name="name">تأمين بحري وشحن — Marine &amp; Cargo</field>
+    <field name="form_type">marine</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">40</field>
+</record>
+
+<record id="pricing_marine_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_marine"/>
+    <field name="base_premium">350.000</field>
+    <field name="min_premium">200.000</field>
+    <field name="max_premium">15000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_marine_gulf" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_gulf"/>
+    <field name="subtype_id" ref="demo_subtype_marine"/>
+    <field name="base_premium">320.000</field>
+    <field name="min_premium">180.000</field>
+    <field name="max_premium">12000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_marine_dhofar" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_dhofar"/>
+    <field name="subtype_id" ref="demo_subtype_marine"/>
+    <field name="base_premium">380.000</field>
+    <field name="min_premium">220.000</field>
+    <field name="max_premium">18000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     ❤️ التأمين على الحياة — LIFE INSURANCE
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_life" model="insurance.subtype">
+    <field name="name">تأمين الحياة — Life Insurance</field>
+    <field name="form_type">life</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">50</field>
+</record>
+
+<record id="pricing_life_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_life"/>
+    <field name="base_premium">240.000</field>
+    <field name="min_premium">120.000</field>
+    <field name="max_premium">5000.000</field>
+    <field name="currency">OMR</field>
+    <field name="coverage_summary">&lt;ul&gt;&lt;li&gt;تغطية الوفاة الطبيعية والحوادث&lt;/li&gt;&lt;li&gt;العجز الكلي والجزئي الدائم&lt;/li&gt;&lt;li&gt;استثمار جزء من القسط&lt;/li&gt;&lt;/ul&gt;</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_life_ahlia" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_ahlia"/>
+    <field name="subtype_id" ref="demo_subtype_life"/>
+    <field name="base_premium">215.000</field>
+    <field name="min_premium">110.000</field>
+    <field name="max_premium">4500.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_life_gulf" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_gulf"/>
+    <field name="subtype_id" ref="demo_subtype_life"/>
+    <field name="base_premium">268.000</field>
+    <field name="min_premium">140.000</field>
+    <field name="max_premium">6000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     👷 تأمين العمال — WORKMEN COMPENSATION
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<record id="demo_subtype_workmen" model="insurance.subtype">
+    <field name="name">تأمين تعويض العمال — Workmen Compensation</field>
+    <field name="form_type">workmen</field>
+    <field name="website_published" eval="True"/>
+    <field name="sequence">60</field>
+</record>
+
+<record id="pricing_wc_national" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_national"/>
+    <field name="subtype_id" ref="demo_subtype_workmen"/>
+    <field name="base_premium">380.000</field>
+    <field name="min_premium">200.000</field>
+    <field name="max_premium">8000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_wc_oman" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_oman"/>
+    <field name="subtype_id" ref="demo_subtype_workmen"/>
+    <field name="base_premium">350.000</field>
+    <field name="min_premium">180.000</field>
+    <field name="max_premium">7500.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+<record id="pricing_wc_dhofar" model="insurance.company.pricing">
+    <field name="company_id" ref="demo_company_dhofar"/>
+    <field name="subtype_id" ref="demo_subtype_workmen"/>
+    <field name="base_premium">420.000</field>
+    <field name="min_premium">220.000</field>
+    <field name="max_premium">9000.000</field>
+    <field name="currency">OMR</field>
+    <field name="active" eval="True"/>
+</record>
+
+</data>
+</odoo>
