@@ -1,0 +1,721 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     AMEEN INSURANCE PORTAL — HOME PAGE
+     Brand: Regal Insurance Management Services LLC
+     Colors: #344B9B (primary) | #5CAFE4 (secondary) | #84CFFF (light)
+     Tagline: Legacy Secured. Future Assured.
+     ══════════════════════════════════════════════════════════════════ -->
+
+<template id="ameen_home_page" name="Ameen Home Page">
+    <t t-call="website.layout">
+        <t t-set="pageName" t-value="'ameen_home'"/>
+        <t t-set="no_header" t-value="False"/>
+
+        <!-- Custom Meta -->
+        <t t-set="head">
+            <meta name="description" content="أمين — وسيطكم الموثوق للتأمين في سلطنة عُمان. Legacy Secured. Future Assured. احصل على أفضل تغطية تأمينية الآن."/>
+            <meta name="keywords" content="تأمين عمان, insurance oman, motor insurance, medical insurance, ameen, أمين, regal insurance"/>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap"/>
+        </t>
+
+        <div id="ameen-portal" class="ameen-portal-wrap">
+
+            <!-- ══════════════ NAVBAR ══════════════ -->
+            <nav class="ameen-navbar" id="ameenNav">
+                <div class="ameen-nav-inner">
+                    <a href="/" class="ameen-logo-link">
+                        <div class="ameen-logo">
+                            <div class="ameen-logo-icon">
+                                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="24" cy="24" r="22" fill="#344B9B" stroke="#5CAFE4" stroke-width="2"/>
+                                    <path d="M24 10 L38 32 H10 Z" fill="white" opacity="0.9"/>
+                                    <path d="M24 16 L34 30 H14 Z" fill="#5CAFE4" opacity="0.6"/>
+                                    <circle cx="24" cy="22" r="3" fill="white"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-logo-text">
+                                <span class="ameen-logo-ar">أمين</span>
+                                <span class="ameen-logo-en">ameen</span>
+                            </div>
+                        </div>
+                    </a>
+                    <ul class="ameen-nav-links">
+                        <li><a href="/insurance">احصل على عرض سعر</a></li>
+                        <li><a href="#services">خدماتنا</a></li>
+                        <li><a href="#why-ameen">لماذا أمين</a></li>
+                        <li><a href="#how-it-works">كيف يعمل</a></li>
+                        <li><a href="/my/insurance" class="ameen-nav-portal">بوابتي</a></li>
+                    </ul>
+                    <div class="ameen-nav-cta">
+                        <a href="/insurance" class="ameen-btn-primary ameen-btn-glow">
+                            <span>احصل على تسعيرة مجانية</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <button class="ameen-hamburger" id="ameenHamburger">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- ══════════════ HERO ══════════════ -->
+            <section class="ameen-hero" id="hero">
+                <div class="ameen-hero-bg">
+                    <div class="ameen-hero-particles" id="particles"></div>
+                    <div class="ameen-hero-gradient"></div>
+                    <div class="ameen-hero-wave"></div>
+                </div>
+                <div class="ameen-container ameen-hero-inner">
+                    <div class="ameen-hero-badge">
+                        <span class="ameen-badge-dot"></span>
+                        أكثر من ٢٠ عاماً من الخبرة في التأمين العُماني
+                    </div>
+                    <h1 class="ameen-hero-title">
+                        <span class="ameen-title-ar">حياتك تستحق</span>
+                        <span class="ameen-title-highlight">الأفضل</span>
+                        <span class="ameen-title-sub">Legacy Secured. Future Assured.</span>
+                    </h1>
+                    <p class="ameen-hero-desc">
+                        أمين — وسيطكم التأميني الموثوق. نجمع بين الخبرة العميقة في السوق العُماني
+                        والتقنية الحديثة لنقدم لك أفضل تغطية تأمينية بأسعار تنافسية.
+                    </p>
+                    <div class="ameen-hero-actions">
+                        <a href="/insurance" class="ameen-btn-primary ameen-btn-xl ameen-btn-glow">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            احصل على تسعيرتك الآن
+                        </a>
+                        <a href="#how-it-works" class="ameen-btn-ghost ameen-btn-xl">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            اعرف أكثر
+                        </a>
+                    </div>
+                    <!-- Quick Quote Widget -->
+                    <div class="ameen-quick-quote">
+                        <div class="ameen-quick-quote-label">ابدأ بالتأمين على:</div>
+                        <div class="ameen-quick-links">
+                            <a href="/insurance" class="ameen-quick-link">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                سيارتك
+                            </a>
+                            <a href="/insurance" class="ameen-quick-link">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                صحتك
+                            </a>
+                            <a href="/insurance" class="ameen-quick-link">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                منزلك
+                            </a>
+                            <a href="/insurance" class="ameen-quick-link">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                حياتك
+                            </a>
+                            <a href="/insurance" class="ameen-quick-link">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                عملك
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Stats Ticker -->
+                <div class="ameen-stats-ticker">
+                    <div class="ameen-ticker-inner">
+                        <div class="ameen-stat-item">
+                            <span class="ameen-stat-num" data-count="20">0</span>+
+                            <span class="ameen-stat-lbl">سنة خبرة</span>
+                        </div>
+                        <div class="ameen-stat-divider">|</div>
+                        <div class="ameen-stat-item">
+                            <span class="ameen-stat-num" data-count="50000">0</span>+
+                            <span class="ameen-stat-lbl">عميل راضٍ</span>
+                        </div>
+                        <div class="ameen-stat-divider">|</div>
+                        <div class="ameen-stat-item">
+                            <span class="ameen-stat-num" data-count="52">0</span>
+                            <span class="ameen-stat-lbl">منتج تأميني</span>
+                        </div>
+                        <div class="ameen-stat-divider">|</div>
+                        <div class="ameen-stat-item">
+                            <span class="ameen-stat-num" data-count="15">0</span>+
+                            <span class="ameen-stat-lbl">شركة تأمين معتمدة</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ SERVICES GRID ══════════════ -->
+            <section class="ameen-section ameen-services" id="services">
+                <div class="ameen-container">
+                    <div class="ameen-section-header">
+                        <div class="ameen-section-badge">خدماتنا التأمينية</div>
+                        <h2 class="ameen-section-title">تغطية شاملة لكل احتياجاتك</h2>
+                        <p class="ameen-section-desc">من تأمين السيارة إلى الحياة — نوفر لك أفضل الحلول التأمينية بأسعار تنافسية من أكبر شركات التأمين في عُمان</p>
+                    </div>
+                    <div class="ameen-services-grid">
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-motor">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="4" y="22" width="56" height="22" rx="8" fill="#344B9B" opacity="0.15"/>
+                                    <rect x="8" y="26" width="48" height="14" rx="6" fill="#344B9B" opacity="0.3"/>
+                                    <circle cx="16" cy="44" r="7" fill="#344B9B"/>
+                                    <circle cx="16" cy="44" r="4" fill="#5CAFE4"/>
+                                    <circle cx="48" cy="44" r="7" fill="#344B9B"/>
+                                    <circle cx="48" cy="44" r="4" fill="#5CAFE4"/>
+                                    <rect x="18" y="20" width="28" height="10" rx="4" fill="#344B9B" opacity="0.5"/>
+                                    <rect x="12" y="30" width="40" height="8" rx="3" fill="#344B9B" opacity="0.4"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>تأمين المركبات</h3>
+                                <p>Motor Insurance</p>
+                                <ul class="ameen-card-features">
+                                    <li>تأمين شامل وضد الغير</li>
+                                    <li>تغطية فورية فائقة</li>
+                                    <li>مقارنة أسعار فورية</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-medical">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M32 56s-24-14-24-30a14 14 0 0128 0 14 14 0 0128 0c0 16-24 30-24 30z" fill="#344B9B" opacity="0.2"/>
+                                    <path d="M32 50s-20-12-20-26a12 12 0 0124 0 12 12 0 0124 0c0 14-20 26-20 26z" fill="#344B9B" opacity="0.3"/>
+                                    <rect x="28" y="22" width="8" height="20" rx="4" fill="#344B9B"/>
+                                    <rect x="22" y="28" width="20" height="8" rx="4" fill="#344B9B"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>التأمين الصحي</h3>
+                                <p>Medical Insurance</p>
+                                <ul class="ameen-card-features">
+                                    <li>أفراد وعائلات وشركات</li>
+                                    <li>شبكة مستشفيات واسعة</li>
+                                    <li>تغطية أسنان وبصريات</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-property">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 28L32 10l24 18v26H8V28z" fill="#344B9B" opacity="0.2"/>
+                                    <path d="M12 28L32 14l20 14v22H12V28z" fill="#344B9B" opacity="0.3"/>
+                                    <rect x="24" y="38" width="16" height="18" rx="2" fill="#344B9B" opacity="0.5"/>
+                                    <rect x="14" y="28" width="12" height="10" rx="2" fill="#5CAFE4" opacity="0.6"/>
+                                    <rect x="38" y="28" width="12" height="10" rx="2" fill="#5CAFE4" opacity="0.6"/>
+                                    <path d="M32 10L8 28h48L32 10z" fill="#344B9B" opacity="0.4"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>تأمين الممتلكات</h3>
+                                <p>Property Insurance</p>
+                                <ul class="ameen-card-features">
+                                    <li>منازل وشقق ومباني</li>
+                                    <li>حريق وسرقة وكوارث</li>
+                                    <li>تغطية شاملة للمحتويات</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-marine">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 40c8-8 16-4 24 0s16 8 24 0" stroke="#344B9B" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+                                    <path d="M8 48c8-8 16-4 24 0s16 8 24 0" stroke="#5CAFE4" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                                    <path d="M32 38V20L16 32h32L32 20v18z" fill="#344B9B" opacity="0.4"/>
+                                    <rect x="20" y="36" width="24" height="6" rx="3" fill="#344B9B" opacity="0.3"/>
+                                    <line x1="32" y1="20" x2="32" y2="10" stroke="#344B9B" stroke-width="2.5"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>التأمين البحري</h3>
+                                <p>Marine Insurance</p>
+                                <ul class="ameen-card-features">
+                                    <li>شحن بضائع دولي</li>
+                                    <li>رحلات بحرية</li>
+                                    <li>تغطية الموانئ والمرافئ</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-life">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M32 54s-26-16-26-32A14 14 0 0132 10a14 14 0 0126 12c0 16-26 32-26 32z" fill="#344B9B" opacity="0.15"/>
+                                    <path d="M32 48s-22-13-22-28A12 12 0 0132 14a12 12 0 0122 6c0 15-22 28-22 28z" fill="#344B9B" opacity="0.25"/>
+                                    <path d="M32 44s-18-10-18-24A10 10 0 0132 18a10 10 0 0118 2c0 14-18 24-18 24z" fill="#344B9B" opacity="0.4"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>التأمين على الحياة</h3>
+                                <p>Life Insurance</p>
+                                <ul class="ameen-card-features">
+                                    <li>حماية مدى الحياة</li>
+                                    <li>خطط ادخارية مرنة</li>
+                                    <li>تأمين المستفيدين</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                        <a href="/insurance" class="ameen-service-card ameen-card-workmen">
+                            <div class="ameen-card-glow"></div>
+                            <div class="ameen-card-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="22" cy="18" r="8" fill="#344B9B" opacity="0.3"/>
+                                    <circle cx="42" cy="18" r="8" fill="#344B9B" opacity="0.3"/>
+                                    <circle cx="32" cy="16" r="10" fill="#344B9B" opacity="0.5"/>
+                                    <path d="M8 54c0-13 10-22 24-22s24 9 24 22" fill="#344B9B" opacity="0.2"/>
+                                    <path d="M12 54c0-11 9-18 20-18s20 7 20 18" fill="#344B9B" opacity="0.3"/>
+                                    <rect x="28" y="34" width="8" height="12" rx="4" fill="#5CAFE4" opacity="0.7"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-card-content">
+                                <h3>تأمين العمال</h3>
+                                <p>Workmen Compensation</p>
+                                <ul class="ameen-card-features">
+                                    <li>حماية موظفيك بالكامل</li>
+                                    <li>تغطية إصابات العمل</li>
+                                    <li>امتثال نظام العمل العُماني</li>
+                                </ul>
+                            </div>
+                            <div class="ameen-card-arrow">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        </a>
+
+                    </div>
+                    <div class="ameen-services-cta">
+                        <a href="/insurance" class="ameen-btn-primary ameen-btn-lg">
+                            استكشف جميع المنتجات التأمينية
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ HOW IT WORKS ══════════════ -->
+            <section class="ameen-section ameen-how" id="how-it-works">
+                <div class="ameen-how-bg"></div>
+                <div class="ameen-container">
+                    <div class="ameen-section-header ameen-header-light">
+                        <div class="ameen-section-badge ameen-badge-light">كيف يعمل النظام</div>
+                        <h2 class="ameen-section-title ameen-title-white">٣ خطوات للحصول على تأمينك</h2>
+                        <p class="ameen-section-desc ameen-desc-light">عملية بسيطة وشفافة — من اختيار التأمين حتى إصدار الوثيقة</p>
+                    </div>
+                    <div class="ameen-steps">
+                        <div class="ameen-step" data-step="1">
+                            <div class="ameen-step-number">١</div>
+                            <div class="ameen-step-icon">
+                                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="24" cy="24" r="20" fill="white" opacity="0.1"/>
+                                    <path d="M24 12l4 8h8l-6.5 5 2.5 8L24 28l-8 5 2.5-8L12 20h8z" fill="white" opacity="0.9"/>
+                                </svg>
+                            </div>
+                            <h3>اختر تأمينك</h3>
+                            <p>تصفح فئات وأنواع التأمين المتاحة واختر ما يناسب احتياجاتك وميزانيتك</p>
+                            <div class="ameen-step-connector"></div>
+                        </div>
+                        <div class="ameen-step" data-step="2">
+                            <div class="ameen-step-number">٢</div>
+                            <div class="ameen-step-icon">
+                                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="24" cy="24" r="20" fill="white" opacity="0.1"/>
+                                    <rect x="12" y="14" width="24" height="18" rx="3" fill="white" opacity="0.9"/>
+                                    <line x1="16" y1="20" x2="32" y2="20" stroke="#344B9B" stroke-width="2.5"/>
+                                    <line x1="16" y1="24" x2="28" y2="24" stroke="#344B9B" stroke-width="2.5"/>
+                                    <line x1="16" y1="28" x2="24" y2="28" stroke="#344B9B" stroke-width="2.5"/>
+                                    <circle cx="34" cy="34" r="7" fill="#5CAFE4"/>
+                                    <path d="M31 34l2 2 4-4" stroke="white" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <h3>أدخل بياناتك</h3>
+                            <p>أكمل نموذج الطلب بمعلوماتك بسهولة — يستغرق دقائق فقط مع ماسح الوثائق الذكي</p>
+                            <div class="ameen-step-connector"></div>
+                        </div>
+                        <div class="ameen-step" data-step="3">
+                            <div class="ameen-step-number">٣</div>
+                            <div class="ameen-step-icon">
+                                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="24" cy="24" r="20" fill="white" opacity="0.1"/>
+                                    <path d="M14 24l8 8 14-14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="24" cy="24" r="12" stroke="white" stroke-width="2" opacity="0.5"/>
+                                </svg>
+                            </div>
+                            <h3>احصل على التغطية</h3>
+                            <p>نقارن الأسعار من أفضل شركات التأمين وتحصل على وثيقتك فوراً إلكترونياً</p>
+                        </div>
+                    </div>
+                    <div class="ameen-how-cta">
+                        <a href="/insurance" class="ameen-btn-white ameen-btn-lg">
+                            ابدأ الآن — مجاناً بالكامل
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ AI SAHAB FEATURE ══════════════ -->
+            <section class="ameen-section ameen-ai-feature">
+                <div class="ameen-container ameen-ai-inner">
+                    <div class="ameen-ai-visual">
+                        <div class="ameen-ai-card">
+                            <div class="ameen-ai-header">
+                                <div class="ameen-ai-avatar">
+                                    <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" fill="#344B9B"/><path d="M20 10a6 6 0 100 12 6 6 0 000-12zM10 34a10 10 0 0120 0" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                                </div>
+                                <div>
+                                    <div class="ameen-ai-name">SAHAB AI</div>
+                                    <div class="ameen-ai-status">
+                                        <span class="ameen-pulse"></span>
+                                        متاح الآن ٢٤/٧
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ameen-ai-messages">
+                                <div class="ameen-msg ameen-msg-bot">
+                                    مرحباً! أنا ساحب مساعدك الذكي. كيف يمكنني مساعدتك في التأمين اليوم؟
+                                </div>
+                                <div class="ameen-msg ameen-msg-user">
+                                    أريد تأمين سيارة شامل
+                                </div>
+                                <div class="ameen-msg ameen-msg-bot">
+                                    ممتاز! دعني أعرض لك أفضل الأسعار من ١٥+ شركة تأمين معتمدة في عُمان...
+                                </div>
+                            </div>
+                            <div class="ameen-ai-input">
+                                <input type="text" placeholder="اكتب سؤالك هنا..."/>
+                                <button>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ameen-ai-floating ameen-ai-float-1">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#344B9B" stroke-width="2"/></svg>
+                            تأمين شامل ٤٨ ريال/شهر
+                        </div>
+                        <div class="ameen-ai-floating ameen-ai-float-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#344B9B" stroke-width="2" stroke-linecap="round"/></svg>
+                            مقارنة فورية
+                        </div>
+                    </div>
+                    <div class="ameen-ai-content">
+                        <div class="ameen-section-badge">مساعد أمين الذكي</div>
+                        <h2 class="ameen-section-title">SAHAB AI — وسيطك الذكي <br/>على مدار الساعة</h2>
+                        <p class="ameen-section-desc">
+                            مساعدنا الذكي ساحب يفهم احتياجاتك التأمينية بالعربية والإنجليزية،
+                            ويقدم لك أفضل التوصيات من شركات التأمين المعتمدة فوراً — دون انتظار.
+                        </p>
+                        <div class="ameen-ai-features-list">
+                            <div class="ameen-ai-feat">
+                                <div class="ameen-ai-feat-icon">✓</div>
+                                <div>مقارنة فورية لأسعار ١٥+ شركة تأمين</div>
+                            </div>
+                            <div class="ameen-ai-feat">
+                                <div class="ameen-ai-feat-icon">✓</div>
+                                <div>يدعم اللغة العربية والإنجليزية بشكل كامل</div>
+                            </div>
+                            <div class="ameen-ai-feat">
+                                <div class="ameen-ai-feat-icon">✓</div>
+                                <div>إرشادات مخصصة حسب وضعك ومتطلباتك</div>
+                            </div>
+                            <div class="ameen-ai-feat">
+                                <div class="ameen-ai-feat-icon">✓</div>
+                                <div>متاح ٢٤ ساعة / ٧ أيام / ٣٦٥ يوماً</div>
+                            </div>
+                        </div>
+                        <a href="/insurance" class="ameen-btn-primary ameen-btn-lg">
+                            تحدث مع ساحب الآن
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ WHY AMEEN ══════════════ -->
+            <section class="ameen-section ameen-why" id="why-ameen">
+                <div class="ameen-container">
+                    <div class="ameen-section-header">
+                        <div class="ameen-section-badge">لماذا تختار أمين</div>
+                        <h2 class="ameen-section-title">الثقة والخبرة في خدمتك</h2>
+                        <p class="ameen-section-desc">أكثر من عشرين عاماً من تقديم الحلول التأمينية المتميزة لعملاء عُمان</p>
+                    </div>
+                    <div class="ameen-values-grid">
+                        <div class="ameen-value-card">
+                            <div class="ameen-value-icon ameen-icon-trust">
+                                <svg viewBox="0 0 48 48" fill="none"><path d="M24 4L8 12v16c0 11 16 16 16 16s16-5 16-16V12L24 4z" fill="#344B9B" opacity="0.15"/><path d="M24 8L10 15v14c0 9 14 13 14 13s14-4 14-13V15L24 8z" fill="#344B9B" opacity="0.25"/><path d="M16 24l6 6 12-12" stroke="#344B9B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h3>الأمانة والنزاهة</h3>
+                            <p>مبنية على مبادئ الشفافية الكاملة والنزاهة التامة في كل تعامل، لأن "أمين" ليست مجرد اسم بل فلسفة عمل.</p>
+                            <div class="ameen-value-tag">Integrity</div>
+                        </div>
+                        <div class="ameen-value-card">
+                            <div class="ameen-value-icon ameen-icon-transparent">
+                                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#344B9B" stroke-width="2.5" opacity="0.3"/><circle cx="24" cy="24" r="10" fill="#344B9B" opacity="0.15"/><path d="M24 16v8l6 4" stroke="#344B9B" stroke-width="2.5" stroke-linecap="round"/></svg>
+                            </div>
+                            <h3>الشفافية الكاملة</h3>
+                            <p>تتابع طلبك خطوة بخطوة عبر لوحة تحكم مخصصة — تعرف دائماً أين وصل ملفك ومتى تصلك وثيقتك.</p>
+                            <div class="ameen-value-tag">Transparency</div>
+                        </div>
+                        <div class="ameen-value-card">
+                            <div class="ameen-value-icon ameen-icon-expert">
+                                <svg viewBox="0 0 48 48" fill="none"><rect x="10" y="20" width="28" height="20" rx="4" fill="#344B9B" opacity="0.15"/><path d="M16 20V14a8 8 0 0116 0v6" stroke="#344B9B" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="30" r="4" fill="#344B9B" opacity="0.5"/></svg>
+                            </div>
+                            <h3>خبرة ٢٠+ سنة</h3>
+                            <p>فريق من المحترفين المعتمدين بخبرة عميقة في السوق العُماني ومعرفة دقيقة بمتطلبات هيئة الحفاظ على ضوابط التأمين.</p>
+                            <div class="ameen-value-tag">Expertise</div>
+                        </div>
+                        <div class="ameen-value-card">
+                            <div class="ameen-value-icon ameen-icon-client">
+                                <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="8" fill="#344B9B" opacity="0.3"/><path d="M10 40c0-8 6-14 14-14s14 6 14 14" fill="#344B9B" opacity="0.15"/><path d="M36 22l2 2 5-5" stroke="#344B9B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h3>العميل أولاً دائماً</h3>
+                            <p>نصمم كل خدمة حسب احتياجاتك الشخصية — لأن كل عميل مختلف ويستحق حلاً تأمينياً مخصصاً له وحده.</p>
+                            <div class="ameen-value-tag">Client-Centric</div>
+                        </div>
+                        <div class="ameen-value-card">
+                            <div class="ameen-value-icon ameen-icon-innovation">
+                                <svg viewBox="0 0 48 48" fill="none"><path d="M24 8l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" fill="#344B9B" opacity="0.3"/><circle cx="24" cy="32" r="8" stroke="#344B9B" stroke-width="2.5" opacity="0.5"/><path d="M20 32l3 3 5-5" stroke="#344B9B" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                            <h3>الابتكار التقني</h3>
+                            <p>منصة رقمية متطورة بمساعد ذكاء اصطناعي ومقارنة فورية وإصدار وثائق إلكترونية — لأن وقتك ثمين.</p>
+                            <div class="ameen-value-tag">Innovation</div>
+                        </div>
+                        <div class="ameen-value-card ameen-value-cta-card">
+                            <div class="ameen-value-cta-inner">
+                                <h3>جاهز للبدء؟</h3>
+                                <p>احصل على تسعيرتك المجانية الآن ودع فريق أمين يهتم بكل التفاصيل</p>
+                                <a href="/insurance" class="ameen-btn-primary">ابدأ الآن</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ TRUST BAR ══════════════ -->
+            <section class="ameen-trust-bar">
+                <div class="ameen-container">
+                    <div class="ameen-trust-inner">
+                        <div class="ameen-trust-item">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#5CAFE4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>معتمد من هيئة الحفاظ على ضوابط التأمين</span>
+                        </div>
+                        <div class="ameen-trust-divider"></div>
+                        <div class="ameen-trust-item">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="#5CAFE4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>بيانات مشفرة و آمنة بالكامل</span>
+                        </div>
+                        <div class="ameen-trust-divider"></div>
+                        <div class="ameen-trust-item">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke="#5CAFE4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>دعم متواصل ٢٤/٧ بالعربية والإنجليزية</span>
+                        </div>
+                        <div class="ameen-trust-divider"></div>
+                        <div class="ameen-trust-item">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#5CAFE4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>إصدار الوثيقة خلال ٢٤ ساعة</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ TESTIMONIALS ══════════════ -->
+            <section class="ameen-section ameen-testimonials">
+                <div class="ameen-container">
+                    <div class="ameen-section-header">
+                        <div class="ameen-section-badge">ماذا يقول عملاؤنا</div>
+                        <h2 class="ameen-section-title">آلاف العملاء يثقون بأمين</h2>
+                    </div>
+                    <div class="ameen-testimonials-grid">
+                        <div class="ameen-testimonial">
+                            <div class="ameen-stars">★★★★★</div>
+                            <p>"خدمة ممتازة وسريعة جداً. حصلت على تأمين سيارتي خلال ١٠ دقائق فقط من خلال المنصة. أفضل تجربة تأمينية في عُمان!"</p>
+                            <div class="ameen-testimonial-author">
+                                <div class="ameen-author-avatar ameen-avatar-1">أ.م</div>
+                                <div>
+                                    <div class="ameen-author-name">أحمد المعمري</div>
+                                    <div class="ameen-author-title">مسقط، عُمان</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ameen-testimonial ameen-testimonial-featured">
+                            <div class="ameen-stars">★★★★★</div>
+                            <p>"منصة احترافية بمعنى الكلمة. المساعد الذكي أجاب على كل أسئلتي وساعدني باختيار أنسب تأمين صحي لعائلتي بأسعار معقولة."</p>
+                            <div class="ameen-testimonial-author">
+                                <div class="ameen-author-avatar ameen-avatar-2">س.ا</div>
+                                <div>
+                                    <div class="ameen-author-name">سعيد الشنفري</div>
+                                    <div class="ameen-author-title">صلالة، ظفار</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ameen-testimonial">
+                            <div class="ameen-stars">★★★★★</div>
+                            <p>"كشركة صغيرة، أمين وفر لنا تأمين العمال والمبنى بأسعار لم نجدها في أي مكان آخر. الشفافية والسرعة هما ما يميزهم."</p>
+                            <div class="ameen-testimonial-author">
+                                <div class="ameen-author-avatar ameen-avatar-3">م.ح</div>
+                                <div>
+                                    <div class="ameen-author-name">محمد الحارثي</div>
+                                    <div class="ameen-author-title">صحار، الباطنة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ FINAL CTA ══════════════ -->
+            <section class="ameen-cta-section">
+                <div class="ameen-cta-bg"></div>
+                <div class="ameen-container ameen-cta-inner">
+                    <div class="ameen-cta-content">
+                        <h2>ابدأ رحلتك التأمينية الآن</h2>
+                        <p>انضم إلى أكثر من ٥٠,٠٠٠ عميل يثقون بأمين لحماية مستقبلهم<br/>
+                        <em>Legacy Secured. Future Assured.</em></p>
+                        <div class="ameen-cta-actions">
+                            <a href="/insurance" class="ameen-btn-white ameen-btn-xl">
+                                احصل على تسعيرة مجانية
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </a>
+                            <a href="/contactus" class="ameen-btn-ghost-white ameen-btn-xl">
+                                تواصل مع مستشارنا
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ameen-cta-visual">
+                        <div class="ameen-cta-logo">
+                            <div class="ameen-cta-logo-icon">
+                                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="40" cy="40" r="36" fill="white" opacity="0.1"/>
+                                    <circle cx="40" cy="40" r="28" fill="white" opacity="0.15"/>
+                                    <path d="M40 18L56 44H24Z" fill="white" opacity="0.9"/>
+                                    <path d="M40 26L52 44H28Z" fill="#5CAFE4" opacity="0.5"/>
+                                    <circle cx="40" cy="38" r="5" fill="white"/>
+                                </svg>
+                            </div>
+                            <div class="ameen-cta-logo-text">
+                                <span class="cta-ar">أمين</span>
+                                <span class="cta-en">ameen</span>
+                                <span class="cta-tag">Legacy Secured. Future Assured.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ FOOTER ══════════════ -->
+            <footer class="ameen-footer">
+                <div class="ameen-container">
+                    <div class="ameen-footer-grid">
+                        <div class="ameen-footer-brand">
+                            <div class="ameen-logo ameen-logo-footer">
+                                <div class="ameen-logo-icon ameen-logo-icon-sm">
+                                    <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#344B9B" stroke="#5CAFE4" stroke-width="1.5"/><path d="M24 10 L38 32 H10 Z" fill="white" opacity="0.9"/><path d="M24 16 L34 30 H14 Z" fill="#5CAFE4" opacity="0.6"/><circle cx="24" cy="22" r="3" fill="white"/></svg>
+                                </div>
+                                <div class="ameen-logo-text">
+                                    <span class="ameen-logo-ar">أمين</span>
+                                    <span class="ameen-logo-en">ameen</span>
+                                </div>
+                            </div>
+                            <p class="ameen-footer-desc">
+                                وسيطكم التأميني الموثوق في سلطنة عُمان.
+                                شركة Regal Insurance Management Services LLC
+                                — أكثر من ٢٠ عاماً من الخبرة والثقة.
+                            </p>
+                            <div class="ameen-footer-tagline">Legacy Secured. Future Assured.</div>
+                        </div>
+                        <div class="ameen-footer-col">
+                            <h4>خدماتنا</h4>
+                            <ul>
+                                <li><a href="/insurance">تأمين المركبات</a></li>
+                                <li><a href="/insurance">التأمين الصحي</a></li>
+                                <li><a href="/insurance">تأمين الممتلكات</a></li>
+                                <li><a href="/insurance">التأمين البحري</a></li>
+                                <li><a href="/insurance">التأمين على الحياة</a></li>
+                                <li><a href="/insurance">تأمين العمال</a></li>
+                            </ul>
+                        </div>
+                        <div class="ameen-footer-col">
+                            <h4>روابط مفيدة</h4>
+                            <ul>
+                                <li><a href="/insurance">احصل على تسعيرة</a></li>
+                                <li><a href="/my/insurance">بوابة العميل</a></li>
+                                <li><a href="#how-it-works">كيف يعمل النظام</a></li>
+                                <li><a href="#why-ameen">لماذا أمين</a></li>
+                                <li><a href="/contactus">تواصل معنا</a></li>
+                            </ul>
+                        </div>
+                        <div class="ameen-footer-col">
+                            <h4>تواصل معنا</h4>
+                            <div class="ameen-footer-contact">
+                                <div class="ameen-contact-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#5CAFE4"/></svg>
+                                    مسقط، سلطنة عُمان
+                                </div>
+                                <div class="ameen-contact-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" fill="#5CAFE4"/></svg>
+                                    +968 XXXX XXXX
+                                </div>
+                                <div class="ameen-contact-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#5CAFE4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    info@ameen.me
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ameen-footer-bottom">
+                        <div class="ameen-footer-copy">
+                            © 2025 Regal Insurance Management Services LLC. جميع الحقوق محفوظة.
+                        </div>
+                        <div class="ameen-footer-legal">
+                            <a href="#">سياسة الخصوصية</a>
+                            <a href="#">الشروط والأحكام</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+
+        </div><!-- /ameen-portal-wrap -->
+    </t>
+</template>
+
+<!-- Homepage page record — sets / as Ameen portal -->
+<record id="ameen_homepage_page" model="website.page">
+    <field name="name">Ameen Insurance Portal — Home</field>
+    <field name="url">/</field>
+    <field name="view_id" ref="ameen_home_page"/>
+    <field name="is_published">True</field>
+    <field name="website_indexed">True</field>
+</record>
+
+</data>
+</odoo>
