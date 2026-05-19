@@ -98,9 +98,6 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
             'insurance_broker_suite/static/src/css/insurance_broker.css',
         ],
         'web.assets_frontend': [
-            # ════ AMEEN HOME PAGE ════
-            'insurance_broker_suite/static/src/css/ameen_home.css',
-            'insurance_broker_suite/static/src/js/ameen_home.js',
             # Portal styles
             'insurance_broker_suite/static/src/css/insurance_portal.css',
             'insurance_broker_suite/static/src/css/insurance_provider.css',
