@@ -1,116 +1,295 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+<data>
 
-        <!-- ══ LIST VIEW ══════════════════════════════════════════════ -->
-        <record id="view_insurance_commission_list" model="ir.ui.view">
-            <field name="name">insurance.commission.list</field>
-            <field name="model">insurance.commission</field>
-            <field name="arch" type="xml">
-                <list string="Commissions"
-                    decoration-danger="status == 'overdue'"
-                    decoration-success="status == 'received'"
-                    decoration-warning="status == 'partial'"
-                    decoration-info="status == 'pending'">
-                    <field name="policy_id"/>
-                    <field name="client_id"/>
-                    <field name="insurer"/>
-                    <field name="insurance_type" widget="badge" optional="show"/>
-                    <field name="expected_amount" widget="monetary"/>
-                    <field name="received_amount" widget="monetary"/>
-                    <field name="outstanding_amount" widget="monetary"/>
-                    <field name="due_date"/>
-                    <field name="received_date" optional="show"/>
-                    <field name="status" widget="badge"
-                        decoration-info="status == 'pending'"
-                        decoration-warning="status == 'partial'"
-                        decoration-success="status == 'received'"
-                        decoration-danger="status == 'overdue'"
-                    />
-                    <button name="action_mark_received" string="Mark Received"
-                        type="object" class="btn-success btn-sm"
-                        invisible="status == 'received'"/>
-                </list>
-            </field>
-        </record>
+<!-- ══════════════════════════════════════════════════════════════════════
+     COMMISSION RECORD VIEWS — insurance.commission
+     ══════════════════════════════════════════════════════════════════════ -->
 
-        <!-- ══ FORM VIEW ══════════════════════════════════════════════ -->
-        <record id="view_insurance_commission_form" model="ir.ui.view">
-            <field name="name">insurance.commission.form</field>
-            <field name="model">insurance.commission</field>
-            <field name="arch" type="xml">
-                <form string="Commission Record">
-                    <header>
-                        <button name="action_mark_received" string="Mark as Received"
-                            type="object" class="btn-success"
-                            invisible="status == 'received'"/>
-                        <button name="action_mark_partial" string="Mark as Partial"
-                            type="object" class="btn-warning"
-                            invisible="status in ('received','partial')"/>
-                        <button name="action_mark_overdue" string="Mark as Overdue"
-                            type="object" class="btn-danger"
-                            invisible="status in ('received','overdue')"/>
-                        <field name="status" widget="statusbar"
-                            statusbar_visible="pending,partial,received"/>
-                    </header>
-                    <sheet>
-                        <div class="oe_title">
-                            <label for="name" string="Reference"/>
-                            <h1><field name="name" readonly="1"/></h1>
+<!-- ── LIST ── -->
+<record id="view_insurance_commission_list" model="ir.ui.view">
+    <field name="name">insurance.commission.list</field>
+    <field name="model">insurance.commission</field>
+    <field name="arch" type="xml">
+        <list string="Commissions"
+              decoration-danger="status == 'overdue'"
+              decoration-success="status in ('received','paid_out')"
+              decoration-warning="status == 'partial'"
+              decoration-info="status == 'draft'">
+            <field name="name"/>
+            <field name="policy_id"/>
+            <field name="client_id"/>
+            <field name="insurer_id" optional="show"/>
+            <field name="invoice_amount"      string="Premium (OMR)"    widget="monetary"/>
+            <field name="commission_rate_pct" string="Rate %"           widget="percentage" optional="show"/>
+            <field name="commission_amount"   string="Commission (OMR)" widget="monetary"/>
+            <field name="insurer_amount"      string="Net to Insurer"   widget="monetary" optional="show"/>
+            <field name="due_date"/>
+            <field name="received_date" optional="show"/>
+            <field name="status" widget="badge"
+                decoration-secondary="status == 'draft'"
+                decoration-info="status == 'confirmed'"
+                decoration-warning="status == 'partial'"
+                decoration-success="status in ('received','paid_out')"
+                decoration-danger="status == 'overdue'"/>
+            <field name="move_id" optional="show"/>
+            <button name="action_confirm" string="Confirm"
+                    type="object" class="btn-primary btn-sm"
+                    invisible="status != 'draft'"/>
+            <button name="action_mark_received" string="Mark Received"
+                    type="object" class="btn-success btn-sm"
+                    invisible="status not in ('confirmed','partial','overdue')"/>
+        </list>
+    </field>
+</record>
+
+<!-- ── FORM ── -->
+<record id="view_insurance_commission_form" model="ir.ui.view">
+    <field name="name">insurance.commission.form</field>
+    <field name="model">insurance.commission</field>
+    <field name="arch" type="xml">
+        <form string="Commission Record">
+            <header>
+                <button name="action_confirm"
+                        string="✅ Confirm &amp; Create Journal Entry"
+                        type="object" class="btn-primary"
+                        invisible="status != 'draft'"
+                        confirm="This will confirm the commission and create an accounting journal entry. Proceed?"/>
+                <button name="action_mark_received"
+                        string="Mark Commission Received"
+                        type="object" class="btn-success"
+                        invisible="status not in ('confirmed','partial','overdue')"/>
+                <button name="action_mark_paid_out"
+                        string="Mark Paid to Insurer"
+                        type="object" class="btn-info"
+                        invisible="status != 'received'"/>
+                <button name="action_mark_partial"
+                        string="Partial"
+                        type="object" class="btn-warning"
+                        invisible="status not in ('confirmed','overdue')"/>
+                <button name="action_view_journal_entry"
+                        string="📒 View Journal Entry"
+                        type="object" class="btn-secondary"
+                        invisible="not move_id"/>
+                <button name="action_reset_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="status != 'overdue'"/>
+                <field name="status" widget="statusbar"
+                       statusbar_visible="draft,confirmed,received,paid_out"/>
+            </header>
+
+            <sheet>
+                <div class="oe_title">
+                    <label for="name" string="Commission Reference"/>
+                    <h1><field name="name" readonly="1"/></h1>
+                </div>
+
+                <!-- ★ FINANCIAL SUMMARY CARD ★ -->
+                <div class="o_ins_form_hero">
+                    <div class="o_ins_hero_label">ملخص العمولة — Commission Summary</div>
+                    <div class="row mt-2">
+                        <div class="col-4 text-center border-end">
+                            <div class="text-muted small fw-bold">إجمالي القسط</div>
+                            <div class="fs-3 fw-bold text-primary">
+                                <field name="invoice_amount" widget="monetary" nolabel="1"/>
+                            </div>
+                            <div class="text-muted small">Total Premium</div>
                         </div>
-
-                        <!-- ★ KEY FIELDS CARD ★ -->
-                        <div class="o_ins_form_hero">
-                            <div class="o_ins_hero_label">Commission Details</div>
-                            <group>
-                                <group>
-                                    <field name="policy_id" options="{'no_create': true}"/>
-                                    <field name="expected_amount" widget="monetary"/>
-                                    <field name="received_amount" widget="monetary"/>
-                                </group>
-                                <group>
-                                    <field name="due_date"/>
-                                    <field name="received_date"/>
-                                    <field name="outstanding_amount" widget="monetary" readonly="1"/>
-                                </group>
-                            </group>
+                        <div class="col-4 text-center border-end">
+                            <div class="text-muted small fw-bold">عمولة البروكر</div>
+                            <div class="fs-3 fw-bold text-success">
+                                <field name="commission_amount" widget="monetary" nolabel="1" readonly="1"/>
+                            </div>
+                            <div class="text-muted small">
+                                <field name="commission_rate_pct" nolabel="1" widget="percentage" readonly="1"/> Commission
+                            </div>
                         </div>
+                        <div class="col-4 text-center">
+                            <div class="text-muted small fw-bold">صافي للشركة</div>
+                            <div class="fs-3 fw-bold text-warning">
+                                <field name="insurer_amount" widget="monetary" nolabel="1" readonly="1"/>
+                            </div>
+                            <div class="text-muted small">Net to Insurer</div>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- Auto-filled / secondary -->
-                        <group string="Policy Info (Auto-filled)">
-                            <group>
-                                <field name="client_id" readonly="1"/>
-                                <field name="insurer" readonly="1"/>
+                <!-- ── MAIN FIELDS ── -->
+                <group>
+                    <group string="Policy &amp; Client / الوثيقة والعميل">
+                        <field name="policy_id" options="{'no_create': true}"/>
+                        <field name="client_id" readonly="1"/>
+                        <field name="insurer_id" readonly="1"/>
+                        <field name="insurance_type" readonly="1" widget="badge"/>
+                        <field name="subtype_id" readonly="1"/>
+                    </group>
+                    <group string="Commission Rate / نسبة العمولة">
+                        <field name="commission_rate_id" options="{'no_create': true}"/>
+                        <field name="invoice_amount"      string="Total Premium (OMR)"/>
+                        <field name="commission_rate_pct" string="Commission Rate (%)" widget="percentage"/>
+                        <field name="commission_amount"   string="Commission Amount" readonly="1" widget="monetary"/>
+                        <field name="insurer_amount"      string="Net to Insurer"    readonly="1" widget="monetary"/>
+                    </group>
+                </group>
+
+                <group>
+                    <group string="Dates / التواريخ">
+                        <field name="due_date"/>
+                        <field name="received_date" invisible="status not in ('partial','received','paid_out')"/>
+                        <field name="paid_out_date" invisible="status != 'paid_out'"/>
+                    </group>
+                    <group string="Payment / الدفع">
+                        <field name="received_amount" string="Received Amount (OMR)"/>
+                        <field name="outstanding_amount" readonly="1" widget="monetary"/>
+                        <field name="payment_method"/>
+                        <field name="payment_reference"/>
+                    </group>
+                </group>
+
+                <notebook>
+                    <!-- Accounting Tab -->
+                    <page string="📒 Accounting / الحسابات" name="accounting">
+                        <group>
+                            <group string="Journal &amp; Accounts">
+                                <field name="journal_id"           options="{'no_create': true}"/>
+                                <field name="commission_account_id" options="{'no_create': true}"/>
+                                <field name="payable_account_id"   options="{'no_create': true}"/>
+                                <field name="receivable_account_id" options="{'no_create': true}"/>
                             </group>
-                            <group>
-                                <field name="insurance_type" readonly="1"/>
+                            <group string="Journal Entry">
+                                <field name="move_id" readonly="1"/>
+                                <field name="move_state" readonly="1" widget="badge"
+                                       invisible="not move_id"/>
                             </group>
                         </group>
 
-                        <notebook>
-                            <page string="Notes" name="notes">
-                                <field name="notes" placeholder="Internal notes..."/>
-                            </page>
-                        </notebook>
-                    </sheet>
-                    <chatter/>
-                </form>
-            </field>
-        </record>
+                        <!-- Commission Breakdown Box -->
+                        <div class="alert alert-info mt-3" role="alert" invisible="not invoice_amount">
+                            <strong>📊 Commission Breakdown / تفصيل العمولة:</strong><br/>
+                            <ul class="mb-0 mt-1">
+                                <li>
+                                    إجمالي القسط: <strong><field name="invoice_amount" nolabel="1" readonly="1"/> OMR</strong>
+                                </li>
+                                <li>
+                                    عمولة البروكر (<field name="commission_rate_pct" nolabel="1" readonly="1" widget="percentage"/>):
+                                    <strong><field name="commission_amount" nolabel="1" readonly="1"/> OMR</strong>
+                                </li>
+                                <li>
+                                    صافي مستحق للشركة:
+                                    <strong><field name="insurer_amount" nolabel="1" readonly="1"/> OMR</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </page>
 
-        <!-- ══ SEARCH VIEW ════════════════════════════════════════════ -->
-              
+                    <!-- Notes Tab -->
+                    <page string="Notes" name="notes">
+                        <field name="notes" placeholder="ملاحظات داخلية..."/>
+                    </page>
+                </notebook>
+            </sheet>
+            <chatter/>
+        </form>
+    </field>
+</record>
 
-        <!-- ══ ACTION ═════════════════════════════════════════════════ -->
-        <record id="action_insurance_commission" model="ir.actions.act_window">
-            <field name="name">Commissions</field>
-            <field name="res_model">insurance.commission</field>
-            <field name="view_mode">list,form</field>
-            <field name="help" type="html">
-                <p class="o_view_nocontent_smiling_face">No commissions yet!</p>
-                <p>Commission records are created automatically when a policy is issued.</p>
-            </field>
-        </record>
+<!-- ── SEARCH ── -->
+<record id="view_insurance_commission_search" model="ir.ui.view">
+    <field name="name">insurance.commission.search</field>
+    <field name="model">insurance.commission</field>
+    <field name="arch" type="xml">
+        <search string="Search Commissions">
+            <field name="name"/>
+            <field name="policy_id"/>
+            <field name="client_id"/>
+            <field name="insurer_id"/>
+            <filter string="Draft"      name="draft"     domain="[('status','=','draft')]"/>
+            <filter string="Confirmed"  name="confirmed" domain="[('status','=','confirmed')]"/>
+            <filter string="Received"   name="received"  domain="[('status','=','received')]"/>
+            <filter string="Overdue"    name="overdue"   domain="[('status','=','overdue')]"/>
+            <filter string="Paid Out"   name="paid_out"  domain="[('status','=','paid_out')]"/>
+            <separator/>
+            <filter string="This Month" name="this_month"
+                    domain="[('due_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+            <group expand="0" string="Group By">
+                <filter string="Insurer"  name="grp_insurer" context="{'group_by':'insurer_id'}"/>
+                <filter string="Status"   name="grp_status"  context="{'group_by':'status'}"/>
+                <filter string="Due Date" name="grp_due"     context="{'group_by':'due_date:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
 
-    </data>
+<!-- ── KANBAN ── -->
+<record id="view_insurance_commission_kanban" model="ir.ui.view">
+    <field name="name">insurance.commission.kanban</field>
+    <field name="model">insurance.commission</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="status" class="o_kanban_small_column">
+            <field name="name"/>
+            <field name="client_id"/>
+            <field name="insurer_id"/>
+            <field name="invoice_amount"/>
+            <field name="commission_amount"/>
+            <field name="commission_rate_pct"/>
+            <field name="insurer_amount"/>
+            <field name="due_date"/>
+            <field name="status"/>
+            <field name="move_id"/>
+            <templates>
+                <t t-name="card">
+                    <div class="fw-bold fs-6">
+                        <field name="name"/>
+                    </div>
+                    <div class="text-muted small">
+                        <field name="client_id"/> —
+                        <field name="insurer_id"/>
+                    </div>
+                    <hr class="my-2"/>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-muted" style="font-size:10px">PREMIUM</div>
+                            <div class="fw-bold text-primary">
+                                <field name="invoice_amount" widget="monetary"/>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted" style="font-size:10px">COMMISSION</div>
+                            <div class="fw-bold text-success">
+                                <field name="commission_amount" widget="monetary"/>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted" style="font-size:10px">NET</div>
+                            <div class="fw-bold text-warning">
+                                <field name="insurer_amount" widget="monetary"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Due: <field name="due_date"/></span>
+                        <field name="status" widget="badge"/>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+<!-- ── ACTION ── -->
+<record id="action_insurance_commission" model="ir.actions.act_window">
+    <field name="name">Commissions / العمولات</field>
+    <field name="res_model">insurance.commission</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="search_view_id" ref="view_insurance_commission_search"/>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            لا توجد عمولات بعد — No commissions yet
+        </p>
+        <p>أنشئ وثيقة تأمين وأضف عمولة مرتبطة بها لبدء تتبع الإيرادات.</p>
+    </field>
+</record>
+
+</data>
 </odoo>
