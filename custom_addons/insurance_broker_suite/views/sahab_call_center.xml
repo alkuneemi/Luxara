@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- وراثة قالب الصفحة الرئيسية لإضافة نافذة الكول سنتر المنبثقة -->
+        <template id="sahab_call_center_overlay_inherit" inherit_id="insurance_broker_suite.insurance_home" name="Sahab Call Center Overlay">
+            
+            <!-- حقن النافذة بعد الـ section الخاص بالهيرو تماماً كما كانت سابقاً -->
+            <xpath expr="//section[hasclass('o_ins_ai_hero')]" position="after">
+                
+                <div class="o_cc_overlay" id="oCCOverlay">
+                    <div class="o_cc_panel" id="oCCPanel" style="max-width: 450px;"> 
+                        <div class="o_cc_header">
+                            <div class="o_cc_agent_info">
+                                <div class="o_cc_avatar_wrap">
+                                    <div class="o_cc_avatar" style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: white;">
+                                        <i class="fa fa-phone-square"/>
+                                    </div>
+                                    <span class="o_cc_status_dot" style="background-color: #10b981; animation: pulse 2s infinite;"/>
+                                </div>
+                                <div>
+                                    <div class="o_cc_agent_name">Ameen — Live Voice AI</div>
+                                    <div class="o_cc_agent_status">
+                                        <span class="badge bg-danger-subtle text-danger fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">LIVE CALL</span>
+                                    </div>
+                                    <div class="o_cc_agent_caption">اتصال مباشر • مستشارك التأميني الذكي متاح الآن</div>
+                                </div>
+                            </div>
+                            <button class="o_cc_close" id="oCCClose" title="Close">&#215;</button>
+                        </div>
+
+                        <div class="o_cc_voice_area d-flex flex-column align-items-center justify-content-center py-5 px-4 text-center">
+                            
+                            <div class="o_cc_voice_title mb-2 fs-5 fw-bold text-dark">
+                                مركز الاتصال الصوتي المباشر (كول سنتر حي)
+                            </div>
+                            <div class="o_cc_voice_sub text-muted small mb-4">
+                                اضغط على زر الاتصال بالأسفل لفتح الخط. تحدث وسيستمع المستشار إليك ويرد فوراً بمجرد صمتك تلقائياً.
+                            </div>
+
+                            <!-- تموجات الصوت -->
+                            <div class="o_cc_waveform d-flex align-items-end justify-content-center gap-1 mb-5" style="height: 60px; min-height: 60px; width: 100%; opacity: 0.2; transition: opacity 0.3s ease;">
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 15px; background: #3b82f6; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 35px; background: #3b82f6; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 50px; background: #2563eb; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 25px; background: #1d4ed8; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 45px; background: #3b82f6; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 60px; background: #2563eb; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 30px; background: #1d4ed8; border-radius: 2px;"/>
+                                <div class="o_cc_wave_bar" style="width: 4px; height: 15px; background: #3b82f6; border-radius: 2px;"/>
+                            </div>
+
+                            <!-- زر الاتصال الرئيسي / إنهاء المكالمة -->
+                            <div class="position-relative mb-4">
+                                <button class="o_cc_record_btn d-flex align-items-center justify-content-center" id="oCCRecord" title="ابدأ المكالمة الحية" 
+                                        style="width: 90px; height: 90px; border-radius: 50%; border: none; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; font-size: 32px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); transition: all 0.3s ease; cursor: pointer;">
+                                    <i class="fa fa-phone" id="micIcon"/>
+                                </button>
+                            </div>
+
+                            <div class="o_cc_voice_status fw-semibold text-primary mb-4" id="oCCVoiceStatus" style="font-size: 14px;">
+                                اضغط على زر الهاتف لبدء المكالمة الحية
+                            </div>
+
+                            <div class="o_cc_transcript p-3 rounded w-100 mb-3 border text-start" id="oCCTranscript" 
+                                 style="background-color: #f8fafc; font-size: 13px; max-height: 120px; overflow-y: auto; min-height: 60px; display: none; direction: rtl;">
+                            </div>
+
+                            <div class="o_cc_voice_info text-muted text-start mt-3 p-3 rounded border-top w-100" style="font-size: 11px; background-color: #fff;">
+                                <i class="fa fa-info-circle text-primary me-1"/>
+                                <span>
+                                    المكالمة مستمرة حياً؛ بمجرد التوقف عن الكلام لمدة 3 ثوانٍ سيتولى الـ AI معالجة طلبك والرد صوتياً، ثم يعود للاستماع تلقائياً.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>   
+
+            </xpath>
+        </template>
+    </data>
+</odoo>
