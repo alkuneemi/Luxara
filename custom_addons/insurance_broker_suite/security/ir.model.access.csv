@@ -56,3 +56,5 @@ access_insurance_quotation_line_user,insurance.quotation.line user,model_insuran
 access_insurance_quotation_line_manager,insurance.quotation.line manager,model_insurance_quotation_line,,1,1,1,1
 access_insurance_quotation_line_public,insurance.quotation.line public,model_insurance_quotation_line,,1,0,0,0
 access_insurance_subtype_pricing_wizard_user,insurance.subtype.pricing.wizard user,model_insurance_subtype_pricing_wizard,,1,1,1,1
+access_insurance_commission_rate_user,insurance.commission.rate user,model_insurance_commission_rate,,1,1,1,0
+access_insurance_commission_rate_manager,insurance.commission.rate manager,model_insurance_commission_rate,,1,1,1,1
