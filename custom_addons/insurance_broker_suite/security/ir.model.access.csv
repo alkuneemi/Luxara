@@ -1,0 +1,47 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_insurance_client_user,insurance.client user,model_insurance_client,,1,1,1,0
+access_insurance_client_manager,insurance.client manager,model_insurance_client,,1,1,1,1
+access_insurance_policy_user,insurance.policy user,model_insurance_policy,,1,1,1,0
+access_insurance_policy_manager,insurance.policy manager,model_insurance_policy,,1,1,1,1
+access_insurance_rfq_user,insurance.rfq user,model_insurance_rfq,,1,1,1,0
+access_insurance_rfq_manager,insurance.rfq manager,model_insurance_rfq,,1,1,1,1
+access_insurance_rfq_quote_user,insurance.rfq.quote user,model_insurance_rfq_quote,,1,1,1,0
+access_insurance_rfq_quote_manager,insurance.rfq.quote manager,model_insurance_rfq_quote,,1,1,1,1
+access_insurance_claim_user,insurance.claim user,model_insurance_claim,,1,1,1,0
+access_insurance_claim_manager,insurance.claim manager,model_insurance_claim,,1,1,1,1
+access_insurance_commission_user,insurance.commission user,model_insurance_commission,,1,1,1,0
+access_insurance_commission_manager,insurance.commission manager,model_insurance_commission,,1,1,1,1
+access_insurance_category_user,insurance.category user,model_insurance_category,,1,0,0,0
+access_insurance_category_manager,insurance.category manager,model_insurance_category,,1,1,1,1
+access_insurance_category_public,insurance.category public,model_insurance_category,,1,0,0,0
+access_insurance_category_portal,insurance.category portal,model_insurance_category,,1,0,0,0
+access_insurance_type_user,insurance.type user,model_insurance_type,,1,0,0,0
+access_insurance_type_manager,insurance.type manager,model_insurance_type,,1,1,1,1
+access_insurance_type_public,insurance.type public,model_insurance_type,,1,0,0,0
+access_insurance_type_portal,insurance.type portal,model_insurance_type,,1,0,0,0
+access_insurance_subtype_user,insurance.subtype user,model_insurance_subtype,,1,0,0,0
+access_insurance_subtype_manager,insurance.subtype manager,model_insurance_subtype,,1,1,1,1
+access_insurance_subtype_public,insurance.subtype public,model_insurance_subtype,,1,0,0,0
+access_insurance_subtype_portal,insurance.subtype portal,model_insurance_subtype,,1,0,0,0
+access_insurance_company_provider_user,insurance.company.provider user,model_insurance_company_provider,,1,0,0,0
+access_insurance_company_provider_manager,insurance.company.provider manager,model_insurance_company_provider,,1,1,1,1
+access_insurance_application_user,insurance.application user,model_insurance_application,,1,1,1,0
+access_insurance_application_manager,insurance.application manager,model_insurance_application,,1,1,1,1
+access_insurance_application_public,insurance.application public,model_insurance_application,,0,0,1,0
+access_insurance_application_portal,insurance.application portal,model_insurance_application,,1,0,0,0
+access_insurance_opportunity_user,insurance.opportunity user,model_insurance_opportunity,,1,1,1,1
+access_insurance_opportunity_manager,insurance.opportunity manager,model_insurance_opportunity,,1,1,1,1
+access_insurance_opportunity_public,insurance.opportunity public,model_insurance_opportunity,,0,0,1,0
+access_insurance_opportunity_portal,insurance.opportunity portal,model_insurance_opportunity,,1,0,0,0
+access_sahab_ai_config_user,sahab.ai.config user,model_sahab_ai_config,,1,0,0,0
+access_sahab_ai_config_manager,sahab.ai.config manager,model_sahab_ai_config,base.group_system,1,1,1,1
+access_insurance_industry_tag_user,insurance.industry.tag user,model_insurance_industry_tag,,1,0,0,0
+access_insurance_industry_tag_manager,insurance.industry.tag manager,model_insurance_industry_tag,,1,1,1,1
+access_crm_lead_journey_log_user,crm.lead.journey.log user,model_crm_lead_journey_log,base.group_user,1,1,1,0
+access_crm_lead_journey_log_public,crm.lead.journey.log public,model_crm_lead_journey_log,,0,0,1,0
+access_crm_lead_journey_log_system,crm.lead.journey.log system,model_crm_lead_journey_log,base.group_system,1,1,1,1
+access_insurance_client_journey_log_user,insurance.client.journey.log.user,model_insurance_client_journey_log,,1,1,1,1
+access_insurance_client_journey_log_public,insurance.client.journey.log.public,model_insurance_client_journey_log,,1,1,1,0
+access_insurance_client_journey_log_portal,insurance.client.journey.log.portal,model_insurance_client_journey_log,,1,1,1,0
+access_insurance_client_agent_message_global,access.insurance.client.agent.message.global,model_insurance_client_agent_message,,1,1,1,1
+access_insurance_source_user,access.insurance.source.user,model_insurance_source,,1,1,1,1
