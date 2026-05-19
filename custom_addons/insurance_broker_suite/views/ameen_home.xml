@@ -12,7 +12,8 @@
 <template id="ameen_home_page" name="Ameen Home Page">
     <t t-call="website.layout">
         <t t-set="pageName" t-value="'ameen_home'"/>
-        <t t-set="no_header" t-value="False"/>
+        <t t-set="no_header" t-value="True"/>
+        <t t-set="no_footer" t-value="True"/>
 
         <!-- Custom Meta -->
         <t t-set="head">
@@ -708,14 +709,25 @@
     </t>
 </template>
 
-<!-- Homepage page record — sets / as Ameen portal -->
-<record id="ameen_homepage_page" model="website.page">
-    <field name="name">Ameen Insurance Portal — Home</field>
-    <field name="url">/</field>
-    <field name="view_id" ref="ameen_home_page"/>
-    <field name="is_published">True</field>
-    <field name="website_indexed">True</field>
-</record>
+</data>
+
+<!-- noupdate: prevents Odoo from resetting the homepage on module upgrade -->
+<data noupdate="1">
+
+    <!-- Homepage page record — sets / as Ameen portal -->
+    <record id="ameen_homepage_page" model="website.page">
+        <field name="name">Ameen Insurance Portal — Home</field>
+        <field name="url">/</field>
+        <field name="view_id" ref="ameen_home_page"/>
+        <field name="is_published">True</field>
+        <field name="website_indexed">True</field>
+    </record>
+
+    <!-- Set system homepage URL -->
+    <record id="ameen_homepage_url_param" model="ir.config_parameter">
+        <field name="key">website.homepage_url</field>
+        <field name="value">/</field>
+    </record>
 
 </data>
 </odoo>
