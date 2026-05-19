@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- ── SVG ICON HELPERS ───────────────────────────────────────── -->
+    <t t-name="ins.icon.shield">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.file">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.clock">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.users">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.trending">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.dollar">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.alert">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.inbox">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.refresh">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.send">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.target">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.percent">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.globe">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.building">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.pie">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.check">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.chevron-right">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.list">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+    </t>
+    <t t-name="ins.icon.cpu">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+        </svg>
+    </t>
+
+    <!-- ── MAIN DASHBOARD ─────────────────────────────────────────── -->
+    <t t-name="insurance_broker_suite.Dashboard">
+        <div class="o_insurance_dashboard">
+
+            <!-- Header -->
+            <div class="o_insurance_header">
+                <div>
+                    <h2>
+                        <t t-call="ins.icon.shield"/>
+                        Insurance Broker Dashboard
+                    </h2>
+                    <span class="date-label" t-esc="state.dateLabel"/>
+                </div>
+                <div class="o_insurance_header-actions">
+                    <button class="btn btn-outline-primary" t-on-click="openCustomerWebsite">
+                        <t t-call="ins.icon.globe"/>
+                        Customer Portal
+                    </button>
+                    <button class="btn btn-outline-secondary" t-on-click="openProviderPortal">
+                        <t t-call="ins.icon.building"/>
+                        Provider Portal
+                    </button>
+                    <button class="btn btn-warning" t-on-click="openOnlineApplications"
+                            t-if="state.pendingApplications > 0">
+                        <t t-call="ins.icon.inbox"/>
+                        Applications
+                        <span class="badge bg-dark ms-1" t-esc="state.pendingApplications"/>
+                    </button>
+                    <button class="btn btn-success d-flex align-items-center gap-1" style="cursor:default;" disabled="true">
+                        <t t-call="ins.icon.cpu"/>
+                        AI Agents Active
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── SECTION: Policies ──────────────────────────────── -->
+            <p class="o_ins_section-title">
+                <t t-call="ins.icon.file"/>
+                Policies
+            </p>
+            <div class="o_insurance_kpi_grid" style="grid-template-columns: repeat(auto-fill, minmax(180px,1fr))">
+
+                <div class="o_insurance_kpi_card" t-on-click="openActivePolicies">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Active Policies</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.activePolicies"/>
+                        <div class="o_insurance_kpi_sub">of <t t-esc="state.totalPolicies"/> total</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-blue"><t t-call="ins.icon.shield"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-orange" t-on-click="openPoliciesExpiring">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Expiring (60 Days)</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.expiringIn60Days"/>
+                        <div class="o_insurance_kpi_sub">Need renewal action</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-orange"><t t-call="ins.icon.clock"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-purple" t-on-click="openRenewedPolicies">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Renewal Rate</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.renewalRate"/>
+                        <div class="o_insurance_kpi_sub">Renewed policies</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-purple"><t t-call="ins.icon.percent"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-blue" t-on-click="openPremiums">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Premium YTD</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalPremiumYTD"/>
+                        <div class="o_insurance_kpi_sub">Year to date</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-teal"><t t-call="ins.icon.trending"/></div>
+                </div>
+
+            </div>
+
+            <!-- ── SECTION: Clients, RFQs, Claims, Applications ──── -->
+            <p class="o_ins_section-title">
+                <t t-call="ins.icon.list"/>
+                Operations
+            </p>
+            <div class="o_insurance_kpi_grid" style="grid-template-columns: repeat(auto-fill, minmax(180px,1fr))">
+
+                <div class="o_insurance_kpi_card" t-on-click="openClients">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Total Clients</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalClients"/>
+                        <div class="o_insurance_kpi_sub">
+                            <t t-esc="state.corporateClients"/> corporate · <t t-esc="state.personalClients"/> personal
+                        </div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-indigo"><t t-call="ins.icon.users"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-red" t-on-click="openClaims">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Open Claims</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.openClaims"/>
+                        <div class="o_insurance_kpi_sub">Pending resolution</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-red"><t t-call="ins.icon.alert"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-blue" t-on-click="openRfqs">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Open RFQs</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.openRfqs"/>
+                        <div class="o_insurance_kpi_sub">Awaiting responses</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-blue"><t t-call="ins.icon.send"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-orange" t-on-click="openOnlineApplications">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Pending Applications</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.pendingApplications"/>
+                        <div class="o_insurance_kpi_sub">Online submissions</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-orange"><t t-call="ins.icon.inbox"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-green" t-on-click="openOpportunities">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Opportunities</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.totalOpportunities"/>
+                        <div class="o_insurance_kpi_sub"><t t-esc="state.wonOpportunities"/> won this period</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-green"><t t-call="ins.icon.target"/></div>
+                </div>
+
+            </div>
+
+            <!-- ── SECTION: Commissions ───────────────────────────── -->
+            <p class="o_ins_section-title">
+                <t t-call="ins.icon.dollar"/>
+                Commissions
+            </p>
+            <div class="o_insurance_kpi_grid" style="grid-template-columns: repeat(auto-fill, minmax(190px,1fr))">
+
+                <div class="o_insurance_kpi_card kpi-value-green" t-on-click="openCommissions">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Received</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.commissionReceived"/>
+                        <div class="o_insurance_kpi_sub">Collected to date</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-green"><t t-call="ins.icon.check"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card" t-on-click="openCommissions">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Expected Total</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.commissionExpected"/>
+                        <div class="o_insurance_kpi_sub">All policies</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-slate"><t t-call="ins.icon.dollar"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-red" t-on-click="openOverdueCommissions">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Overdue</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.overdueCommissions"/>
+                        <div class="o_insurance_kpi_sub">Past due date</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-red"><t t-call="ins.icon.alert"/></div>
+                </div>
+
+                <div class="o_insurance_kpi_card kpi-value-orange" t-on-click="openCommissions">
+                    <div class="o_insurance_kpi_info">
+                        <div class="o_insurance_kpi_label">Outstanding</div>
+                        <div class="o_insurance_kpi_value" t-esc="state.commissionOutstanding"/>
+                        <div class="o_insurance_kpi_sub">Yet to receive</div>
+                    </div>
+                    <div class="o_insurance_kpi_icon kpi-icon-orange"><t t-call="ins.icon.refresh"/></div>
+                </div>
+
+            </div>
+
+            <!-- ── DETAIL ROWS ────────────────────────────────────── -->
+            <div class="o_ins_row o_ins_row-2">
+
+                <!-- Policies by Type -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ins.icon.pie"/>
+                            Policies by Type
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openActivePolicies">
+                            View all <t t-call="ins.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.policiesByType.length > 0">
+                        <t t-foreach="state.policiesByType" t-as="item" t-key="item.type">
+                            <div class="o_ins_stat-item">
+                                <span class="o_ins_stat-label" t-esc="item.label"/>
+                                <div class="o_ins_stat-bar-wrap">
+                                    <div class="o_ins_stat-bar"
+                                         t-attf-class="bar-{{item.type}}"
+                                         t-attf-style="width: {{item.pct}}%"/>
+                                </div>
+                                <span class="o_ins_stat-count" t-esc="item.count"/>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ins.icon.file"/>
+                            <p>No policy data</p>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Opportunity Funnel -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ins.icon.target"/>
+                            Opportunity Funnel
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openOpportunities">
+                            View all <t t-call="ins.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.oppByStage.length > 0">
+                        <t t-foreach="state.oppByStage" t-as="stg" t-key="stg.stage">
+                            <div class="o_ins_opp-item">
+                                <span class="o_ins_opp-stage">
+                                    <span class="o_ins_opp-dot" t-attf-style="background: {{stg.color}}"/>
+                                    <t t-esc="stg.label"/>
+                                </span>
+                                <span class="o_ins_opp-count" t-esc="stg.count"/>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ins.icon.target"/>
+                            <p>No opportunities yet</p>
+                        </div>
+                    </t>
+                </div>
+
+            </div>
+
+            <div class="o_ins_row o_ins_row-2">
+
+                <!-- Upcoming Renewals -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ins.icon.clock"/>
+                            Upcoming Renewals
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openPoliciesExpiring">
+                            View all <t t-call="ins.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.renewals.length > 0">
+                        <table class="o_ins_renewal-table">
+                            <thead>
+                                <tr>
+                                    <th>Policy</th>
+                                    <th>Client</th>
+                                    <th>Type</th>
+                                    <th>Expiry</th>
+                                    <th>Days</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.renewals" t-as="r" t-key="r.id">
+                                    <tr>
+                                        <td>
+                                            <span class="o_ins_renewal-link"
+                                                  t-on-click="() => this.openPolicy(r.id)"
+                                                  t-esc="r.policy_number"/>
+                                        </td>
+                                        <td t-esc="r.client_name"/>
+                                        <td t-esc="r.type_label"/>
+                                        <td t-esc="r.expiry_date"/>
+                                        <td>
+                                            <span class="badge-days"
+                                                  t-attf-class="badge-days-{{r.urgency}}">
+                                                <t t-esc="r.days_left"/> d
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ins.icon.check"/>
+                            <p>No renewals in the next 60 days</p>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Claims by Status -->
+                <div class="o_ins_card">
+                    <div class="o_ins_card-header">
+                        <span class="o_ins_card-title">
+                            <t t-call="ins.icon.alert"/>
+                            Claims by Status
+                        </span>
+                        <span class="o_ins_card-link" t-on-click="openClaims">
+                            View all <t t-call="ins.icon.chevron-right"/>
+                        </span>
+                    </div>
+                    <t t-if="state.claimsByStatus.length > 0">
+                        <t t-foreach="state.claimsByStatus" t-as="cs" t-key="cs.status">
+                            <div class="o_ins_stat-item">
+                                <span class="o_ins_stat-label" t-esc="cs.label"/>
+                                <div class="o_ins_stat-bar-wrap">
+                                    <div class="o_ins_stat-bar bar-default"
+                                         t-attf-style="width: {{cs.pct}}%; background: {{cs.color}}"/>
+                                </div>
+                                <span class="o_ins_stat-count" t-esc="cs.count"/>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="o_ins_empty">
+                            <t t-call="ins.icon.check"/>
+                            <p>No open claims</p>
+                        </div>
+                    </t>
+                </div>
+
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="o_ins_card">
+                <div class="o_ins_card-header">
+                    <span class="o_ins_card-title">
+                        <t t-call="ins.icon.list"/>
+                        Quick Actions
+                    </span>
+                </div>
+                <div class="o_ins_quick-actions">
+                    <span class="o_ins_quick-btn" t-on-click="openActivePolicies">
+                        <t t-call="ins.icon.shield"/> All Policies
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openClients">
+                        <t t-call="ins.icon.users"/> Clients
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openClaims">
+                        <t t-call="ins.icon.alert"/> Claims
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openCommissions">
+                        <t t-call="ins.icon.dollar"/> Commissions
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openRfqs">
+                        <t t-call="ins.icon.send"/> RFQs
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openOpportunities">
+                        <t t-call="ins.icon.target"/> Opportunities
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openOnlineApplications">
+                        <t t-call="ins.icon.inbox"/> Applications
+                    </span>
+                    <span class="o_ins_quick-btn" t-on-click="openCustomerWebsite">
+                        <t t-call="ins.icon.globe"/> Customer Portal
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>
