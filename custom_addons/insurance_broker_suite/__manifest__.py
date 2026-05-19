@@ -1,6 +1,6 @@
 {
     'name': 'Insurance Broker Suite',
-    'version': '19.0.6.0.0',
+    'version': '19.0.7.0.0',
     'summary': 'Full-featured Insurance Broker Management System — Ameen Portal with Universal Quoting Engine & Customer Portal',
     'description': '''
 Insurance Broker Suite for Odoo 19 — Ameen Portal
@@ -63,6 +63,7 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         'views/insurance_rfq_views.xml',
         'views/insurance_claim_views.xml',
         'data/insurance_accounts_data.xml',
+        'data/insurance_pricing_demo.xml',
         'data/insurance_commission_demo.xml',
         'views/insurance_commission_rate_views.xml',
         'views/insurance_commission_views.xml',
@@ -85,6 +86,7 @@ Insurance Broker Suite for Odoo 19 — Ameen Portal
         'views/sahab_ai_settings_views.xml',
         # ════ AMEEN PORTAL HOME PAGE ════
         'views/ameen_home.xml',
+        'views/ameen_pricing.xml',
         # Website / Portal templates
         'views/website_insurance.xml',
         'views/portal_insurance.xml',
