@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             APPLICATION VIEWS  (insurance.application)
+             ══════════════════════════════════════════════════════════════════════ -->
+
+        <!-- ══ LIST VIEW (عام — يُستخدم في جميع السجلات) ══════════════ -->
+        <record id="view_insurance_application_list" model="ir.ui.view">
+            <field name="name">insurance.application.list</field>
+            <field name="model">insurance.application</field>
+            <field name="arch" type="xml">
+                <list string="Online Applications"
+                    decoration-info="status == 'submitted'"
+                    decoration-warning="status == 'info_required'"
+                    decoration-success="status in ('approved', 'policy_issued')"
+                    decoration-danger="status == 'rejected'">
+                    <field name="reference"/>
+                    <field name="customer_name"/>
+                    <field name="customer_email" optional="show"/>
+                    <field name="customer_phone" optional="show"/>
+                    <field name="channel" widget="badge" optional="show"
+                        decoration-info="channel == 'online'"
+                        decoration-warning="channel == 'sales'"
+                        decoration-muted="channel == 'general'"/>
+                    <field name="category_id"/>
+                    <field name="type_id"/>
+                    <field name="subtype_id"/>
+                    <field name="create_date" string="Date"/>
+                    <field name="assigned_to" optional="show"/>
+                    <field name="status" widget="badge"
+                        decoration-info="status == 'submitted'"
+                        decoration-warning="status in ('under_review', 'info_required')"
+                        decoration-success="status in ('approved', 'policy_issued')"
+                        decoration-danger="status == 'rejected'"
+                        decoration-muted="status == 'draft'"
+                    />
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ SALES LIST VIEW (سجل المبيعات — مع أعمدة العمولة) ═════ -->
+        <record id="view_insurance_application_sales_list" model="ir.ui.view">
+            <field name="name">insurance.application.sales.list</field>
+            <field name="model">insurance.application</field>
+            <field name="arch" type="xml">
+                <list string="Sales Team Registry — سجل المبيعات"
+                    decoration-info="status == 'submitted'"
+                    decoration-warning="status == 'info_required'"
+                    decoration-success="status in ('approved', 'policy_issued')"
+                    decoration-danger="status == 'rejected'">
+                    <field name="reference"/>
+                    <field name="customer_name"/>
+                    <field name="customer_phone" optional="show"/>
+                    <field name="category_id"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="subtype_id" optional="show"/>
+                    <field name="sales_agent_id" string="المندوب" optional="show"/>
+                    <field name="sales_team_id" string="الفريق" optional="show"/>
+                    <field name="quoted_premium" string="القسط (OMR)" optional="show"/>
+                    <field name="commission_rate" string="% عمولة" optional="show"/>
+                    <field name="commission_amount" string="العمولة (OMR)" optional="show"/>
+                    <field name="commission_paid" string="مدفوعة؟" optional="show"
+                        widget="boolean_toggle"/>
+                    <field name="create_date" string="Date"/>
+                    <field name="status" widget="badge"
+                        decoration-info="status == 'submitted'"
+                        decoration-warning="status in ('under_review', 'info_required')"
+                        decoration-success="status in ('approved', 'policy_issued')"
+                        decoration-danger="status == 'rejected'"
+                        decoration-muted="status == 'draft'"
+                    />
+                </list>
+            </field>
+        </record>
+
+        <!-- ══ FORM VIEW ══════════════════════════════════════════════ -->
+        <record id="view_insurance_application_form" model="ir.ui.view">
+            <field name="name">insurance.application.form</field>
+            <field name="model">insurance.application</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Application">
+                    <header>
+                        <button name="action_under_review" string="Start Review"
+                            type="object" class="btn-secondary"
+                            invisible="status != 'submitted'"/>
+                        <button name="action_request_info" string="Request Info"
+                            type="object" class="btn-warning"
+                            invisible="status not in ('submitted', 'under_review')"/>
+                        <button name="action_approve" string="Approve / Quote"
+                            type="object" class="btn-success"
+                            invisible="status not in ('submitted', 'under_review', 'info_required')"/>
+                        <button name="action_issue_policy" string="Issue Policy"
+                            type="object" class="btn-primary"
+                            invisible="status != 'approved'"/>
+                        <button name="action_reject" string="Reject"
+                            type="object" class="btn-danger"
+                            invisible="status in ('policy_issued', 'rejected')"/>
+                        <button name="action_view_on_portal" string="View on Portal"
+                            type="object" class="btn-link"
+                            invisible="channel != 'online'"/>
+                        <field name="status" widget="statusbar"
+                            statusbar_visible="submitted,under_review,approved,policy_issued"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="reference" string="Reference"/>
+                            <h1>
+                                <field name="reference" readonly="1"/>
+                                <field name="channel" widget="badge"
+                                    decoration-info="channel == 'online'"
+                                    decoration-warning="channel == 'sales'"
+                                    decoration-muted="channel == 'general'"
+                                    class="ms-2"/>
+                            </h1>
+                        </div>
+
+                        <!-- ★ KEY FIELDS CARD ★ -->
+                        <div class="o_ins_form_hero">
+                            <div class="o_ins_hero_label">Customer &amp; Insurance Selection</div>
+                            <group>
+                                <group>
+                                    <field name="customer_name" placeholder="Full legal name"/>
+                                    <field name="customer_phone" widget="phone"/>
+                                    <field name="customer_email" widget="email"/>
+                                    <field name="id_number" placeholder="Civil / ID number"/>
+                                </group>
+                                <group>
+                                    <field name="category_id"
+                                        options="{'no_create': true}"
+                                        invisible="channel == 'online'"
+                                        placeholder="اختر الفئة أولاً..."/>
+                                    <field name="type_id"
+                                        options="{'no_create': true}"
+                                        invisible="channel == 'online' or not category_id"
+                                        placeholder="اختر النوع..."/>
+                                    <field name="subtype_id"
+                                        options="{'no_create': true}"
+                                        placeholder="اختر النوع الفرعي للتأمين..."/>
+                                    <field name="category_id" readonly="1"
+                                        invisible="channel != 'online'"
+                                        string="Category (auto)"/>
+                                    <field name="type_id" readonly="1"
+                                        invisible="channel != 'online'"
+                                        string="Type (auto)"/>
+                                    <field name="form_type" readonly="1"/>
+                                </group>
+                            </group>
+                        </div>
+
+                        <!-- ★ Sales Team Section ★ -->
+                        <group string="فريق المبيعات والعمولة — Sales &amp; Commission"
+                            invisible="channel != 'sales'">
+                            <group>
+                                <field name="sales_agent_id" string="المندوب"/>
+                                <field name="sales_team_id" string="الفريق"/>
+                                <field name="opportunity_id" string="الفرصة المصدر"
+                                    readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="commission_rate" string="نسبة العمولة %"/>
+                                <field name="commission_amount" string="مبلغ العمولة (OMR)"
+                                    readonly="1"/>
+                                <field name="commission_paid" widget="boolean_toggle"
+                                    string="العمولة مدفوعة؟"/>
+                                <field name="commission_paid_date" string="تاريخ الدفع"
+                                    invisible="not commission_paid"/>
+                            </group>
+                        </group>
+
+                        <!-- Quote / Policy -->
+                        <group string="Quote &amp; Policy"
+                            invisible="status not in ('approved', 'policy_issued')">
+                            <group>
+                                <field name="quoted_premium" widget="monetary"/>
+                                <field name="policy_id"/>
+                            </group>
+                            <group>
+                                <field name="assigned_to"/>
+                                <field name="partner_id"/>
+                            </group>
+                        </group>
+
+                        <!-- Assignment -->
+                        <group string="Assignment"
+                            invisible="status in ('approved', 'policy_issued')">
+                            <group>
+                                <field name="assigned_to"/>
+                                <field name="partner_id"/>
+                            </group>
+                        </group>
+
+                        <!-- ══ TABS ════════════════════════════════════ -->
+                        <notebook>
+
+                            <!-- Motor -->
+                            <page string="Motor Details" name="motor"
+                                invisible="form_type != 'motor'">
+                                <group>
+                                    <group string="Owner Information">
+                                        <field name="motor_full_name"/>
+                                        <field name="motor_id_number"/>
+                                        <field name="motor_license_number"/>
+                                    </group>
+                                    <group string="Vehicle Details">
+                                        <field name="motor_make"/>
+                                        <field name="motor_model"/>
+                                        <field name="motor_year"/>
+                                        <field name="motor_color"/>
+                                        <field name="motor_plate_number"/>
+                                        <field name="motor_plate_character"/>
+                                        <field name="motor_chassis_number"/>
+                                        <field name="motor_vehicle_registration_date"/>
+                                    </group>
+                                    <group string="Additional">
+                                        <field name="motor_engine_cc" optional="show"/>
+                                        <field name="motor_seating_capacity" optional="show"/>
+                                        <field name="motor_is_financed"/>
+                                        <field name="motor_finance_company"
+                                            invisible="not motor_is_financed"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Medical -->
+                            <page string="Medical Details" name="medical"
+                                invisible="form_type not in ('medical_individual', 'medical_corporate')">
+                                <group>
+                                    <group string="Coverage">
+                                        <field name="med_coverage_type"/>
+                                        <field name="med_company_name"
+                                            invisible="form_type != 'medical_corporate'"/>
+                                        <field name="med_employee_count"
+                                            invisible="form_type != 'medical_corporate'"/>
+                                        <field name="med_dependents_count"
+                                            invisible="form_type != 'medical_corporate'"/>
+                                        <field name="med_network_preference"/>
+                                    </group>
+                                    <group string="Options">
+                                        <field name="med_dental_required" widget="boolean_toggle"/>
+                                        <field name="med_optical_required" widget="boolean_toggle"/>
+                                        <field name="med_pre_existing" widget="boolean_toggle"/>
+                                        <field name="med_pre_existing_details"
+                                            invisible="not med_pre_existing"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Property / Fire -->
+                            <page string="Property Details" name="property"
+                                invisible="form_type != 'property_fire'">
+                                <group>
+                                    <group string="Property Info">
+                                        <field name="prop_address"/>
+                                        <field name="prop_cover_type"/>
+                                        <field name="prop_usage"/>
+                                        <field name="prop_construction_type"/>
+                                        <field name="prop_year_built"/>
+                                    </group>
+                                    <group string="Values &amp; Owner">
+                                        <field name="prop_building_value" widget="monetary"/>
+                                        <field name="prop_contents_value" widget="monetary"/>
+                                        <field name="prop_proposer_name"/>
+                                        <field name="prop_profession_business"/>
+                                        <field name="prop_any_previous_loss"
+                                            widget="boolean_toggle"/>
+                                        <field name="prop_previous_loss_details"
+                                            invisible="not prop_any_previous_loss"/>
+                                        <field name="prop_any_rejection"
+                                            widget="boolean_toggle"/>
+                                        <field name="prop_rejection_details"
+                                            invisible="not prop_any_rejection"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Marine -->
+                            <page string="Marine Details" name="marine"
+                                invisible="form_type != 'marine'">
+                                <group>
+                                    <group string="Voyage">
+                                        <field name="marine_voyage_from"/>
+                                        <field name="marine_voyage_to"/>
+                                        <field name="marine_departure_date"/>
+                                        <field name="marine_arrival_date"/>
+                                    </group>
+                                    <group string="Cargo">
+                                        <field name="marine_cargo_type"/>
+                                        <field name="marine_cargo_value" widget="monetary"/>
+                                        <field name="marine_vessel_name"/>
+                                        <field name="marine_packing"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Life -->
+                            <page string="Life Details" name="life"
+                                invisible="form_type != 'life'">
+                                <group>
+                                    <group string="Policy Terms">
+                                        <field name="life_sum_assured" widget="monetary"/>
+                                        <field name="life_policy_term"/>
+                                        <field name="life_payment_frequency"/>
+                                        <field name="life_occupation"/>
+                                    </group>
+                                    <group string="Beneficiary">
+                                        <field name="life_beneficiary_name"/>
+                                        <field name="life_beneficiary_relation"/>
+                                        <field name="life_smoker" widget="boolean_toggle"/>
+                                        <field name="life_hazardous_activity"
+                                            widget="boolean_toggle"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Workmen Comp -->
+                            <page string="Workmen Comp." name="workmen"
+                                invisible="form_type != 'workmen'">
+                                <group>
+                                    <group>
+                                        <field name="wc_company_name"/>
+                                        <field name="wc_business_nature"/>
+                                        <field name="wc_employee_count"/>
+                                    </group>
+                                    <group>
+                                        <field name="wc_total_annual_wages" widget="monetary"/>
+                                        <field name="wc_any_previous_claims"
+                                            widget="boolean_toggle"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <!-- Documents -->
+                            <page string="Documents" name="documents">
+                                <field name="document_ids" widget="many2many_attachments"/>
+                            </page>
+
+                            <!-- Internal Notes -->
+                            <page string="Internal Notes" name="notes">
+                                <group string="Team Notes (not visible to customer)">
+                                    <field name="admin_notes" widget="html" nolabel="1"
+                                        colspan="2"
+                                        placeholder="Internal team notes..."/>
+                                </group>
+                                <group string="Requirements Message (shown to customer)"
+                                    invisible="status != 'info_required'">
+                                    <field name="requirement_message" widget="html"
+                                        nolabel="1" colspan="2"
+                                        placeholder="Describe what additional information or documents are needed..."/>
+                                </group>
+                            </page>
+
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- ══ SEARCH VIEW ════════════════════════════════════════════ -->
+       
+
+        <!-- ══════════════════════════════════════════════════════════════════════
+             ACTIONS
+             ══════════════════════════════════════════════════════════════════════ -->
+
+        <record id="action_insurance_application_all" model="ir.actions.act_window">
+            <field name="name">السجل العام — General Registry</field>
+            <field name="res_model">insurance.application</field>
+            <field name="view_mode">list,form</field>
+            <field name="view_ids" eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_insurance_application_list')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_insurance_application_form')}),
+            ]"/>
+        
+        </record>
+
+        <record id="action_insurance_application" model="ir.actions.act_window">
+            <field name="name">Online Applications / سجل الأونلاين</field>
+            <field name="res_model">insurance.application</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('channel', '=', 'online')]</field>
+            <field name="context">{'default_channel': 'online'}</field>
+            <field name="view_ids" eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_insurance_application_list')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_insurance_application_form')}),
+            ]"/>
+    
+        </record>
+
+        <record id="action_insurance_application_sales" model="ir.actions.act_window">
+            <field name="name">Sales Registry / سجل المبيعات</field>
+            <field name="res_model">insurance.application</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('channel', '=', 'sales')]</field>
+            <field name="context">{'default_channel': 'sales'}</field>
+            <field name="view_ids" eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_insurance_application_sales_list')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_insurance_application_form')}),
+            ]"/>
+
+        </record>
+
+    </data>
+</odoo>
