@@ -41,6 +41,10 @@ Insurance Broker Suite for Odoo 19
         'web',
         'crm',
         'website',
+        'account',
+        'contacts',
+        'sale_management',
+        
     ],
     'data': [
         # Security
