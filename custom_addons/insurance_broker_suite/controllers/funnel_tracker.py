@@ -65,7 +65,7 @@ class InsuranceFunnelTracker(http.Controller):
 
         if not stage:
             stage = env['crm.stage'].sudo().search([
-                '|', '|',
+                '|',
                 ('name', 'ilike', 'opp'),
                 ('name', 'ilike', 'فرص'),
             ], limit=1, order='sequence asc')
