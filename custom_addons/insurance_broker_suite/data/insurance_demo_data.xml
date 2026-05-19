@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Demo Clients -->
+        <record id="demo_client_1" model="insurance.client">
+            <field name="name">Al Rashidi Trading Co.</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Mohammed Al Rashidi</field>
+            <field name="email">mo@alrashidi.com</field>
+            <field name="phone">+968 9100 0001</field>
+            <field name="industry">Trading &amp; Retail</field>
+            <field name="crm_stage">won</field>
+        </record>
+
+        <record id="demo_client_2" model="insurance.client">
+            <field name="name">Gulf Logistics LLC</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Faisal Al Amri</field>
+            <field name="email">faisal@gulflogistics.om</field>
+            <field name="phone">+968 9100 0002</field>
+            <field name="industry">Logistics &amp; Transport</field>
+            <field name="crm_stage">quotation_requested</field>
+        </record>
+
+        <record id="demo_client_3" model="insurance.client">
+            <field name="name">Dr. Sara Al Habsi</field>
+            <field name="category">personal</field>
+            <field name="contact_person">Sara Al Habsi</field>
+            <field name="email">sara.habsi@gmail.com</field>
+            <field name="phone">+968 9100 0003</field>
+            <field name="crm_stage">won</field>
+        </record>
+
+        <record id="demo_client_4" model="insurance.client">
+            <field name="name">Oman Steel Industries</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Khalid Al Balushi</field>
+            <field name="email">khalid@omansteel.com</field>
+            <field name="phone">+968 9100 0004</field>
+            <field name="industry">Manufacturing</field>
+            <field name="crm_stage">won</field>
+        </record>
+
+        <record id="demo_client_5" model="insurance.client">
+            <field name="name">Al Noor Medical Group</field>
+            <field name="category">corporate</field>
+            <field name="contact_person">Ahmad Al Siyabi</field>
+            <field name="email">ahmad@alnoormed.om</field>
+            <field name="phone">+968 9100 0005</field>
+            <field name="industry">Healthcare</field>
+            <field name="crm_stage">quotation_requested</field>
+        </record>
+
+        <!-- Demo Policies -->
+        <record id="demo_policy_1" model="insurance.policy">
+            <field name="policy_number">POL-2024-001</field>
+            <field name="client_id" ref="demo_client_1"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">Takaful Oman</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-01-15</field>
+            <field name="expiry_date">2025-01-15</field>
+            <field name="net_premium">1500.00</field>
+            <field name="commission_rate">10</field>
+            <field name="vehicle_chassis_no">JN1BNBAV7AW000001</field>
+            <field name="vehicle_year">2022</field>
+        </record>
+
+        <record id="demo_policy_2" model="insurance.policy">
+            <field name="policy_number">POL-2024-002</field>
+            <field name="client_id" ref="demo_client_4"/>
+            <field name="insurance_type">medical</field>
+            <field name="insurer">GIG Insurance</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-03-01</field>
+            <field name="expiry_date">2025-03-01</field>
+            <field name="net_premium">8500.00</field>
+            <field name="commission_rate">8</field>
+            <field name="coverage_details">Group medical for 45 employees including dependents. Network A hospitals.</field>
+        </record>
+
+        <record id="demo_policy_3" model="insurance.policy">
+            <field name="policy_number">POL-2024-003</field>
+            <field name="client_id" ref="demo_client_3"/>
+            <field name="insurance_type">motor</field>
+            <field name="insurer">Liva Insurance</field>
+            <field name="status">active</field>
+            <field name="issue_date">2024-05-10</field>
+            <field name="expiry_date">2025-05-10</field>
+            <field name="net_premium">750.00</field>
+            <field name="commission_rate">10</field>
+        </record>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             DEMO INSURANCE PROVIDER COMPANIES (with portal tokens)
+        ════════════════════════════════════════════════════════════════════ -->
+
+        <record id="demo_provider_gig" model="insurance.company.provider">
+            <field name="name">GIG Insurance Oman</field>
+            <field name="name_ar">شركة الخليج للتأمين عُمان</field>
+            <field name="code">GIG</field>
+            <field name="email">rfq@gig.com.om</field>
+            <field name="phone">+968 2449 0000</field>
+            <field name="rating">A</field>
+            <field name="license_number">ISC-OM-001</field>
+            <field name="license_expiry">2026-12-31</field>
+            <field name="portal_active" eval="True"/>
+            <field name="portal_token">gig-demo-portal-token-001-ameen</field>
+            <field name="active" eval="True"/>
+            <field name="notes">Leading medical and motor insurer in Oman. Preferred partner for corporate group medical.</field>
+        </record>
+
+        <record id="demo_provider_takaful" model="insurance.company.provider">
+            <field name="name">Takaful Oman Insurance</field>
+            <field name="name_ar">تكافل عُمان للتأمين</field>
+            <field name="code">TKF</field>
+            <field name="email">quotes@takafuloman.com</field>
+            <field name="phone">+968 2456 7890</field>
+            <field name="rating">A-</field>
+            <field name="license_number">ISC-OM-002</field>
+            <field name="license_expiry">2026-06-30</field>
+            <field name="portal_active" eval="True"/>
+            <field name="portal_token">takaful-demo-portal-token-002-ameen</field>
+            <field name="active" eval="True"/>
+            <field name="notes">Strong motor and property insurance provider. Sharia-compliant products.</field>
+        </record>
+
+        <record id="demo_provider_liva" model="insurance.company.provider">
+            <field name="name">Liva Insurance (Al Ahlia)</field>
+            <field name="name_ar">ليفا للتأمين - الأهلية</field>
+            <field name="code">LVA</field>
+            <field name="email">underwriting@livainsurance.om</field>
+            <field name="phone">+968 2457 1234</field>
+            <field name="rating">BBB+</field>
+            <field name="license_number">ISC-OM-003</field>
+            <field name="license_expiry">2025-12-31</field>
+            <field name="portal_active" eval="True"/>
+            <field name="portal_token">liva-demo-portal-token-003-ameen</field>
+            <field name="active" eval="True"/>
+            <field name="notes">Comprehensive motor and engineering insurance. Competitive premiums.</field>
+        </record>
+
+        <record id="demo_provider_vision" model="insurance.company.provider">
+            <field name="name">Vision Insurance</field>
+            <field name="name_ar">رؤية للتأمين</field>
+            <field name="code">VIS</field>
+            <field name="email">rfq@visioninsurance.om</field>
+            <field name="phone">+968 2441 5500</field>
+            <field name="rating">A</field>
+            <field name="license_number">ISC-OM-004</field>
+            <field name="license_expiry">2026-09-30</field>
+            <field name="portal_active" eval="True"/>
+            <field name="portal_token">vision-demo-portal-token-004-ameen</field>
+            <field name="active" eval="True"/>
+            <field name="notes">Specialises in marine and property. Strong network for logistics clients.</field>
+        </record>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             DEMO RFQ 1 — Group Medical (Oman Steel) — responses_received
+             Sent to: GIG, Takaful, Liva
+        ════════════════════════════════════════════════════════════════════ -->
+
+        <record id="demo_rfq_1" model="insurance.rfq">
+            <field name="reference_no">RFQ-M9X2K7</field>
+            <field name="client_id" ref="demo_client_4"/>
+            <field name="insurance_type">medical</field>
+            <field name="status">responses_received</field>
+            <field name="sent_date">2025-05-01</field>
+            <field name="response_deadline">2025-05-15</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Group medical insurance for 60 employees + dependents. Preferred: Network A, dental included.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Client:&lt;/strong&gt; Oman Steel Industries — 60 employees + families&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Annual limit: OMR 5,000 per person&lt;/li&gt;
+&lt;li&gt;Network A preferred (120+ hospitals)&lt;/li&gt;
+&lt;li&gt;Dental and optical cover required&lt;/li&gt;
+&lt;li&gt;Direct billing mandatory&lt;/li&gt;
+&lt;/ul&gt;</field>
+            <field name="provider_ids" eval="[(6, 0, [ref('demo_provider_gig'), ref('demo_provider_takaful'), ref('demo_provider_liva')])]"/>
+        </record>
+
+        <!-- Quotes for RFQ-M9X2K7 (simulated provider responses) -->
+        <record id="demo_quote_1" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_1"/>
+            <field name="insurer">GIG Insurance Oman</field>
+            <field name="provider_id" ref="demo_provider_gig"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">9200.00</field>
+            <field name="deductible">200.00</field>
+            <field name="coverage">Full medical + dental + optical for employee, spouse, and 2 children</field>
+            <field name="exclusions">Pre-existing conditions excluded in year 1, maternity OMR 1,000 cap</field>
+            <field name="network">Network A — 120 hospitals nationwide</field>
+            <field name="claim_settlement_ratio">94.5</field>
+            <field name="validity_date">2025-06-01</field>
+            <field name="add_ons">Free annual wellness screening, 24/7 nurse helpline</field>
+            <field name="is_recommended" eval="True"/>
+            <field name="notes">Best value for Network A coverage. Recommended.</field>
+        </record>
+
+        <record id="demo_quote_2" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_1"/>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="provider_id" ref="demo_provider_takaful"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">10500.00</field>
+            <field name="deductible">300.00</field>
+            <field name="coverage">Medical + dental, no optical</field>
+            <field name="exclusions">Optical and vision excluded. Pre-existing conditions: 2-year waiting period.</field>
+            <field name="network">Network B — 80 hospitals</field>
+            <field name="claim_settlement_ratio">89.2</field>
+            <field name="validity_date">2025-06-01</field>
+            <field name="notes">Sharia-compliant Takaful product. Higher premium, Network B only.</field>
+        </record>
+
+        <record id="demo_quote_3" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_1"/>
+            <field name="insurer">Liva Insurance (Al Ahlia)</field>
+            <field name="provider_id" ref="demo_provider_liva"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">11200.00</field>
+            <field name="deductible">250.00</field>
+            <field name="coverage">Medical + dental + optical + wellness</field>
+            <field name="exclusions">Cosmetic procedures, fertility treatment excluded</field>
+            <field name="network">Network A — 120 hospitals nationwide</field>
+            <field name="claim_settlement_ratio">91.8</field>
+            <field name="validity_date">2025-06-01</field>
+            <field name="add_ons">Wellness programme included, gym reimbursement OMR 200/year</field>
+            <field name="notes">Comprehensive coverage but highest premium in comparison.</field>
+        </record>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             DEMO RFQ 2 — Fleet Motor Insurance (Gulf Logistics) — sent
+             Sent to: Takaful, Liva, Vision
+        ════════════════════════════════════════════════════════════════════ -->
+
+        <record id="demo_rfq_2" model="insurance.rfq">
+            <field name="reference_no">RFQ-F4L8W3</field>
+            <field name="client_id" ref="demo_client_2"/>
+            <field name="insurance_type">motor</field>
+            <field name="status">sent</field>
+            <field name="sent_date">2025-05-10</field>
+            <field name="response_deadline">2025-05-20</field>
+            <field name="underwriting_complete" eval="False"/>
+            <field name="notes">Fleet of 18 trucks and 6 light vehicles. All registered in Oman. Comprehensive cover required for all units. No claims in last 3 years.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Client:&lt;/strong&gt; Gulf Logistics LLC — Fleet of 24 vehicles&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;18 × heavy trucks (2020–2023 models)&lt;/li&gt;
+&lt;li&gt;6 × light vehicles (SUVs and pickups)&lt;/li&gt;
+&lt;li&gt;Comprehensive cover — all units&lt;/li&gt;
+&lt;li&gt;Agency repair required&lt;/li&gt;
+&lt;li&gt;No claims last 3 years (NCD applicable)&lt;/li&gt;
+&lt;/ul&gt;</field>
+            <field name="provider_ids" eval="[(6, 0, [ref('demo_provider_takaful'), ref('demo_provider_liva'), ref('demo_provider_vision')])]"/>
+        </record>
+
+        <!-- Partial quote received for RFQ-F4L8W3 (1 provider responded so far) -->
+        <record id="demo_quote_4" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_2"/>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="provider_id" ref="demo_provider_takaful"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">7800.00</field>
+            <field name="deductible">500.00</field>
+            <field name="coverage">Comprehensive cover — all 24 vehicles. Agency repair for vehicles under 3 years.</field>
+            <field name="exclusions">Vehicles over 5 years: non-agency repair only</field>
+            <field name="claim_settlement_ratio">88.0</field>
+            <field name="validity_date">2025-06-10</field>
+            <field name="notes">First response received. Still awaiting Liva and Vision quotes.</field>
+        </record>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             DEMO RFQ 3 — Property / Fire Insurance (Al Rashidi Trading) — sent
+             Sent to: GIG, Vision
+        ════════════════════════════════════════════════════════════════════ -->
+
+        <record id="demo_rfq_3" model="insurance.rfq">
+            <field name="reference_no">RFQ-P2R6T9</field>
+            <field name="client_id" ref="demo_client_1"/>
+            <field name="insurance_type">property</field>
+            <field name="status">sent</field>
+            <field name="sent_date">2025-05-12</field>
+            <field name="response_deadline">2025-05-22</field>
+            <field name="underwriting_complete" eval="False"/>
+            <field name="notes">Commercial warehouse and showroom in Muscat Industrial Area. Sum insured OMR 1.2 million. Stock and contents included.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Client:&lt;/strong&gt; Al Rashidi Trading Co. — Commercial Property&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Warehouse: 3,500 m² — Muscat Industrial Area&lt;/li&gt;
+&lt;li&gt;Showroom: 800 m² — Muttrah Corniche&lt;/li&gt;
+&lt;li&gt;Sum insured: OMR 1,200,000 (building + contents + stock)&lt;/li&gt;
+&lt;li&gt;Fire, theft, and consequential loss cover required&lt;/li&gt;
+&lt;li&gt;Business interruption: 12 months indemnity period&lt;/li&gt;
+&lt;/ul&gt;</field>
+            <field name="provider_ids" eval="[(6, 0, [ref('demo_provider_gig'), ref('demo_provider_vision')])]"/>
+        </record>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             DEMO RFQ 4 — Group Medical (Al Noor Medical Group) — comparison_ready
+             All 3 providers responded — ready for broker comparison
+        ════════════════════════════════════════════════════════════════════ -->
+
+        <record id="demo_rfq_4" model="insurance.rfq">
+            <field name="reference_no">RFQ-H7N1Q5</field>
+            <field name="client_id" ref="demo_client_5"/>
+            <field name="insurance_type">medical</field>
+            <field name="status">comparison_ready</field>
+            <field name="sent_date">2025-04-20</field>
+            <field name="response_deadline">2025-05-05</field>
+            <field name="underwriting_complete" eval="True"/>
+            <field name="notes">Group medical for 120 healthcare staff. VIP and standard cover tiers required. Network A mandatory. Maternity benefit required.</field>
+            <field name="requirements_summary">&lt;p&gt;&lt;strong&gt;Client:&lt;/strong&gt; Al Noor Medical Group — 120 employees (2 tiers)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Tier 1 (Doctors &amp;amp; Managers): 30 persons — VIP cover OMR 10,000/year&lt;/li&gt;
+&lt;li&gt;Tier 2 (Support Staff): 90 persons — Standard cover OMR 5,000/year&lt;/li&gt;
+&lt;li&gt;Network A mandatory (direct billing)&lt;/li&gt;
+&lt;li&gt;Maternity benefit: OMR 2,000 per event&lt;/li&gt;
+&lt;li&gt;Dental and optical included&lt;/li&gt;
+&lt;/ul&gt;</field>
+            <field name="provider_ids" eval="[(6, 0, [ref('demo_provider_gig'), ref('demo_provider_takaful'), ref('demo_provider_liva')])]"/>
+        </record>
+
+        <!-- All 3 quotes received for RFQ-H7N1Q5 -->
+        <record id="demo_quote_5" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_4"/>
+            <field name="insurer">GIG Insurance Oman</field>
+            <field name="provider_id" ref="demo_provider_gig"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">38500.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">VIP + Standard tiers. Full medical, dental, optical, maternity OMR 2,000</field>
+            <field name="exclusions">Cosmetic surgery, fertility treatment</field>
+            <field name="network">Network A — 120 hospitals</field>
+            <field name="claim_settlement_ratio">95.2</field>
+            <field name="validity_date">2025-06-05</field>
+            <field name="add_ons">Dedicated account manager, 24-hr emergency line, annual health screening</field>
+            <field name="is_recommended" eval="True"/>
+            <field name="notes">Best overall — highest CSR, full coverage, competitive on VIP tier.</field>
+        </record>
+
+        <record id="demo_quote_6" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_4"/>
+            <field name="insurer">Takaful Oman Insurance</field>
+            <field name="provider_id" ref="demo_provider_takaful"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">41200.00</field>
+            <field name="deductible">0.00</field>
+            <field name="coverage">VIP + Standard tiers. Medical + dental. Optical OMR 150 cap/year.</field>
+            <field name="exclusions">Optical beyond OMR 150, fertility, cosmetic</field>
+            <field name="network">Network A — 110 hospitals</field>
+            <field name="claim_settlement_ratio">90.1</field>
+            <field name="validity_date">2025-06-05</field>
+            <field name="notes">Sharia-compliant. Higher premium, limited optical benefit.</field>
+        </record>
+
+        <record id="demo_quote_7" model="insurance.rfq.quote">
+            <field name="rfq_id" ref="demo_rfq_4"/>
+            <field name="insurer">Liva Insurance (Al Ahlia)</field>
+            <field name="provider_id" ref="demo_provider_liva"/>
+            <field name="submitted_via_portal" eval="True"/>
+            <field name="premium">36900.00</field>
+            <field name="deductible">100.00</field>
+            <field name="coverage">VIP + Standard. Medical + dental + optical + wellness. Maternity OMR 1,500.</field>
+            <field name="exclusions">Pre-existing conditions year 1, fertility</field>
+            <field name="network">Network A — 120 hospitals</field>
+            <field name="claim_settlement_ratio">92.3</field>
+            <field name="validity_date">2025-06-05</field>
+            <field name="add_ons">Gym reimbursement OMR 300/year, mental health helpline</field>
+            <field name="notes">Lowest premium but maternity cap is OMR 1,500 vs client requirement of OMR 2,000. Negotiate.</field>
+        </record>
+
+        <!-- Demo Claim -->
+        <record id="demo_claim_1" model="insurance.claim">
+            <field name="claim_number">CLM-M3K8P1</field>
+            <field name="policy_id" ref="demo_policy_2"/>
+            <field name="status">under_assessment</field>
+            <field name="incident_date">2025-04-10</field>
+            <field name="claim_amount">8500.00</field>
+            <field name="description">Employee hospitalization — appendix surgery</field>
+            <field name="surveyor_notes">Medical records submitted, awaiting insurer approval</field>
+        </record>
+
+        <!-- Demo Commissions -->
+        <record id="demo_commission_1" model="insurance.commission">
+            <field name="policy_id" ref="demo_policy_1"/>
+            <field name="expected_amount">150.00</field>
+            <field name="status">received</field>
+            <field name="due_date">2024-12-01</field>
+            <field name="received_date">2024-11-28</field>
+            <field name="received_amount">150.00</field>
+        </record>
+
+        <record id="demo_commission_2" model="insurance.commission">
+            <field name="policy_id" ref="demo_policy_2"/>
+            <field name="expected_amount">680.00</field>
+            <field name="status">pending</field>
+            <field name="due_date">2025-06-01</field>
+        </record>
+
+    </data>
+</odoo>
