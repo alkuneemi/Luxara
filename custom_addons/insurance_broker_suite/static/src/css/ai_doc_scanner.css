@@ -1,0 +1,300 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   AI Document Scanner — Website Form Camera/Scan Feature
+   insurance_broker_suite/static/src/css/ai_doc_scanner.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scan Button (injected into section headers) ──────────────────────────── */
+.o_ins_scan_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1.5px solid var(--bs-primary, #6e54d6);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--bs-primary, #6e54d6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    float: right;
+    margin-top: -2px;
+}
+.o_ins_scan_btn:hover {
+    background: var(--bs-primary, #6e54d6);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(110,84,214,0.3);
+    transform: translateY(-1px);
+}
+.o_ins_scan_btn .o_ins_scan_icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+/* ── Modal Overlay ─────────────────────────────────────────────────────────── */
+#o_ins_scan_modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10999;
+    background: rgba(0,0,0,0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+}
+#o_ins_scan_modal.o_ins_scan_open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Modal Card ────────────────────────────────────────────────────────────── */
+.o_ins_scan_card {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    overflow: hidden;
+    transform: scale(0.94) translateY(10px);
+    transition: transform 0.22s ease;
+}
+#o_ins_scan_modal.o_ins_scan_open .o_ins_scan_card {
+    transform: scale(1) translateY(0);
+}
+
+.o_ins_scan_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #eee;
+}
+.o_ins_scan_header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+.o_ins_scan_close {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #f0f0f0;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1;
+    transition: background 0.15s;
+}
+.o_ins_scan_close:hover { background: #e0e0e0; }
+
+.o_ins_scan_body { padding: 20px 22px; }
+
+/* ── Document Type Pills ───────────────────────────────────────────────────── */
+.o_ins_doctype_pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.o_ins_doctype_pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #ddd;
+    background: #fafafa;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.15s;
+}
+.o_ins_doctype_pill:hover { border-color: var(--bs-primary, #6e54d6); color: var(--bs-primary, #6e54d6); }
+.o_ins_doctype_pill.active {
+    background: var(--bs-primary, #6e54d6);
+    border-color: var(--bs-primary, #6e54d6);
+    color: #fff;
+}
+
+/* ── Camera Preview Area ───────────────────────────────────────────────────── */
+.o_ins_camera_area {
+    background: #0a0a14;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 4/3;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.o_ins_camera_area video,
+.o_ins_camera_area canvas,
+.o_ins_camera_area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    border-radius: 12px;
+}
+.o_ins_camera_area video.active,
+.o_ins_camera_area canvas.active,
+.o_ins_camera_area img.active {
+    display: block;
+}
+.o_ins_camera_placeholder {
+    text-align: center;
+    color: #555;
+}
+.o_ins_camera_placeholder svg {
+    width: 56px;
+    height: 56px;
+    fill: #444;
+    margin-bottom: 10px;
+}
+.o_ins_camera_placeholder p {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin: 0;
+}
+
+/* ── Scan Frame overlay on video ──────────────────────────────────────────── */
+.o_ins_scan_frame {
+    position: absolute;
+    inset: 18px;
+    border: 2.5px solid rgba(110,84,214,0.7);
+    border-radius: 10px;
+    box-shadow: 0 0 0 3000px rgba(0,0,0,0.35);
+    pointer-events: none;
+    display: none;
+}
+.o_ins_scan_frame.active { display: block; }
+.o_ins_scan_frame::before, .o_ins_scan_frame::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: #fff;
+    border-style: solid;
+}
+.o_ins_scan_frame::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.o_ins_scan_frame::after  { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+/* ── Scan Line animation ───────────────────────────────────────────────────── */
+@keyframes o_ins_scanline {
+    0%   { top: 12%; opacity: 1; }
+    80%  { top: 80%; opacity: 1; }
+    100% { top: 80%; opacity: 0; }
+}
+.o_ins_scanline {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--bs-primary, #6e54d6), transparent);
+    border-radius: 2px;
+    display: none;
+    animation: o_ins_scanline 1.6s ease-in-out infinite;
+}
+.o_ins_scanline.active { display: block; }
+
+/* ── Action Buttons ────────────────────────────────────────────────────────── */
+.o_ins_scan_actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.o_ins_scan_actions .btn {
+    flex: 1;
+    min-width: 120px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 9px 14px;
+}
+
+/* ── Progress / Status ─────────────────────────────────────────────────────── */
+.o_ins_scan_status {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+.o_ins_scan_status.show { display: flex; }
+.o_ins_scan_status.processing {
+    background: #ede9ff;
+    color: var(--bs-primary, #6e54d6);
+}
+.o_ins_scan_status.success {
+    background: #e8f8ed;
+    color: #1a8a3d;
+}
+.o_ins_scan_status.error {
+    background: #fff0f0;
+    color: #d32f2f;
+}
+.o_ins_scan_status .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Auto-fill highlight animation ────────────────────────────────────────── */
+@keyframes o_ins_fill_flash {
+    0%   { background-color: #ede9ff; box-shadow: 0 0 0 3px rgba(110,84,214,0.3); }
+    60%  { background-color: #f0f8f0; box-shadow: 0 0 0 3px rgba(34,197,94,0.25); }
+    100% { background-color: ''; box-shadow: none; }
+}
+.o_ins_field_filled {
+    animation: o_ins_fill_flash 1.1s ease forwards;
+    border-radius: 6px;
+}
+
+/* ── Result Preview ────────────────────────────────────────────────────────── */
+.o_ins_scan_result_preview {
+    margin-top: 12px;
+    background: #f8f9ff;
+    border: 1px solid #e0dbff;
+    border-radius: 10px;
+    padding: 12px 14px;
+    max-height: 160px;
+    overflow-y: auto;
+    display: none;
+}
+.o_ins_scan_result_preview.show { display: block; }
+.o_ins_scan_result_preview table { width: 100%; font-size: 0.78rem; }
+.o_ins_scan_result_preview td:first-child {
+    font-weight: 600;
+    color: #444;
+    padding-right: 10px;
+    white-space: nowrap;
+    width: 45%;
+}
+.o_ins_scan_result_preview td:last-child { color: #222; }
+
+/* ── Hidden file input ─────────────────────────────────────────────────────── */
+#o_ins_scan_file_input { display: none !important; }
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .o_ins_scan_card { border-radius: 12px; }
+    .o_ins_scan_body { padding: 14px 16px; }
+    .o_ins_scan_actions .btn { min-width: 90px; }
+}
