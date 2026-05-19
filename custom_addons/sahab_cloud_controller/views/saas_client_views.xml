@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <odoo>
+      <!-- Form View: SaaS Client -->
+      <record id="view_saas_client_form" model="ir.ui.view">
+          <field name="name">saas.client.form</field>
+          <field name="model">saas.client</field>
+          <field name="arch" type="xml">
+              <form string="بيئة العميل">
+                  <header>
+                      <button name="action_provision"
+                              string="تفعيل الحاوية 🚀"
+                              type="object"
+                              class="oe_highlight"
+                              invisible="state != 'draft'"/>
+                      <button name="action_upgrade"
+                              string="تحديث النظام ♻️"
+                              type="object"
+                              invisible="state != 'active'"/>
+                      <button name="action_create_staging"
+                              string="إنشاء بيئة اختبار 🧪"
+                              type="object"
+                              invisible="state != 'active' or is_staging"/>
+                      <button name="action_merge_staging"
+                              string="دمج وتطبيق ✅"
+                              type="object"
+                              class="oe_highlight"
+                              invisible="not is_staging or state != 'active'"/>
+                      <button name="action_suspend"
+                              string="إيقاف مؤقت ⏸️"
+                              type="object"
+                              invisible="state != 'active'"
+                              confirm="هل أنت متأكد من إيقاف الخدمة؟ سيفقد العميل الوصول فوراً."/>
+                      <button name="action_resume"
+                              string="استئناف الخدمة ▶️"
+                              type="object"
+                              class="oe_highlight"
+                              invisible="state != 'suspended'"/>
+                      <field name="state" widget="statusbar"
+                             statusbar_visible="draft,deploying,active,suspended"/>
+                  </header>
+                  <sheet>
+                      <div class="oe_button_box" name="button_box">
+                          <button class="oe_stat_button" type="url"
+                                  icon="fa-external-link"
+                                  invisible="not full_domain">
+                              <field name="full_domain" widget="url" string="فتح المنصة"/>
+                          </button>
+                      </div>
+                      <div class="oe_title">
+                          <h1>
+                              <field name="display_name_computed" readonly="1"/>
+                          </h1>
+                          <div class="o_field_badge" invisible="not is_staging">
+                              <span class="badge text-bg-warning">بيئة اختبار</span>
+                          </div>
+                      </div>
+                      <group>
+                          <group string="بيانات العميل">
+                              <field name="partner_id"/>
+                              <field name="email" readonly="1"/>
+                              <field name="package_id"/>
+                              <field name="server_id"/>
+                          </group>
+                          <group string="بيانات النطاق والفروع">
+                              <field name="subdomain"/>
+                              <field name="full_domain" widget="url"/>
+                              <field name="prod_branch" readonly="1"/>
+                              <field name="stage_branch" readonly="1"/>
+                          </group>
+                      </group>
+                      <group>
+                          <group string="معرفات Railway">
+                              <field name="railway_service_id"/>
+                              <field name="railway_db_id"/>
+                              <field name="railway_domain"/>
+                          </group>
+                          <group string="الاشتراك">
+                              <field name="subscription_start"/>
+                              <field name="subscription_end"/>
+                              <field name="last_deployed"/>
+                          </group>
+                      </group>
+                      <notebook>
+                          <page string="بيئات الاختبار" name="staging"
+                                invisible="is_staging">
+                              <field name="staging_client_ids" readonly="1">
+                                  <list>
+                                      <field name="subdomain"/>
+                                      <field name="state"/>
+                                      <field name="full_domain" widget="url"/>
+                                      <field name="last_deployed"/>
+                                  </list>
+                              </field>
+                          </page>
+                          <page string="ملاحظات" name="notes">
+                              <field name="notes"/>
+                          </page>
+                      </notebook>
+                  </sheet>
+                  <chatter/>
+              </form>
+          </field>
+      </record>
+
+      <!-- List View: SaaS Client -->
+      <record id="view_saas_client_list" model="ir.ui.view">
+          <field name="name">saas.client.list</field>
+          <field name="model">saas.client</field>
+          <field name="arch" type="xml">
+              <list string="العملاء" decoration-success="state == 'active'"
+                    decoration-warning="state == 'deploying'"
+                    decoration-muted="state == 'suspended'"
+                    decoration-danger="state == 'cancelled'">
+                  <field name="partner_id"/>
+                  <field name="subdomain"/>
+                  <field name="package_id"/>
+                  <field name="state" widget="badge"
+                         decoration-success="state == 'active'"
+                         decoration-warning="state == 'deploying'"
+                         decoration-secondary="state in ('draft','suspended')"/>
+                  <field name="full_domain" widget="url"/>
+                  <field name="last_deployed"/>
+                  <field name="is_staging" optional="hide"/>
+                  <button name="action_provision" type="object"
+                          string="تفعيل" class="btn-primary btn-sm"
+                          invisible="state != 'draft'"/>
+                  <button name="action_suspend" type="object"
+                          string="إيقاف" class="btn-warning btn-sm"
+                          invisible="state != 'active'"/>
+              </list>
+          </field>
+      </record>
+
+      <!-- Kanban View: SaaS Client -->
+      <record id="view_saas_client_kanban" model="ir.ui.view">
+          <field name="name">saas.client.kanban</field>
+          <field name="model">saas.client</field>
+          <field name="arch" type="xml">
+              <kanban default_group_by="state">
+                  <field name="state"/>
+                  <field name="partner_id"/>
+                  <field name="subdomain"/>
+                  <field name="full_domain"/>
+                  <field name="package_id"/>
+                  <field name="is_staging"/>
+                  <templates>
+                      <t t-name="card">
+                          <div class="oe_kanban_card">
+                              <strong><field name="partner_id"/></strong>
+                              <div class="text-muted small">
+                                  <field name="subdomain"/>
+                                  <t t-if="record.is_staging.raw_value">
+                                      <span class="badge bg-warning ms-1">staging</span>
+                                  </t>
+                              </div>
+                              <div class="mt-1">
+                                  <field name="package_id"/>
+                              </div>
+                              <div t-if="record.full_domain.raw_value" class="mt-1">
+                                  <a t-att-href="record.full_domain.raw_value" target="_blank"
+                                     class="btn btn-sm btn-outline-primary">
+                                      فتح المنصة ↗
+                                  </a>
+                              </div>
+                          </div>
+                      </t>
+                  </templates>
+              </kanban>
+          </field>
+      </record>
+
+      <!-- Search View: SaaS Client -->
+      <record id="view_saas_client_search" model="ir.ui.view">
+          <field name="name">saas.client.search</field>
+          <field name="model">saas.client</field>
+          <field name="arch" type="xml">
+              <search>
+                  <field name="partner_id"/>
+                  <field name="subdomain"/>
+                  <field name="package_id"/>
+                  <filter name="active" string="نشط" domain="[('state','=','active')]"/>
+                  <filter name="deploying" string="جاري البناء" domain="[('state','=','deploying')]"/>
+                  <filter name="suspended" string="موقوف" domain="[('state','=','suspended')]"/>
+                  <filter name="staging" string="بيئات الاختبار" domain="[('is_staging','=',True)]"/>
+                  <filter name="production" string="الإنتاج فقط" domain="[('is_staging','=',False)]"/>
+                  <group expand="0" string="تجميع بـ">
+                      <filter name="group_package" string="الحزمة"
+                              context="{'group_by': 'package_id'}"/>
+                      <filter name="group_state" string="الحالة"
+                              context="{'group_by': 'state'}"/>
+                  </group>
+              </search>
+          </field>
+      </record>
+
+      <!-- Action: SaaS Client -->
+      <record id="action_saas_client" model="ir.actions.act_window">
+          <field name="name">بيئات العملاء</field>
+          <field name="res_model">saas.client</field>
+          <field name="view_mode">kanban,list,form</field>
+          <field name="context">{'search_default_production': 1}</field>
+      </record>
+  </odoo>
+  
