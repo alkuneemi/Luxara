@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <odoo>
+      <data noupdate="1">
+
+          <record id="industry_construction" model="insurance.industry.tag">
+              <field name="name">Construction</field>
+              <field name="name_ar">البناء والمقاولات</field>
+          </record>
+          <record id="industry_healthcare" model="insurance.industry.tag">
+              <field name="name">Healthcare</field>
+              <field name="name_ar">الرعاية الصحية</field>
+          </record>
+          <record id="industry_oil_gas" model="insurance.industry.tag">
+              <field name="name">Oil &amp; Gas</field>
+              <field name="name_ar">النفط والغاز</field>
+          </record>
+          <record id="industry_retail" model="insurance.industry.tag">
+              <field name="name">Retail &amp; Trade</field>
+              <field name="name_ar">التجزئة والتجارة</field>
+          </record>
+          <record id="industry_manufacturing" model="insurance.industry.tag">
+              <field name="name">Manufacturing</field>
+              <field name="name_ar">التصنيع</field>
+          </record>
+          <record id="industry_finance" model="insurance.industry.tag">
+              <field name="name">Finance &amp; Banking</field>
+              <field name="name_ar">المالية والمصرفية</field>
+          </record>
+          <record id="industry_hospitality" model="insurance.industry.tag">
+              <field name="name">Hospitality &amp; Tourism</field>
+              <field name="name_ar">الضيافة والسياحة</field>
+          </record>
+          <record id="industry_transport" model="insurance.industry.tag">
+              <field name="name">Transport &amp; Logistics</field>
+              <field name="name_ar">النقل واللوجستيات</field>
+          </record>
+          <record id="industry_education" model="insurance.industry.tag">
+              <field name="name">Education</field>
+              <field name="name_ar">التعليم</field>
+          </record>
+          <record id="industry_government" model="insurance.industry.tag">
+              <field name="name">Government &amp; Public Sector</field>
+              <field name="name_ar">الحكومة والقطاع العام</field>
+          </record>
+          <record id="industry_real_estate" model="insurance.industry.tag">
+              <field name="name">Real Estate</field>
+              <field name="name_ar">العقارات</field>
+          </record>
+          <record id="industry_marine_fisheries" model="insurance.industry.tag">
+              <field name="name">Marine &amp; Fisheries</field>
+              <field name="name_ar">البحرية والصيد</field>
+          </record>
+          <record id="industry_it_telecom" model="insurance.industry.tag">
+              <field name="name">IT &amp; Telecommunications</field>
+              <field name="name_ar">تقنية المعلومات والاتصالات</field>
+          </record>
+          <record id="industry_individual" model="insurance.industry.tag">
+              <field name="name">Individual / Personal</field>
+              <field name="name_ar">أفراد</field>
+          </record>
+
+      </data>
+  </odoo>
+  
