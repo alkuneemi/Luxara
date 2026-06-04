@@ -2,9 +2,9 @@ FROM odoo:19.0
 
 USER root
 
-# 1. تحديث النظام وتثبيت المتطلبات الأساسية ومكتبات قواعد البيانات
+# 1. تحديث النظام وتثبيت المتطلبات الأساسية
 RUN apt-get update && \
-    apt-get install -y git ca-certificates python3-num2words python3-libsass libpq-dev gcc && \
+    apt-get install -y git ca-certificates python3-num2words python3-libsass && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /mnt/extra-addons
