@@ -14,9 +14,10 @@ ARG GITHUB_TOKEN
 RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi && \
     git clone --depth 1 -b 19.0 https://${GITHUB_TOKEN}@github.com/alkuneemi/Luxara.git .
 
-# 3. تنظيم الموديولات وتثبيت المتطلبات
+# 3. تعديل ملف المتطلبات برمجياً لتجنب مشاكل البناء، ثم التثبيت
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 RUN if [ -f "requirements.txt" ]; then \
+    sed -i 's/psycopg2==/psycopg2-binary==/g' requirements.txt && \
     pip install --no-cache-dir --ignore-installed cryptography -r requirements.txt --break-system-packages; \
     fi
 
