@@ -2,9 +2,9 @@ FROM odoo:19.0
 
 USER root
 
-# 1. تحديث النظام وتثبيت المتطلبات الأساسية
+# 1. تحديث النظام وتثبيت المتطلبات الأساسية ومكتبات قواعد البيانات
 RUN apt-get update && \
-    apt-get install -y git ca-certificates python3-num2words python3-libsass && \
+    apt-get install -y git ca-certificates python3-num2words python3-libsass libpq-dev gcc && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /mnt/extra-addons
@@ -14,7 +14,7 @@ ARG GITHUB_TOKEN
 RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 1; fi && \
     git clone --depth 1 -b 19.0 https://${GITHUB_TOKEN}@github.com/alkuneemi/Luxara.git .
 
-# 3. تنظيم الموديولات وتثبيت المتطلبات (مع حل مشكلة التثبيت)
+# 3. تنظيم الموديولات وتثبيت المتطلبات
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 RUN if [ -f "requirements.txt" ]; then \
     pip install --no-cache-dir --ignore-installed cryptography -r requirements.txt --break-system-packages; \
