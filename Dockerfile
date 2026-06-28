@@ -34,8 +34,7 @@ RUN if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN is not set"; exit 
 
 RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 
-RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt --break-system-packages; fi
-
+RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir --ignore-installed -r requirements.txt --break-system-packages; fi
 
 
 # 4. الحل الجذري: إنشاء مجلدات الكاش والتنسيقات ومنحها صلاحيات كاملة ومطلقة
