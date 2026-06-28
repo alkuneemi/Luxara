@@ -37,7 +37,6 @@ RUN if [ -d "custom_addons" ]; then cp -r custom_addons/* . ; fi
 RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir --ignore-installed -r requirements.txt --break-system-packages; fi
 
 
-
 # 4. الحل الجذري: إنشاء مجلدات الكاش والتنسيقات ومنحها صلاحيات كاملة ومطلقة
 
 RUN mkdir -p /var/lib/odoo/data_dir/filestore && \
