@@ -1,0 +1,26 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "buildCommand": "pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt --break-system-packages --no-deps 2>&1 | tail -20 || pip install --no-cache-dir -r requirements.txt --break-system-packages 2>&1 | tail -20 || true",
+    "dockerfilePath": "/Dockerfile",
+    "buildEnvironment": "V3"
+  },
+  "deploy": {
+    "runtime": "V2",
+    "numReplicas": 1,
+    "startCommand": "odoo-bin -c /etc/odoo/odoo.conf",
+    "healthcheckPath": "/web/health",
+    "sleepApplication": false,
+    "useLegacyStacker": false,
+    "ipv6EgressEnabled": false,
+    "multiRegionConfig": {
+      "sfo": {
+        "numReplicas": 1
+      }
+    },
+    "restartPolicyType": "ON_FAILURE",
+    "healthcheckTimeout": 30,
+    "restartPolicyMaxRetries": 10
+  }
+}
